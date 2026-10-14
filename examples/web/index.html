@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pida · Runtime lab</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="mark">p</div>
+        <div>
+          <p class="eyebrow">PIDA / EMBEDDED AGENT RUNTIME</p>
+          <h1>업무와 에이전트를 연결합니다.</h1>
+        </div>
+        <span class="badge">MVP 0.1</span>
+      </header>
+      <p class="intro">
+        세션을 만들고, 업무 도구를 실행하고, 실행 과정을 확인하세요. 기본 mock
+        모드는 합성 데이터를 사용하는 결정론적 데모입니다.
+      </p>
+      <section class="connection">
+        <label for="token"
+          >Pida 접속 토큰
+          <span>LLM API 키가 아닙니다 · 메모리에만 보관</span></label
+        >
+        <div class="row">
+          <input
+            id="token"
+            type="password"
+            autocomplete="off"
+            placeholder="서버에 설정한 PIDA_API_TOKEN"
+          /><button id="connect">새 세션</button
+          ><button id="disconnect" class="secondary" disabled>세션 삭제</button>
+        </div>
+        <p id="session" class="muted">연결된 세션 없음</p>
+      </section>
+      <div class="grid">
+        <section class="panel">
+          <div class="panel-heading">
+            <h2>대화</h2>
+            <span id="status" role="status">대기 중</span>
+          </div>
+          <div id="messages" aria-live="polite">
+            <p class="empty">예: “LOT-001의 현재 상태를 알려줘”</p>
+          </div>
+          <form id="form">
+            <label for="prompt">업무 요청</label
+            ><textarea id="prompt" rows="3" maxlength="16000">
+LOT-001의 현재 상태를 알려줘</textarea
+            >
+            <div class="row">
+              <button id="send" disabled>실행</button
+              ><button type="button" id="cancel" class="secondary" disabled>
+                실행 중단
+              </button>
+            </div>
+          </form>
+        </section>
+        <section class="panel">
+          <div class="panel-heading">
+            <h2>실행 타임라인</h2>
+            <span>TRACE</span>
+          </div>
+          <ol id="trace">
+            <li class="muted">실행 이벤트가 여기에 표시됩니다.</li>
+          </ol>
+          <p class="footnote">
+            메타데이터만 기록합니다. 프롬프트, 도구 인자, API 키는 추적 로그에
+            포함하지 않습니다.
+          </p>
+        </section>
+      </div>
+      <p id="error" role="alert"></p>
+      <footer>
+        Pi SDK 기반 · 명시적 업무 도구 · 사용자별 세션 · 스트리밍 & 취소
+      </footer>
+    </main>
+  </body>
+</html>
