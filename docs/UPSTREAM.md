@@ -18,7 +18,7 @@ Inspection date: 2026-10-14 KST. Recheck on dependency upgrades.
 | `@earendil-works/pi-coding-agent` | `createAgentSession`, `AgentSession.prompt/subscribe/abort/dispose`, `ModelRuntime`, `SessionManager`, `SettingsManager`, custom `ResourceLoader`, `ToolDefinition` | Embed the SDK; explicit safe configuration |
 | `@earendil-works/pi-agent-core` | Agent/tool loop, events, `prepareRequest`, `finishTurn` | Reused transitively; preserve Pi-installed hooks |
 | `@earendil-works/pi-ai` | `createProvider`, `Provider`, `InMemoryCredentialStore`, protocol implementations, faux provider | Company adapter + host provider factory + deterministic tests |
-| `SessionManager.inMemory()` | Pi-authoritative conversation tree/projection | Single-process MVP, no homebrew transcript persistence |
+| `SessionManager.inMemory()` / `create()` / `open()` | Pi-authoritative conversation tree/projection and JSONL storage | Ephemeral embedding or persistent single-process workspace; no homebrew transcript format |
 | Pi MIT license | Copyright (c) 2025 Mario Zechner | Notice retained in THIRD_PARTY_NOTICES.md |
 
 Historical `@mariozechner/*` names are not used. Current official main package listing no longer includes the old `pi-web-ui` package; Pida uses a small example UI plus its own transport client, not an unverified legacy UI dependency. Pi-durable, chord and telemetry exist upstream but are not required for this minimal profile.
@@ -27,6 +27,7 @@ Historical `@mariozechner/*` names are not used. Current official main package l
 
 - [Release SDK contract](https://github.com/earendil-works/pi/blob/v1.2.0/packages/coding-agent/docs/sdk.md)
 - [Full-control example](https://github.com/earendil-works/pi/blob/v1.2.0/packages/coding-agent/examples/sdk/12-full-control.ts)
+- [Session persistence contracts](https://github.com/earendil-works/pi/blob/v1.2.0/packages/coding-agent/src/core/session-manager.ts)
 - [Session factory](https://github.com/earendil-works/pi/blob/v1.2.0/packages/coding-agent/src/core/sdk.ts)
 - [Model runtime](https://github.com/earendil-works/pi/blob/v1.2.0/packages/coding-agent/src/core/model-runtime.ts)
 - [AI/provider README](https://github.com/earendil-works/pi/blob/v1.2.0/packages/ai/README.md)
@@ -37,6 +38,6 @@ Pi's upstream README explicitly states that filesystem/process/network/credentia
 
 ## Provenance and compatibility
 
-Dependencies are consumed from npm, pinned at 1.2.0; transitive Pi packages are also overridden to 1.2.0. `npm-shrinkwrap.json` records resolved tarballs and integrity values. The architecture follows the official full-control example, with in-memory stores and no discovered resources. No upstream source tree is vendored or forked.
+Dependencies are consumed from npm, pinned at 1.2.0; transitive Pi packages are also overridden to 1.2.0. `npm-shrinkwrap.json` records resolved tarballs and integrity values. The architecture follows the official full-control example, with explicit stores and no ambient discovered resources. Version 0.2 also uses the public Pi file-session create/open APIs, verified against installed 1.2.0 source and the release source on 2026-10-15. No upstream source tree is vendored or forked.
 
 The release example mentions an internal AuthStorage pattern; the installed public root does not export AuthStorage. Pida uses the publicly exported `InMemoryCredentialStore` from pi-ai instead. Compilation and real-package tests, rather than documentation snippets alone, determine compatibility.

@@ -3,80 +3,111 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Pida · Runtime lab</title>
+    <title>Pida · Agent workspace</title>
     <link rel="stylesheet" href="/style.css" />
     <script type="module" src="/app.js"></script>
   </head>
   <body>
     <main>
       <header>
-        <div class="mark">p</div>
+        <div class="mark" aria-hidden="true">p</div>
         <div>
-          <p class="eyebrow">PIDA / EMBEDDED AGENT RUNTIME</p>
-          <h1>업무와 에이전트를 연결합니다.</h1>
+          <p class="eyebrow">PIDA / YOUR AGENT WORKSPACE</p>
+          <h1>도구를 연결하고, 대화를 이어가세요.</h1>
         </div>
-        <span class="badge">MVP 0.1</span>
+        <span class="badge">0.2</span>
       </header>
       <p class="intro">
-        세션을 만들고, 업무 도구를 실행하고, 실행 과정을 확인하세요. 기본 mock
-        모드는 합성 데이터를 사용하는 결정론적 데모입니다.
+        내 도구와 모델로 작업하는 공간. 대화와 실행 과정을 한곳에서 확인하세요.
       </p>
-      <section class="connection">
-        <label for="token"
-          >Pida 접속 토큰
-          <span>LLM API 키가 아닙니다 · 메모리에만 보관</span></label
-        >
-        <div class="row">
-          <input
-            id="token"
-            type="password"
-            autocomplete="off"
-            placeholder="서버에 설정한 PIDA_API_TOKEN"
-          /><button id="connect">새 세션</button
-          ><button id="disconnect" class="secondary" disabled>세션 삭제</button>
-        </div>
-        <p id="session" class="muted">연결된 세션 없음</p>
+      <section id="connection" class="connection">
+        <h2>작업 공간에 연결</h2>
+        <p>
+          로컬 실행 명령의 <strong>브라우저 열기</strong>를 이용하거나 접속
+          토큰을 입력하세요.
+        </p>
+        <form id="connection-form">
+          <label for="token"
+            >Pida 접속 토큰
+            <span>LLM API 키가 아닙니다 · 이 탭의 메모리에만 보관</span></label
+          >
+          <div class="row">
+            <input
+              id="token"
+              type="password"
+              autocomplete="off"
+              required
+              placeholder="Pida 접속 토큰"
+            /><button id="connect">연결</button>
+          </div>
+        </form>
       </section>
-      <div class="grid">
-        <section class="panel">
-          <div class="panel-heading">
-            <h2>대화</h2>
-            <span id="status" role="status">대기 중</span>
-          </div>
-          <div id="messages" aria-live="polite">
-            <p class="empty">예: “LOT-001의 현재 상태를 알려줘”</p>
-          </div>
-          <form id="form">
-            <label for="prompt">업무 요청</label
-            ><textarea id="prompt" rows="3" maxlength="16000">
-LOT-001의 현재 상태를 알려줘</textarea
-            >
-            <div class="row">
-              <button id="send" disabled>실행</button
-              ><button type="button" id="cancel" class="secondary" disabled>
-                실행 중단
-              </button>
-            </div>
-          </form>
-        </section>
-        <section class="panel">
-          <div class="panel-heading">
-            <h2>실행 타임라인</h2>
-            <span>TRACE</span>
-          </div>
-          <ol id="trace">
-            <li class="muted">실행 이벤트가 여기에 표시됩니다.</li>
-          </ol>
-          <p class="footnote">
-            메타데이터만 기록합니다. 프롬프트, 도구 인자, API 키는 추적 로그에
-            포함하지 않습니다.
-          </p>
-        </section>
-      </div>
       <p id="error" role="alert"></p>
-      <footer>
-        Pi SDK 기반 · 명시적 업무 도구 · 사용자별 세션 · 스트리밍 & 취소
-      </footer>
+      <div id="workspace" hidden>
+        <div class="workspace-info">
+          <span id="model"></span><span id="storage"></span
+          ><button id="disconnect" class="secondary">로그아웃</button>
+        </div>
+        <p id="mock-note" class="notice" hidden>
+          지금은 데모 모드입니다. LOT-001 또는 LOT-002를 요청하면 합성 데이터를
+          조회합니다. 자유로운 대화와 내 도구 사용에는 실제 모델을 연결해주세요.
+        </p>
+        <div class="workspace-grid">
+          <aside class="panel sidebar" aria-label="대화 목록">
+            <div class="panel-heading">
+              <h2>내 대화</h2>
+              <button id="new-session">새 대화</button>
+            </div>
+            <div id="sessions"></div>
+            <button id="refresh" class="secondary">목록 · 상태 새로고침</button>
+            <div class="tool-list">
+              <h2>등록된 도구</h2>
+              <ul id="tools"></ul>
+            </div>
+          </aside>
+          <section class="panel conversation" aria-label="대화">
+            <div class="panel-heading">
+              <h2 id="session-title">새 대화를 시작하세요</h2>
+              <span id="status" role="status">대기</span>
+            </div>
+            <div id="messages" aria-live="polite" aria-label="대화 내용">
+              <p class="empty">왼쪽에서 대화를 선택하거나 새로 시작하세요.</p>
+            </div>
+            <form id="form">
+              <label for="prompt">요청</label
+              ><textarea
+                id="prompt"
+                rows="3"
+                maxlength="16000"
+                placeholder="무엇을 도와드릴까요?"
+                disabled
+              ></textarea>
+              <div class="row">
+                <button id="send" disabled>보내기</button
+                ><button type="button" id="cancel" class="secondary" disabled>
+                  중단</button
+                ><button
+                  type="button"
+                  id="delete-session"
+                  class="quiet"
+                  disabled
+                >
+                  대화 삭제
+                </button>
+              </div>
+            </form>
+            <details>
+              <summary>실행 타임라인</summary>
+              <ol id="trace"></ol>
+              <p class="footnote">
+                타임라인은 실행 메타데이터입니다. 대화 저장이 켜져 있으면 대화
+                본문과 도구 결과도 서버에 별도로 저장됩니다.
+              </p>
+            </details>
+          </section>
+        </div>
+      </div>
+      <footer>Pi 기반 · 내 모델 · 내 도구 · 이어지는 대화</footer>
     </main>
   </body>
 </html>

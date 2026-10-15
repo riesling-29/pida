@@ -2,24 +2,38 @@
 
 An embedded, reusable **Pi-based agent harness** for applications. Bring the package into a host backend, register business tools, and connect a web or app interface through the client SDK. The host does not implement the agent loop.
 
-**MVP 0.1.0:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and in-memory `SessionManager` are reused. Pida adds authenticated HTTP access, session ownership, per-call business authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+**Workspace MVP 0.2.0:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces now persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call business authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
 
 The lot-status tool is **replaceable synthetic sample data**, not a manufacturing-specific restriction. The default mock is deterministic and not an intelligent model.
 
-## Quick start
+## Quick start — usable workspace
 
-Requires Node.js **22.19+** and npm. Tested here on Node 24.19.0.
+Requires Node.js **22.19+** and npm. From a checkout of this feature branch:
 
 ```sh
 npm ci --ignore-scripts
-npm test
-export PIDA_API_TOKEN=$(node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('hex'))")
-npm start
+npm run pida -- init ./my-agent
+npm start -- ./my-agent --open
 ```
 
-Open `http://127.0.0.1:8787`, enter the value of `PIDA_API_TOKEN` from your own shell, click **새 세션**, then run `LOT-001의 상태를 알려줘`. The server never logs the token. In PowerShell, set `$env:PIDA_API_TOKEN` to a freshly generated random value before `npm start`. Tokens must be at least 32 characters; length alone is not an entropy guarantee.
+`init` builds the CLI through the npm script, creates a configuration, generates a private random application token, and adds a sample tool. `start` serves the bundled web UI and API at `http://127.0.0.1:8787`. `--open` launches a browser with local authentication; no manual token generation is required. If opening a browser is unavailable, open the URL manually and run `npm run pida -- token ./my-agent` to obtain the login token. This command intentionally displays the secret; do not paste its output into logs or chat.
 
-The example server listens on loopback only. Its token represents one demo user with `lots:read`. The browser holds this application token only in memory. It never receives the LLM provider key.
+Click **새 대화**, ask `LOT-001의 상태를 알려줘`, and inspect the result and timeline. Stop with Ctrl+C; run the same start command later and select the saved conversation. Refreshing the browser requires authentication again; tokens are held only in that tab's memory. A login fragment from `--open` is removed immediately after page load.
+
+Default mock mode needs no company credentials. It is a deterministic demonstration of the sample tool, **not a general-purpose model**. To connect your own model:
+
+```sh
+npm run pida -- configure ./my-agent
+# Put the provider key into my-agent/.env (or inject it through the environment).
+npm run pida -- doctor ./my-agent
+npm start -- ./my-agent --open
+```
+
+The wizard asks for protocol, endpoint, exact model ID and model limits. It never asks you to paste an API key into command-line arguments. `doctor` checks configuration and paths without importing tool code or contacting the model; a successful doctor check does not verify gateway compatibility.
+
+The workspace server is a local, single-user profile. It listens on loopback and uses a generated token. For another app or remote multi-user deployment, embed the SDK and supply your application's authentication.
+
+See [the complete workspace guide](docs/WORKSPACE.md) for tool folders, provider examples, persistence, Windows commands and packaging.
 
 ## Bring Pida into another application
 
@@ -28,16 +42,17 @@ The package has **not** been published to npm. Create and install a local packag
 ```sh
 npm pack
 # Run from your host application directory:
-npm install /absolute/path/to/pida-core-0.1.0.tgz
+npm install /absolute/path/to/pida-core-0.2.0.tgz
 ```
 
-Three entry points separate server code from browser code:
+Entry points separate standalone configuration, server code and browser code:
 
 | Import | Environment | Responsibility |
 | --- | --- | --- |
 | `pida-core` | Node backend / desktop backend | Runtime, provider factories, business tool contract |
 | `pida-core/http` | Node backend | Authenticated HTTP/SSE adapter |
-| `pida-core/client` | Browser or Node with Fetch streams | Session, execution, streaming, cancellation and trace client |
+| `pida-core/client` | Browser or Node with Fetch streams | Session listing/resume, execution, streaming, cancellation and trace client |
+| `pida-core/workspace` | Node backend | Load a configured workspace, approved tool modules and local HTTP service |
 
 ### Embedded backend
 
@@ -94,7 +109,7 @@ await client.cancel(sessionId);
 
 ## Connect a company LLM endpoint
 
-For the example server:
+For the standalone workspace, use `pida configure` and `.env` as described above. The original environment-only example is retained as `npm run demo`:
 
 ```sh
 export PIDA_PROVIDER=endpoint
@@ -104,7 +119,7 @@ export PIDA_MODEL=your-deployment-name
 export PIDA_LLM_API_KEY=... # Inject through your secret manager / environment
 export PIDA_CONTEXT_WINDOW=32000
 export PIDA_MAX_TOKENS=2048
-npm start
+npm run demo
 ```
 
 The model limits above are examples: set verified values for your actual deployment. `PIDA_API` accepts `openai-completions`, `openai-responses` or `anthropic-messages`; these delegate to Pi's protocol implementations. **Only Chat Completions has been exercised against a local protocol stub in this MVP.** Responses, Anthropic, actual company endpoints and local LLM servers require endpoint-specific acceptance tests. A compatible label is not evidence of tool-call/streaming compatibility.
@@ -131,7 +146,7 @@ const orderStatus = defineBusinessTool({
 
 Register it with `new PidaRuntime({ provider, tools: [orderStatus] })`. Pi validates arguments, then Pida checks the current run's host-supplied permission **at each invocation**. `authorize(request)` can additionally enforce row-level or resource-level rules. The business service must also enforce its own access control. Tool failures do not become successful runs just because the model continues or says it succeeded.
 
-No tools are enabled unless registered. Built-in shell/filesystem tools, project extensions, skills, prompt templates, context files and MCP discovery are disabled in this profile. Pi's trusted tool/plugin code is not an OS sandbox. See [security boundaries](docs/SECURITY.md).
+Workspace tool modules can be enabled with `pida tools enable FILE.mjs ./my-agent`; their required permission must also be granted in configuration, and the server restarted. Only enabled modules are imported. No tools are enabled unless registered. Built-in shell/filesystem tools, project extensions, skills, prompt templates, context files and MCP discovery are disabled in this profile. Pi's trusted tool/plugin code is not an OS sandbox. See [security boundaries](docs/SECURITY.md).
 
 ## API
 
@@ -139,6 +154,8 @@ All `/v1/*` routes require `Authorization: Bearer <application-token>`. POST bod
 
 | Method | Path | Request / response |
 | --- | --- | --- |
+| GET | `/v1/info` | Safe configured model label, persistence mode, tools and permission availability |
+| GET | `/v1/sessions` | Current user’s saved and active sessions (title, dates, status) |
 | POST | `/v1/sessions` | `{}` → `{ sessionId }` |
 | GET | `/v1/sessions/:id` | Safe user/assistant text history, active tools, state |
 | POST | `/v1/sessions/:id/runs` | `{ prompt }` → SSE `trace`, `text_delta`, final `result` |
@@ -151,7 +168,7 @@ Final run status: `completed`, `failed`, `cancelled`, `limited`. `completed` mea
 
 ## Scope and validation
 
-Defaults: 100 sessions, 100 runs per session, 8 turns per run, 16 tool calls per run, 60-second cooperative deadline, 1,000 trace records per session, 16,000 prompt characters, 32 KiB HTTP bodies and tool text results. Limits are configurable through the SDK. Finished sessions are not automatically evicted; delete them when done. Session state and traces are in memory and disappear on restart.
+Defaults: 100 sessions, 100 runs per session, 8 turns per run, 16 tool calls per run, 60-second cooperative deadline, 1,000 trace records per session, 16,000 prompt characters, 32 KiB HTTP bodies and tool text results. Limits are configurable through the SDK. Finished sessions are not automatically evicted; delete them when done. Direct SDK calls default to in-memory sessions. Set `storageDir` for persistence; standalone workspaces enable it by default. `listSessions` returns owned saved sessions, `resumeSession` loads a Pi transcript, and HTTP reads/runs restore saved sessions automatically. `close()` preserves disk sessions; `deleteSession()` removes them. One process owns each storage directory. See the workspace guide for crash recovery and storage limitations.
 
 `npm test` runs contract and integration tests with real Pi packages, faux providers, a local OpenAI-compatible streaming stub, HTTP and the client SDK. No company credentials or paid provider calls are needed. [Validation](docs/VALIDATION.md) records exactly what was tested and what remains open.
 

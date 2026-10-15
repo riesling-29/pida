@@ -127,6 +127,14 @@ export function createPidaServer(options: HttpOptions) {
         throw new PidaError("UNAUTHORIZED", 401);
       const principal = await options.authenticate(auth.slice(7));
       if (!principal) throw new PidaError("UNAUTHORIZED", 401);
+      if (path === "/v1/info" && req.method === "GET") {
+        json(res, 200, runtime.getInfo(principal));
+        return;
+      }
+      if (path === "/v1/sessions" && req.method === "GET") {
+        json(res, 200, { sessions: runtime.listSessions(principal) });
+        return;
+      }
       if (path === "/v1/sessions" && req.method === "POST") {
         keys(await body(req), []);
         json(res, 201, await runtime.createSession(principal));
@@ -139,6 +147,7 @@ export function createPidaServer(options: HttpOptions) {
       const id = match[1]!,
         action = match[2];
       if (!action && req.method === "GET") {
+        await runtime.resumeSession(id, principal);
         json(res, 200, runtime.getSession(id, principal));
         return;
       }
@@ -149,6 +158,7 @@ export function createPidaServer(options: HttpOptions) {
         return;
       }
       if (action === "trace" && req.method === "GET") {
+        await runtime.resumeSession(id, principal);
         json(res, 200, { events: runtime.getTrace(id, principal) });
         return;
       }

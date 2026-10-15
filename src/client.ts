@@ -1,9 +1,17 @@
-import type { RunResult, StreamEvent, TraceEvent } from "./protocol.js";
+import type {
+  RunResult,
+  StreamEvent,
+  TraceEvent,
+  SessionSummary,
+  RuntimeInfo,
+} from "./protocol.js";
 export type {
   RunResult,
   StreamEvent,
   TraceEvent,
   RunStatus,
+  SessionSummary,
+  RuntimeInfo,
 } from "./protocol.js";
 
 export class PidaClientError extends Error {
@@ -55,13 +63,19 @@ export class PidaClient {
   private path(id: string) {
     return `/v1/sessions/${encodeURIComponent(id)}`;
   }
+  async listSessions(): Promise<{ sessions: SessionSummary[] }> {
+    return (await this.request("/v1/sessions")).json();
+  }
+  async getInfo(): Promise<RuntimeInfo> {
+    return (await this.request("/v1/info")).json();
+  }
   async createSession(): Promise<{ sessionId: string }> {
     return (await this.request("/v1/sessions", "POST", {})).json();
   }
-  async getSession(
-    id: string,
-  ): Promise<{
+  async getSession(id: string): Promise<{
     sessionId: string;
+    title: string;
+    lastStatus?: SessionSummary["lastStatus"];
     running: boolean;
     runs: number;
     tools: string[];

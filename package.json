@@ -1,13 +1,15 @@
 {
   "name": "pida-core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Embedded Pi runtime with authorized business tools and a session HTTP API",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && node --test --test-timeout=15000 test/*.test.mjs",
-    "start": "node dist/server.js",
-    "prepack": "npm run build"
+    "start": "node dist/cli.js start",
+    "prepack": "npm run build",
+    "pida": "npm run build --silent && node dist/cli.js",
+    "demo": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
@@ -37,6 +39,10 @@
     "./client": {
       "types": "./dist/client.d.ts",
       "import": "./dist/client.js"
+    },
+    "./workspace": {
+      "types": "./dist/workspace.d.ts",
+      "import": "./dist/workspace.js"
     }
   },
   "files": [
@@ -53,5 +59,8 @@
     "@earendil-works/pi-mcp": "1.2.0",
     "@earendil-works/pi-tui": "1.2.0",
     "@earendil-works/pi-telemetry": "1.2.0"
+  },
+  "bin": {
+    "pida": "./dist/cli.js"
   }
 }

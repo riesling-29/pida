@@ -1,4 +1,8 @@
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
+import { basename, join } from "node:path";
+import { SessionStore, type SavedSession } from "./storage.js";
+import type { SessionSummary, RuntimeInfo } from "./protocol.js";
 import { InMemoryCredentialStore } from "@earendil-works/pi-ai";
 import {
   createAgentSession,
@@ -23,6 +27,8 @@ export type {
   RunResult,
   TraceEvent,
   StreamEvent,
+  SessionSummary,
+  RuntimeInfo,
 } from "./protocol.js";
 
 export interface Principal {
@@ -64,6 +70,10 @@ export class PidaError extends Error {
 }
 export interface RuntimeOptions {
   provider: ProviderFactory;
+  /** Dedicated private directory. One runtime/process at a time; unset keeps memory-only behavior. */
+  storageDir?: string;
+  /** Safe display labels only: never endpoint URLs or credentials. */
+  providerInfo?: { mode: string; model: string };
   tools?: readonly BusinessTool<any>[];
   /** Additional deny-capable host policy, after the permission check. */
   authorize?: (request: AuthorizationRequest) => boolean | Promise<boolean>;
@@ -92,6 +102,7 @@ interface SessionRecord {
   nextSequence: number;
   active?: ActiveRun;
   runs: number;
+  saved: SavedSession;
   finished?: Promise<void>;
   deleting?: boolean;
 }
@@ -137,6 +148,9 @@ function loader(systemPrompt: string): ResourceLoader {
 export class PidaRuntime {
   private readonly sessions = new Map<string, SessionRecord>();
   private pendingSessions = 0;
+  private readonly store?: SessionStore;
+  private readonly loading = new Map<string, Promise<{ sessionId: string }>>();
+  private readonly creating = new Set<Promise<{ sessionId: string }>>();
   private closed = false;
   private readonly limits;
   private readonly options: RuntimeOptions;
@@ -174,11 +188,29 @@ export class PidaRuntime {
       traces: positive(options.maxTraceEvents, 1000),
       runs: positive(options.maxRunsPerSession, 100),
     };
+    if (options.storageDir) this.store = new SessionStore(options.storageDir);
   }
   async createSession(principal: Principal): Promise<{ sessionId: string }> {
+    const task = this.openSession(principal);
+    this.creating.add(task);
+    try {
+      return await task;
+    } finally {
+      this.creating.delete(task);
+    }
+  }
+  private async openSession(
+    principal: Principal,
+    saved?: SavedSession,
+  ): Promise<{ sessionId: string }> {
     const p = principalCopy(principal);
     if (this.closed) throw new PidaError("RUNTIME_CLOSED", 503);
-    if (this.sessions.size + this.pendingSessions >= this.limits.sessions)
+    if (
+      !saved &&
+      (this.store?.list().length ?? this.sessions.size) +
+        this.pendingSessions >=
+        this.limits.sessions
+    )
       throw new PidaError("SESSION_LIMIT", 429);
     this.pendingSessions++;
     try {
@@ -193,8 +225,24 @@ export class PidaRuntime {
       await models.getAvailable(binding.provider.id);
       const model = models.getModel(binding.provider.id, binding.modelId);
       if (!model) throw new Error("Configured model not found");
-      const manager = SessionManager.inMemory();
+      let manager: SessionManager;
+      if (this.store) {
+        const file = saved && join(this.store.piDirectory, saved.piFile);
+        if (file && existsSync(file))
+          manager = SessionManager.open(file, this.store.piDirectory);
+        else {
+          if (saved?.hasTranscript)
+            throw new PidaError("SESSION_FILE_MISSING", 500);
+          manager = SessionManager.create(
+            process.cwd(),
+            this.store.piDirectory,
+            saved ? { id: saved.sessionId } : undefined,
+          );
+        }
+      } else manager = SessionManager.inMemory();
       const id = manager.getSessionId();
+      if (saved && id !== saved.sessionId)
+        throw new PidaError("SESSION_FILE_MISMATCH", 500);
       let record: SessionRecord;
       const customTools: ToolDefinition[] = this.options.tools!.map((tool) => ({
         name: tool.name,
@@ -278,9 +326,24 @@ export class PidaRuntime {
         id,
         owner: p.id,
         pi: session,
-        traces: [],
-        nextSequence: 1,
-        runs: 0,
+        traces: saved?.traces.slice(-this.limits.traces) ?? [],
+        nextSequence: saved?.nextSequence ?? 1,
+        runs: saved?.runs ?? 0,
+        saved: saved ?? {
+          version: 1,
+          sessionId: id,
+          owner: p.id,
+          piFile: manager.getSessionFile()
+            ? basename(manager.getSessionFile()!)
+            : "memory.jsonl",
+          title: "새 대화",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          running: false,
+          runs: 0,
+          nextSequence: 1,
+          traces: [],
+        },
       };
       const piPrepareRequest = session.agent.prepareRequest;
       session.agent.prepareRequest = async (request, signal) => {
@@ -305,11 +368,89 @@ export class PidaRuntime {
         }
         return decision ?? undefined;
       };
+      record.saved.piFile = manager.getSessionFile()
+        ? basename(manager.getSessionFile()!)
+        : "memory.jsonl";
+      try {
+        this.persist(record);
+      } catch (error) {
+        session.dispose();
+        throw error;
+      }
       this.sessions.set(id, record);
       return { sessionId: id };
     } finally {
       this.pendingSessions--;
     }
+  }
+  private persist(record: SessionRecord): void {
+    record.saved.runs = record.runs;
+    record.saved.running = !!record.active;
+    record.saved.nextSequence = record.nextSequence;
+    record.saved.traces = record.traces;
+    if (this.store) {
+      record.saved.hasTranscript = existsSync(
+        join(this.store.piDirectory, record.saved.piFile),
+      );
+      this.store.save(record.saved);
+    }
+  }
+  /** Restore a saved Pi session lazily. Ownership is verified before reading its transcript. */
+  async resumeSession(
+    id: string,
+    principal: Principal,
+  ): Promise<{ sessionId: string }> {
+    const p = principalCopy(principal);
+    if (this.closed) throw new PidaError("RUNTIME_CLOSED", 503);
+    if (this.sessions.has(id)) {
+      this.owned(id, p);
+      return { sessionId: id };
+    }
+    const saved = this.store?.get(id);
+    if (!saved || saved.owner !== p.id)
+      throw new PidaError("SESSION_NOT_FOUND", 404);
+    let task = this.loading.get(id);
+    if (!task) {
+      task = this.openSession(p, saved);
+      this.loading.set(id, task);
+    }
+    try {
+      return await task;
+    } finally {
+      this.loading.delete(id);
+    }
+  }
+  listSessions(principal: Principal): SessionSummary[] {
+    const p = principalCopy(principal);
+    const all = new Map(
+      (this.store?.list() ?? []).map((s) => [s.sessionId, s]),
+    );
+    for (const r of this.sessions.values())
+      all.set(r.id, { ...r.saved, running: !!r.active, runs: r.runs });
+    return [...all.values()]
+      .filter((s) => s.owner === p.id)
+      .map((s) => ({
+        sessionId: s.sessionId,
+        title: s.title,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+        running: s.running,
+        runs: s.runs,
+        lastStatus: s.lastStatus,
+      }))
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  }
+  getInfo(principal: Principal): RuntimeInfo {
+    const p = principalCopy(principal);
+    return {
+      persistence: !!this.store,
+      provider: this.options.providerInfo,
+      tools: this.options.tools!.map((t) => ({
+        name: t.name,
+        description: t.description,
+        permitted: p.permissions.includes(t.permission),
+      })),
+    };
   }
   private owned(id: string, principal: Principal): SessionRecord {
     const p = principalCopy(principal),
@@ -322,6 +463,8 @@ export class PidaRuntime {
     const s = this.owned(id, principal);
     return {
       sessionId: id,
+      title: s.saved.title,
+      lastStatus: s.saved.lastStatus,
       running: !!s.active,
       runs: s.runs,
       tools: s.pi.getActiveToolNames(),
@@ -353,6 +496,7 @@ export class PidaRuntime {
     onEvent?: (event: StreamEvent) => void,
     signal?: AbortSignal,
   ): Promise<RunResult> {
+    if (!this.sessions.has(id)) await this.resumeSession(id, principal);
     const record = this.owned(id, principal);
     if (this.closed) throw new PidaError("RUNTIME_CLOSED", 503);
     if (typeof prompt !== "string" || !prompt.trim() || prompt.length > 16_000)
@@ -372,6 +516,16 @@ export class PidaRuntime {
     const priorMessages = record.pi.messages.length;
     record.active = run;
     record.runs++;
+    record.saved.title =
+      record.runs === 1 ? prompt.trim().slice(0, 80) : record.saved.title;
+    record.saved.updatedAt = new Date().toISOString();
+    try {
+      this.persist(record);
+    } catch {
+      record.active = undefined;
+      record.runs--;
+      throw new PidaError("PERSISTENCE_FAILED", 500);
+    }
     let finish!: () => void;
     record.finished = new Promise<void>((resolve) => {
       finish = resolve;
@@ -389,7 +543,11 @@ export class PidaRuntime {
         stop("cancelled", "CONSUMER_DISCONNECTED");
       }
     };
-    const trace = (type: string, extra: Partial<TraceEvent> = {}) => {
+    const trace = (
+      type: string,
+      extra: Partial<TraceEvent> = {},
+      publish = true,
+    ) => {
       const event: TraceEvent = {
         sequence: record.nextSequence++,
         timestamp: new Date().toISOString(),
@@ -400,7 +558,8 @@ export class PidaRuntime {
       };
       record.traces.push(event);
       if (record.traces.length > this.limits.traces) record.traces.shift();
-      emit({ type: "trace", trace: { ...event } });
+      if (publish) emit({ type: "trace", trace: { ...event } });
+      return event;
     };
     const externalAbort = () => stop("cancelled", "CANCELLED");
     signal?.addEventListener("abort", externalAbort, { once: true });
@@ -472,13 +631,30 @@ export class PidaRuntime {
       text,
       ...(run.code ? { code: run.code } : {}),
     };
-    trace("run_finished", { status: result.status, code: result.code });
+    const finalTrace = trace(
+      "run_finished",
+      { status: result.status, code: result.code },
+      false,
+    );
     record.active = undefined;
+    record.saved.lastStatus = result.status;
+    record.saved.updatedAt = new Date().toISOString();
+    try {
+      this.persist(record);
+    } catch {
+      result.status = "failed";
+      result.code = "PERSISTENCE_FAILED";
+      finalTrace.status = "failed";
+      finalTrace.code = "PERSISTENCE_FAILED";
+      record.saved.lastStatus = "failed";
+    }
     finish();
+    emit({ type: "trace", trace: { ...finalTrace } });
     emit({ type: "result", result });
     return result;
   }
   async cancel(id: string, principal: Principal): Promise<void> {
+    if (!this.sessions.has(id)) await this.resumeSession(id, principal);
     const record = this.owned(id, principal);
     if (record.active) {
       record.active.status = "cancelled";
@@ -489,18 +665,36 @@ export class PidaRuntime {
     }
   }
   async deleteSession(id: string, principal: Principal): Promise<void> {
+    // Deleting an unloaded session needs no provider credentials.
+    if (!this.sessions.has(id) && !this.loading.has(id)) {
+      const p = principalCopy(principal),
+        saved = this.store?.get(id);
+      if (!saved || saved.owner !== p.id)
+        throw new PidaError("SESSION_NOT_FOUND", 404);
+      this.store!.remove(id);
+      return;
+    }
+    if (this.loading.has(id)) await this.resumeSession(id, principal);
     const record = this.owned(id, principal);
     record.deleting = true;
     await this.cancel(id, principal);
     record.pi.dispose();
+    this.store?.remove(id);
     this.sessions.delete(id);
   }
   async close(): Promise<void> {
     this.closed = true;
-    await Promise.all(
-      [...this.sessions.values()].map((r) =>
-        this.deleteSession(r.id, { id: r.owner, permissions: [] }),
-      ),
-    );
+    await Promise.allSettled([...this.creating, ...this.loading.values()]);
+    try {
+      await Promise.all(
+        [...this.sessions.values()].map(async (r) => {
+          await this.cancel(r.id, { id: r.owner, permissions: [] });
+          r.pi.dispose();
+        }),
+      );
+      this.sessions.clear();
+    } finally {
+      this.store?.close();
+    }
   }
 }
