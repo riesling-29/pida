@@ -15,7 +15,7 @@
           <p class="eyebrow">PIDA / YOUR AGENT WORKSPACE</p>
           <h1>도구를 연결하고, 대화를 이어가세요.</h1>
         </div>
-        <span class="badge">0.2</span>
+        <span class="badge">0.3</span>
       </header>
       <p class="intro">
         내 도구와 모델로 작업하는 공간. 대화와 실행 과정을 한곳에서 확인하세요.
@@ -52,6 +52,97 @@
           지금은 데모 모드입니다. LOT-001 또는 LOT-002를 요청하면 합성 데이터를
           조회합니다. 자유로운 대화와 내 도구 사용에는 실제 모델을 연결해주세요.
         </p>
+        <details id="provider-settings" class="panel settings">
+          <summary>모델 연결 · 설정</summary>
+          <form id="provider-form">
+            <p>
+              사용할 모델을 연결하세요. 주소와 API 키는 이 서버에서만
+              사용합니다.
+            </p>
+            <label for="provider-preset">어디에 연결할까요?</label>
+            <select id="provider-preset">
+              <option value="local">로컬 모델 (LM Studio 등)</option>
+              <option value="company">사내 API · 다른 서버</option>
+              <option value="mock">데모만 사용</option>
+            </select>
+            <div id="endpoint-fields">
+              <label for="provider-url">서버 주소</label
+              ><input
+                id="provider-url"
+                type="url"
+                placeholder="http://localhost:1234/v1"
+              />
+              <div class="row auth-row">
+                <label
+                  ><input id="provider-no-key" type="checkbox" /> API 키가 필요
+                  없는 서버</label
+                >
+              </div>
+              <label for="provider-key"
+                >API 키 <span id="provider-key-state"></span></label
+              ><input
+                id="provider-key"
+                type="password"
+                autocomplete="off"
+                placeholder="키를 붙여넣으세요"
+              />
+              <div class="row model-row">
+                <label for="provider-model">모델</label
+                ><button id="load-models" type="button" class="secondary">
+                  모델 목록 불러오기
+                </button>
+              </div>
+              <input
+                id="provider-model"
+                list="provider-models"
+                placeholder="목록에서 선택하거나 모델 이름 입력"
+              /><datalist id="provider-models"></datalist>
+              <details class="advanced">
+                <summary>고급 설정</summary>
+                <label for="provider-api">API 형식</label
+                ><select id="provider-api">
+                  <option value="openai-completions">
+                    OpenAI Chat Completions 호환
+                  </option>
+                  <option value="openai-responses">
+                    OpenAI Responses 호환
+                  </option>
+                  <option value="anthropic-messages">
+                    Anthropic Messages 호환
+                  </option>
+                </select>
+                <label for="provider-context">문맥 한도</label
+                ><input
+                  id="provider-context"
+                  type="number"
+                  min="2"
+                  value="8192"
+                />
+                <label for="provider-output">최대 응답 토큰</label
+                ><input
+                  id="provider-output"
+                  type="number"
+                  min="1"
+                  value="1024"
+                />
+                <p class="muted">
+                  초기값은 보수적인 설정값입니다. 서버 모델의 실제 한도에 맞게
+                  조정하세요.
+                </p>
+              </details>
+              <label id="provider-http-row" class="auth-row" hidden
+                ><input id="provider-http" type="checkbox" /> 이 서버에
+                암호화되지 않은 HTTP 연결 허용</label
+              >
+            </div>
+            <p id="provider-feedback" role="status"></p>
+            <button id="apply-provider" type="submit">연결 확인 후 적용</button>
+            <p class="muted">
+              짧은 테스트 응답을 요청합니다. 유료 API는 소량의 요금이 발생할 수
+              있습니다. 대화 실행 중에는 설정을 바꿀 수 없습니다.
+            </p>
+          </form>
+        </details>
         <div class="workspace-grid">
           <aside class="panel sidebar" aria-label="대화 목록">
             <div class="panel-heading">

@@ -24,7 +24,7 @@ The host must enforce tenant and row-level permissions in its business services;
 
 Integrate a real identity provider, TLS, ingress rate limiting, tenant quotas, auditing/retention policy, secret rotation, egress controls, production storage hardening and operational monitoring. The sample's static token authenticates one fixed demo account and is not an SSO implementation. Local restart recovery is implemented; no distributed locks, tamper-evident audit ledger, idempotent command replay or business transaction rollback is present.
 
-Endpoint URLs are trusted deployment configuration. HTTPS checks do not constitute an SSRF filter, network sandbox or destination allowlist. Provider/model overrides cannot be supplied by untrusted HTTP callers. Custom provider factories are trusted host extension points.
+Endpoint URLs are trusted deployment configuration. HTTPS checks do not constitute an SSRF filter, network sandbox or destination allowlist. Provider/model overrides cannot be supplied to session/run requests. The optional local settings routes allow explicit administration only with `pida:configure`; ordinary application principals are denied. Custom provider factories are trusted host extension points.
 
 Prompts, assistant output and successful tool results remain sensitive conversation data, even though traces are metadata-only. An LLM can repeat information it was legitimately given. Do not place secrets in prompts/tool output, and apply your application's data minimization and display rules. Raw Pi model errors are not returned; generated assistant text is not guaranteed secret-free.
 
@@ -40,3 +40,11 @@ No claim of vulnerability-free dependencies or a completed penetration test is m
 - Enabled modules execute with full Node authority, including at import time. Module selection and per-call authorization do not sandbox that code. `doctor` and `tools` listing do not import it.
 - Local lock files are a single-host guard, not a distributed lock. Do not share a writable workspace across servers. After a crash, verify the process has ended and use `pida unlock`; no work is replayed automatically. External side effects may already have happened before interruption.
 - Writes use atomic replacement for application metadata, but Pi JSONL and metadata are separate files. There is no cross-file transaction, fsync durability guarantee or automatic repair of corrupted data. Back up and apply retention to the state directory according to your data policy.
+
+## Provider settings administration (0.3)
+
+The local operator may intentionally connect arbitrary company/local endpoints. This is trusted configuration, not an untrusted-user proxy or SSRF sandbox. The generic HTTP adapter does not expose settings by default; do not enable it for tenant users without an independent admin policy. Model-list fetches reject redirects, cap response size and time out. The apply probe contains no previous conversation or tools, but invokes the real provider and may incur a small charge.
+
+Typed provider keys are saved with mode 0600 via atomic replacement under the private state directory. They override environment keys only for the exact stored URL, API and variable name. To return to environment-managed credentials, stop the server and remove `provider-key.json`. Changing URL/protocol requires an explicitly supplied key or explicit keyless mode. Keys are never returned by GET or apply responses. Browser password fields clear after a successful apply and at logout; they are not stored in browser storage.
+
+The connection probe and file update are not a distributed transaction. Failed probes leave configuration untouched. Configuration and credential files are separate writes; failed config writes attempt to restore the previous key. Abrupt power loss between writes is not guaranteed recoverable automatically. Provider changes are rejected while a run or session creation is active, and no active tool is interrupted to apply new settings.

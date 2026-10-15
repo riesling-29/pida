@@ -45,6 +45,7 @@ function controls() {
     button.disabled = busy || remoteRunning;
   $("connection").hidden = connected;
   $("workspace").hidden = !connected;
+  providerControls();
 }
 async function action(fn) {
   if (pending || running) return;
@@ -138,6 +139,12 @@ async function connect() {
     $("tools").append(item);
   }
   if (!info.tools.length) $("tools").textContent = "등록된 도구 없음";
+  await loadProviderSettings();
+  if (
+    new URLSearchParams(location.hash.slice(1)).get("setup") === "1" ||
+    initialSetup
+  )
+    $("provider-settings").open = true;
   connected = true;
   sessionId = undefined;
   remoteRunning = false;
@@ -178,6 +185,7 @@ $("delete-session").onclick = () => {
 $("disconnect").onclick = () => {
   connected = false;
   token = "";
+  $("provider-key").value = "";
   sessionId = undefined;
   remoteRunning = false;
   $("token").value = "";
@@ -242,12 +250,156 @@ $("form").onsubmit = async (e) => {
   }
 };
 // Optional authenticated launch from the local CLI. Never persist the token in storage.
-const fragment = new URLSearchParams(location.hash.slice(1));
-const initial = fragment.get("token");
-if (location.hash)
-  history.replaceState(null, "", location.pathname + location.search);
-controls();
-if (initial) {
-  $("token").value = initial;
-  action(connect);
+// Workspace-only provider settings. Generic embedded hosts may omit these endpoints.
+let configuring = false;
+const setupErrors = {
+  PROVIDER_KEY_REQUIRED:
+    "API 키를 입력하세요. 서버 주소를 바꾸면 키도 다시 입력해야 합니다.",
+  PROVIDER_TEST_FAILED:
+    "모델 응답을 받지 못했습니다. 주소·모델·키와 API 형식을 확인해주세요. 기존 설정은 유지됩니다.",
+  MODEL_LIST_UNAVAILABLE:
+    "모델 목록을 받지 못했습니다. 모델 이름을 직접 입력해도 됩니다.",
+  PROVIDER_AUTH_FAILED: "서버가 인증을 거부했습니다. API 키를 확인해주세요.",
+  PROVIDER_BUSY: "진행 중인 대화가 끝난 뒤 다시 적용해주세요.",
+  SETUP_BUSY: "이전 연결 확인이 끝날 때까지 기다려주세요.",
+  INVALID_PROVIDER:
+    "주소·모델 이름·고급 설정을 확인해주세요. HTTP 주소는 연결 허용을 선택해야 합니다.",
+  INVALID_PROVIDER_URL:
+    "올바른 서버 주소를 입력해주세요. 주소에 키나 쿼리 문자열을 넣지 마세요.",
+};
+function providerControls() {
+  const mock = $("provider-preset").value === "mock";
+  $("endpoint-fields").hidden = mock;
+  $("provider-key").disabled = $("provider-no-key").checked;
+  $("provider-http-row").hidden = !$("provider-url").value.startsWith("http:");
+  $("apply-provider").disabled = configuring || running || pending;
+  $("load-models").disabled = configuring || mock;
 }
+function providerDraft() {
+  if ($("provider-preset").value === "mock") return { kind: "mock" };
+  return {
+    kind: "endpoint",
+    baseUrl: $("provider-url").value.trim(),
+    modelId: $("provider-model").value.trim(),
+    apiKey: $("provider-key").value,
+    authMode: $("provider-no-key").checked ? "none" : "api-key",
+    api: $("provider-api").value,
+    contextWindow: Number($("provider-context").value),
+    maxTokens: Number($("provider-output").value),
+    allowInsecureHttp: $("provider-http").checked,
+  };
+}
+async function loadProviderSettings() {
+  try {
+    const { provider: p, keyConfigured } = await client.getProviderSettings();
+    $("provider-settings").hidden = false;
+    $("provider-preset").value =
+      p.kind === "mock" ? "mock" : p.authMode === "none" ? "local" : "company";
+    $("provider-url").value = p.baseUrl ?? "http://localhost:1234/v1";
+    $("provider-model").value = p.modelId ?? "";
+    $("provider-key").value = "";
+    $("provider-no-key").checked = p.authMode === "none" || p.kind === "mock";
+    $("provider-api").value = p.api ?? "openai-completions";
+    $("provider-context").value = p.contextWindow ?? 8192;
+    $("provider-output").value = p.maxTokens ?? 1024;
+    $("provider-http").checked = p.allowInsecureHttp ?? false;
+    $("provider-key-state").textContent = keyConfigured
+      ? "저장된 키 사용 가능 · 비우면 같은 서버의 키 유지"
+      : "";
+    providerControls();
+  } catch {
+    $("provider-settings").hidden = true;
+  }
+}
+$("provider-preset").onchange = () => {
+  if ($("provider-preset").value === "local") {
+    $("provider-url").value = "http://localhost:1234/v1";
+    $("provider-no-key").checked = true;
+    $("provider-http").checked = true;
+    $("provider-api").value = "openai-completions";
+  } else if ($("provider-preset").value === "company") {
+    $("provider-url").value = "";
+    $("provider-no-key").checked = false;
+    $("provider-http").checked = false;
+  }
+  $("provider-key").value = "";
+  $("provider-model").value = "";
+  $("provider-models").replaceChildren();
+  $("provider-feedback").textContent = "";
+  providerControls();
+};
+$("provider-no-key").onchange = providerControls;
+$("provider-url").oninput = () => {
+  $("provider-http").checked = false;
+  providerControls();
+};
+$("load-models").onclick = async () => {
+  if (configuring) return;
+  configuring = true;
+  providerControls();
+  $("provider-feedback").textContent = "모델 목록을 불러오는 중…";
+  try {
+    const { models } = await client.listProviderModels(providerDraft());
+    $("provider-models").replaceChildren();
+    for (const id of models) {
+      const option = document.createElement("option");
+      option.value = id;
+      $("provider-models").append(option);
+    }
+    if (models.length === 1) $("provider-model").value = models[0];
+    $("provider-feedback").textContent = models.length
+      ? `${models.length}개 모델을 찾았습니다. 모델 입력란에서 선택하세요.`
+      : "목록이 비어 있습니다. 모델을 로드하거나 이름을 직접 입력하세요.";
+  } catch (e) {
+    $("provider-feedback").textContent =
+      setupErrors[e.code] ??
+      "목록을 불러오지 못했습니다. 모델 이름을 직접 입력하세요.";
+  } finally {
+    configuring = false;
+    providerControls();
+  }
+};
+$("provider-form").onsubmit = async (e) => {
+  e.preventDefault();
+  if (configuring || running || pending) return;
+  configuring = true;
+  providerControls();
+  $("provider-feedback").textContent = "연결을 확인하고 있습니다…";
+  try {
+    await client.configureProvider(providerDraft());
+    $("provider-key").value = "";
+    const info = await client.getInfo();
+    $("model").textContent =
+      `${info.provider.mode === "mock" ? "데모 모델" : "설정 모델"} · ${info.provider.model}`;
+    $("mock-note").hidden = info.provider.mode !== "mock";
+    await loadProviderSettings();
+    $("provider-feedback").textContent =
+      "적용했습니다. 바로 대화를 시작하셔도 됩니다.";
+  } catch (error) {
+    $("provider-feedback").textContent =
+      setupErrors[error.code] ??
+      "설정을 적용하지 못했습니다. 기존 연결을 확인해주세요.";
+  } finally {
+    configuring = false;
+    providerControls();
+  }
+};
+let initialSetup = false;
+function consumeLaunch() {
+  const fragment = new URLSearchParams(location.hash.slice(1));
+  const initial = fragment.get("token");
+  initialSetup = fragment.get("setup") === "1";
+  if (location.hash)
+    history.replaceState(null, "", location.pathname + location.search);
+  if (initial && connected && initial === token) {
+    if (initialSetup) $("provider-settings").open = true;
+    return;
+  }
+  if (initial) {
+    $("token").value = initial;
+    action(connect);
+  }
+}
+controls();
+consumeLaunch();
+window.addEventListener("hashchange", consumeLaunch);

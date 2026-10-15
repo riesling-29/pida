@@ -4,7 +4,8 @@ import { mkdtemp, rm, readFile, writeFile, symlink } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { once } from "node:events";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import { createServer } from "node:net";
 import {
   initWorkspace,
   readConfig,
@@ -23,6 +24,49 @@ async function fixture(t) {
   initWorkspace(dir);
   return dir;
 }
+test("CLI setup starts the workspace and configure reuses its running server", async (t) => {
+  const dir = await fixture(t);
+  const listener = createServer().listen(0, "127.0.0.1");
+  await once(listener, "listening");
+  const config = readConfig(dir);
+  config.port = listener.address().port;
+  await new Promise((ok) => listener.close(ok));
+  await writeFile(join(dir, "pida.config.json"), JSON.stringify(config));
+  const cli = join(root, "dist", "cli.js");
+  const server = spawn(process.execPath, [cli, "setup", dir, "--no-open"], {
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  t.after(async () => {
+    if (server.exitCode === null && server.signalCode === null) {
+      const stopped = once(server, "exit");
+      server.kill("SIGTERM");
+      await stopped;
+    }
+  });
+  let startup = "";
+  await new Promise((ok, fail) => {
+    server.stdout.on("data", (chunk) => {
+      startup += chunk;
+      if (startup.includes("Pida ready:")) ok();
+    });
+    server.once("error", fail);
+    server.once("exit", () => fail(new Error("Setup exited before readiness")));
+  });
+  const configure = spawn(
+    process.execPath,
+    [cli, "configure", dir, "--no-open"],
+    {
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
+  let result = "";
+  configure.stdout.on("data", (chunk) => (result += chunk));
+  configure.stderr.on("data", (chunk) => (result += chunk));
+  assert.equal((await once(configure, "exit"))[0], 0, result);
+  assert.match(result, /Pida settings:/);
+  assert.ok(!startup.includes(workspaceEnvironment(dir).PIDA_API_TOKEN));
+  assert.ok(!result.includes(workspaceEnvironment(dir).PIDA_API_TOKEN));
+});
 test("initialization creates a usable workspace, unique private credentials and never overwrites existing files", async (t) => {
   const a = await fixture(t),
     b = await fixture(t);
@@ -127,7 +171,16 @@ test("doctor catches missing provider credentials without printing keys or impor
   const report = checkWorkspace(dir);
   assert.equal(report.ok, false);
   assert.match(report.problems[0], /PIDA_TEST_MISSING_KEY/);
-  await assert.rejects(createWorkspace(dir), /PIDA_TEST_MISSING_KEY/);
+  const app = await createWorkspace(dir);
+  assert.equal(
+    app.runtime.getInfo({ id: "local-user", permissions: [] }).provider.mode,
+    "endpoint",
+  );
+  await assert.rejects(
+    app.runtime.createSession({ id: "local-user", permissions: [] }),
+    /PIDA_TEST_MISSING_KEY/,
+  );
+  await app.runtime.close();
 });
 test("CLI help and doctor are executable and output no credentials", async (t) => {
   const dir = await fixture(t);

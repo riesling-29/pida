@@ -383,6 +383,27 @@ export class PidaRuntime {
       this.pendingSessions--;
     }
   }
+  /** Trusted host operation. Refuse changes while a run or session creation is in flight. */
+  assertIdle(): void {
+    if (this.closed) throw new PidaError("RUNTIME_CLOSED", 503);
+    if (
+      this.pendingSessions ||
+      [...this.sessions.values()].some((r) => r.active || r.deleting)
+    )
+      throw new PidaError("PROVIDER_BUSY", 409);
+    if (!this.store && this.sessions.size)
+      throw new PidaError("PERSISTENCE_REQUIRED", 409);
+  }
+  configureProvider(
+    provider: ProviderFactory,
+    info?: { mode: string; model: string },
+  ): void {
+    this.assertIdle();
+    for (const session of this.sessions.values()) session.pi.dispose();
+    this.sessions.clear();
+    this.options.provider = provider;
+    this.options.providerInfo = info;
+  }
   private persist(record: SessionRecord): void {
     record.saved.runs = record.runs;
     record.saved.running = !!record.active;

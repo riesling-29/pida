@@ -24,6 +24,7 @@ export interface EndpointConfig {
   contextWindow: number;
   maxTokens: number;
   allowInsecureHttp?: boolean;
+  authMode?: "api-key" | "none";
 }
 
 /** Credentials resolve server-side on each request; no shell interpolation. */
@@ -65,7 +66,7 @@ export function endpointProvider(
   };
   if (!Object.hasOwn(apis, c.api)) throw new Error("Unsupported API");
   return () => {
-    if (!env[c.apiKeyEnv])
+    if (c.authMode !== "none" && !env[c.apiKeyEnv])
       throw new Error(
         `Missing provider credential environment variable: ${c.apiKeyEnv}`,
       );
@@ -77,6 +78,13 @@ export function endpointProvider(
           apiKey: {
             name: c.id,
             resolve: async () => {
+              if (c.authMode === "none")
+                return {
+                  auth: {
+                    apiKey: "pida-no-auth",
+                    headers: { Authorization: null, "x-api-key": null },
+                  },
+                };
               const apiKey = env[c.apiKeyEnv];
               if (!apiKey) throw new Error("Provider credential unavailable");
               return { auth: { apiKey } };

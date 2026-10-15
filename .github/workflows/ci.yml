@@ -19,3 +19,31 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm test
       - run: npm pack --dry-run
+
+  package-managers:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - manager: npm
+            install: npm ci --ignore-scripts
+            test: npm test
+          - manager: pnpm
+            install: pnpm install --frozen-lockfile --ignore-scripts
+            test: pnpm run test
+          - manager: bun
+            install: bun install --frozen-lockfile --ignore-scripts
+            test: bun run test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - if: matrix.manager == 'pnpm'
+        run: npm install --global pnpm@12.11.2
+      - if: matrix.manager == 'bun'
+        run: npm install --global bun@1.4.3
+      - run: ${{ matrix.install }}
+      - run: ${{ matrix.test }}
+      - run: npm pack
+      - run: node scripts/install-check.mjs ${{ matrix.manager }} pida-core-0.3.0.tgz

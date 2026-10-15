@@ -5,10 +5,13 @@ import {
 } from "node:http";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import type { ProviderSettings } from "./provider-settings.js";
 import { PidaError, type PidaRuntime, type Principal } from "./runtime.js";
 
 export interface HttpOptions {
   runtime: PidaRuntime;
+  /** Optional local workspace administration; never enable for arbitrary tenant users. */
+  providerSettings?: ProviderSettings;
   /** Verify a bearer token with the host identity service. Never trust body claims. */
   authenticate: (
     token: string,
@@ -127,6 +130,29 @@ export function createPidaServer(options: HttpOptions) {
         throw new PidaError("UNAUTHORIZED", 401);
       const principal = await options.authenticate(auth.slice(7));
       if (!principal) throw new PidaError("UNAUTHORIZED", 401);
+      if (path.startsWith("/v1/provider") && options.providerSettings) {
+        if (!principal.permissions.includes("pida:configure"))
+          throw new PidaError("FORBIDDEN", 403);
+        if (path === "/v1/provider" && req.method === "GET") {
+          json(res, 200, options.providerSettings.get());
+          return;
+        }
+        if (
+          req.method === "POST" &&
+          ["/v1/provider/models", "/v1/provider/test", "/v1/provider"].includes(
+            path,
+          )
+        ) {
+          const input = await body(req);
+          const result = path.endsWith("/models")
+            ? await options.providerSettings.models(input)
+            : path.endsWith("/test")
+              ? await options.providerSettings.test(input)
+              : await options.providerSettings.apply(input);
+          json(res, 200, result);
+          return;
+        }
+      }
       if (path === "/v1/info" && req.method === "GET") {
         json(res, 200, runtime.getInfo(principal));
         return;

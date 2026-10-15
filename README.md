@@ -2,38 +2,40 @@
 
 An embedded, reusable **Pi-based agent harness** for applications. Bring the package into a host backend, register business tools, and connect a web or app interface through the client SDK. The host does not implement the agent loop.
 
-**Workspace MVP 0.2.0:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces now persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call business authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+**Workspace MVP 0.3.0:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces now persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call business authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
 
 The lot-status tool is **replaceable synthetic sample data**, not a manufacturing-specific restriction. The default mock is deterministic and not an intelligent model.
 
-## Quick start — usable workspace
+## Quick start — choose npm, pnpm or bun
 
-Requires Node.js **22.19+** and npm. From a checkout of this feature branch:
+Requires **Node.js 22.19+**, including when installing with bun. This release supports all three package managers; the production runtime stays on Node.
 
-```sh
-npm ci --ignore-scripts
-npm run pida -- init ./my-agent
-npm start -- ./my-agent --open
-```
+From a checkout of this feature branch, choose one row:
 
-`init` builds the CLI through the npm script, creates a configuration, generates a private random application token, and adds a sample tool. `start` serves the bundled web UI and API at `http://127.0.0.1:8787`. `--open` launches a browser with local authentication; no manual token generation is required. If opening a browser is unavailable, open the URL manually and run `npm run pida -- token ./my-agent` to obtain the login token. This command intentionally displays the secret; do not paste its output into logs or chat.
+| Manager | Install | Initialize, configure and open UI |
+| --- | --- | --- |
+| npm | `npm ci --ignore-scripts` | `npm run pida -- setup ./my-agent` |
+| pnpm | `pnpm install --frozen-lockfile --ignore-scripts` | `pnpm run pida setup ./my-agent` |
+| bun | `bun install --frozen-lockfile --ignore-scripts` | `bun run pida setup ./my-agent` |
 
-Click **새 대화**, ask `LOT-001의 상태를 알려줘`, and inspect the result and timeline. Stop with Ctrl+C; run the same start command later and select the saved conversation. Refreshing the browser requires authentication again; tokens are held only in that tab's memory. A login fragment from `--open` is removed immediately after page load.
+`setup` creates the workspace if needed, generates its private login token, starts the server and opens **model settings** in the browser. If its server is already running, it opens that server's settings. The same npm/pnpm/bun `run pida` prefix can invoke every CLI command.
 
-Default mock mode needs no company credentials. It is a deterministic demonstration of the sample tool, **not a general-purpose model**. To connect your own model:
+In the browser:
 
-```sh
-npm run pida -- configure ./my-agent
-# Put the provider key into my-agent/.env (or inject it through the environment).
-npm run pida -- doctor ./my-agent
-npm start -- ./my-agent --open
-```
+1. Choose **로컬 모델** or **사내 API · 다른 서버**.
+2. Enter the server address and, if required, its API key. LM Studio's local preset fills `http://localhost:1234/v1` and needs no dummy key.
+3. Click **모델 목록 불러오기** and select a model, or type its exact name if listing is unavailable.
+4. Click **연결 확인 후 적용**. Pida asks for a short test response, saves only after success, and applies the connection immediately without restarting. The test may incur a small provider charge; it does not verify tool calling.
 
-The wizard asks for protocol, endpoint, exact model ID and model limits. It never asks you to paste an API key into command-line arguments. `doctor` checks configuration and paths without importing tool code or contacting the model; a successful doctor check does not verify gateway compatibility.
+The advanced section contains protocol and token limits. Defaults are conservative settings, not detected model specifications. Failed checks keep the previous configuration. API keys are stored privately on the local server and never returned by the settings API. No model conversation history is sent by the connection probe.
 
-The workspace server is a local, single-user profile. It listens on loopback and uses a generated token. For another app or remote multi-user deployment, embed the SDK and supply your application's authentication.
+You can also select **데모만 사용** and try `LOT-001의 상태를 알려줘` without LLM credentials. The mock is deterministic and cannot choose arbitrary custom tools.
 
-See [the complete workspace guide](docs/WORKSPACE.md) for tool folders, provider examples, persistence, Windows commands and packaging.
+After initial setup, start again with `npm start -- ./my-agent --open`, `pnpm start ./my-agent --open`, or `bun run start ./my-agent --open`. Conversations survive restart. `pida configure` opens model settings again; the earlier terminal wizard remains under `configure --terminal`.
+
+If browser launching is unavailable, open `http://127.0.0.1:8787` manually and obtain the application token with `pida token` using your package-manager prefix and workspace directory. This command intentionally prints a secret. Browser refresh requires signing in again because tokens are not persisted in browser storage.
+
+The bundled server is a local single-user profile. Embed the SDK with your own identity callback for a remote multi-user application. See [the workspace guide](docs/WORKSPACE.md).
 
 ## Bring Pida into another application
 
@@ -42,7 +44,7 @@ The package has **not** been published to npm. Create and install a local packag
 ```sh
 npm pack
 # Run from your host application directory:
-npm install /absolute/path/to/pida-core-0.2.0.tgz
+npm install /absolute/path/to/pida-core-0.3.0.tgz
 ```
 
 Entry points separate standalone configuration, server code and browser code:
@@ -124,7 +126,7 @@ npm run demo
 
 The model limits above are examples: set verified values for your actual deployment. `PIDA_API` accepts `openai-completions`, `openai-responses` or `anthropic-messages`; these delegate to Pi's protocol implementations. **Only Chat Completions has been exercised against a local protocol stub in this MVP.** Responses, Anthropic, actual company endpoints and local LLM servers require endpoint-specific acceptance tests. A compatible label is not evidence of tool-call/streaming compatibility.
 
-For a local endpoint, explicitly set `PIDA_ALLOW_HTTP=true`. Credentials resolve from `PIDA_LLM_API_KEY` on each request. Base URLs must not include credentials, query strings or fragments. URLs and provider selection are host configuration, never HTTP request fields. Pricing is unknown: required Pi cost fields use zero placeholders, and Pida does not expose them as measured cost.
+For the legacy environment-only demo, explicitly set `PIDA_ALLOW_HTTP=true` for HTTP. The web setup includes a corresponding HTTP checkbox and an explicit keyless option. Credentials resolve from `PIDA_LLM_API_KEY` on each request. Base URLs must not include credentials, query strings or fragments. URLs and provider selection are host configuration; session/run requests cannot override them. The optional settings API requires explicit admin permission. Pricing is unknown: required Pi cost fields use zero placeholders, and Pida does not expose them as measured cost.
 
 Other Pi providers, authentication methods or custom protocols can be supplied through `RuntimeOptions.provider`, a factory returning `{ provider: PiProvider, modelId }` for each session. The factory is trusted host code. Its provider must cooperate with cancellation. The MVP selects a provider/model at session creation; in-session model switching is not exposed.
 
@@ -154,6 +156,10 @@ All `/v1/*` routes require `Authorization: Bearer <application-token>`. POST bod
 
 | Method | Path | Request / response |
 | --- | --- | --- |
+| GET | `/v1/provider` | Local admin only: safe provider configuration and key-presence flag |
+| POST | `/v1/provider/models` | Local admin only: discover model IDs using a draft connection |
+| POST | `/v1/provider/test` | Local admin only: request a short model response without saving |
+| POST | `/v1/provider` | Local admin only: test, save and apply a draft connection |
 | GET | `/v1/info` | Safe configured model label, persistence mode, tools and permission availability |
 | GET | `/v1/sessions` | Current user’s saved and active sessions (title, dates, status) |
 | POST | `/v1/sessions` | `{}` → `{ sessionId }` |

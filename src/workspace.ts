@@ -1,4 +1,9 @@
 import {
+  ProviderSettings,
+  providerEnvironment,
+  providerLabel,
+} from "./provider-settings.js";
+import {
   existsSync,
   mkdirSync,
   readFileSync,
@@ -46,6 +51,9 @@ const configSchema = Type.Object(
           contextWindow: Type.Integer({ minimum: 2 }),
           maxTokens: Type.Integer({ minimum: 1 }),
           allowInsecureHttp: Type.Optional(Type.Boolean()),
+          authMode: Type.Optional(
+            Type.Union([Type.Literal("api-key"), Type.Literal("none")]),
+          ),
         },
         { additionalProperties: false },
       ),
@@ -122,11 +130,15 @@ export function validateConfig(
 }
 export function checkWorkspace(directory: string) {
   const config = readConfig(directory),
-    env = workspaceEnvironment(directory);
+    env = providerEnvironment(directory, config);
   const problems: string[] = [];
   if (!env.PIDA_API_TOKEN || env.PIDA_API_TOKEN.length < 32)
     problems.push("PIDA_API_TOKEN is missing or too short.");
-  if (config.provider.kind === "endpoint" && !env[config.provider.apiKeyEnv])
+  if (
+    config.provider.kind === "endpoint" &&
+    config.provider.authMode !== "none" &&
+    !env[config.provider.apiKeyEnv]
+  )
     problems.push(`Missing credential variable: ${config.provider.apiKeyEnv}`);
   for (const file of config.tools.enabled) {
     try {
@@ -266,7 +278,7 @@ export async function loadWorkspaceTools(
 export async function createWorkspace(directory: string) {
   const root = resolve(directory),
     config = readConfig(root),
-    env = workspaceEnvironment(root);
+    env = providerEnvironment(root, config);
   if (!env.PIDA_API_TOKEN || env.PIDA_API_TOKEN.length < 32)
     throw new Error(
       "Set PIDA_API_TOKEN (at least 32 random characters) in .env or the environment.",
@@ -275,30 +287,28 @@ export async function createWorkspace(directory: string) {
     config.provider.kind === "mock"
       ? mockProvider
       : endpointProvider({ id: "workspace", ...config.provider }, env);
-  // Validate missing credentials before locking the workspace or importing trusted tools.
-  if (config.provider.kind === "endpoint" && !env[config.provider.apiKeyEnv])
-    throw new Error(
-      `Set ${config.provider.apiKeyEnv} in .env or the environment.`,
-    );
+  // Keep local settings reachable even when a provider key is absent. Model calls still fail closed.
   const tools = await loadWorkspaceTools(root, config);
   const runtime = new PidaRuntime({
     provider,
     tools,
     storageDir: inside(root, config.stateDir),
     systemPrompt: config.systemPrompt,
-    providerInfo:
-      config.provider.kind === "mock"
-        ? { mode: "mock", model: "Deterministic demo" }
-        : { mode: "endpoint", model: config.provider.modelId },
+    providerInfo: providerLabel(config.provider),
   });
+  const settings = new ProviderSettings(root, runtime);
   const server = createPidaServer({
+    providerSettings: settings,
     runtime,
     serveDemo: true,
     allowedOrigin: `http://127.0.0.1:${config.port}`,
     authenticate: staticTokenAuth([
       {
         token: env.PIDA_API_TOKEN,
-        principal: { id: "local-user", permissions: config.permissions },
+        principal: {
+          id: "local-user",
+          permissions: [...config.permissions, "pida:configure"],
+        },
       },
     ]),
   });

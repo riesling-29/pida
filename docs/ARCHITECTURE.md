@@ -1,4 +1,4 @@
-# Architecture decision — Pida-core 0.2
+# Architecture decision — Pida-core 0.3
 
 Updated 2026-10-15 KST. Implements the user's Pida Initial Engineering Task, superseding the OpenCode-first assumption of the attached July Schumpeter baseline for this repository only.
 
@@ -42,7 +42,7 @@ No general shell, browser automation, MCP auto-discovery, skills loader, schedul
 
 ## Workspace layer
 
-`pida init` creates `pida.config.json`, private `.env`, and a `tools/` folder. `pida configure` edits non-secret provider configuration interactively. `pida start` uses `createWorkspace()` to compose the same runtime, HTTP adapter and client UI; applications may also import that function or use the lower-level SDK. `doctor` is a static configuration/path check and deliberately does not import tool code or make model requests.
+`pida init` creates `pida.config.json`, private `.env`, and a `tools/` folder. `pida setup` initializes and opens browser model settings; `pida configure` reopens them, with the earlier terminal wizard under `--terminal`. `pida start` uses `createWorkspace()` to compose the same runtime, HTTP adapter and client UI; applications may also import that function or use the lower-level SDK. `doctor` is a static configuration/path check and deliberately does not import tool code or make model requests.
 
 Tool files are deployer-trusted ESM modules, explicitly enabled by basename. Directory traversal and file/directory symlinks escaping the tool workspace are rejected. Permission grants remain separate from module selection. Tool configuration is read at startup; hot reload is not implemented.
 
@@ -55,3 +55,11 @@ The web UI uses the same `PidaClient` to list conversations, select/resume them,
 ## Acceptance / withdrawal conditions
 
 The present design is valid for an embedded, single-process MVP with trusted host code and cooperative tools. Reassess on a Pi dependency update or before remote multi-user deployment. Withdraw readiness if unauthorized calls execute, session history crosses users, cancellation is reported before settlement, package consumers need to implement a loop, or Pi projection is bypassed. There is no throughput, availability, sandbox or enterprise production claim.
+
+## Provider setup in 0.3
+
+ProviderSettings is an optional local-administration layer attached only by createWorkspace. The generic HTTP server exposes no settings operations unless the host supplies it, and every provider route separately requires `pida:configure`. The single local workspace operator receives that capability; do not grant it to arbitrary tenant users.
+
+Discovery uses the chosen protocol's model-list endpoint. Applying settings probes a no-tool ephemeral Pi session, then saves and updates the runtime only while idle. Existing Pi histories remain on disk and reopen under the new provider. The key file binds a typed key to one exact normalized base URL, protocol and environment-variable name; blank key fields never forward old credentials to a new destination. API responses contain configuration and key presence, never key values. The short probe verifies a model text response only.
+
+Source build/test scripts invoke Node and the installed compiler directly instead of recursively invoking npm. npm, pnpm and bun get their own tested source lockfiles and consumer-install checks. The CLI retains its Node shebang; package-manager support is distinct from native Bun runtime support.

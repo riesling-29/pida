@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { once } from "node:events";
 import { createServer } from "node:net";
+import { createServer as createHttpServer } from "node:http";
 import {
   initWorkspace,
   createWorkspace,
@@ -16,7 +17,7 @@ const { chromium } = await import(
 const directory = await mkdtemp(
   fileURLToPath(new URL("../.pida-test-browser-", import.meta.url)),
 );
-let app, browser;
+let app, browser, endpoint;
 try {
   initWorkspace(directory);
   const portProbe = createServer().listen(0, "127.0.0.1");
@@ -162,15 +163,117 @@ try {
       .some((s) => s.sessionId === sessionId),
     false,
   );
+  endpoint = createHttpServer(async (req, res) => {
+    if (req.url === "/v1/models") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ data: [{ id: "browser-model" }] }));
+      return;
+    }
+    let raw = "";
+    for await (const chunk of req) raw += chunk;
+    const payload = JSON.parse(raw);
+    if (payload.model === "bad-model") {
+      res.writeHead(401);
+      res.end("denied");
+      return;
+    }
+    res.writeHead(200, { "Content-Type": "text/event-stream" });
+    for (const [delta, finish_reason] of [
+      [{ role: "assistant", content: "OK" }, null],
+      [{}, "stop"],
+    ])
+      res.write(
+        `data: ${JSON.stringify({ id: "browser", object: "chat.completion.chunk", created: 1, model: payload.model, choices: [{ index: 0, delta, finish_reason }] })}\n\n`,
+      );
+    res.end("data: [DONE]\n\n");
+  });
+  endpoint.listen(0, "127.0.0.1");
+  await once(endpoint, "listening");
+  await page.goto(`${base}/#token=${encodeURIComponent(token)}&setup=1`);
+  await page.locator("#provider-preset").waitFor({ state: "visible" });
+  await page.locator("#provider-preset").selectOption("local");
+  await page
+    .locator("#provider-url")
+    .fill(`http://127.0.0.1:${endpoint.address().port}/v1`);
+  await page.locator("#provider-http").check();
+  await page
+    .getByRole("button", { name: "모델 목록 불러오기", exact: true })
+    .click();
+  await page.waitForFunction(
+    () => document.querySelector("#provider-model").value === "browser-model",
+  );
+  await page
+    .getByRole("button", { name: "연결 확인 후 적용", exact: true })
+    .click();
+  await page.waitForFunction(() =>
+    document
+      .querySelector("#provider-feedback")
+      .textContent.includes("적용했습니다"),
+  );
+  assert.equal(
+    app.runtime.getInfo({ id: "local-user", permissions: [] }).provider.model,
+    "browser-model",
+  );
+  await page.getByRole("button", { name: "새 대화", exact: true }).click();
+  await page.locator("#prompt").fill("hello");
+  await page.getByRole("button", { name: "보내기", exact: true }).click();
+  await page.waitForFunction(
+    () => document.querySelector("#status").textContent === "완료",
+  );
+  assert.match(await page.locator("#messages").textContent(), /OK/);
+  await page.locator("#provider-model").fill("bad-model");
+  await page
+    .getByRole("button", { name: "연결 확인 후 적용", exact: true })
+    .click();
+  await page.waitForFunction(() =>
+    document
+      .querySelector("#provider-feedback")
+      .textContent.includes("기존 설정은 유지"),
+  );
+  assert.equal(
+    JSON.parse(await readFile(configPath, "utf8")).provider.modelId,
+    "browser-model",
+  );
+  await page.locator("#provider-model").fill("browser-model");
+  await page.locator("#provider-no-key").uncheck();
+  await page.locator("#provider-key").fill("synthetic-browser-key");
+  await page
+    .getByRole("button", { name: "연결 확인 후 적용", exact: true })
+    .click();
+  await page.waitForFunction(() =>
+    document
+      .querySelector("#provider-feedback")
+      .textContent.includes("적용했습니다"),
+  );
+  assert.equal(await page.locator("#provider-key").inputValue(), "");
+  assert.ok(
+    !(await page.locator("body").textContent()).includes(
+      "synthetic-browser-key",
+    ),
+  );
+  await page.screenshot({
+    path: "/tmp/pida-provider-settings.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.ok(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  );
   await page.getByRole("button", { name: "로그아웃", exact: true }).click();
   await page.locator("#connection").waitFor({ state: "visible" });
   assert.deepEqual(errors, []);
   await stop();
   console.log(
-    "PASS: authenticated launch, Korean request, tool result/trace, refresh login, restart/resume, selection, mobile overflow, cancellation, deletion, logout; no page errors.",
+    "PASS: authenticated launch, Korean request, tool result/trace, refresh login, restart/resume, selection, mobile overflow, cancellation, deletion, logout, model discovery, keyless/authenticated live provider apply and failure rollback; no page errors.",
   );
 } finally {
   await browser?.close();
+  if (endpoint?.listening) {
+    endpoint.closeAllConnections();
+    await new Promise((ok) => endpoint.close(ok));
+  }
   if (app?.server.listening) {
     app.server.closeAllConnections();
     await new Promise((ok) => app.server.close(ok));

@@ -372,3 +372,53 @@ footer {
     padding: 18px;
   }
 }
+.settings {
+  margin: 18px 0;
+}
+.settings summary {
+  border-top: 0;
+  font-weight: 600;
+}
+.settings form {
+  max-width: 760px;
+}
+.settings input:not([type="checkbox"]),
+.settings select {
+  width: 100%;
+  margin-bottom: 16px;
+}
+select {
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid #bccbc0;
+  border-radius: 7px;
+  color: var(--ink);
+  background: #fff;
+}
+.auth-row {
+  margin: 10px 0 16px;
+}
+.auth-row input {
+  width: auto;
+}
+.model-row {
+  align-items: center;
+  justify-content: space-between;
+  margin: 12px 0;
+}
+.model-row label {
+  margin: 0;
+}
+.advanced {
+  padding: 0 16px;
+  background: #f4f6f1;
+  border-radius: 8px;
+  margin: 8px 0 18px;
+}
+.advanced summary {
+  padding-left: 0;
+}
+#provider-feedback {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}

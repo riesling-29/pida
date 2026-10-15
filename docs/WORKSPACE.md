@@ -1,15 +1,14 @@
 # Pida workspace — install, configure, extend, reuse
 
-Pida 0.2 provides a local agent workspace around the same embedded Pi runtime. It includes a CLI, approved tool directory, saved conversations and a web UI. Node.js 22.19+ is required. npm registry publication has not been performed.
+Pida 0.3 provides a local agent workspace around the same embedded Pi runtime. It includes a CLI, approved tool directory, saved conversations and a web UI. Node.js 22.19+ is required. npm registry publication has not been performed.
 
 ## Start from the repository
 
-Check out the feature branch containing 0.2, then:
+Check out the feature branch containing 0.3, then:
 
 ```sh
 npm ci --ignore-scripts
-npm run pida -- init ./my-agent
-npm start -- ./my-agent --open
+npm run pida -- setup ./my-agent
 ```
 
 These commands work with npm in PowerShell as well as a Unix shell. The npm `pida` script builds the TypeScript source before invoking the CLI. `npm start` uses that build. No LLM key is needed for the mock demonstration.
@@ -35,9 +34,8 @@ npm pack
 From the receiving application's directory:
 
 ```sh
-npm install /absolute/path/to/pida-core-0.2.0.tgz
-npx pida init
-npx pida start --open
+npm install /absolute/path/to/pida-core-0.3.0.tgz
+npx pida setup
 ```
 
 After this installation, use `npx pida` in the commands below instead of `npm run pida --`. If installed globally from the tarball, the `pida` command is directly available. Do not run an unqualified registry install expecting this unpublished package to exist.
@@ -66,37 +64,42 @@ my-agent/
     runtime.lock         One active process for this workspace
     index/               Session ownership, title, counters and metadata traces
     sessions/            Canonical Pi JSONL conversations
+    provider-key.json    Optional private, endpoint-bound provider key
 ```
 
 Initialization refuses to overwrite existing workspace files. The config requires `version`, `port`, `stateDir`, `systemPrompt`, `provider`, `tools`, and `permissions`; unknown fields are rejected. Paths are workspace-relative subdirectories. If you change `stateDir`, add the new path to `.gitignore`. State contains sensitive conversation data, not only traces.
 
-## Connect a model once
+## Connect a model once — browser setup
 
-```sh
-npm run pida -- configure ./my-agent
-npm run pida -- doctor ./my-agent
-```
+`pida setup` initializes the workspace, starts its server and opens model settings. `pida configure` opens settings on the existing server or starts it if needed. Append the workspace directory when not using the current directory.
 
-The interactive wizard selects mock or endpoint mode, protocol, base URL, exact model ID, context window, output limit, and the name of a credential variable. Add the variable's value to the private `.env` or the launching shell. Shell values override `.env`. Restart to apply configuration changes.
+Select local model or company API, enter its URL and key if required, load the model list, then choose **연결 확인 후 적용**. Configuration changes take effect without a restart. Existing sessions are unloaded safely and reopen through Pi using the new provider. A running request blocks a provider change; it is not silently cancelled.
 
-Example provider section (replace model names/limits with your actual endpoint values):
+The local preset uses `http://localhost:1234/v1`, OpenAI Chat Completions format and no authentication. It is a convenience preset, not evidence that a real LM Studio instance was tested here. HTTP requires an explicit opt-in; company HTTPS URLs remain the default for remote endpoints. An exact `/chat/completions`, `/responses` or `/messages` suffix is normalized to its base URL. URLs containing credentials, query strings or fragments are rejected.
 
-```json
-{
-  "kind": "endpoint",
-  "api": "openai-completions",
-  "baseUrl": "http://localhost:1234/v1",
-  "modelId": "your-loaded-model-id",
-  "apiKeyEnv": "PIDA_LLM_API_KEY",
-  "contextWindow": 32000,
-  "maxTokens": 2048,
-  "allowInsecureHttp": true
-}
-```
+Model discovery calls the draft endpoint's `/models`. If a gateway does not implement it, type the exact model ID. Discovery uses a 10-second timeout, a bounded response and no redirects. It does not send conversation history. The apply action uses Pi itself to request a short response without tools; only after success does it persist and apply configuration. Tool-call compatibility requires a separate real tool request. Failed tests preserve the old configuration.
 
-This is an illustrative local OpenAI-compatible configuration, not a verified LM Studio integration. For an endpoint with no authentication, set `PIDA_LLM_API_KEY` to a non-secret placeholder if that endpoint permits it. For a company HTTPS gateway use its actual URL and credentials, with `allowInsecureHttp` false/omitted. Available protocols are `openai-completions`, `openai-responses`, and `anthropic-messages`; only Chat Completions has a local protocol-stub integration test here.
+Advanced options expose the protocol, context window and output-token limit. Their initial 8192/1024 values are conservative configuration defaults, not a claim about the model's actual limits. Anthropic Messages and OpenAI Responses remain available; this milestone's protocol stub exercises Chat Completions only.
 
-`doctor` checks config shape, key presence and approved module paths. It does not prove connectivity, tool-call support, model quality or import-time module correctness. Follow it with an actual request and tool execution against your chosen gateway.
+Keys entered in the web form are saved in `<stateDir>/provider-key.json`, bound to the exact normalized URL and API protocol. A blank key field reuses a configured credential only for that same URL and protocol. Changing the destination requires entering its key again; previous environment/saved keys are not forwarded to a new endpoint automatically. Keyless mode sends no Authorization or x-api-key header. A matching UI-saved key takes precedence over the configured environment variable; remove the local key file to return to environment-managed credentials.
+
+The original terminal wizard is still available as `pida configure --terminal`. In that advanced mode, put credentials in `.env` or the shell yourself. `pida doctor` remains a static check; it imports no tools and makes no model call. A server with missing model credentials can still start, so the UI can fix the connection before creating a model session.
+
+## Package-manager commands
+
+After installing an already-built tarball into a receiving application:
+
+| Manager | Install package | Set up / open settings |
+| --- | --- | --- |
+| npm | `npm install /path/pida-core-0.3.0.tgz` | `npx pida setup` |
+| pnpm | `pnpm add --ignore-scripts /path/pida-core-0.3.0.tgz` | `pnpm exec pida setup` |
+| bun | `bun add --ignore-scripts /path/pida-core-0.3.0.tgz` | `bun run pida setup` |
+
+The tarball contains compiled code and requires no install/build lifecycle scripts. Using `--ignore-scripts` with npm is also supported. Pnpm 12 can otherwise ask about lifecycle scripts of optional upstream provider dependencies. The repository's pnpm configuration explicitly disables those unused scripts.
+
+All three managers install and invoke the same `pida` executable. Node 22.19+ remains required; native Bun runtime support is not claimed. The source scripts themselves no longer invoke npm, so pnpm/bun users do not need npm for building or running the project. npm is used as the canonical tarball packer in CI only. The package is not published to the npm registry yet.
+
+The source repository includes npm-shrinkwrap.json, pnpm-lock.yaml and bun.lock. Each captures its manager's tested graph; they are not necessarily byte-for-byte identical dependency graphs. When changing dependencies regenerate the affected locks and run the manager matrix. npm's shrinkwrap travels with the tarball; do not assume pnpm or bun will honor it in consumer projects.
 
 ## Add your own tool
 

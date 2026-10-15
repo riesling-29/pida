@@ -1,13 +1,13 @@
-# Validation record — Pida-core 0.2.0
+# Validation record — Pida-core 0.3.0
 
-Updated: 2026-10-15 KST. Environment: Linux, Node.js 24.19.0, npm 11.9.0, TypeScript 7.0.2, official Pi packages 1.2.0.
+Updated: 2026-10-15 UTC. Environment: Linux, Node.js 24.19.0, npm 11.9.0, TypeScript 7.0.2, official Pi packages 1.2.0.
 
 ## Confirmed
 
 | Check | Result | Evidence / boundary |
 | --- | --- | --- |
 | TypeScript strict build and declarations | PASS | `npm run build`, `npm run check` |
-| Automated contract/integration suite | PASS — 38 tests | `npm test`; actual installed Pi SDK, no copied loop |
+| Automated contract/integration suite | PASS — 44 tests | `npm test`; actual installed Pi SDK, no copied loop |
 | Runtime loop and tools | PASS | Faux model asks for tool; Pi dispatches, validates, persists result and calls model again |
 | Authorization and owner isolation | PASS | Missing scopes, additional policy denial, foreign session read/run/trace/cancel/delete, concurrent independent sessions |
 | Restricted profile | PASS | Only explicit business tools active; model request for built-in bash fails |
@@ -18,7 +18,7 @@ Updated: 2026-10-15 KST. Environment: Linux, Node.js 24.19.0, npm 11.9.0, TypeSc
 | Company protocol path | PASS against local Chat Completions stub only | Actual Pi OpenAI protocol implementation sends tool definitions, reads SSE tool calls, submits tool results, continues history and reads rotated key |
 | Client protocol parser | PASS | Split UTF-8 and frame boundaries; truncated stream produces an error |
 | HTTP boundary | PASS | Auth, origin allowlist, JSON/unknown-field validation, body limit, CSP and demo asset delivery |
-| Consumer installation | PASS | `npm pack` then clean `/tmp/pida-consumer-v02` install; installed `pida` executable initializes and starts a workspace, imports its sample module, runs a tool via HTTP/client, survives SIGTERM/restart and serves packaged UI assets |
+| Consumer installation | PASS | `npm pack` then separate clean installs using all three managers; installed CLI initializes and starts a workspace, imports the sample module, runs a tool through HTTP and serves packaged UI assets. Restart persistence is covered by integration/browser tests. |
 | Browser TypeScript dependency boundary | PASS | Consumer compiles `pida-core/client` with `types: []`, DOM/ES2022 libs and no Node ambient types |
 | Example JavaScript syntax | PASS | `node --check examples/web/app.js` |
 | Directory tool loading | PASS | Disabled modules never imported; traversal/symlinks/invalid exports rejected; approved user module executes through Pi and permission denial remains enforced |
@@ -26,13 +26,18 @@ Updated: 2026-10-15 KST. Environment: Linux, Node.js 24.19.0, npm 11.9.0, TypeSc
 | Crash behavior and local lock | PASS | Separate process killed during a tool call; stale lock explicitly cleared; interrupted state restored without automatic tool replay; live owner unlock refused |
 | Browser interaction | PASS | Playwright 1.62.1 + headless Chromium 153.0.8010.0: authenticated launch, Korean request, trace, refresh/login, restart/resume, selection, cancellation, deletion and logout; no page errors |
 | Responsive layout | PASS for checked viewports | Desktop 1365 × 1000 and mobile-width 390 × 844; screenshots inspected with Korean fonts; no horizontal overflow at mobile width |
-| Interactive provider setup | PASS in Linux PTY | Endpoint wizard saved protocol, URL, model ID, limits and credential variable name without receiving a secret |
+| Browser provider administration | PASS against a local protocol stub | Model discovery, keyless headers, private-key save/restart, same-target key reuse, destination-change denial, redirect rejection, failed-probe retention and live provider switching with preserved history |
+| Provider admin isolation | PASS | Explicit `pida:configure` permission required; changes during a running tool are refused |
+| npm / pnpm / bun consumer installation | PASS | npm 11.9.0, pnpm 12.11.2, bun 1.4.3: clean tarball install, manager exec/run init, installed Node CLI start, tool run, UI and settings endpoints |
+| Source package-manager scripts | PASS | 44 tests under each manager's dependency installation; build/test tasks contain no nested npm invocation |
+| Interactive advanced setup | Previously verified in Linux PTY | Earlier terminal wizard retained behind `configure --terminal` |
+| CLI setup and reuse | PASS | `setup --no-open` starts a workspace; a separate `configure --no-open` process finds and reuses its authenticated server without opening a second store |
 | Workspace diagnostics | PASS | Key-presence and configuration checks, no key output, no tool imports or model requests |
 
 
 Mock responses are produced by Pi's built-in faux provider. Only the LLM is simulated; runtime, session management, tool execution, authorization and HTTP paths are real. No company credentials or paid API calls were used. Protocol-stub success is not a claim about a real company's gateway.
 
-The package uses `npm-shrinkwrap.json` so the tested dependency resolution also accompanies the installable tarball. The tarball was installed outside the repository, rather than testing only a workspace import.
+The package includes `npm-shrinkwrap.json` for npm consumers. Source pnpm and bun installations have separate tested lockfiles; their consumers must not assume they honor npm shrinkwrap. The tarball was installed outside the repository, rather than testing only a workspace import.
 
 ## Not verified / limitations
 
@@ -43,10 +48,12 @@ The package uses `npm-shrinkwrap.json` so the tested dependency resolution also 
 - Cancellation is cooperative; no forced termination of hostile or non-cooperative host code.
 - No measured production throughput, latency SLO, real model cost, task-quality improvement or business objective verification. Those values are unknown.
 - CI workflow is supplied for Node 22.19 and 24. Local results above do not assert remote GitHub Actions success.
-- Package is installable as a tarball but has not been published to npm. Source licensing for redistribution is deliberately left to the repository owner (`UNLICENSED`).
+- Package is installable through npm/pnpm/bun as a tarball but has not been published to npm. Source licensing for redistribution is deliberately left to the repository owner (`UNLICENSED`).
 
 ## Commit-readiness review
 
 The MVP meets the tested embedded-runtime/API/tool/client contracts. Pi remains an upstream dependency; no external agent executable, fork, replacement loop, duplicate transcript store or undisclosed credential is introduced. Architecture, installation, provider configuration, API usage, extension boundaries, provenance and limitations are documented.
 
 Re-run tests on any Pi package or transport/auth change. Reassess storage guarantees and the architecture before remote multi-user deployment. Revoke readiness if a forbidden tool executes, an owner check fails, an interrupted stream reports success, or consumer applications need to reconstruct the agent loop.
+
+The browser acceptance script also exercises the settings form against a local Chat Completions stub: model discovery/autoselection, keyless apply, live conversation on the new model, failure retention, masked-key submission and clearing, and mobile-width overflow. These are synthetic protocol tests, not tests against LM Studio or a real company gateway. Installation checks are reproducible with `scripts/install-check.mjs`; CI now includes the three-manager matrix.

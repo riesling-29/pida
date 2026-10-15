@@ -1,14 +1,14 @@
 {
   "name": "pida-core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Embedded Pi runtime with authorized business tools and a session HTTP API",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "check": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && node --test --test-timeout=15000 test/*.test.mjs",
+    "build": "node scripts/task.mjs build",
+    "check": "node scripts/task.mjs check",
+    "test": "node scripts/task.mjs test",
     "start": "node dist/cli.js start",
-    "prepack": "npm run build",
-    "pida": "npm run build --silent && node dist/cli.js",
+    "prepack": "node scripts/task.mjs build",
+    "pida": "node scripts/task.mjs pida",
     "demo": "node dist/server.js"
   },
   "keywords": [],
@@ -50,7 +50,8 @@
     "examples",
     "docs",
     "README.md",
-    "THIRD_PARTY_NOTICES.md"
+    "THIRD_PARTY_NOTICES.md",
+    "scripts/task.mjs"
   ],
   "overrides": {
     "@earendil-works/pi-agent-core": "1.2.0",

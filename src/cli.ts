@@ -3,7 +3,7 @@ import { once } from "node:events";
 import { resolve, join } from "node:path";
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline/promises";
-import { writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import { stdin, stdout } from "node:process";
 import {
   createWorkspace,
@@ -18,7 +18,8 @@ import { unlockStore } from "./storage.js";
 const help = `Pida — reusable local agent workspace
 
   pida init [directory]                 Create config, private .env and sample tool
-  pida configure [directory]            Configure mock or company/local endpoint
+  pida setup [directory] [--no-open]    Initialize and open easy model setup
+  pida configure [directory]            Open easy model setup (--terminal for advanced wizard)
   pida start [directory] [--open]        Serve web UI and API; save conversations
   pida open [directory]                 Open the UI with local authentication
   pida token [directory]                Explicitly print the local UI token
@@ -32,13 +33,13 @@ Default directory: current working directory. Requires Node 22.19+.
 The default mock demonstrates LOT-001/LOT-002; it is not a language model.
 `;
 
-async function openBrowser(directory: string) {
+async function openBrowser(directory: string, setup = false) {
   const config = readConfig(directory),
     token = workspaceEnvironment(directory).PIDA_API_TOKEN;
   if (!token || token.length < 32)
     throw new Error("Missing local token; run pida doctor.");
   // Fragment never reaches the HTTP server. The UI immediately removes it from browser history.
-  const url = `http://127.0.0.1:${config.port}/#token=${encodeURIComponent(token)}`;
+  const url = `http://127.0.0.1:${config.port}/#token=${encodeURIComponent(token)}${setup ? "&setup=1" : ""}`;
   const command =
     process.platform === "win32"
       ? "rundll32"
@@ -138,6 +139,69 @@ async function configure(directory: string) {
   }
 }
 
+async function startWorkspace(
+  directory: string,
+  open: boolean,
+  setup: boolean,
+) {
+  if (setup) {
+    const config = readConfig(directory),
+      token = workspaceEnvironment(directory).PIDA_API_TOKEN;
+    const available = await fetch(
+      `http://127.0.0.1:${config.port}/v1/provider`,
+      {
+        headers: { Authorization: `Bearer ${token ?? ""}` },
+        signal: AbortSignal.timeout(1500),
+        redirect: "error",
+      },
+    )
+      .then((response) => response.ok)
+      .catch(() => false);
+    if (available) {
+      if (open)
+        await openBrowser(directory, true).catch((e) =>
+          console.error(e.message),
+        );
+      console.log(
+        `Pida settings: http://127.0.0.1:${config.port} (use the model settings button after login)`,
+      );
+      return;
+    }
+  }
+  // CLI owns its process environment, including credentials used by trusted business tools.
+  const env = workspaceEnvironment(directory);
+  for (const [key, value] of Object.entries(env))
+    if (process.env[key] === undefined && value !== undefined)
+      process.env[key] = value;
+  const app = await createWorkspace(directory);
+  let closing = false;
+  const stop = async () => {
+    if (closing) return;
+    closing = true;
+    app.server.close();
+    await app.runtime.close();
+    app.server.closeAllConnections();
+  };
+  try {
+    app.server.listen(app.config.port, "127.0.0.1");
+    await once(app.server, "listening");
+  } catch (error) {
+    await app.runtime.close();
+    throw error;
+  }
+  process.once("SIGINT", () => {
+    void stop();
+  });
+  process.once("SIGTERM", () => {
+    void stop();
+  });
+  console.log(
+    `Pida ready: http://127.0.0.1:${app.config.port}\nProvider: ${app.config.provider.kind} · conversations saved locally\nUse pida open to sign in, or pida token for manual sign-in. Ctrl+C stops the server.`,
+  );
+  if (open)
+    await openBrowser(directory, setup).catch((e) => console.error(e.message));
+}
+
 async function main() {
   const [command = "help", ...args] = process.argv.slice(2);
   if (["help", "--help", "-h"].includes(command)) {
@@ -153,7 +217,16 @@ async function main() {
       );
       return;
     case "configure":
-      await configure(directory);
+      if (args.includes("--terminal")) {
+        await configure(directory);
+        return;
+      }
+      await startWorkspace(directory, !args.includes("--no-open"), true);
+      return;
+    case "setup":
+      if (!existsSync(join(directory, "pida.config.json")))
+        initWorkspace(directory);
+      await startWorkspace(directory, !args.includes("--no-open"), true);
       return;
     case "token": {
       const token = workspaceEnvironment(directory).PIDA_API_TOKEN;
@@ -185,41 +258,9 @@ async function main() {
       if (!report.ok) process.exitCode = 1;
       return;
     }
-    case "start": {
-      // CLI owns its process environment, including credentials used by trusted business tools.
-      const env = workspaceEnvironment(directory);
-      for (const [key, value] of Object.entries(env))
-        if (process.env[key] === undefined && value !== undefined)
-          process.env[key] = value;
-      const app = await createWorkspace(directory);
-      let closing = false;
-      const stop = async () => {
-        if (closing) return;
-        closing = true;
-        app.server.close();
-        await app.runtime.close();
-        app.server.closeAllConnections();
-      };
-      try {
-        app.server.listen(app.config.port, "127.0.0.1");
-        await once(app.server, "listening");
-      } catch (error) {
-        await app.runtime.close();
-        throw error;
-      }
-      process.once("SIGINT", () => {
-        void stop();
-      });
-      process.once("SIGTERM", () => {
-        void stop();
-      });
-      console.log(
-        `Pida ready: http://127.0.0.1:${app.config.port}\nProvider: ${app.config.provider.kind} · conversations saved locally\nUse pida open to sign in, or pida token for manual sign-in. Ctrl+C stops the server.`,
-      );
-      if (args.includes("--open"))
-        await openBrowser(directory).catch((e) => console.error(e.message));
+    case "start":
+      await startWorkspace(directory, args.includes("--open"), false);
       return;
-    }
     default:
       throw new Error(`Unknown command: ${command}. Use pida --help.`);
   }

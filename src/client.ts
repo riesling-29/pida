@@ -63,6 +63,27 @@ export class PidaClient {
   private path(id: string) {
     return `/v1/sessions/${encodeURIComponent(id)}`;
   }
+  async getProviderSettings(): Promise<{
+    provider: Record<string, unknown>;
+    keyConfigured: boolean;
+  }> {
+    return (await this.request("/v1/provider")).json();
+  }
+  async listProviderModels(
+    draft: Record<string, unknown>,
+  ): Promise<{ models: string[] }> {
+    return (await this.request("/v1/provider/models", "POST", draft)).json();
+  }
+  async testProvider(
+    draft: Record<string, unknown>,
+  ): Promise<{ ok: boolean; scope: string }> {
+    return (await this.request("/v1/provider/test", "POST", draft)).json();
+  }
+  async configureProvider(
+    draft: Record<string, unknown>,
+  ): Promise<{ applied: boolean }> {
+    return (await this.request("/v1/provider", "POST", draft)).json();
+  }
   async listSessions(): Promise<{ sessions: SessionSummary[] }> {
     return (await this.request("/v1/sessions")).json();
   }
