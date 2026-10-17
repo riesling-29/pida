@@ -1,3 +1,11 @@
+# 0.4 provider selection validation — 2026-10-17
+
+Result: **52/52 automated tests passed** on Node 24 with `npm test`. A clean npm consumer installed the 0.4 tarball successfully. In the cloud browser, the named provider selector, Anthropic model selection, missing-key rejection and switch to the separate Gemini model list were verified. No real API key was entered.
+
+The previous 0.3 evidence below remains historical. The 0.4 change adds eight Pi native provider catalogs and separate API-key storage. New automated tests validate all eight factories, model ownership, scoped auth, keyless catalog discovery, rejection of native endpoint overrides, failed-probe retention, provider-specific key isolation and credential-safe metadata. Real Pi OpenAI Responses, Anthropic Messages, Google Gemini and DeepSeek adapters consume synthetic intercepted protocol streams through settings apply, conversation execution and persistence/reopen. These tests never call paid services.
+
+Live cloud-provider credentials, subscription OAuth, IAM/ADC, Azure deployments and real Ollama/LM Studio inference are not verified. OpenRouter, Groq, xAI and Mistral have factory/catalog/auth contract checks, not protocol-response integration checks in this release.
+
 # Validation record — Pida-core 0.3.0
 
 Updated: 2026-10-15 UTC. Environment: Linux, Node.js 24.19.0, npm 11.9.0, TypeScript 7.0.2, official Pi packages 1.2.0.

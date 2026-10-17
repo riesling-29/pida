@@ -1,3 +1,4 @@
+import { nativeProvider, validateNativeProvider, type NativeProviderConfig } from "./provider-catalog.js";
 import {
   ProviderSettings,
   providerEnvironment,
@@ -33,6 +34,7 @@ const configSchema = Type.Object(
     stateDir: Type.String({ minLength: 1 }),
     systemPrompt: Type.String({ minLength: 1 }),
     provider: Type.Union([
+      Type.Object({ kind: Type.Literal("native"), providerId: Type.String({ minLength: 1 }), modelId: Type.String({ minLength: 1 }), apiKeyEnv: Type.String({ pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }) }, { additionalProperties: false }),
       Type.Object(
         { kind: Type.Literal("mock") },
         { additionalProperties: false },
@@ -79,6 +81,7 @@ export interface WorkspaceConfig {
   systemPrompt: string;
   provider:
     | { kind: "mock" }
+    | NativeProviderConfig
     | ({ kind: "endpoint" } & Omit<EndpointConfig, "id">);
   tools: { directory: string; enabled: string[] };
   permissions: string[];
@@ -126,6 +129,7 @@ export function validateConfig(
   inside(root, config.tools.directory);
   if (config.provider.kind === "endpoint")
     endpointProvider({ id: "workspace", ...config.provider });
+  if (config.provider.kind === "native") validateNativeProvider(config.provider);
   return config;
 }
 export function checkWorkspace(directory: string) {
@@ -135,8 +139,8 @@ export function checkWorkspace(directory: string) {
   if (!env.PIDA_API_TOKEN || env.PIDA_API_TOKEN.length < 32)
     problems.push("PIDA_API_TOKEN is missing or too short.");
   if (
-    config.provider.kind === "endpoint" &&
-    config.provider.authMode !== "none" &&
+    config.provider.kind !== "mock" &&
+    (config.provider.kind === "native" || config.provider.authMode !== "none") &&
     !env[config.provider.apiKeyEnv]
   )
     problems.push(`Missing credential variable: ${config.provider.apiKeyEnv}`);
@@ -286,7 +290,9 @@ export async function createWorkspace(directory: string) {
   const provider =
     config.provider.kind === "mock"
       ? mockProvider
-      : endpointProvider({ id: "workspace", ...config.provider }, env);
+      : config.provider.kind === "native"
+        ? nativeProvider(config.provider, env)
+        : endpointProvider({ id: "workspace", ...config.provider }, env);
   // Keep local settings reachable even when a provider key is absent. Model calls still fail closed.
   const tools = await loadWorkspaceTools(root, config);
   const runtime = new PidaRuntime({

@@ -1,6 +1,6 @@
-# Architecture decision — Pida-core 0.3
+# Architecture decision — Pida-core 0.4
 
-Updated 2026-10-15 KST. Implements the user's Pida Initial Engineering Task, superseding the OpenCode-first assumption of the attached July Schumpeter baseline for this repository only.
+Updated 2026-10-17 KST. Implements the user's Pida Initial Engineering Task, superseding the OpenCode-first assumption of the attached July Schumpeter baseline for this repository only.
 
 ## Boundaries
 
@@ -63,3 +63,9 @@ ProviderSettings is an optional local-administration layer attached only by crea
 Discovery uses the chosen protocol's model-list endpoint. Applying settings probes a no-tool ephemeral Pi session, then saves and updates the runtime only while idle. Existing Pi histories remain on disk and reopen under the new provider. The key file binds a typed key to one exact normalized base URL, protocol and environment-variable name; blank key fields never forward old credentials to a new destination. API responses contain configuration and key presence, never key values. The short probe verifies a model text response only.
 
 Source build/test scripts invoke Node and the installed compiler directly instead of recursively invoking npm. npm, pnpm and bun get their own tested source lockfiles and consumer-install checks. The CLI retains its Node shebang; package-manager support is distinct from native Bun runtime support.
+
+## Native provider selection in 0.4
+
+`provider-catalog.ts` imports eight official Pi provider factories. Pida maintains only an explicit selection allowlist and credential-variable mapping, not model catalogs or provider protocols. Native models retain Pi metadata and streaming dispatch, including OpenRouter's per-model API routing. The auth wrapper invokes Pi API-key resolution with the workspace-scoped key and no fallback to ambient auth files or other credentials. OAuth is not advertised by this wrapper.
+
+Native catalog discovery is offline and requires no key. Provider settings remain administrator-only. Native request bodies cannot override URLs, protocol or token metadata. Native saved keys are isolated by provider ID, while existing custom keys retain their URL/protocol binding. Applying any provider still requires a successful no-tool probe and an idle runtime. No account entitlements or live-service availability are inferred from a bundled catalog entry.

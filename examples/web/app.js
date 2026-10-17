@@ -125,7 +125,7 @@ async function connect() {
   token = $("token").value;
   const info = await client.getInfo();
   $("model").textContent = info.provider
-    ? `${info.provider.mode === "mock" ? "데모 모델" : "설정 모델"} · ${info.provider.model}`
+    ? `${info.provider.mode === "mock" ? "데모 모델" : info.provider.mode === "endpoint" ? "사용자 지정" : info.provider.mode} · ${info.provider.model}`
     : "호스트 설정 모델";
   $("storage").textContent = info.persistence
     ? "대화 자동 저장"
@@ -254,7 +254,7 @@ $("form").onsubmit = async (e) => {
 let configuring = false;
 const setupErrors = {
   PROVIDER_KEY_REQUIRED:
-    "API 키를 입력하세요. 서버 주소를 바꾸면 키도 다시 입력해야 합니다.",
+    "선택한 프로바이더의 API 키를 입력하거나 서버의 해당 환경변수를 설정해주세요.",
   PROVIDER_TEST_FAILED:
     "모델 응답을 받지 못했습니다. 주소·모델·키와 API 형식을 확인해주세요. 기존 설정은 유지됩니다.",
   MODEL_LIST_UNAVAILABLE:
@@ -267,16 +267,49 @@ const setupErrors = {
   INVALID_PROVIDER_URL:
     "올바른 서버 주소를 입력해주세요. 주소에 키나 쿼리 문자열을 넣지 마세요.",
 };
+let providerCatalog = [];
+const selectedNative = () => providerCatalog.find(p => p.id === $("provider-preset").value);
+function showNativeModels(selectedId = "") {
+  const p = selectedNative();
+  $("native-model-select").replaceChildren();
+  if (!p) return;
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "모델을 선택하세요";
+  $("native-model-select").append(placeholder);
+  for (const model of p.models) {
+    const option = document.createElement("option");
+    option.value = model.id;
+    option.textContent = `${model.name} · ${model.id}`;
+    $("native-model-select").append(option);
+  }
+  $("native-model-select").value = selectedId;
+  $("provider-key").placeholder = `API 키 입력 또는 서버의 ${p.apiKeyEnv} 사용`;
+  $("provider-key-state").textContent = p.keyConfigured ? "이 프로바이더의 저장된 키 사용 가능" : "";
+  $("native-provider-note").textContent = `${p.name} · API 키 인증. 서버 주소와 API 형식은 자동 설정됩니다. 기본 제공 모델 목록입니다. 계정별 이용 가능 여부는 연결 확인이 필요합니다. 구독 계정 OAuth 로그인은 아직 지원하지 않습니다.`;
+}
 function providerControls() {
   const mock = $("provider-preset").value === "mock";
+  const native = !!selectedNative();
   $("endpoint-fields").hidden = mock;
-  $("provider-key").disabled = $("provider-no-key").checked;
-  $("provider-http-row").hidden = !$("provider-url").value.startsWith("http:");
+  $("custom-connection-fields").hidden = native;
+  $("native-provider-note").hidden = !native;
+  $("native-model-select").hidden = !native;
+  $("provider-model-label").htmlFor = native ? "native-model-select" : "provider-model";
+  $("provider-model").hidden = native;
+  $("provider-advanced").hidden = native;
+  $("load-models").hidden = native;
+  for (const field of $("provider-form").querySelectorAll("input, select")) field.disabled = configuring;
+  $("provider-key").disabled = configuring || (!native && $("provider-no-key").checked);
+  $("provider-http-row").hidden = native || !$("provider-url").value.startsWith("http:");
   $("apply-provider").disabled = configuring || running || pending;
   $("load-models").disabled = configuring || mock;
 }
 function providerDraft() {
   if ($("provider-preset").value === "mock") return { kind: "mock" };
+  const native = selectedNative();
+  if (native) return { kind: "native", providerId: native.id,
+    modelId: $("native-model-select").value, apiKey: $("provider-key").value };
   return {
     kind: "endpoint",
     baseUrl: $("provider-url").value.trim(),
@@ -291,41 +324,52 @@ function providerDraft() {
 }
 async function loadProviderSettings() {
   try {
-    const { provider: p, keyConfigured } = await client.getProviderSettings();
+    const { provider: p, keyConfigured, catalog = [] } = await client.getProviderSettings();
+    providerCatalog = catalog;
+    $("native-providers").replaceChildren();
+    for (const item of catalog) {
+      const option = document.createElement("option");
+      option.value = item.id;
+      option.textContent = item.name;
+      $("native-providers").append(option);
+    }
     $("provider-settings").hidden = false;
-    $("provider-preset").value =
-      p.kind === "mock" ? "mock" : p.authMode === "none" ? "local" : "company";
-    $("provider-url").value = p.baseUrl ?? "http://localhost:1234/v1";
+    $("provider-preset").value = p.kind === "mock" ? "mock" : p.kind === "native" ? p.providerId :
+      p.baseUrl === "http://localhost:11434/v1" ? "ollama" :
+      p.baseUrl === "http://localhost:1234/v1" ? "local" : "company";
+    $("provider-url").value = p.baseUrl ?? "";
     $("provider-model").value = p.modelId ?? "";
     $("provider-key").value = "";
-    $("provider-no-key").checked = p.authMode === "none" || p.kind === "mock";
+    $("provider-key").placeholder = "키를 붙여넣으세요";
+    $("provider-no-key").checked = p.authMode === "none";
     $("provider-api").value = p.api ?? "openai-completions";
     $("provider-context").value = p.contextWindow ?? 8192;
     $("provider-output").value = p.maxTokens ?? 1024;
     $("provider-http").checked = p.allowInsecureHttp ?? false;
     $("provider-key-state").textContent = keyConfigured
-      ? "저장된 키 사용 가능 · 비우면 같은 서버의 키 유지"
-      : "";
+      ? "저장된 키 사용 가능 · 비우면 같은 서버의 키 유지" : "";
+    showNativeModels(p.modelId);
     providerControls();
   } catch {
     $("provider-settings").hidden = true;
   }
 }
 $("provider-preset").onchange = () => {
-  if ($("provider-preset").value === "local") {
-    $("provider-url").value = "http://localhost:1234/v1";
-    $("provider-no-key").checked = true;
-    $("provider-http").checked = true;
-    $("provider-api").value = "openai-completions";
-  } else if ($("provider-preset").value === "company") {
-    $("provider-url").value = "";
-    $("provider-no-key").checked = false;
-    $("provider-http").checked = false;
-  }
+  const value = $("provider-preset").value;
+  const local = value === "local" || value === "ollama";
+  $("provider-url").value = local ? (value === "ollama" ? "http://localhost:11434/v1" : "http://localhost:1234/v1") : "";
+  $("provider-no-key").checked = local;
+  $("provider-http").checked = local;
+  $("provider-api").value = "openai-completions";
+  $("provider-context").value = 8192;
+  $("provider-output").value = 1024;
   $("provider-key").value = "";
+  $("provider-key").placeholder = "키를 붙여넣으세요";
+  $("provider-key-state").textContent = "";
   $("provider-model").value = "";
   $("provider-models").replaceChildren();
   $("provider-feedback").textContent = "";
+  showNativeModels();
   providerControls();
 };
 $("provider-no-key").onchange = providerControls;
@@ -370,7 +414,7 @@ $("provider-form").onsubmit = async (e) => {
     $("provider-key").value = "";
     const info = await client.getInfo();
     $("model").textContent =
-      `${info.provider.mode === "mock" ? "데모 모델" : "설정 모델"} · ${info.provider.model}`;
+      `${info.provider.mode === "mock" ? "데모 모델" : info.provider.mode === "endpoint" ? "사용자 지정" : info.provider.mode} · ${info.provider.model}`;
     $("mock-note").hidden = info.provider.mode !== "mock";
     await loadProviderSettings();
     $("provider-feedback").textContent =

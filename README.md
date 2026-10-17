@@ -2,7 +2,7 @@
 
 An embedded, reusable **Pi-based agent harness** for applications. Bring the package into a host backend, register business tools, and connect a web or app interface through the client SDK. The host does not implement the agent loop.
 
-**Workspace MVP 0.3.0:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces now persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call business authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+**Workspace MVP 0.4.0:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces now persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call business authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
 
 The lot-status tool is **replaceable synthetic sample data**, not a manufacturing-specific restriction. The default mock is deterministic and not an intelligent model.
 
@@ -22,12 +22,14 @@ From a checkout of this feature branch, choose one row:
 
 In the browser:
 
-1. Choose **로컬 모델** or **사내 API · 다른 서버**.
-2. Enter the server address and, if required, its API key. LM Studio's local preset fills `http://localhost:1234/v1` and needs no dummy key.
-3. Click **모델 목록 불러오기** and select a model, or type its exact name if listing is unavailable.
-4. Click **연결 확인 후 적용**. Pida asks for a short test response, saves only after success, and applies the connection immediately without restarting. The test may incur a small provider charge; it does not verify tool calling.
+1. Choose **OpenAI, Anthropic, Google Gemini, OpenRouter, DeepSeek, Groq, xAI, or Mistral**.
+2. Enter its API key (or use the provider's environment variable already set on the server).
+3. Select a model from that provider's bundled Pi catalog. The native Pi adapter owns its API, endpoint, model limits and compatibility metadata.
+4. Click **연결 확인 후 적용**. A short, no-tool test response must succeed before settings are saved and applied. Existing conversations can resume without restarting. The test may incur a small charge and does not establish tool-call compatibility.
 
-The advanced section contains protocol and token limits. Defaults are conservative settings, not detected model specifications. Failed checks keep the previous configuration. API keys are stored privately on the local server and never returned by the settings API. No model conversation history is sent by the connection probe.
+**LM Studio**, **Ollama**, and **사내 API · 다른 서버** remain separate choices. Local presets supply the URL and keyless mode; custom connections expose protocol and token limits under advanced settings. Their model-list button queries the chosen server. Native service catalogs come from pinned Pi 1.2.0, not a live account entitlement check; newer models require a Pi update or a custom connection.
+
+Native API keys are stored separately per provider, server-side, with private file permissions; switching back can reuse that provider's key. Keys are never returned by the settings API. **Subscription OAuth login (ChatGPT, Claude, Copilot, etc.) and AWS/Azure/Vertex credential flows are not implemented in this setup UI.** They are not interchangeable with API keys.
 
 You can also select **데모만 사용** and try `LOT-001의 상태를 알려줘` without LLM credentials. The mock is deterministic and cannot choose arbitrary custom tools.
 
@@ -44,7 +46,7 @@ The package has **not** been published to npm. Create and install a local packag
 ```sh
 npm pack
 # Run from your host application directory:
-npm install /absolute/path/to/pida-core-0.3.0.tgz
+npm install /absolute/path/to/pida-core-0.4.0.tgz
 ```
 
 Entry points separate standalone configuration, server code and browser code:
@@ -124,11 +126,11 @@ export PIDA_MAX_TOKENS=2048
 npm run demo
 ```
 
-The model limits above are examples: set verified values for your actual deployment. `PIDA_API` accepts `openai-completions`, `openai-responses` or `anthropic-messages`; these delegate to Pi's protocol implementations. **Only Chat Completions has been exercised against a local protocol stub in this MVP.** Responses, Anthropic, actual company endpoints and local LLM servers require endpoint-specific acceptance tests. A compatible label is not evidence of tool-call/streaming compatibility.
+The model limits above are examples: set verified values for your actual deployment. `PIDA_API` accepts `openai-completions`, `openai-responses` or `anthropic-messages`; these delegate to Pi's protocol implementations. Chat Completions has been exercised against a local protocol stub; native OpenAI Responses, Anthropic Messages and Google Gemini adapters have also been tested with intercepted synthetic protocol streams. Actual company/cloud/local endpoints still require endpoint-specific acceptance tests. A compatible label is not evidence of tool-call/streaming compatibility.
 
-For the legacy environment-only demo, explicitly set `PIDA_ALLOW_HTTP=true` for HTTP. The web setup includes a corresponding HTTP checkbox and an explicit keyless option. Credentials resolve from `PIDA_LLM_API_KEY` on each request. Base URLs must not include credentials, query strings or fragments. URLs and provider selection are host configuration; session/run requests cannot override them. The optional settings API requires explicit admin permission. Pricing is unknown: required Pi cost fields use zero placeholders, and Pida does not expose them as measured cost.
+For the legacy environment-only demo, explicitly set `PIDA_ALLOW_HTTP=true` for HTTP. The web setup includes a corresponding HTTP checkbox and an explicit keyless option. Credentials resolve from `PIDA_LLM_API_KEY` on each request. Base URLs must not include credentials, query strings or fragments. URLs and provider selection are host configuration; session/run requests cannot override them. The optional settings API requires explicit admin permission. For custom endpoints pricing is unknown: required Pi cost fields use zero placeholders, and Pida does not expose them as measured cost.
 
-Other Pi providers, authentication methods or custom protocols can be supplied through `RuntimeOptions.provider`, a factory returning `{ provider: PiProvider, modelId }` for each session. The factory is trusted host code. Its provider must cooperate with cancellation. The MVP selects a provider/model at session creation; in-session model switching is not exposed.
+Other Pi providers, authentication methods or custom protocols can be supplied through `RuntimeOptions.provider`, a factory returning `{ provider: PiProvider, modelId }` for each session. The factory is trusted host code. Its provider must cooperate with cancellation. The workspace settings can switch the workspace-wide provider while idle; embedded hosts can use `configureProvider`. Per-conversation model selection is not exposed.
 
 ## Register your tools
 

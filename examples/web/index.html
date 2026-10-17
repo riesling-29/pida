@@ -56,16 +56,20 @@
           <summary>모델 연결 · 설정</summary>
           <form id="provider-form">
             <p>
-              사용할 모델을 연결하세요. 주소와 API 키는 이 서버에서만
-              사용합니다.
+              프로바이더를 선택하고 API 키와 사용할 모델을 설정하세요.
+              API 키는 서버에만 저장하며 브라우저에 다시 표시하지 않습니다.
             </p>
-            <label for="provider-preset">어디에 연결할까요?</label>
+            <label for="provider-preset">LLM 프로바이더</label>
             <select id="provider-preset">
-              <option value="local">로컬 모델 (LM Studio 등)</option>
+              <optgroup id="native-providers" label="클라우드 서비스 · API 키"></optgroup>
+              <option value="local">LM Studio</option>
+              <option value="ollama">Ollama</option>
               <option value="company">사내 API · 다른 서버</option>
               <option value="mock">데모만 사용</option>
             </select>
             <div id="endpoint-fields">
+              <p id="native-provider-note" class="muted" hidden></p>
+              <div id="custom-connection-fields">
               <label for="provider-url">서버 주소</label
               ><input
                 id="provider-url"
@@ -78,6 +82,7 @@
                   없는 서버</label
                 >
               </div>
+              </div>
               <label for="provider-key"
                 >API 키 <span id="provider-key-state"></span></label
               ><input
@@ -87,17 +92,18 @@
                 placeholder="키를 붙여넣으세요"
               />
               <div class="row model-row">
-                <label for="provider-model">모델</label
+                <label id="provider-model-label" for="provider-model">모델</label
                 ><button id="load-models" type="button" class="secondary">
                   모델 목록 불러오기
                 </button>
               </div>
+              <select id="native-model-select" aria-label="프로바이더 모델" hidden></select>
               <input
                 id="provider-model"
                 list="provider-models"
                 placeholder="목록에서 선택하거나 모델 이름 입력"
               /><datalist id="provider-models"></datalist>
-              <details class="advanced">
+              <details id="provider-advanced" class="advanced">
                 <summary>고급 설정</summary>
                 <label for="provider-api">API 형식</label
                 ><select id="provider-api">

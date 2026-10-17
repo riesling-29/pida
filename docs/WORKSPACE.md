@@ -1,10 +1,10 @@
 # Pida workspace — install, configure, extend, reuse
 
-Pida 0.3 provides a local agent workspace around the same embedded Pi runtime. It includes a CLI, approved tool directory, saved conversations and a web UI. Node.js 22.19+ is required. npm registry publication has not been performed.
+Pida 0.4 provides a local agent workspace around the same embedded Pi runtime. It includes a CLI, approved tool directory, saved conversations and a web UI. Node.js 22.19+ is required. npm registry publication has not been performed.
 
 ## Start from the repository
 
-Check out the feature branch containing 0.3, then:
+Check out the feature branch containing 0.4, then:
 
 ```sh
 npm ci --ignore-scripts
@@ -34,7 +34,7 @@ npm pack
 From the receiving application's directory:
 
 ```sh
-npm install /absolute/path/to/pida-core-0.3.0.tgz
+npm install /absolute/path/to/pida-core-0.4.0.tgz
 npx pida setup
 ```
 
@@ -73,17 +73,49 @@ Initialization refuses to overwrite existing workspace files. The config require
 
 `pida setup` initializes the workspace, starts its server and opens model settings. `pida configure` opens settings on the existing server or starts it if needed. Append the workspace directory when not using the current directory.
 
-Select local model or company API, enter its URL and key if required, load the model list, then choose **연결 확인 후 적용**. Configuration changes take effect without a restart. Existing sessions are unloaded safely and reopen through Pi using the new provider. A running request blocks a provider change; it is not silently cancelled.
+Select a named cloud provider, enter its API key (or use the matching server environment variable), select a model, then choose **연결 확인 후 적용**. URLs, protocols and model limits come from Pi for native providers. LM Studio, Ollama and custom company endpoints use a separate URL-based form. Configuration changes take effect without a restart. Existing sessions are unloaded safely and reopen through Pi using the new provider. A running request blocks a provider change; it is not silently cancelled.
 
-The local preset uses `http://localhost:1234/v1`, OpenAI Chat Completions format and no authentication. It is a convenience preset, not evidence that a real LM Studio instance was tested here. HTTP requires an explicit opt-in; company HTTPS URLs remain the default for remote endpoints. An exact `/chat/completions`, `/responses` or `/messages` suffix is normalized to its base URL. URLs containing credentials, query strings or fragments are rejected.
+The LM Studio preset uses `http://localhost:1234/v1`, OpenAI Chat Completions format and no authentication. It is a convenience preset, not evidence that a real LM Studio instance was tested here. HTTP requires an explicit opt-in; company HTTPS URLs remain the default for remote endpoints. An exact `/chat/completions`, `/responses` or `/messages` suffix is normalized to its base URL. URLs containing credentials, query strings or fragments are rejected.
 
 Model discovery calls the draft endpoint's `/models`. If a gateway does not implement it, type the exact model ID. Discovery uses a 10-second timeout, a bounded response and no redirects. It does not send conversation history. The apply action uses Pi itself to request a short response without tools; only after success does it persist and apply configuration. Tool-call compatibility requires a separate real tool request. Failed tests preserve the old configuration.
 
 Advanced options expose the protocol, context window and output-token limit. Their initial 8192/1024 values are conservative configuration defaults, not a claim about the model's actual limits. Anthropic Messages and OpenAI Responses remain available; this milestone's protocol stub exercises Chat Completions only.
 
-Keys entered in the web form are saved in `<stateDir>/provider-key.json`, bound to the exact normalized URL and API protocol. A blank key field reuses a configured credential only for that same URL and protocol. Changing the destination requires entering its key again; previous environment/saved keys are not forwarded to a new endpoint automatically. Keyless mode sends no Authorization or x-api-key header. A matching UI-saved key takes precedence over the configured environment variable; remove the local key file to return to environment-managed credentials.
+For custom endpoints, keys entered in the web form are saved in `<stateDir>/provider-key.json`, bound to the exact normalized URL and API protocol. A blank key field reuses a configured credential only for that same URL and protocol. Changing the destination requires entering its key again; previous environment/saved keys are not forwarded to a new endpoint automatically. Keyless mode sends no Authorization or x-api-key header. A matching UI-saved key takes precedence over the configured environment variable; remove the local key file to return to environment-managed credentials.
 
 The original terminal wizard is still available as `pida configure --terminal`. In that advanced mode, put credentials in `.env` or the shell yourself. `pida doctor` remains a static check; it imports no tools and makes no model call. A server with missing model credentials can still start, so the UI can fix the connection before creating a model session.
+
+### Named providers
+
+Native configuration uses Pi's actual provider factory and full model metadata:
+
+```json
+{
+  "kind": "native",
+  "providerId": "anthropic",
+  "modelId": "<select an ID from nativeProviderCatalog()>",
+  "apiKeyEnv": "ANTHROPIC_API_KEY"
+}
+```
+
+This is the `provider` field of `pida.config.json`; choose a real catalog model ID. No key belongs in this JSON. `pida configure --terminal` also lists providers and numbered models.
+
+| Provider ID | Server environment variable |
+| --- | --- |
+| openai | OPENAI_API_KEY |
+| anthropic | ANTHROPIC_API_KEY |
+| google | GEMINI_API_KEY |
+| openrouter | OPENROUTER_API_KEY |
+| deepseek | DEEPSEEK_API_KEY |
+| groq | GROQ_API_KEY |
+| xai | XAI_API_KEY |
+| mistral | MISTRAL_API_KEY |
+
+Native keys use separate `<stateDir>/provider-key-<providerId>.json` files with mode 0600. A matching saved key takes precedence over the environment. Keys survive switching to another provider or mock mode, and are only reused by their provider. Remove the corresponding key file to revert to environment credentials. These files are not encrypted. One provider/model is active per workspace.
+
+`GET /v1/provider` returns a secret-free `catalog` with names, key status and bundled model metadata. `POST /v1/provider/models` accepts `{ "kind": "native", "providerId": "google" }` without a key and returns catalog IDs; this is not account-specific discovery. Apply/test accepts `kind`, `providerId`, `modelId`, `apiKey` only for native providers, rejecting endpoint overrides. Unknown providers/models fail closed. Existing endpoint configurations remain supported unchanged.
+
+The local Ollama preset is `http://localhost:11434/v1`, keyless Chat Completions. Neither local-server preset starts or installs a model server. `localhost` refers to the machine running Pida. Subscription OAuth, IAM/ADC and Azure deployment configuration are not part of this release's setup flow.
 
 ## Package-manager commands
 
@@ -91,9 +123,9 @@ After installing an already-built tarball into a receiving application:
 
 | Manager | Install package | Set up / open settings |
 | --- | --- | --- |
-| npm | `npm install /path/pida-core-0.3.0.tgz` | `npx pida setup` |
-| pnpm | `pnpm add --ignore-scripts /path/pida-core-0.3.0.tgz` | `pnpm exec pida setup` |
-| bun | `bun add --ignore-scripts /path/pida-core-0.3.0.tgz` | `bun run pida setup` |
+| npm | `npm install /path/pida-core-0.4.0.tgz` | `npx pida setup` |
+| pnpm | `pnpm add --ignore-scripts /path/pida-core-0.4.0.tgz` | `pnpm exec pida setup` |
+| bun | `bun add --ignore-scripts /path/pida-core-0.4.0.tgz` | `bun run pida setup` |
 
 The tarball contains compiled code and requires no install/build lifecycle scripts. Using `--ignore-scripts` with npm is also supported. Pnpm 12 can otherwise ask about lifecycle scripts of optional upstream provider dependencies. The repository's pnpm configuration explicitly disables those unused scripts.
 

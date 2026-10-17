@@ -66,6 +66,10 @@ export class PidaClient {
   async getProviderSettings(): Promise<{
     provider: Record<string, unknown>;
     keyConfigured: boolean;
+    catalog: Array<{ id: string; name: string; baseUrl?: string; apiKeyEnv: string;
+      auth: "api-key"; source: string; keyConfigured: boolean;
+      models: Array<{ id: string; name: string; api: string; contextWindow: number; maxTokens: number }> }>;
+
   }> {
     return (await this.request("/v1/provider")).json();
   }

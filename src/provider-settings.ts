@@ -1,3 +1,4 @@
+import { nativeProvider, nativeProviderCatalog, nativeProviderDefaults } from "./provider-catalog.js";
 import {
   existsSync,
   mkdirSync,
@@ -25,7 +26,8 @@ interface SavedKey {
   key: string;
 }
 function keyPath(directory: string, config: WorkspaceConfig) {
-  return join(resolve(directory), config.stateDir, "provider-key.json");
+  const file = config.provider.kind === "native" ? `provider-key-${config.provider.providerId}.json` : "provider-key.json";
+  return join(resolve(directory), config.stateDir, file);
 }
 function savedKey(
   directory: string,
@@ -43,19 +45,25 @@ function savedKey(
     throw new Error("Invalid local provider credential file");
   return value;
 }
+function target(provider: ProviderConfig) {
+  if (provider.kind === "mock") return undefined;
+  return provider.kind === "native"
+    ? { baseUrl: `native:${provider.providerId}`, api: "native", apiKeyEnv: provider.apiKeyEnv }
+    : { baseUrl: provider.baseUrl, api: provider.api, apiKeyEnv: provider.apiKeyEnv };
+}
 export function providerEnvironment(
   directory: string,
   config: WorkspaceConfig,
 ): NodeJS.ProcessEnv {
   const env = workspaceEnvironment(directory),
     secret = savedKey(directory, config),
-    provider = config.provider;
+    provider = config.provider, destination = target(provider);
   if (
-    provider.kind === "endpoint" &&
+    provider.kind !== "mock" && destination &&
     secret &&
-    secret.baseUrl === provider.baseUrl &&
-    secret.api === provider.api &&
-    secret.apiKeyEnv === provider.apiKeyEnv
+    secret.baseUrl === destination.baseUrl &&
+    secret.api === destination.api &&
+    secret.apiKeyEnv === destination.apiKeyEnv
   )
     env[provider.apiKeyEnv] = secret.key;
   return env;
@@ -63,7 +71,7 @@ export function providerEnvironment(
 export function providerLabel(provider: ProviderConfig) {
   return provider.kind === "mock"
     ? { mode: "mock", model: "Deterministic demo" }
-    : { mode: "endpoint", model: provider.modelId };
+    : { mode: provider.kind === "native" ? provider.providerId : "endpoint", model: provider.modelId };
 }
 function atomicWrite(path: string, content: string, mode = 0o600) {
   const temp = `${path}.${randomUUID()}.tmp`;
@@ -93,15 +101,25 @@ export class ProviderSettings {
       provider = config.provider;
     return {
       provider,
+      catalog: nativeProviderCatalog().map(p => {
+        const apiKeyEnv = provider.kind === "native" && provider.providerId === p.id
+          ? provider.apiKeyEnv : p.apiKeyEnv;
+        const candidate: WorkspaceConfig = { ...config, provider: {
+          kind: "native", providerId: p.id, modelId: p.models[0]?.id ?? "", apiKeyEnv,
+        } };
+        return { ...p, apiKeyEnv,
+          keyConfigured: !!providerEnvironment(this.directory, candidate)[apiKeyEnv] };
+      }),
       keyConfigured:
-        provider.kind === "endpoint" &&
-        provider.authMode !== "none" &&
+        provider.kind !== "mock" &&
+        (provider.kind === "native" || provider.authMode !== "none") &&
         !!providerEnvironment(this.directory, config)[provider.apiKeyEnv],
     };
   }
   private draft(input: Record<string, unknown>, requireModel = true) {
     const allowed = [
       "kind",
+      "providerId",
       "api",
       "baseUrl",
       "modelId",
@@ -129,6 +147,26 @@ export class ProviderSettings {
         env: workspaceEnvironment(this.directory),
         apiKey: "",
       };
+    if (input.kind === "native") {
+      if (Object.keys(input).some(k => !["kind", "providerId", "modelId", "apiKey"].includes(k)))
+        throw new PidaError("UNKNOWN_FIELD", 400);
+      try {
+        if (typeof input.providerId !== "string") throw new Error();
+        const defaults = nativeProviderDefaults(input.providerId);
+        const provider = { kind: "native" as const, providerId: input.providerId,
+          modelId: input.modelId || (requireModel ? "" : defaults.provider.getModels()[0]?.id),
+          apiKeyEnv: current.kind === "native" && current.providerId === input.providerId
+            ? current.apiKeyEnv : defaults.apiKeyEnv };
+        const next = validateConfig({ ...config, provider }, this.directory);
+        const env: NodeJS.ProcessEnv = {};
+        env[provider.apiKeyEnv] = apiKey || providerEnvironment(this.directory, next)[provider.apiKeyEnv];
+        if (requireModel && !env[provider.apiKeyEnv]) throw new PidaError("PROVIDER_KEY_REQUIRED", 400);
+        return { config: next, env, apiKey };
+      } catch (error) {
+        if (error instanceof PidaError) throw error;
+        throw new PidaError("INVALID_PROVIDER", 400);
+      }
+    }
     if (input.kind !== "endpoint" || typeof input.baseUrl !== "string")
       throw new PidaError("INVALID_PROVIDER", 400);
     let baseUrl: string;
@@ -186,6 +224,10 @@ export class ProviderSettings {
       const { config, env } = this.draft(input, false),
         p = config.provider;
       if (p.kind === "mock") return { models: [] };
+      if (p.kind === "native") return {
+        models: nativeProviderDefaults(p.providerId).provider.getModels().map(m => m.id),
+        source: "bundled-pi-catalog",
+      };
       const headers: Record<string, string> = {};
       if (p.api === "anthropic-messages")
         headers["anthropic-version"] = "2023-06-01";
@@ -243,7 +285,7 @@ export class ProviderSettings {
     const p = draft.config.provider;
     if (p.kind === "mock") return { ok: true, scope: "mock" };
     const probe = new PidaRuntime({
-      provider: endpointProvider(
+      provider: p.kind === "native" ? nativeProvider(p, draft.env, 128) : endpointProvider(
         { id: "setup-probe", ...p, maxTokens: Math.min(32, p.maxTokens) },
         draft.env,
       ),
@@ -281,10 +323,10 @@ export class ProviderSettings {
       const provider =
         p.kind === "mock"
           ? mockProvider
-          : endpointProvider({ id: "workspace", ...p }, draft.env);
+          : p.kind === "native" ? nativeProvider(p, draft.env) : endpointProvider({ id: "workspace", ...p }, draft.env);
       const file = keyPath(this.directory, draft.config),
         oldKey = existsSync(file) ? readFileSync(file, "utf8") : undefined;
-      if (draft.apiKey && p.kind === "endpoint" && p.authMode !== "none") {
+      if (draft.apiKey && p.kind !== "mock" && (p.kind === "native" || p.authMode !== "none")) {
         mkdirSync(join(resolve(this.directory), draft.config.stateDir), {
           recursive: true,
           mode: 0o700,
@@ -292,9 +334,7 @@ export class ProviderSettings {
         atomicWrite(
           file,
           JSON.stringify({
-            baseUrl: p.baseUrl,
-            api: p.api,
-            apiKeyEnv: p.apiKeyEnv,
+            ...target(p),
             key: draft.apiKey,
           }),
         );
@@ -315,8 +355,8 @@ export class ProviderSettings {
         applied: true,
         provider: p,
         keyConfigured:
-          p.kind === "endpoint" &&
-          p.authMode !== "none" &&
+          p.kind !== "mock" &&
+          (p.kind === "native" || p.authMode !== "none") &&
           !!draft.env[p.apiKeyEnv],
       };
     });

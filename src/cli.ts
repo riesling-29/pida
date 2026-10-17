@@ -13,6 +13,7 @@ import {
   setToolEnabled,
   workspaceEnvironment,
 } from "./workspace.js";
+import { nativeProviderCatalog } from "./provider-catalog.js";
 import { unlockStore } from "./storage.js";
 
 const help = `Pida — reusable local agent workspace
@@ -78,7 +79,9 @@ async function configure(directory: string) {
   const ask = async (label: string, fallback: string) =>
     (await rl.question(`${label} [${fallback}]: `)).trim() || fallback;
   try {
-    const mode = await ask("Provider: mock or endpoint", config.provider.kind);
+    const catalog = nativeProviderCatalog();
+    console.log("Providers: " + catalog.map(p => p.id).join(", ") + ", endpoint, mock");
+    const mode = await ask("Provider", config.provider.kind === "native" ? config.provider.providerId : config.provider.kind);
     if (mode === "mock") config.provider = { kind: "mock" };
     else if (mode === "endpoint") {
       const previous =
@@ -121,7 +124,17 @@ async function configure(directory: string) {
         apiKeyEnv,
         allowInsecureHttp,
       };
-    } else throw new Error("Provider must be mock or endpoint.");
+    } else {
+      const selected = catalog.find(p => p.id === mode);
+      if (!selected) throw new Error("Select one of the listed providers.");
+      selected.models.forEach((m, i) => console.log(`${i + 1}. ${m.name} (${m.id})`));
+      const previous = config.provider.kind === "native" && config.provider.providerId === mode ? config.provider : undefined;
+      const choice = await ask("Model number or exact ID", previous?.modelId ?? "1");
+      const modelId = /^\d+$/.test(choice) ? selected.models[Number(choice) - 1]?.id : choice;
+      if (!modelId) throw new Error("Invalid model selection");
+      config.provider = { kind: "native", providerId: mode, modelId,
+        apiKeyEnv: previous?.apiKeyEnv ?? selected.apiKeyEnv };
+    }
     // Validate before replacing the user's configuration.
     const { validateConfig } = await import("./workspace.js");
     validateConfig(config, directory);
@@ -130,9 +143,9 @@ async function configure(directory: string) {
       JSON.stringify(config, null, 2) + "\n",
     );
     console.log("Configuration saved. Restart Pida to apply it.");
-    if (config.provider.kind === "endpoint")
+    if (config.provider.kind !== "mock")
       console.log(
-        `Put ${config.provider.apiKeyEnv} in the private .env file or your shell environment. For a no-auth local endpoint, use a non-secret placeholder. Run pida doctor, then a real tool request to verify compatibility.`,
+        `Put ${config.provider.apiKeyEnv} in the private .env file or your shell environment. For a keyless custom endpoint, set authMode to none. Run pida doctor, then a real tool request to verify compatibility.`,
       );
   } finally {
     rl.close();
