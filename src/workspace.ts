@@ -1,3 +1,4 @@
+import { PidaWorkbench, workbenchPermissions, workbenchPrompt } from "./workbench.js";
 import { nativeProvider, validateNativeProvider, type NativeProviderConfig } from "./provider-catalog.js";
 import {
   ProviderSettings,
@@ -67,6 +68,7 @@ const configSchema = Type.Object(
       },
       { additionalProperties: false },
     ),
+    workbench: Type.Optional(Type.Object({ enabled: Type.Boolean() }, { additionalProperties: false })),
     permissions: Type.Array(Type.String({ minLength: 1 }), {
       uniqueItems: true,
     }),
@@ -84,6 +86,7 @@ export interface WorkspaceConfig {
     | NativeProviderConfig
     | ({ kind: "endpoint" } & Omit<EndpointConfig, "id">);
   tools: { directory: string; enabled: string[] };
+  workbench?: { enabled: boolean };
   permissions: string[];
 }
 export const defaultConfig: WorkspaceConfig = {
@@ -94,7 +97,8 @@ export const defaultConfig: WorkspaceConfig = {
     "You are a helpful assistant. Use the registered tools when useful. Report errors and missing evidence honestly.",
   provider: { kind: "mock" },
   tools: { directory: "tools", enabled: ["lot-status.mjs"] },
-  permissions: ["lots:read"],
+  workbench: { enabled: true },
+  permissions: ["lots:read", ...workbenchPermissions],
 };
 
 function inside(root: string, path: string): string {
@@ -295,16 +299,19 @@ export async function createWorkspace(directory: string) {
         : endpointProvider({ id: "workspace", ...config.provider }, env);
   // Keep local settings reachable even when a provider key is absent. Model calls still fail closed.
   const tools = await loadWorkspaceTools(root, config);
+  const workbench = config.workbench?.enabled ? new PidaWorkbench(join(inside(root, config.stateDir), "workbench")) : undefined;
   const runtime = new PidaRuntime({
     provider,
-    tools,
+    tools: [...tools, ...(workbench?.tools() ?? [])],
+    ...(workbench ? { maxTurns: 24, maxToolCalls: 48, maxRunMs: 120_000 } : {}),
     storageDir: inside(root, config.stateDir),
-    systemPrompt: config.systemPrompt,
+    systemPrompt: config.systemPrompt + (workbench ? "\n\n" + workbenchPrompt : ""),
     providerInfo: providerLabel(config.provider),
   });
   const settings = new ProviderSettings(root, runtime);
   const server = createPidaServer({
     providerSettings: settings,
+    workbench,
     runtime,
     serveDemo: true,
     allowedOrigin: `http://127.0.0.1:${config.port}`,
@@ -318,5 +325,5 @@ export async function createWorkspace(directory: string) {
       },
     ]),
   });
-  return { runtime, server, config };
+  return { runtime, server, config, workbench };
 }

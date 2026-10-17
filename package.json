@@ -1,6 +1,6 @@
 {
   "name": "pida-core",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Embedded Pi runtime with authorized business tools and a session HTTP API",
   "scripts": {
     "build": "node scripts/task.mjs build",
@@ -18,6 +18,7 @@
   "dependencies": {
     "@earendil-works/pi-ai": "1.2.0",
     "@earendil-works/pi-coding-agent": "1.2.0",
+    "quickjs-emscripten": "0.32.0",
     "typebox": "1.3.27"
   },
   "devDependencies": {

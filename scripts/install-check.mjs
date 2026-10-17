@@ -101,8 +101,23 @@ try {
     "mock",
   );
   assert.equal((await fetch(base)).status, 200);
+  assert.equal((await (await request("/v1/workbench")).json()).enabled, true);
+  await request("/v1/workbench/file", { path: "input.txt", content: "installed" });
+  assert.equal((await (await request("/v1/workbench/file?path=input.txt")).json()).content, "installed");
+  // Exercise the packaged worker/WASM, not the source tree's dependency resolution.
+  const runner = spawn(process.execPath, ["--input-type=module", "-e", `
+    import { PidaWorkbench, workbenchPermissions } from 'pida-core';
+    const w = new PidaWorkbench('./worker-check');
+    const principal = {id:'check', permissions:workbenchPermissions};
+    await w.write(principal, 'test.js', 'assert(6*7===42); console.log("installed WASM");');
+    const tool = w.tools().find(t=>t.name==='workspace_test');
+    const result = await tool.execute({path:'test.js'}, {principal, signal:new AbortController().signal});
+    if (!result.ok || result.assertions!==1) throw new Error('Packaged worker failed');
+  `], {cwd:dir, stdio:["ignore","pipe","pipe"]});
+  let workerError = ""; runner.stderr.on("data", c => workerError += c);
+  assert.equal((await once(runner,"exit"))[0], 0, workerError);
   console.log(
-    `PASS ${manager} ${version.trim()}: clean tarball install, manager exec/run init, installed CLI startup, sample tool execution, provider settings and UI.`,
+    `PASS ${manager} ${version.trim()}: clean tarball install, manager exec/run init, installed CLI startup, sample tool execution, provider settings, UI, workbench files and packaged QuickJS worker.`,
   );
 } finally {
   if (server?.exitCode === null && server?.signalCode === null) {

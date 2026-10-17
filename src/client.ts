@@ -63,6 +63,15 @@ export class PidaClient {
   private path(id: string) {
     return `/v1/sessions/${encodeURIComponent(id)}`;
   }
+  async getWorkbench(): Promise<{ enabled: boolean; engine: string; files: { path: string; bytes: number }[]; skills: { name: string; description: string }[]; history: { id: string; message: string }[] }> {
+    return (await this.request("/v1/workbench")).json();
+  }
+  async readWorkspaceFile(path: string): Promise<{ path: string; content: string }> {
+    return (await this.request("/v1/workbench/file?path=" + encodeURIComponent(path))).json();
+  }
+  async writeWorkspaceFile(path: string, content: string): Promise<{ checkpoint: string }> {
+    return (await this.request("/v1/workbench/file", "POST", { path, content })).json();
+  }
   async getProviderSettings(): Promise<{
     provider: Record<string, unknown>;
     keyConfigured: boolean;

@@ -1,3 +1,19 @@
+# 0.5 workbench validation — 2026-10-17
+
+Result: **57/57 automated tests passed** on Node 24 using `npm test`.
+
+- Actual Pi loop with scripted provider responses: writes a deliberately incorrect aggregation, observes an assertion failure, repairs with upstream Pi edit, retests, produces an HTML dashboard and saves a Pi SKILL.md bundle. A new runtime discovers and retests the saved bundle, reuses it with new input, and produces a different result despite the current working script being broken.
+- QuickJS WASM: no exposed process/require/fetch/WebSocket; failed staged writes discarded; path/output/file bounds, CPU loop, memory pressure, cancellation and unsupported Promise result tested.
+- Files/history/security: independent permissions, principal separation, traversal/symlink/hardlink rejection, oversized files, exact Git restore including trailing whitespace and removal of later files, empty/failed/write-attempting tests rejected for skill save.
+- HTTP/client: authenticated workbench listing/upload/read, principal separation and permission rejection. HTML is returned as JSON, with preview markup using an empty iframe sandbox.
+- **npm 11.9.0, pnpm 12.11.2, bun 1.4.3** each installed the 0.5.0 tarball in a separate clean consumer project. Each exercised manager CLI init, installed Node server, sample tool, provider/settings/UI, file upload/read, and the packaged QuickJS worker/WASM. All passed. The full 57-test suite was run with npm; a full 0.5 source-test matrix under pnpm/bun was not run.
+- Cloud browser: installed tarball served in the test computer; restored scripted demonstration conversation, 4 files and 1 saved skill displayed. Selecting artifacts/dashboard.html rendered a static dashboard with total 540 and monthly values 120/180/240. This is evidence of the actual generated file and UI preview, not real-model reasoning. Desktop Chromium was inspected; new workbench mobile layout and all download/upload UI interactions were not separately browser-tested.
+- `scripts/workbench-demo.mjs` reproduces the deterministic demonstration into a new local workspace, with explicit synthetic-model labeling in both the conversation and generated HTML.
+
+No paid or real LLM credentials were used. Real-provider autonomous tool selection, business correctness, arbitrary app building, shell/Python/npm execution, dynamic React previews and production isolation remain unverified or unsupported. Test-created skills only establish their own assertions. The generic embedded runtime still has no tools by default; new standalone workspaces explicitly enable the bounded workbench profile. Git remains an external host prerequisite.
+
+Previous release records below are historical; they do not imply a repeated full browser or source package-manager matrix for 0.5.
+
 # 0.4 provider selection validation — 2026-10-17
 
 Result: **52/52 automated tests passed** on Node 24 with `npm test`. A clean npm consumer installed the 0.4 tarball successfully. In the cloud browser, the named provider selector, Anthropic model selection, missing-key rejection and switch to the separate Gemini model list were verified. No real API key was entered.

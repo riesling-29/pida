@@ -93,7 +93,7 @@ test("only explicitly approved tool files are imported; enabling grants no permi
   assert.equal(checkWorkspace(dir).ok, true);
   assert.equal((await loadWorkspaceTools(dir)).length, 1);
   setToolEnabled(dir, "disabled.mjs", true);
-  assert.deepEqual(readConfig(dir).permissions, ["lots:read"]);
+  assert.deepEqual(readConfig(dir).permissions, ["lots:read", "workbench:read", "workbench:write", "workbench:execute", "workbench:history", "skills:write"]);
   await assert.rejects(loadWorkspaceTools(dir), /SHOULD_NOT_IMPORT/);
   setToolEnabled(dir, "disabled.mjs", false);
   assert.equal((await loadWorkspaceTools(dir)).length, 1);

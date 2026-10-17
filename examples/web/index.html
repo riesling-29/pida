@@ -15,7 +15,7 @@
           <p class="eyebrow">PIDA / YOUR AGENT WORKSPACE</p>
           <h1>도구를 연결하고, 대화를 이어가세요.</h1>
         </div>
-        <span class="badge">0.4</span>
+        <span class="badge">0.5</span>
       </header>
       <p class="intro">
         내 도구와 모델로 작업하는 공간. 대화와 실행 과정을 한곳에서 확인하세요.
@@ -148,6 +148,16 @@
               있습니다. 대화 실행 중에는 설정을 바꿀 수 없습니다.
             </p>
           </form>
+        </details>
+        <details id="workbench" class="panel settings" hidden>
+          <summary>작업 파일 · 결과물 · 저장된 스킬</summary>
+          <p>내 대화들이 함께 사용하는 작업 공간입니다. 파일 생성 → JavaScript 실행 → 테스트·수정 → 스킬 저장을 챗으로 요청할 수 있습니다.</p>
+          <p class="muted">실제 모델 연결이 필요합니다. 실행은 QuickJS JavaScript 전용이며 HTML 미리보기는 정적 화면입니다.</p>
+          <div class="row"><button id="refresh-workbench" class="secondary">작업 공간 새로고침</button><label>파일 올리기 <input type="file" id="upload-file" accept=".txt,.csv,.json,.js,.md,.html,.svg,.css" /></label></div>
+          <p id="workbench-status" role="status"></p>
+          <div class="workbench-grid"><section><h3>작업 파일</h3><div id="workbench-files"></div><h3>검증 후 저장한 스킬</h3><ul id="workbench-skills"></ul></section>
+          <section><h3 id="file-title">파일을 선택하세요</h3><button id="download-file" class="secondary" disabled>다운로드</button><iframe id="artifact-preview" title="정적 결과물 미리보기" sandbox="" referrerpolicy="no-referrer" hidden></iframe><pre id="file-source"></pre></section></div>
+          <details><summary>Git 변경 이력</summary><ul id="workbench-history"></ul></details>
         </details>
         <div class="workspace-grid">
           <aside class="panel sidebar" aria-label="대화 목록">

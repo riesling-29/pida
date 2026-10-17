@@ -140,6 +140,7 @@ async function connect() {
   }
   if (!info.tools.length) $("tools").textContent = "등록된 도구 없음";
   await loadProviderSettings();
+  await refreshWorkbench();
   if (
     new URLSearchParams(location.hash.slice(1)).get("setup") === "1" ||
     initialSetup
@@ -167,6 +168,7 @@ $("refresh").onclick = () =>
   action(async () => {
     if (sessionId) await select(sessionId);
     else await list();
+    await refreshWorkbench();
   });
 $("delete-session").onclick = () => {
   if (!confirm("이 대화와 저장된 실행 기록을 삭제할까요?")) return;
@@ -184,6 +186,7 @@ $("delete-session").onclick = () => {
 };
 $("disconnect").onclick = () => {
   connected = false;
+  clearWorkbench();
   token = "";
   $("provider-key").value = "";
   sessionId = undefined;
@@ -240,6 +243,7 @@ $("form").onsubmit = async (e) => {
       $("messages").scrollTop = $("messages").scrollHeight;
     }
     await list();
+    await refreshWorkbench();
   } catch (error) {
     problem(error);
     $("status").textContent = "연결 확인 필요";
@@ -427,6 +431,61 @@ $("provider-form").onsubmit = async (e) => {
     configuring = false;
     providerControls();
   }
+};
+let selectedFile;
+function clearWorkbench() {
+  selectedFile = undefined;
+  $("file-source").textContent = "";
+  $("file-title").textContent = "파일을 선택하세요";
+  $("artifact-preview").srcdoc = "";
+  $("artifact-preview").hidden = true;
+  $("download-file").disabled = true;
+  for (const id of ["workbench-files", "workbench-skills", "workbench-history"]) $(id).replaceChildren();
+}
+async function refreshWorkbench() {
+  try {
+    const data = await client.getWorkbench();
+    $("workbench").hidden = false;
+    $("workbench-status").textContent = `${data.engine} · ${data.files.length}개 파일 · ${data.skills.length}개 스킬`;
+    $("workbench-files").replaceChildren();
+    for (const file of data.files) {
+      const button = document.createElement("button");
+      button.className = "file-item secondary";
+      button.textContent = `${file.path} · ${file.bytes} B`;
+      button.onclick = () => action(async () => {
+        selectedFile = await client.readWorkspaceFile(file.path);
+        $("file-title").textContent = file.path;
+        $("file-source").textContent = selectedFile.content;
+        $("download-file").disabled = false;
+        const html = /\.html?$/.test(file.path);
+        $("artifact-preview").hidden = !html;
+        $("artifact-preview").srcdoc = html ? `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'none'; base-uri 'none'">` + selectedFile.content : "";
+      });
+      $("workbench-files").append(button);
+    }
+    $("workbench-skills").replaceChildren();
+    for (const skill of data.skills) { const li = document.createElement("li"); li.textContent = `${skill.name} — ${skill.description}`; $("workbench-skills").append(li); }
+    $("workbench-history").replaceChildren();
+    for (const h of data.history) { const li = document.createElement("li"); li.textContent = `${h.id.slice(0, 8)} · ${h.message}`; $("workbench-history").append(li); }
+  } catch (e) {
+    if (e.status === 404 || e.status === 403) $("workbench").hidden = true;
+    else throw e;
+  }
+}
+$("refresh-workbench").onclick = () => action(refreshWorkbench);
+$("upload-file").onchange = () => action(async () => {
+  const file = $("upload-file").files[0];
+  if (!file) return;
+  if (file.size > 131072) throw new Error("파일은 128 KiB 이하여야 합니다.");
+  await client.writeWorkspaceFile("uploads/" + file.name, await file.text());
+  $("upload-file").value = "";
+  await refreshWorkbench();
+});
+$("download-file").onclick = () => {
+  if (!selectedFile) return;
+  const url = URL.createObjectURL(new Blob([selectedFile.content], { type: "text/plain;charset=utf-8" }));
+  const link = document.createElement("a"); link.href = url; link.download = selectedFile.path.split("/").pop(); link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 let initialSetup = false;
 function consumeLaunch() {

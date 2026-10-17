@@ -1,4 +1,4 @@
-# Architecture decision — Pida-core 0.4
+# Architecture decision — Pida-core 0.5
 
 Updated 2026-10-17 KST. Implements the user's Pida Initial Engineering Task, superseding the OpenCode-first assumption of the attached July Schumpeter baseline for this repository only.
 
@@ -38,7 +38,7 @@ Use `createAgentSession`, not a new agent loop. Use Pi `SessionManager.inMemory`
 
 ## Narrow first profile
 
-No general shell, browser automation, MCP auto-discovery, skills loader, scheduler, background task manager or multi-agent orchestration is enabled. These are explicit future profiles with their own authorization requirements, not claims of missing Pi capabilities. No OCEL/PIX integration is claimed: current trace metadata is an integration point, not an OCEL-conformant ledger.
+The embedded runtime still has no tools by default. New standalone workspaces enable the bounded workbench described in [WORKBENCH.md](WORKBENCH.md): Pi file tools and skill discovery, QuickJS WASM execution, and Git history. No general shell, browser automation, MCP auto-discovery, scheduler, background task manager or multi-agent orchestration is enabled. These are explicit future profiles with their own authorization requirements, not claims of missing Pi capabilities. No OCEL/PIX integration is claimed: current trace metadata is an integration point, not an OCEL-conformant ledger.
 
 ## Workspace layer
 
@@ -64,7 +64,7 @@ Discovery uses the chosen protocol's model-list endpoint. Applying settings prob
 
 Source build/test scripts invoke Node and the installed compiler directly instead of recursively invoking npm. npm, pnpm and bun get their own tested source lockfiles and consumer-install checks. The CLI retains its Node shebang; package-manager support is distinct from native Bun runtime support.
 
-## Native provider selection in 0.4
+## Native provider selection in 0.5
 
 `provider-catalog.ts` imports eight official Pi provider factories. Pida maintains only an explicit selection allowlist and credential-variable mapping, not model catalogs or provider protocols. Native models retain Pi metadata and streaming dispatch, including OpenRouter's per-model API routing. The auth wrapper invokes Pi API-key resolution with the workspace-scoped key and no fallback to ambient auth files or other credentials. OAuth is not advertised by this wrapper.
 

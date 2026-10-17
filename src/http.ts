@@ -1,3 +1,4 @@
+import type { PidaWorkbench } from "./workbench.js";
 import {
   createServer,
   type IncomingMessage,
@@ -10,6 +11,7 @@ import { PidaError, type PidaRuntime, type Principal } from "./runtime.js";
 
 export interface HttpOptions {
   runtime: PidaRuntime;
+  workbench?: PidaWorkbench;
   /** Optional local workspace administration; never enable for arbitrary tenant users. */
   providerSettings?: ProviderSettings;
   /** Verify a bearer token with the host identity service. Never trust body claims. */
@@ -41,14 +43,14 @@ function json(res: ServerResponse, status: number, data: unknown) {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
   res.end(JSON.stringify(data));
 }
-async function body(req: IncomingMessage): Promise<Record<string, unknown>> {
+async function body(req: IncomingMessage, limit = 32_768): Promise<Record<string, unknown>> {
   if (req.headers["content-type"]?.split(";")[0]?.trim() !== "application/json")
     throw new PidaError("JSON_REQUIRED", 415);
   let size = 0;
   const chunks: Buffer[] = [];
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > 32_768) throw new PidaError("BODY_TOO_LARGE", 413);
+    if (size > limit) throw new PidaError("BODY_TOO_LARGE", 413);
     chunks.push(Buffer.from(chunk));
   }
   let value: unknown;
@@ -74,7 +76,7 @@ export function createPidaServer(options: HttpOptions) {
     res.setHeader("Referrer-Policy", "no-referrer");
     res.setHeader(
       "Content-Security-Policy",
-      "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; frame-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
     );
     try {
       if (req.headers.origin && req.headers.origin !== options.allowedOrigin)
@@ -130,6 +132,21 @@ export function createPidaServer(options: HttpOptions) {
         throw new PidaError("UNAUTHORIZED", 401);
       const principal = await options.authenticate(auth.slice(7));
       if (!principal) throw new PidaError("UNAUTHORIZED", 401);
+      if (path.startsWith("/v1/workbench") && options.workbench) {
+        if (path === "/v1/workbench" && req.method === "GET") {
+          json(res, 200, await options.workbench.status(principal)); return;
+        }
+        if (path === "/v1/workbench/file" && req.method === "GET") {
+          const name = new URL(req.url!, "http://pida.invalid").searchParams.get("path");
+          if (!name) throw new PidaError("INVALID_PATH", 400);
+          json(res, 200, await options.workbench.read(principal, name)); return;
+        }
+        if (path === "/v1/workbench/file" && req.method === "POST") {
+          const input = await body(req, 800_000); keys(input, ["path", "content"]);
+          if (typeof input.path !== "string" || typeof input.content !== "string") throw new PidaError("INVALID_BODY", 400);
+          json(res, 200, await options.workbench.write(principal, input.path, input.content)); return;
+        }
+      }
       if (path.startsWith("/v1/provider") && options.providerSettings) {
         if (!principal.permissions.includes("pida:configure"))
           throw new PidaError("FORBIDDEN", 403);
