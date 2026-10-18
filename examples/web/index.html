@@ -1,59 +1,88 @@
 <!doctype html>
 <html lang="ko">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Pida · Agent workspace</title>
-    <link rel="stylesheet" href="/style.css" />
-    <script type="module" src="/app.js"></script>
-  </head>
-  <body>
-    <main>
-      <header>
-        <div class="mark" aria-hidden="true">p</div>
-        <div>
-          <p class="eyebrow">PIDA / YOUR AGENT WORKSPACE</p>
-          <h1>도구를 연결하고, 대화를 이어가세요.</h1>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Pida · Workspace</title>
+  <link rel="stylesheet" href="/style.css" />
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#prompt">요청 입력으로 이동</a>
+  <main class="app-shell">
+    <header class="app-bar">
+      <div class="brand" aria-label="Pida">pida<span class="cursor-mark" aria-hidden="true">_</span></div>
+      <span class="app-divider" aria-hidden="true">/</span>
+      <h1>workspace</h1>
+      <span class="version">core 0.5</span>
+      <div class="app-actions">
+        <button id="toggle-sessions" class="mobile-control" aria-controls="session-navigation" aria-expanded="false" disabled>대화 목록</button>
+        <button id="toggle-inspector" class="inspector-control" aria-controls="inspector" aria-expanded="false" disabled>작업 패널</button>
+        <button id="open-settings" class="quiet" disabled><span aria-hidden="true">⚙</span> 모델 설정</button>
+        <span id="connection-state" class="connection-state">offline</span>
+      </div>
+    </header>
+    <p id="error" role="alert"></p>
+    <section id="connection" class="connection">
+      <div class="connection-copy"><p class="eyebrow">YOUR MODELS. YOUR TOOLS.</p><h2>작업을 이어갈 준비.</h2><p>모델과 도구를 연결하고,<br />생각을 실행 가능한 결과로 만드세요.</p><span class="connection-caption">PIDA / EMBEDDED AGENT WORKSPACE</span></div>
+      <form id="connection-form">
+        <div class="section-label"><span>01</span> CONNECT</div>
+        <h3>작업 공간에 연결</h3>
+        <p class="muted">실행 명령의 ‘브라우저 열기’를 이용하거나 접속 토큰을 입력하세요.</p>
+        <label for="token">Pida 접속 토큰</label>
+        <input id="token" type="password" autocomplete="off" required placeholder="접속 토큰 입력" />
+        <p class="field-hint">LLM API 키가 아닙니다. 이 탭의 메모리에만 보관됩니다.</p>
+        <button id="connect" class="primary">연결 <span aria-hidden="true">↗</span></button>
+      </form>
+    </section>
+    <div id="workspace" hidden>
+      <aside id="session-navigation" class="sidebar" aria-label="대화 목록">
+        <div class="section-heading"><h2>SESSIONS <span id="session-count">00</span></h2><button id="close-sessions" class="mobile-control quiet" aria-label="대화 목록 닫기">닫기</button></div>
+        <button id="new-session" class="new-session" aria-label="새 대화"><span aria-hidden="true">＋</span> 새 대화 <kbd>⌥ N</kbd></button>
+        <div id="sessions"></div>
+        <div class="sidebar-bottom">
+          <button id="refresh" class="quiet">↻ 목록 · 상태 새로고침</button>
+          <div class="workspace-info"><span class="section-label">RUNTIME</span><span id="model"></span><span id="storage"></span></div>
+          <button id="disconnect" class="quiet">로그아웃</button>
         </div>
-        <span class="badge">0.5</span>
-      </header>
-      <p class="intro">
-        내 도구와 모델로 작업하는 공간. 대화와 실행 과정을 한곳에서 확인하세요.
-      </p>
-      <section id="connection" class="connection">
-        <h2>작업 공간에 연결</h2>
-        <p>
-          로컬 실행 명령의 <strong>브라우저 열기</strong>를 이용하거나 접속
-          토큰을 입력하세요.
-        </p>
-        <form id="connection-form">
-          <label for="token"
-            >Pida 접속 토큰
-            <span>LLM API 키가 아닙니다 · 이 탭의 메모리에만 보관</span></label
-          >
-          <div class="row">
-            <input
-              id="token"
-              type="password"
-              autocomplete="off"
-              required
-              placeholder="Pida 접속 토큰"
-            /><button id="connect">연결</button>
-          </div>
+      </aside>
+      <section class="conversation" aria-label="대화">
+        <div class="conversation-heading"><div><p class="section-label">WORKSPACE <span>/</span> CONVERSATION</p><h2 id="session-title">새 대화를 시작하세요</h2></div><span id="status" role="status">대기</span></div>
+        <p id="mock-note" class="notice" hidden><span>DEMO</span> LOT-001 · LOT-002 조회를 체험할 수 있습니다. 자유로운 작업은 모델을 연결해주세요.</p>
+        <div id="messages" aria-live="polite" aria-label="대화 내용"><div class="empty"><span class="empty-symbol" aria-hidden="true">p<span>_</span></span><h3>무엇을 만들어볼까요?</h3><p>새 대화를 열어 작업을 시작하세요.<br />파일과 실행 결과는 오른쪽 패널에 모입니다.</p></div></div>
+        <form id="form" class="composer">
+          <div class="composer-label"><label for="prompt"><span aria-hidden="true">›</span> 요청</label><span id="composer-state">새 대화를 시작하세요</span></div>
+          <textarea id="prompt" rows="3" maxlength="16000" placeholder="요청을 입력하세요…" disabled></textarea>
+          <div class="composer-actions"><span class="keyboard-hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> 보내기</span><button type="button" id="delete-session" class="quiet" disabled>대화 삭제</button><button type="button" id="cancel" class="secondary" disabled>중단</button><button id="send" class="primary" disabled>보내기</button></div>
         </form>
       </section>
-      <p id="error" role="alert"></p>
-      <div id="workspace" hidden>
-        <div class="workspace-info">
-          <span id="model"></span><span id="storage"></span
-          ><button id="disconnect" class="secondary">로그아웃</button>
+      <aside id="inspector" class="inspector" aria-label="작업 패널">
+        <div class="inspector-heading"><span class="section-label">INSPECTOR</span><button id="close-inspector" class="inspector-control quiet" aria-label="작업 패널 닫기">닫기</button></div>
+        <div class="inspector-tabs" role="tablist" aria-label="작업 패널 보기">
+          <button id="tab-files" role="tab" aria-selected="true" aria-controls="files-panel" tabindex="0">파일 <span id="file-count">0</span></button>
+          <button id="tab-runs" role="tab" aria-selected="false" aria-controls="runs-panel" tabindex="-1">실행 <span id="trace-count">0</span></button>
+          <button id="tab-tools" role="tab" aria-selected="false" aria-controls="tools-panel" tabindex="-1">도구 <span id="tool-count">0</span></button>
         </div>
-        <p id="mock-note" class="notice" hidden>
-          지금은 데모 모드입니다. LOT-001 또는 LOT-002를 요청하면 합성 데이터를
-          조회합니다. 자유로운 대화와 내 도구 사용에는 실제 모델을 연결해주세요.
-        </p>
-        <details id="provider-settings" class="panel settings">
-          <summary>모델 연결 · 설정</summary>
+        <section id="files-panel" class="inspector-panel" role="tabpanel" aria-labelledby="tab-files">
+          <div id="workbench" hidden>
+            <div class="file-toolbar"><span class="section-label">WORKING FILES</span><button id="refresh-workbench" class="quiet" aria-label="작업 공간 새로고침" title="작업 공간 새로고침">↻</button><label class="upload-control">＋ 파일 올리기<input type="file" id="upload-file" accept=".txt,.csv,.json,.js,.md,.html,.svg,.css" /></label></div>
+            <p id="workbench-status" role="status" class="field-hint"></p>
+            <div id="workbench-files"></div>
+            <section class="file-viewer" aria-label="선택한 파일"><div class="file-heading"><h3 id="file-title">선택한 파일 없음</h3><button id="download-file" class="quiet" disabled aria-label="다운로드">↓</button></div><p id="file-empty" class="panel-empty">파일을 선택하면<br />내용과 결과물을 여기에서 볼 수 있습니다.</p><iframe id="artifact-preview" title="정적 결과물 미리보기" sandbox="" referrerpolicy="no-referrer" hidden></iframe><details id="source-details" hidden><summary>소스 보기</summary><pre id="file-source"></pre></details></section>
+            <details class="inspector-section" open><summary>저장된 스킬 <span id="skill-count">0</span></summary><ul id="workbench-skills"></ul></details>
+            <details class="inspector-section"><summary>Git 변경 이력</summary><ul id="workbench-history"></ul></details>
+            <p class="inspector-note">같은 사용자의 대화들이 공유합니다.<br />JavaScript 실행 · 정적 HTML 미리보기</p>
+          </div>
+          <p id="workbench-unavailable" class="panel-empty">이 서버에는 작업 파일 기능이<br />연결되어 있지 않습니다.</p>
+        </section>
+        <section id="runs-panel" class="inspector-panel" role="tabpanel" aria-labelledby="tab-runs" hidden><div class="inspector-description"><span class="section-label">EXECUTION LOG</span><p>도구 호출과 작업의 흐름을 확인하세요.</p></div><ol id="trace"></ol><p id="trace-empty" class="panel-empty">아직 실행 기록이 없습니다.</p><p class="inspector-note">실행 메타데이터입니다. 대화 저장 시 본문과 도구 결과도 서버에 별도 저장됩니다.</p></section>
+        <section id="tools-panel" class="inspector-panel" role="tabpanel" aria-labelledby="tab-tools" hidden><div class="inspector-description"><span class="section-label">AVAILABLE TOOLS</span><p>현재 연결된 도구와 실행 권한입니다.</p></div><ul id="tools"></ul></section>
+      </aside>
+    </div>
+    <footer class="status-bar"><span><span class="status-dot" aria-hidden="true"></span> <span id="footer-state">연결 대기</span></span><span class="footer-center">PI RUNTIME <span>/</span> PIDA WORKSPACE</span><span><kbd>Alt</kbd> + <kbd>N</kbd> 새 대화</span></footer>
+  </main>
+  <dialog id="settings-dialog" aria-labelledby="settings-title"><div class="dialog-heading"><div><span class="section-label">CONFIGURATION</span><h2 id="settings-title">모델 연결</h2></div><button id="close-settings" class="quiet" aria-label="모델 설정 닫기">닫기 <kbd>Esc</kbd></button></div><details id="provider-settings" class="settings" open><summary>모델 연결 · 설정</summary>
           <form id="provider-form">
             <p>
               프로바이더를 선택하고 API 키와 사용할 모델을 설정하세요.
@@ -148,73 +177,6 @@
               있습니다. 대화 실행 중에는 설정을 바꿀 수 없습니다.
             </p>
           </form>
-        </details>
-        <details id="workbench" class="panel settings" hidden>
-          <summary>작업 파일 · 결과물 · 저장된 스킬</summary>
-          <p>내 대화들이 함께 사용하는 작업 공간입니다. 파일 생성 → JavaScript 실행 → 테스트·수정 → 스킬 저장을 챗으로 요청할 수 있습니다.</p>
-          <p class="muted">실제 모델 연결이 필요합니다. 실행은 QuickJS JavaScript 전용이며 HTML 미리보기는 정적 화면입니다.</p>
-          <div class="row"><button id="refresh-workbench" class="secondary">작업 공간 새로고침</button><label>파일 올리기 <input type="file" id="upload-file" accept=".txt,.csv,.json,.js,.md,.html,.svg,.css" /></label></div>
-          <p id="workbench-status" role="status"></p>
-          <div class="workbench-grid"><section><h3>작업 파일</h3><div id="workbench-files"></div><h3>검증 후 저장한 스킬</h3><ul id="workbench-skills"></ul></section>
-          <section><h3 id="file-title">파일을 선택하세요</h3><button id="download-file" class="secondary" disabled>다운로드</button><iframe id="artifact-preview" title="정적 결과물 미리보기" sandbox="" referrerpolicy="no-referrer" hidden></iframe><pre id="file-source"></pre></section></div>
-          <details><summary>Git 변경 이력</summary><ul id="workbench-history"></ul></details>
-        </details>
-        <div class="workspace-grid">
-          <aside class="panel sidebar" aria-label="대화 목록">
-            <div class="panel-heading">
-              <h2>내 대화</h2>
-              <button id="new-session">새 대화</button>
-            </div>
-            <div id="sessions"></div>
-            <button id="refresh" class="secondary">목록 · 상태 새로고침</button>
-            <div class="tool-list">
-              <h2>등록된 도구</h2>
-              <ul id="tools"></ul>
-            </div>
-          </aside>
-          <section class="panel conversation" aria-label="대화">
-            <div class="panel-heading">
-              <h2 id="session-title">새 대화를 시작하세요</h2>
-              <span id="status" role="status">대기</span>
-            </div>
-            <div id="messages" aria-live="polite" aria-label="대화 내용">
-              <p class="empty">왼쪽에서 대화를 선택하거나 새로 시작하세요.</p>
-            </div>
-            <form id="form">
-              <label for="prompt">요청</label
-              ><textarea
-                id="prompt"
-                rows="3"
-                maxlength="16000"
-                placeholder="무엇을 도와드릴까요?"
-                disabled
-              ></textarea>
-              <div class="row">
-                <button id="send" disabled>보내기</button
-                ><button type="button" id="cancel" class="secondary" disabled>
-                  중단</button
-                ><button
-                  type="button"
-                  id="delete-session"
-                  class="quiet"
-                  disabled
-                >
-                  대화 삭제
-                </button>
-              </div>
-            </form>
-            <details>
-              <summary>실행 타임라인</summary>
-              <ol id="trace"></ol>
-              <p class="footnote">
-                타임라인은 실행 메타데이터입니다. 대화 저장이 켜져 있으면 대화
-                본문과 도구 결과도 서버에 별도로 저장됩니다.
-              </p>
-            </details>
-          </section>
-        </div>
-      </div>
-      <footer>Pi 기반 · 내 모델 · 내 도구 · 이어지는 대화</footer>
-    </main>
-  </body>
+</details></dialog>
+</body>
 </html>

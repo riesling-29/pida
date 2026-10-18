@@ -201,3 +201,12 @@ Alternatively set `PIDA_PLAYWRIGHT_MODULE` to an installed module path and `PIDA
 ## Work, verify, repair, reuse
 
 New 0.5 workspaces include the bounded workbench. Existing configs remain unchanged until explicitly enabled. See [WORKBENCH.md](WORKBENCH.md) for migration, tool contracts, the execution API and security limits.
+
+## Compact terminal-style web UI
+
+The bundled web UI uses a charcoal/ivory palette with olive and terracotta accents, fixed-width labels, thin separators and three working areas: sessions on the left, conversation in the center, and a file/run/tool inspector on the right. Model settings open in a native modal dialog with focus handling and Escape dismissal. No extra frontend dependency or external font request is added.
+
+- **Alt+N** creates a conversation; **Ctrl+Enter** (or **Cmd+Enter**) sends the request. Enter by itself remains a newline. IME composition is not submitted by the shortcut.
+- The inspector tabs support Left/Right/Home/End keys. File selection shows source or the existing sandboxed static HTML preview; source is collapsed for HTML.
+- Below 1120px the inspector opens from “작업 패널”; below 700px sessions also open from “대화 목록”. Close buttons and Escape dismiss these panels. Browser-specific shortcut conflicts can be avoided by using the corresponding buttons.
+- Provider behavior, API contracts and execution capabilities are unchanged. The dark interface is a web UI, not a terminal emulator or shell.

@@ -1,3 +1,9 @@
+# Terminal-style UI refresh — 2026-10-18
+
+The existing 57 automated contract/integration tests pass after the UI changes. Browser QA uses the real local Pida backend with a synthetic model, not static mock screens. Verified in cloud Chromium: session restoration, HTML file preview, inspector tab switching and arrow-key navigation, Alt+N session creation, Ctrl+Enter submission through the Pi loop (LOT-002 tool response), six execution events in the timeline, native provider catalog selection in the settings modal and Escape dismissal. No real LLM key was entered or charged. Backend/API/provider capabilities are unchanged.
+
+The optional `scripts/browser-check.mjs` selectors were adapted for the modal and translated timeline; that full optional script was not rerun. Mobile breakpoints are implemented, but a separate mobile-device browser acceptance run has not been performed for this refresh. Package-manager dependencies and lockfiles are unchanged.
+
 # 0.5 workbench validation — 2026-10-17
 
 Result: **57/57 automated tests passed** on Node 24 using `npm test`.

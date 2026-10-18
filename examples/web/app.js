@@ -45,6 +45,17 @@ function controls() {
     button.disabled = busy || remoteRunning;
   $("connection").hidden = connected;
   $("workspace").hidden = !connected;
+  document.body.dataset.connected = String(connected);
+  $("connection-state").textContent = connected ? "connected" : "offline";
+  $("footer-state").textContent = !connected ? "연결 대기" : running || remoteRunning ? "실행 중" : "작업 공간 연결됨";
+  $("composer-state").textContent = !sessionId ? "새 대화를 시작하세요" : running || remoteRunning ? "작업을 수행하고 있습니다" : "준비됨";
+  $("open-settings").disabled = !connected || $("provider-settings").hidden;
+  $("toggle-sessions").disabled = !connected;
+  $("toggle-inspector").disabled = !connected;
+  $("refresh-workbench").disabled = busy;
+  $("upload-file").disabled = busy;
+  $("trace-count").textContent = $("trace").children.length;
+  $("trace-empty").hidden = $("trace").children.length > 0;
   providerControls();
 }
 async function action(fn) {
@@ -67,21 +78,39 @@ function message(role, text) {
     label = document.createElement("strong"),
     content = document.createElement("p");
   article.className = role;
-  label.textContent = role === "user" ? "나" : "Pida";
+  label.textContent = role === "user" ? "YOU" : "PIDA";
   content.textContent = text;
   article.append(label, content);
   $("messages").append(article);
   return content;
 }
+const traceLabels = { run_started: "작업 시작", turn_started: "모델 응답", tool_started: "도구 실행", tool_completed: "도구 실행 완료", tool_failed: "도구 실행 실패", run_finished: "작업 종료" };
 function trace(event) {
-  const li = document.createElement("li");
-  li.textContent = `${event.sequence} · ${event.type}${event.toolName ? ` · ${event.toolName}` : ""}${event.status ? ` · ${labels[event.status] ?? event.status}` : ""}`;
-  $("trace").append(li);
+  const li = document.createElement("li"), sequence = document.createElement("span"), body = document.createElement("div"), kind = document.createElement("span"), detail = document.createElement("span");
+  li.title = event.type;
+  li.classList.toggle("trace-failed", event.status === "failed" || event.type === "tool_failed");
+  sequence.className = "trace-sequence";
+  sequence.textContent = String(event.sequence).padStart(2, "0");
+  kind.className = "trace-kind";
+  kind.textContent = traceLabels[event.type] ?? event.type;
+  detail.className = "trace-detail";
+  detail.textContent = [event.toolName, labels[event.status] ?? event.status].filter(Boolean).join(" / ");
+  body.append(kind, detail); li.append(sequence, body); $("trace").append(li);
   while ($("trace").children.length > 1000) $("trace").firstChild.remove();
+  $("trace-count").textContent = $("trace").children.length;
+  $("trace-empty").hidden = true;
+}
+function emptyConversation() {
+  const empty = document.createElement("div"), symbol = document.createElement("span"), title = document.createElement("h3"), hint = document.createElement("p");
+  empty.className = "empty"; symbol.className = "empty-symbol"; symbol.textContent = "p_"; symbol.setAttribute("aria-hidden", "true");
+  title.textContent = "무엇을 만들어볼까요?";
+  hint.textContent = sessionId ? "아래에 요청을 입력하세요. 파일과 실행 결과는 작업 패널에서 확인할 수 있습니다." : "새 대화를 열어 작업을 시작하세요.";
+  empty.append(symbol, title, hint); $("messages").replaceChildren(empty);
 }
 async function list() {
   const { sessions } = await client.listSessions();
   $("sessions").replaceChildren();
+  $("session-count").textContent = String(sessions.length).padStart(2, "0");
   for (const s of sessions) {
     const button = document.createElement("button"),
       title = document.createElement("span"),
@@ -89,7 +118,12 @@ async function list() {
     button.className = "session-item";
     button.setAttribute("aria-current", String(s.sessionId === sessionId));
     title.textContent = s.title;
-    detail.textContent = `${new Date(s.updatedAt).toLocaleString()} · ${s.running ? "실행 중" : (labels[s.lastStatus] ?? "대기")}`;
+    button.title = s.title;
+    if (s.sessionId === sessionId) {
+      $("session-title").textContent = s.title;
+      $("session-title").title = s.title;
+    }
+    detail.textContent = `${new Date(s.updatedAt).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })} · ${s.running ? "실행 중" : (labels[s.lastStatus] ?? "대기")}`;
     button.append(title, detail);
     button.onclick = () => action(() => select(s.sessionId));
     $("sessions").append(button);
@@ -104,14 +138,11 @@ async function select(id) {
   remoteRunning = data.running;
   sessionStorage.setItem("pida-session", id);
   $("session-title").textContent = data.title ?? "대화";
+  $("session-title").title = data.title ?? "대화";
+  setDrawer("sessions", false);
   $("messages").replaceChildren();
   for (const m of data.messages) message(m.role, m.text);
-  if (!data.messages.length) {
-    const p = document.createElement("p");
-    p.className = "empty";
-    p.textContent = "무엇을 도와드릴까요? 아래에 요청을 입력하세요.";
-    $("messages").append(p);
-  }
+  if (!data.messages.length) emptyConversation();
   $("trace").replaceChildren();
   for (const event of (await client.getTrace(id)).events) trace(event);
   $("status").textContent = data.running
@@ -133,11 +164,13 @@ async function connect() {
   $("mock-note").hidden = info.provider?.mode !== "mock";
   $("tools").replaceChildren();
   for (const tool of info.tools) {
-    const item = document.createElement("li");
-    item.textContent = `${tool.name}${tool.permitted ? "" : " · 권한 없음"}`;
-    item.title = tool.description;
-    $("tools").append(item);
+    const item = document.createElement("li"), name = document.createElement("strong"), description = document.createElement("p");
+    name.textContent = `${tool.name}${tool.permitted ? "" : " · 권한 없음"}`;
+    name.classList.toggle("denied", !tool.permitted);
+    description.textContent = tool.description;
+    item.append(name, description); $("tools").append(item);
   }
+  $("tool-count").textContent = info.tools.length;
   if (!info.tools.length) $("tools").textContent = "등록된 도구 없음";
   await loadProviderSettings();
   await refreshWorkbench();
@@ -145,7 +178,7 @@ async function connect() {
     new URLSearchParams(location.hash.slice(1)).get("setup") === "1" ||
     initialSetup
   )
-    $("provider-settings").open = true;
+    openSettings();
   connected = true;
   sessionId = undefined;
   remoteRunning = false;
@@ -154,16 +187,19 @@ async function connect() {
   const saved = sessionStorage.getItem("pida-session");
   const recent = sessions.find((s) => s.sessionId === saved) ?? sessions[0];
   if (recent) await select(recent.sessionId);
+  else emptyConversation();
 }
 $("connection-form").onsubmit = (e) => {
   e.preventDefault();
   action(connect);
 };
-$("new-session").onclick = () =>
-  action(async () => {
+$("new-session").onclick = async () => {
+  await action(async () => {
     const data = await client.createSession();
     await select(data.sessionId);
   });
+  $("prompt").focus();
+};
 $("refresh").onclick = () =>
   action(async () => {
     if (sessionId) await select(sessionId);
@@ -182,10 +218,13 @@ $("delete-session").onclick = () => {
     $("status").textContent = "대기";
     const sessions = await list();
     if (sessions[0]) await select(sessions[0].sessionId);
+    else emptyConversation();
   });
 };
 $("disconnect").onclick = () => {
   connected = false;
+  $("settings-dialog").close();
+  setDrawer("sessions", false); setDrawer("inspector", false);
   clearWorkbench();
   token = "";
   $("provider-key").value = "";
@@ -433,42 +472,66 @@ $("provider-form").onsubmit = async (e) => {
   }
 };
 let selectedFile;
-function clearWorkbench() {
+function clearFile() {
   selectedFile = undefined;
   $("file-source").textContent = "";
-  $("file-title").textContent = "파일을 선택하세요";
+  $("file-title").textContent = "선택한 파일 없음";
   $("artifact-preview").srcdoc = "";
   $("artifact-preview").hidden = true;
+  $("file-empty").hidden = false;
+  $("source-details").hidden = true;
   $("download-file").disabled = true;
+}
+function clearWorkbench() {
+  clearFile();
+  $("file-count").textContent = "0"; $("skill-count").textContent = "0";
   for (const id of ["workbench-files", "workbench-skills", "workbench-history"]) $(id).replaceChildren();
+}
+async function selectFile(path) {
+  selectedFile = await client.readWorkspaceFile(path);
+  $("file-title").textContent = path;
+  $("file-source").textContent = selectedFile.content;
+  $("file-empty").hidden = true;
+  $("source-details").hidden = false;
+  $("download-file").disabled = false;
+  const html = /\.html?$/.test(path);
+  $("source-details").open = !html;
+  $("artifact-preview").hidden = !html;
+  $("artifact-preview").srcdoc = html ? `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'none'; base-uri 'none'">` + selectedFile.content : "";
+  for (const button of $("workbench-files").querySelectorAll("button")) button.setAttribute("aria-current", String(button.dataset.path === path));
 }
 async function refreshWorkbench() {
   try {
     const data = await client.getWorkbench();
-    $("workbench").hidden = false;
-    $("workbench-status").textContent = `${data.engine} · ${data.files.length}개 파일 · ${data.skills.length}개 스킬`;
+    $("workbench").hidden = false; $("workbench-unavailable").hidden = true;
+    $("file-count").textContent = data.files.length;
+    $("skill-count").textContent = data.skills.length;
+    $("workbench-status").textContent = `${data.engine} / ${data.files.length} files / ${data.skills.length} skills`;
     $("workbench-files").replaceChildren();
     for (const file of data.files) {
-      const button = document.createElement("button");
-      button.className = "file-item secondary";
-      button.textContent = `${file.path} · ${file.bytes} B`;
-      button.onclick = () => action(async () => {
-        selectedFile = await client.readWorkspaceFile(file.path);
-        $("file-title").textContent = file.path;
-        $("file-source").textContent = selectedFile.content;
-        $("download-file").disabled = false;
-        const html = /\.html?$/.test(file.path);
-        $("artifact-preview").hidden = !html;
-        $("artifact-preview").srcdoc = html ? `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'none'; base-uri 'none'">` + selectedFile.content : "";
-      });
+      const button = document.createElement("button"), icon = document.createElement("span"), name = document.createElement("span"), size = document.createElement("small");
+      button.className = "file-item"; button.dataset.path = file.path; button.title = file.path;
+      button.setAttribute("aria-label", file.path);
+      button.setAttribute("aria-current", String(selectedFile?.path === file.path));
+      icon.className = "file-icon"; icon.setAttribute("aria-hidden", "true"); icon.textContent = file.path.split(".").pop().slice(0, 4).toUpperCase();
+      name.className = "file-name"; name.textContent = file.path;
+      size.textContent = file.bytes < 1024 ? `${file.bytes} B` : `${(file.bytes / 1024).toFixed(1)} K`;
+      button.append(icon, name, size);
+      button.onclick = () => action(() => selectFile(file.path));
       $("workbench-files").append(button);
     }
+    if (!data.files.length) { const p = document.createElement("p"); p.className = "panel-empty"; p.textContent = "파일을 올리거나 챗에서 생성을 요청하세요."; $("workbench-files").append(p); }
     $("workbench-skills").replaceChildren();
-    for (const skill of data.skills) { const li = document.createElement("li"); li.textContent = `${skill.name} — ${skill.description}`; $("workbench-skills").append(li); }
+    for (const skill of data.skills) { const li = document.createElement("li"), name = document.createElement("strong"), description = document.createElement("p"); name.textContent = skill.name; description.textContent = skill.description; li.append(name, description); $("workbench-skills").append(li); }
+    if (!data.skills.length) $("workbench-skills").textContent = "검증 후 저장한 스킬이 여기에 쌓입니다.";
     $("workbench-history").replaceChildren();
-    for (const h of data.history) { const li = document.createElement("li"); li.textContent = `${h.id.slice(0, 8)} · ${h.message}`; $("workbench-history").append(li); }
+    for (const h of data.history) { const li = document.createElement("li"), id = document.createElement("code"); id.textContent = h.id.slice(0, 8); li.append(id, ` · ${h.message}`); $("workbench-history").append(li); }
+    if (selectedFile) {
+      if (data.files.some(f => f.path === selectedFile.path)) await selectFile(selectedFile.path);
+      else clearFile();
+    }
   } catch (e) {
-    if (e.status === 404 || e.status === 403) $("workbench").hidden = true;
+    if (e.status === 404 || e.status === 403) { clearWorkbench(); $("workbench").hidden = true; $("workbench-unavailable").hidden = false; }
     else throw e;
   }
 }
@@ -487,6 +550,47 @@ $("download-file").onclick = () => {
   const link = document.createElement("a"); link.href = url; link.download = selectedFile.path.split("/").pop(); link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
+function openSettings() {
+  if ($("provider-settings").hidden) return;
+  $("provider-settings").open = true;
+  if (!$("settings-dialog").open) $("settings-dialog").showModal();
+}
+$("open-settings").onclick = openSettings;
+$("close-settings").onclick = () => $("settings-dialog").close();
+function setDrawer(name, open) {
+  document.body.dataset[name + "Open"] = String(open);
+  $("toggle-" + name).setAttribute("aria-expanded", String(open));
+  if (open) setDrawer(name === "sessions" ? "inspector" : "sessions", false);
+}
+for (const name of ["sessions", "inspector"]) {
+  $("toggle-" + name).onclick = () => setDrawer(name, document.body.dataset[name + "Open"] !== "true");
+  $("close-" + name).onclick = () => { setDrawer(name, false); $("toggle-" + name).focus(); };
+}
+const inspectorTabs = ["files", "runs", "tools"];
+function inspectorTab(name, focus = false) {
+  for (const key of inspectorTabs) {
+    const active = key === name;
+    $("tab-" + key).setAttribute("aria-selected", String(active));
+    $("tab-" + key).tabIndex = active ? 0 : -1;
+    $(key + "-panel").hidden = !active;
+  }
+  if (focus) $("tab-" + name).focus();
+}
+for (const [index, name] of inspectorTabs.entries()) {
+  $("tab-" + name).onclick = () => inspectorTab(name);
+  $("tab-" + name).onkeydown = e => {
+    const next = e.key === "ArrowRight" ? (index + 1) % 3 : e.key === "ArrowLeft" ? (index + 2) % 3 : e.key === "Home" ? 0 : e.key === "End" ? 2 : undefined;
+    if (next !== undefined) { e.preventDefault(); inspectorTab(inspectorTabs[next], true); }
+  };
+}
+$("prompt").onkeydown = e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && !e.isComposing && !$("send").disabled) { e.preventDefault(); $("form").requestSubmit(); }
+};
+document.addEventListener("keydown", e => {
+  if (e.isComposing || $("settings-dialog").open) return;
+  if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === "KeyN" && !$("new-session").disabled) { e.preventDefault(); $("new-session").click(); }
+  if (e.key === "Escape") { setDrawer("sessions", false); setDrawer("inspector", false); }
+});
 let initialSetup = false;
 function consumeLaunch() {
   const fragment = new URLSearchParams(location.hash.slice(1));
@@ -495,7 +599,7 @@ function consumeLaunch() {
   if (location.hash)
     history.replaceState(null, "", location.pathname + location.search);
   if (initial && connected && initial === token) {
-    if (initialSetup) $("provider-settings").open = true;
+    if (initialSetup) openSettings();
     return;
   }
   if (initial) {

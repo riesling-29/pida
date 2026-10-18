@@ -145,7 +145,7 @@ try {
   await page.waitForFunction(() =>
     [...document.querySelectorAll("#trace li")]
       .at(-1)
-      ?.textContent.includes("tool_started"),
+      ?.getAttribute("title") === "tool_started",
   );
   await page.getByRole("button", { name: "중단", exact: true }).click();
   await page.waitForFunction(
@@ -214,6 +214,7 @@ try {
     app.runtime.getInfo({ id: "local-user", permissions: [] }).provider.model,
     "browser-model",
   );
+  await page.locator("#close-settings").click();
   await page.getByRole("button", { name: "새 대화", exact: true }).click();
   await page.locator("#prompt").fill("hello");
   await page.getByRole("button", { name: "보내기", exact: true }).click();
@@ -221,6 +222,7 @@ try {
     () => document.querySelector("#status").textContent === "완료",
   );
   assert.match(await page.locator("#messages").textContent(), /OK/);
+  await page.locator("#open-settings").click();
   await page.locator("#provider-model").fill("bad-model");
   await page
     .getByRole("button", { name: "연결 확인 후 적용", exact: true })
@@ -261,6 +263,7 @@ try {
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   );
+  await page.locator("#close-settings").click();
   await page.getByRole("button", { name: "로그아웃", exact: true }).click();
   await page.locator("#connection").waitFor({ state: "visible" });
   assert.deepEqual(errors, []);

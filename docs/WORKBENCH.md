@@ -13,7 +13,7 @@ This is a JavaScript artifact-building profile, not a general-purpose developmen
 
 ## Start and use
 
-Install with npm, pnpm or bun as described in [WORKSPACE.md](WORKSPACE.md). Run setup, select a real LLM provider and model, and use **작업 파일 · 결과물 · 저장된 스킬** in the web UI. Upload a small text/CSV/JSON file; it is stored under `uploads/`. Example chat request:
+Install with npm, pnpm or bun as described in [WORKSPACE.md](WORKSPACE.md). Run setup, select a real LLM provider and model, and use **작업 패널 → 파일** in the web UI. Upload a small text/CSV/JSON file; it is stored under `uploads/`. Example chat request:
 
 > uploads/sales.csv를 읽고 월별 합계 대시보드를 artifacts/sales.html로 만들어줘. 집계 로직은 JavaScript로 분리하고 기대값을 assert로 검사해. 실패하면 수정하고 다시 검사한 뒤, 통과한 스크립트와 테스트를 sales-dashboard-v1 스킬로 저장해줘.
 
