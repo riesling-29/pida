@@ -4,7 +4,8 @@ import {
   type IncomingMessage,
   type ServerResponse,
 } from "node:http";
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual, randomBytes } from "node:crypto";
+import { uiFrame, uiFramePolicy } from "./ui-frame.js";
 import { readFile } from "node:fs/promises";
 import type { ProviderSettings } from "./provider-settings.js";
 import { PidaError, type PidaRuntime, type Principal } from "./runtime.js";
@@ -104,8 +105,17 @@ export function createPidaServer(options: HttpOptions) {
       }
       if (
         options.serveDemo &&
+        req.method === "GET" && path === "/studio-frame.html"
+      ) {
+        const nonce = randomBytes(24).toString("base64");
+        res.setHeader("Content-Security-Policy", uiFramePolicy(nonce));
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(uiFrame(nonce)); return;
+      }
+      if (
+        options.serveDemo &&
         req.method === "GET" &&
-        ["/", "/app.js", "/style.css", "/pida-client.js"].includes(path)
+        ["/", "/app.js", "/studio.js", "/style.css", "/pida-client.js"].includes(path)
       ) {
         const file = path === "/" ? "index.html" : path.slice(1);
         const contents = await readFile(
@@ -132,6 +142,14 @@ export function createPidaServer(options: HttpOptions) {
         throw new PidaError("UNAUTHORIZED", 401);
       const principal = await options.authenticate(auth.slice(7));
       if (!principal) throw new PidaError("UNAUTHORIZED", 401);
+      if (options.workbench && path === "/v1/studio" && req.method === "GET") {
+        json(res, 200, await options.workbench.uiState(principal)); return;
+      }
+      if (options.workbench && path === "/v1/studio/template" && req.method === "POST") {
+        const input = await body(req); keys(input, ["templateId", "expectedRevision"]);
+        if (typeof input.templateId !== "string" || typeof input.expectedRevision !== "string") throw new PidaError("INVALID_BODY", 400);
+        json(res, 200, await options.workbench.uiTemplate(principal, input.templateId, input.expectedRevision)); return;
+      }
       if (path.startsWith("/v1/workbench") && options.workbench) {
         if (path === "/v1/workbench" && req.method === "GET") {
           json(res, 200, await options.workbench.status(principal)); return;

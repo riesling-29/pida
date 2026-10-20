@@ -46,4 +46,4 @@ jobs:
       - run: ${{ matrix.install }}
       - run: ${{ matrix.test }}
       - run: npm pack
-      - run: node scripts/install-check.mjs ${{ matrix.manager }} pida-core-0.3.0.tgz
+      - run: node scripts/install-check.mjs ${{ matrix.manager }} pida-core-*.tgz

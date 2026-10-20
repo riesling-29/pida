@@ -1,3 +1,4 @@
+import { createStudio } from "/studio.js";
 import { PidaClient } from "/pida-client.js";
 const $ = (id) => document.getElementById(id);
 let token = "",
@@ -7,6 +8,17 @@ let token = "",
   running = false,
   remoteRunning = false;
 const client = new PidaClient({ baseUrl: location.origin, token: () => token });
+const studio = createStudio({
+  client,
+  async request(path, options = {}) {
+    const response = await fetch(path, { method: options.method ?? "GET", headers: { Authorization: `Bearer ${token}`, ...(options.body ? { "Content-Type": "application/json" } : {}) }, ...(options.body ? { body: JSON.stringify(options.body) } : {}) });
+    const value = await response.json();
+    if (!response.ok) throw Object.assign(new Error(value.error), { code: value.error, status: response.status });
+    return value;
+  },
+  changed: () => controls(),
+  disconnected: () => $("disconnect").click(),
+});
 const labels = {
   completed: "완료",
   failed: "실패",
@@ -32,7 +44,7 @@ function problem(error) {
     errors[error.code] ?? error.message ?? "요청을 처리하지 못했습니다.";
 }
 function controls() {
-  const busy = pending || running;
+  const busy = pending || running || studio.busy;
   $("send").disabled = !sessionId || busy || remoteRunning;
   $("cancel").disabled = pending || !(running || remoteRunning);
   $("connect").disabled = busy;
@@ -57,9 +69,10 @@ function controls() {
   $("trace-count").textContent = $("trace").children.length;
   $("trace-empty").hidden = $("trace").children.length > 0;
   providerControls();
+  studio.update({ connected, busy: pending || running || remoteRunning || configuring });
 }
 async function action(fn) {
-  if (pending || running) return;
+  if (pending || running || studio.busy) return;
   pending = true;
   $("error").textContent = "";
   controls();
@@ -188,6 +201,7 @@ async function connect() {
   const recent = sessions.find((s) => s.sessionId === saved) ?? sessions[0];
   if (recent) await select(recent.sessionId);
   else emptyConversation();
+  await studio.connect(info);
 }
 $("connection-form").onsubmit = (e) => {
   e.preventDefault();
@@ -226,6 +240,7 @@ $("disconnect").onclick = () => {
   $("settings-dialog").close();
   setDrawer("sessions", false); setDrawer("inspector", false);
   clearWorkbench();
+  studio.reset();
   token = "";
   $("provider-key").value = "";
   sessionId = undefined;
@@ -249,7 +264,7 @@ $("cancel").onclick = async () => {
 };
 $("form").onsubmit = async (e) => {
   e.preventDefault();
-  if (pending || running || remoteRunning || !sessionId) return;
+  if (pending || running || studio.busy || remoteRunning || !sessionId) return;
   const prompt = $("prompt").value.trim();
   if (!prompt) return;
   running = true;
@@ -283,6 +298,7 @@ $("form").onsubmit = async (e) => {
     }
     await list();
     await refreshWorkbench();
+    await studio.refresh();
   } catch (error) {
     problem(error);
     $("status").textContent = "연결 확인 필요";
@@ -345,7 +361,7 @@ function providerControls() {
   for (const field of $("provider-form").querySelectorAll("input, select")) field.disabled = configuring;
   $("provider-key").disabled = configuring || (!native && $("provider-no-key").checked);
   $("provider-http-row").hidden = native || !$("provider-url").value.startsWith("http:");
-  $("apply-provider").disabled = configuring || running || pending;
+  $("apply-provider").disabled = configuring || running || pending || studio.busy;
   $("load-models").disabled = configuring || mock;
 }
 function providerDraft() {
@@ -448,9 +464,9 @@ $("load-models").onclick = async () => {
 };
 $("provider-form").onsubmit = async (e) => {
   e.preventDefault();
-  if (configuring || running || pending) return;
+  if (configuring || running || pending || studio.busy) return;
   configuring = true;
-  providerControls();
+  controls();
   $("provider-feedback").textContent = "연결을 확인하고 있습니다…";
   try {
     await client.configureProvider(providerDraft());
@@ -460,6 +476,7 @@ $("provider-form").onsubmit = async (e) => {
       `${info.provider.mode === "mock" ? "데모 모델" : info.provider.mode === "endpoint" ? "사용자 지정" : info.provider.mode} · ${info.provider.model}`;
     $("mock-note").hidden = info.provider.mode !== "mock";
     await loadProviderSettings();
+    await studio.connect(info);
     $("provider-feedback").textContent =
       "적용했습니다. 바로 대화를 시작하셔도 됩니다.";
   } catch (error) {
@@ -468,7 +485,7 @@ $("provider-form").onsubmit = async (e) => {
       "설정을 적용하지 못했습니다. 기존 연결을 확인해주세요.";
   } finally {
     configuring = false;
-    providerControls();
+    controls();
   }
 };
 let selectedFile;

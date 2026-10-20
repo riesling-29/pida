@@ -2,11 +2,13 @@
 
 An embedded, reusable **Pi-based agent harness** for applications. Bring the package into a host backend, register business tools, and connect a web or app interface through the client SDK. The host does not implement the agent loop.
 
-**Workspace MVP 0.5.0:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces now persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call business authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+**Workspace MVP 0.6.0:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces now persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call business authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
 
 The lot-status tool is **replaceable synthetic sample data**, not a manufacturing-specific restriction. The default mock is deterministic and not an intelligent model.
 
 New workspaces include a practical **work → test → repair → save/reuse** profile. Pi handles file reads/writes/edits and SKILL.md discovery; QuickJS runs bounded JavaScript in WASM; Git checkpoints changes. The web UI exposes files, static HTML previews, downloads and saved skills. Connect a real model to ask Pida to build artifacts. The default mock only demonstrates lot lookup. See [workbench usage and limits](docs/WORKBENCH.md).
+
+New in 0.6: **Service / Developer–Operator / Agent workspace** tabs. Choose a sidebar, three-column, top-navigation or blank template, then ask the connected Pida model to edit the service UI. Both views load the same saved HTML. Inline JavaScript interactions run in a separate opaque-origin frame; network/backend access and role management are not included. See [UI Studio](docs/UI-STUDIO.md).
 
 ## Quick start — choose npm, pnpm or bun
 
@@ -48,7 +50,7 @@ The package has **not** been published to npm. Create and install a local packag
 ```sh
 npm pack
 # Run from your host application directory:
-npm install /absolute/path/to/pida-core-0.5.0.tgz
+npm install /absolute/path/to/pida-core-0.6.0.tgz
 ```
 
 Entry points separate standalone configuration, server code and browser code:

@@ -1,6 +1,6 @@
 # Pida workspace — install, configure, extend, reuse
 
-Pida 0.5 provides a local agent workspace around the same embedded Pi runtime. It includes a CLI, approved tool directory, saved conversations and a web UI. Git and Node.js 22.19+ are required for the default workbench. npm registry publication has not been performed.
+Pida 0.6 provides a local agent workspace around the same embedded Pi runtime. It includes a CLI, approved tool directory, saved conversations and a web UI. Git and Node.js 22.19+ are required for the default workbench. npm registry publication has not been performed.
 
 ## Start from the repository
 
@@ -34,7 +34,7 @@ npm pack
 From the receiving application's directory:
 
 ```sh
-npm install /absolute/path/to/pida-core-0.5.0.tgz
+npm install /absolute/path/to/pida-core-0.6.0.tgz
 npx pida setup
 ```
 
@@ -123,9 +123,9 @@ After installing an already-built tarball into a receiving application:
 
 | Manager | Install package | Set up / open settings |
 | --- | --- | --- |
-| npm | `npm install /path/pida-core-0.5.0.tgz` | `npx pida setup` |
-| pnpm | `pnpm add --ignore-scripts /path/pida-core-0.5.0.tgz` | `pnpm exec pida setup` |
-| bun | `bun add --ignore-scripts /path/pida-core-0.5.0.tgz` | `bun run pida setup` |
+| npm | `npm install /path/pida-core-0.6.0.tgz` | `npx pida setup` |
+| pnpm | `pnpm add --ignore-scripts /path/pida-core-0.6.0.tgz` | `pnpm exec pida setup` |
+| bun | `bun add --ignore-scripts /path/pida-core-0.6.0.tgz` | `bun run pida setup` |
 
 The tarball contains compiled code and requires no install/build lifecycle scripts. Using `--ignore-scripts` with npm is also supported. Pnpm 12 can otherwise ask about lifecycle scripts of optional upstream provider dependencies. The repository's pnpm configuration explicitly disables those unused scripts.
 

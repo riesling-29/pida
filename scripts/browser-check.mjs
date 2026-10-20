@@ -54,6 +54,8 @@ try {
   const token = workspaceEnvironment(directory).PIDA_API_TOKEN,
     base = `http://127.0.0.1:${port}`;
   await page.goto(`${base}/#token=${encodeURIComponent(token)}`);
+  await page.locator("#mode-tabs").waitFor({ state: "visible" });
+  await page.locator('#mode-tabs [data-mode="workspace"]').click();
   await page.locator("#workspace").waitFor({ state: "visible" });
   assert.equal(new URL(page.url()).hash, "");
   assert.equal(
@@ -81,6 +83,7 @@ try {
   await page.locator("#connection").waitFor({ state: "visible" });
   await page.locator("#token").fill(token);
   await page.locator("#token").press("Enter");
+  await page.locator('#mode-tabs [data-mode="workspace"]').click();
   await page.waitForFunction(() =>
     document.querySelector("#messages").textContent.includes("processing"),
   );
@@ -89,6 +92,7 @@ try {
   await page.reload();
   await page.locator("#token").fill(token);
   await page.locator("#token").press("Enter");
+  await page.locator('#mode-tabs [data-mode="workspace"]').click();
   await page.waitForFunction(() =>
     document.querySelector("#messages").textContent.includes("processing"),
   );
@@ -140,6 +144,7 @@ try {
   await page.reload();
   await page.locator("#token").fill(token);
   await page.locator("#token").press("Enter");
+  await page.locator('#mode-tabs [data-mode="workspace"]').click();
   await page.locator("#prompt").fill("LOT-001");
   await page.getByRole("button", { name: "보내기", exact: true }).click();
   await page.waitForFunction(() =>
@@ -215,6 +220,7 @@ try {
     "browser-model",
   );
   await page.locator("#close-settings").click();
+  await page.locator('#mode-tabs [data-mode="workspace"]').click();
   await page.getByRole("button", { name: "새 대화", exact: true }).click();
   await page.locator("#prompt").fill("hello");
   await page.getByRole("button", { name: "보내기", exact: true }).click();
@@ -264,7 +270,7 @@ try {
     ),
   );
   await page.locator("#close-settings").click();
-  await page.getByRole("button", { name: "로그아웃", exact: true }).click();
+  await page.locator("#disconnect").click();
   await page.locator("#connection").waitFor({ state: "visible" });
   assert.deepEqual(errors, []);
   await stop();
