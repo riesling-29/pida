@@ -285,13 +285,15 @@ export class ProviderSettings {
     const p = draft.config.provider;
     if (p.kind === "mock") return { ok: true, scope: "mock" };
     const probe = new PidaRuntime({
-      provider: p.kind === "native" ? nativeProvider(p, draft.env, 128) : endpointProvider(
-        { id: "setup-probe", ...p, maxTokens: Math.min(32, p.maxTokens) },
+      provider: p.kind === "native" ? nativeProvider(p, draft.env, 1024) : endpointProvider(
+        { id: "setup-probe", ...p, maxTokens: Math.min(1024, p.maxTokens) },
         draft.env,
       ),
       tools: [],
-      maxRunMs: 15_000,
+      maxRunMs: 60_000,
       maxTurns: 1,
+      maxOutputRetries: 0,
+      autoCompaction: false,
     });
     const principal = { id: "setup-probe", permissions: [] };
     try {
@@ -302,9 +304,10 @@ export class ProviderSettings {
         "Reply briefly with OK.",
       );
       if (result.status !== "completed" || !result.text.trim())
-        throw new Error();
+        throw new PidaError(result.code === "OUTPUT_LIMIT" ? "PROVIDER_TEST_OUTPUT_LIMIT" : result.code === "RUN_TIMEOUT" ? "PROVIDER_TEST_TIMEOUT" : "PROVIDER_TEST_FAILED", 400);
       return { ok: true, scope: "model-response" };
-    } catch {
+    } catch (error) {
+      if (error instanceof PidaError) throw error;
       throw new PidaError("PROVIDER_TEST_FAILED", 400);
     } finally {
       await probe.close();
@@ -362,3 +365,4 @@ export class ProviderSettings {
     });
   }
 }
+

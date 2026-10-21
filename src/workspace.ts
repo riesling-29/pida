@@ -1,3 +1,4 @@
+import { codingPacks } from "./coding-packs.js";
 import { PidaWorkbench, workbenchPermissions, workbenchPrompt } from "./workbench.js";
 import { nativeProvider, validateNativeProvider, type NativeProviderConfig } from "./provider-catalog.js";
 import {
@@ -68,6 +69,9 @@ const configSchema = Type.Object(
       },
       { additionalProperties: false },
     ),
+    codingPacks: Type.Optional(Type.Array(Type.Union([Type.Literal("debugging"), Type.Literal("verification")]), { uniqueItems: true })),
+    browserChecks: Type.Optional(Type.Boolean()),
+    runtime: Type.Optional(Type.Object({ maxRunMs: Type.Optional(Type.Integer({ minimum: 1000, maximum: 900000 })), autoCompaction: Type.Optional(Type.Boolean()), maxOutputRetries: Type.Optional(Type.Integer({ minimum: 0, maximum: 2 })) }, { additionalProperties: false })),
     workbench: Type.Optional(Type.Object({ enabled: Type.Boolean() }, { additionalProperties: false })),
     permissions: Type.Array(Type.String({ minLength: 1 }), {
       uniqueItems: true,
@@ -86,6 +90,9 @@ export interface WorkspaceConfig {
     | NativeProviderConfig
     | ({ kind: "endpoint" } & Omit<EndpointConfig, "id">);
   tools: { directory: string; enabled: string[] };
+  codingPacks?: string[];
+  browserChecks?: boolean;
+  runtime?: { maxRunMs?: number; autoCompaction?: boolean; maxOutputRetries?: number };
   workbench?: { enabled: boolean };
   permissions: string[];
 }
@@ -299,13 +306,16 @@ export async function createWorkspace(directory: string) {
         : endpointProvider({ id: "workspace", ...config.provider }, env);
   // Keep local settings reachable even when a provider key is absent. Model calls still fail closed.
   const tools = await loadWorkspaceTools(root, config);
-  const workbench = config.workbench?.enabled ? new PidaWorkbench(join(inside(root, config.stateDir), "workbench")) : undefined;
+  const workbench = config.workbench?.enabled ? new PidaWorkbench(join(inside(root, config.stateDir), "workbench"), config.browserChecks ?? false) : undefined;
+  const packs = codingPacks(workbench ? config.codingPacks : []);
   const runtime = new PidaRuntime({
     provider,
-    tools: [...tools, ...(workbench?.tools() ?? [])],
-    ...(workbench ? { maxTurns: 24, maxToolCalls: 48, maxRunMs: 120_000 } : {}),
+    tools: [...tools, ...(workbench?.tools() ?? []), ...packs.tools],
+    skills: packs.skills,
+    ...(workbench ? { maxTurns: 24, maxToolCalls: 48, maxRunMs: 180_000 } : {}),
+    ...config.runtime,
     storageDir: inside(root, config.stateDir),
-    systemPrompt: config.systemPrompt + (workbench ? "\n\n" + workbenchPrompt : ""),
+    systemPrompt: config.systemPrompt + (workbench ? "\n\n" + workbenchPrompt : "") + packs.prompt,
     providerInfo: providerLabel(config.provider),
   });
   const settings = new ProviderSettings(root, runtime);
@@ -327,3 +337,4 @@ export async function createWorkspace(directory: string) {
   });
   return { runtime, server, config, workbench };
 }
+

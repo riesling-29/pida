@@ -228,6 +228,9 @@ try {
     () => document.querySelector("#status").textContent === "완료",
   );
   assert.match(await page.locator("#messages").textContent(), /OK/);
+  await page.locator("#workspace-handoff").click();
+  await page.waitForFunction(() => document.querySelector("#messages").textContent.includes("이어받았습니다"));
+  assert.match(await page.locator("#workspace-context").textContent(), /자동 압축 켜짐/);
   await page.locator("#open-settings").click();
   await page.locator("#provider-model").fill("bad-model");
   await page
@@ -270,7 +273,7 @@ try {
     ),
   );
   await page.locator("#close-settings").click();
-  await page.locator("#disconnect").click();
+  await page.locator("#mode-disconnect").click();
   await page.locator("#connection").waitFor({ state: "visible" });
   assert.deepEqual(errors, []);
   await stop();
@@ -290,3 +293,4 @@ try {
   }
   await rm(directory, { recursive: true, force: true });
 }
+

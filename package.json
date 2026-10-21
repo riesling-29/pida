@@ -1,6 +1,6 @@
 {
   "name": "pida-core",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Embedded Pi runtime with authorized business tools and a session HTTP API",
   "scripts": {
     "build": "node scripts/task.mjs build",
@@ -52,7 +52,8 @@
     "docs",
     "README.md",
     "THIRD_PARTY_NOTICES.md",
-    "scripts/task.mjs"
+    "scripts/task.mjs",
+    "packs"
   ],
   "overrides": {
     "@earendil-works/pi-agent-core": "1.2.0",
@@ -64,5 +65,8 @@
   },
   "bin": {
     "pida": "./dist/cli.js"
+  },
+  "optionalDependencies": {
+    "playwright": "1.64.1"
   }
 }

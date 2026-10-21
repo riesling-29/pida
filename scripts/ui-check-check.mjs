@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { checkUi } from '../dist/ui-check.js';
+const html = '<!doctype html><html><body><button id="analysis">분석</button><main id="content">홈</main><script>document.querySelector("#analysis").addEventListener("click",()=>document.querySelector("#content").textContent="분석 화면");</script></body></html>';
+const signal = new AbortController().signal;
+const result = await checkUi(html, [{ click: '#analysis', visibleText: '분석 화면' }], signal);
+assert.equal(result.ok, true, JSON.stringify(result)); assert.equal(result.checks.length, 1);
+const bad = await checkUi(html.replace('</script>', 'throw new Error("synthetic-ui-error");</script>'), [], signal);
+assert.equal(bad.ok, false); assert.match(bad.errors.join(' '), /synthetic-ui-error/);
+const blocked = await checkUi(html.replace('document.querySelector("#content").textContent="분석 화면"', 'fetch("https://example.com/").then(()=>document.querySelector("#content").textContent="unexpected network").catch(()=>document.querySelector("#content").textContent="network blocked")'), [{ click: '#analysis', visibleText: 'network blocked' }], signal);
+assert.equal(blocked.ok, true, JSON.stringify(blocked));
+console.log('PASS: isolated service renderer, menu click, script error detection, external fetch denied.');

@@ -95,3 +95,12 @@ THE SOFTWARE.
 ## Git
 
 The workbench invokes the host-installed Git executable; Git is not vendored or bundled in the Pida tarball. Git upstream: https://git-scm.com/ (GPL-2.0). Install and redistribute Git under its own supplied license terms.
+
+
+## Selected Superpowers guidance
+
+Unmodified `systematic-debugging` and `verification-before-completion` skill texts from `obra/superpowers`, commit `b739a8af570e10a95898f2bdf6cec97467fa6c12`. MIT license included at `packs/licenses/superpowers.txt`; provenance at `packs/sources.json`. No Superpowers executable extension or subagent runner is loaded.
+
+## Optional browser verification
+
+Playwright and playwright-core 1.64.1 are optional dependencies under Apache-2.0. Their packages retain LICENSE/NOTICE. Browser binaries are installed separately by the deployment administrator.

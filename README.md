@@ -2,7 +2,7 @@
 
 An embedded, reusable **Pi-based agent harness** for applications. Bring the package into a host backend, register business tools, and connect a web or app interface through the client SDK. The host does not implement the agent loop.
 
-**Workspace MVP 0.6.0:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces now persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call business authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+**Workspace MVP 0.6.1:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces now persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call business authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
 
 The lot-status tool is **replaceable synthetic sample data**, not a manufacturing-specific restriction. The default mock is deterministic and not an intelligent model.
 
@@ -50,7 +50,7 @@ The package has **not** been published to npm. Create and install a local packag
 ```sh
 npm pack
 # Run from your host application directory:
-npm install /absolute/path/to/pida-core-0.6.0.tgz
+npm install /absolute/path/to/pida-core-0.6.1.tgz
 ```
 
 Entry points separate standalone configuration, server code and browser code:
@@ -154,7 +154,7 @@ const orderStatus = defineBusinessTool({
 
 Register it with `new PidaRuntime({ provider, tools: [orderStatus] })`. Pi validates arguments, then Pida checks the current run's host-supplied permission **at each invocation**. `authorize(request)` can additionally enforce row-level or resource-level rules. The business service must also enforce its own access control. Tool failures do not become successful runs just because the model continues or says it succeeded.
 
-Workspace tool modules can be enabled with `pida tools enable FILE.mjs ./my-agent`; their required permission must also be granted in configuration, and the server restarted. Only enabled modules are imported. No tools are enabled unless registered. Built-in shell/filesystem tools, project extensions, skills, prompt templates, context files and MCP discovery are disabled in this profile. Pi's trusted tool/plugin code is not an OS sandbox. See [security boundaries](docs/SECURITY.md).
+Workspace tool modules can be enabled with `pida tools enable FILE.mjs ./my-agent`; their required permission must also be granted in configuration, and the server restarted. Only enabled modules are imported. No tools are enabled unless registered. Built-in shell/filesystem tools, ambient project extensions, skills, prompt templates, context files and MCP discovery are disabled. Workspaces load only the bundled, selected coding guides. Pi's trusted tool/plugin code is not an OS sandbox. See [security boundaries](docs/SECURITY.md).
 
 ## API
 
@@ -185,3 +185,8 @@ Defaults: 100 sessions, 100 runs per session, 8 turns per run, 16 tool calls per
 `npm test` runs contract and integration tests with real Pi packages, faux providers, a local OpenAI-compatible streaming stub, HTTP and the client SDK. No company credentials or paid provider calls are needed. [Validation](docs/VALIDATION.md) records exactly what was tested and what remains open.
 
 See [architecture](docs/ARCHITECTURE.md), [upstream verification](docs/UPSTREAM.md), [security](docs/SECURITY.md), and [third-party notices](THIRD_PARTY_NOTICES.md). Pida source currently has no redistribution license grant (`UNLICENSED`); Pi retains its MIT license. Publishing to npm is a separate owner decision.
+
+
+## Local-model recovery (0.6.1)
+
+Automatic Pi compaction is enabled with model-sized budgets. Both chat surfaces show context usage and provide **대화 압축** and **요약해서 이어가기**. Output truncation retries once with smaller edits, under the same deadline and turn/tool budgets. Bundled, pinned Superpowers debugging and verification guides are read on demand. Optional `ui_check` uses the service renderer in a fresh browser. See [upgrade/configuration](docs/RECOVERY.md).

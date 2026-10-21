@@ -34,7 +34,7 @@ npm pack
 From the receiving application's directory:
 
 ```sh
-npm install /absolute/path/to/pida-core-0.6.0.tgz
+npm install /absolute/path/to/pida-core-0.6.1.tgz
 npx pida setup
 ```
 
@@ -123,9 +123,9 @@ After installing an already-built tarball into a receiving application:
 
 | Manager | Install package | Set up / open settings |
 | --- | --- | --- |
-| npm | `npm install /path/pida-core-0.6.0.tgz` | `npx pida setup` |
-| pnpm | `pnpm add --ignore-scripts /path/pida-core-0.6.0.tgz` | `pnpm exec pida setup` |
-| bun | `bun add --ignore-scripts /path/pida-core-0.6.0.tgz` | `bun run pida setup` |
+| npm | `npm install /path/pida-core-0.6.1.tgz` | `npx pida setup` |
+| pnpm | `pnpm add --ignore-scripts /path/pida-core-0.6.1.tgz` | `pnpm exec pida setup` |
+| bun | `bun add --ignore-scripts /path/pida-core-0.6.1.tgz` | `bun run pida setup` |
 
 The tarball contains compiled code and requires no install/build lifecycle scripts. Using `--ignore-scripts` with npm is also supported. Pnpm 12 can otherwise ask about lifecycle scripts of optional upstream provider dependencies. The repository's pnpm configuration explicitly disables those unused scripts.
 
@@ -210,3 +210,4 @@ The bundled web UI uses a charcoal/ivory palette with olive and terracotta accen
 - The inspector tabs support Left/Right/Home/End keys. File selection shows source or the existing sandboxed static HTML preview; source is collapsed for HTML.
 - Below 1120px the inspector opens from “작업 패널”; below 700px sessions also open from “대화 목록”. Close buttons and Escape dismiss these panels. Browser-specific shortcut conflicts can be avoided by using the corresponding buttons.
 - Provider behavior, API contracts and execution capabilities are unchanged. The dark interface is a web UI, not a terminal emulator or shell.
+

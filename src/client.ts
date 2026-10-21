@@ -113,12 +113,17 @@ export class PidaClient {
     running: boolean;
     runs: number;
     tools: string[];
+    context?: { tokens: number | null; contextWindow: number; percent: number | null };
+    autoCompaction: boolean;
     messages: { role: string; text: string }[];
   }> {
     return (await this.request(this.path(id))).json();
   }
   async getTrace(id: string): Promise<{ events: TraceEvent[] }> {
     return (await this.request(this.path(id) + "/trace")).json();
+  }
+  async compactSession(id: string, handoff = false): Promise<{ sessionId: string; compacted: boolean }> {
+    return (await this.request(this.path(id) + (handoff ? "/handoff" : "/compact"), "POST", {})).json();
   }
   async cancel(id: string): Promise<void> {
     await this.request(this.path(id) + "/cancel", "POST", {});
@@ -186,4 +191,24 @@ export class PidaClient {
     if (!result) throw new PidaClientError("STREAM_INTERRUPTED", 502);
     return result;
   }
+}
+
+
+/** Stable, credential-free explanations shared by both bundled chat surfaces. */
+export function explainError(code?: string): string {
+  const messages: Record<string, string> = {
+    OUTPUT_LIMIT: "출력 한도로 수정 명령이 중단됐습니다. 이미 저장된 변경은 유지됩니다. 요청을 나누거나 출력 한도와 실행 시간을 조정하세요.",
+    EMPTY_RESPONSE: "모델이 표시할 답변을 보내지 않았습니다. 출력 한도와 모델의 추론 설정을 확인하세요.",
+    RUN_TIMEOUT: "실행 시간이 초과됐습니다. 저장된 변경을 확인하고 이어서 요청하거나 실행 시간을 늘리세요.",
+    UI_REVISION_CONFLICT: "화면이 다른 작업에서 변경됐습니다. 현재 화면을 다시 읽고 수정하도록 요청하세요.",
+    COMPACTION_FAILED: "대화 압축에 실패했습니다. 기존 대화는 유지됩니다. 모델 상태와 출력 한도를 확인하세요.",
+    HANDOFF_TOO_LARGE: "인계할 맥락이 아직 큽니다. 작업을 정리한 뒤 다시 시도하세요. 기존 대화는 유지됩니다.",
+    NOTHING_TO_COMPACT: "아직 압축할 대화가 없습니다.",
+    PROVIDER_TEST_OUTPUT_LIMIT: "서버에는 연결됐지만 연결 테스트 응답이 출력 한도에 도달했습니다.",
+    PROVIDER_TEST_TIMEOUT: "연결 테스트가 시간 내에 끝나지 않았습니다. 모델 로딩 상태를 확인하세요.",
+    TOOL_FAILED: "도구 실행에 실패했습니다. 현재 파일과 실행 기록을 확인하고 다시 요청하세요.",
+    SESSION_RUN_LIMIT: "이 대화의 실행 횟수 한도에 도달했습니다. ‘요약해서 이어가기’를 사용하세요.",
+    CANCELLED: "작업을 중단했습니다. 이미 저장된 변경은 유지됩니다.",
+  };
+  return messages[code ?? ""] ?? `작업을 완료하지 못했습니다 (${code ?? "UNKNOWN_ERROR"}).`;
 }

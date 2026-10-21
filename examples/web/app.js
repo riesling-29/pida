@@ -1,5 +1,5 @@
 import { createStudio } from "/studio.js";
-import { PidaClient } from "/pida-client.js";
+import { PidaClient, explainError } from "/pida-client.js";
 const $ = (id) => document.getElementById(id);
 let token = "",
   sessionId,
@@ -41,13 +41,14 @@ const errors = {
 };
 function problem(error) {
   $("error").textContent =
-    errors[error.code] ?? error.message ?? "요청을 처리하지 못했습니다.";
+    errors[error.code] ?? (error.code ? explainError(error.code) : error.message) ?? "요청을 처리하지 못했습니다.";
 }
 function controls() {
   const busy = pending || running || studio.busy;
   $("send").disabled = !sessionId || busy || remoteRunning;
   $("cancel").disabled = pending || !(running || remoteRunning);
   $("connect").disabled = busy;
+  for (const id of ["workspace-compact", "workspace-handoff"]) $(id).disabled = !sessionId || busy || remoteRunning;
   $("new-session").disabled = !connected || busy || remoteRunning;
   $("delete-session").disabled = !sessionId || busy || remoteRunning;
   $("refresh").disabled = !connected || busy;
@@ -147,6 +148,8 @@ async function list() {
 }
 async function select(id) {
   const data = await client.getSession(id);
+  const c = data.context;
+  $("workspace-context").textContent = c ? `컨텍스트 ${c.percent == null ? "측정 대기" : c.percent.toFixed(0) + "%"} / ${c.contextWindow.toLocaleString()} · 자동 압축 ${data.autoCompaction ? "켜짐" : "꺼짐"}` : "";
   sessionId = id;
   remoteRunning = data.running;
   sessionStorage.setItem("pida-session", id);
@@ -207,6 +210,14 @@ $("connection-form").onsubmit = (e) => {
   e.preventDefault();
   action(connect);
 };
+for (const [id, handoff] of [["workspace-compact", false], ["workspace-handoff", true]]) {
+  $(id).onclick = () => action(async () => {
+    $("status").textContent = handoff ? "요약해서 이어가는 중…" : "대화 압축 중…";
+    const result = await client.compactSession(sessionId, handoff);
+    await select(result.sessionId); await list();
+    $("status").textContent = "작업 맥락을 정리했습니다.";
+  });
+}
 $("new-session").onclick = async () => {
   await action(async () => {
     const data = await client.createSession();
@@ -288,7 +299,7 @@ $("form").onsubmit = async (e) => {
         answer.textContent =
           event.result.text ||
           errors[event.result.code] ||
-          event.result.code ||
+          (event.result.code ? explainError(event.result.code) : "") ||
           "응답 없음";
         if (event.result.code)
           problem({ code: event.result.code, message: event.result.code });
@@ -482,7 +493,7 @@ $("provider-form").onsubmit = async (e) => {
   } catch (error) {
     $("provider-feedback").textContent =
       setupErrors[error.code] ??
-      "설정을 적용하지 못했습니다. 기존 연결을 확인해주세요.";
+      explainError(error.code);
   } finally {
     configuring = false;
     controls();
@@ -627,3 +638,4 @@ function consumeLaunch() {
 controls();
 consumeLaunch();
 window.addEventListener("hashchange", consumeLaunch);
+

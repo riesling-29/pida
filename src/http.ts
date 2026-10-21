@@ -202,7 +202,7 @@ export function createPidaServer(options: HttpOptions) {
         return;
       }
       const match = path.match(
-        /^\/v1\/sessions\/([a-f0-9-]{36})(?:\/(runs|cancel|trace))?$/,
+        /^\/v1\/sessions\/([a-f0-9-]{36})(?:\/(runs|cancel|trace|compact|handoff))?$/,
       );
       if (!match) throw new PidaError("NOT_FOUND", 404);
       const id = match[1]!,
@@ -222,6 +222,10 @@ export function createPidaServer(options: HttpOptions) {
         await runtime.resumeSession(id, principal);
         json(res, 200, { events: runtime.getTrace(id, principal) });
         return;
+      }
+      if ((action === "compact" || action === "handoff") && req.method === "POST") {
+        keys(await body(req), []);
+        json(res, 200, await runtime.compactSession(id, principal, action === "handoff")); return;
       }
       if (action === "cancel" && req.method === "POST") {
         keys(await body(req), []);
@@ -286,3 +290,4 @@ export function createPidaServer(options: HttpOptions) {
   server.maxHeadersCount = 40;
   return server;
 }
+

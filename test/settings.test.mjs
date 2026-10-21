@@ -40,6 +40,8 @@ async function fixture(t) {
     let raw = "";
     for await (const c of req) raw += c;
     const body = JSON.parse(raw);
+    calls.at(-1).maxOutput = body.max_completion_tokens;
+    if (body.model === "reasoning-probe") assert.ok(body.max_completion_tokens >= 1024, "reasoning probe needs room for its final answer");
     if (body.model === "fail") {
       res.writeHead(401);
       res.end("private upstream error synthetic-key");
@@ -228,4 +230,11 @@ test("applying providers during a tool run is rejected without changing state", 
   await assert.rejects(settings.apply({ kind: "mock" }), /PROVIDER_BUSY/);
   await runtime.cancel(sessionId, owner);
   await running;
+});
+
+
+test("reasoning-capable local model probe reserves enough output for a final answer", async t => {
+  const { settings, draft, calls } = await fixture(t);
+  assert.equal((await settings.test({ ...draft, modelId: "reasoning-probe", maxTokens: 4096 })).ok, true);
+  assert.equal(calls.at(-1).maxOutput, 1024);
 });

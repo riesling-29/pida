@@ -1,12 +1,12 @@
 {
   "name": "pida-core",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "pida-core",
-      "version": "0.6.0",
+      "version": "0.6.1",
       "license": "UNLICENSED",
       "dependencies": {
         "@earendil-works/pi-ai": "1.2.0",
@@ -23,6 +23,9 @@
       },
       "engines": {
         "node": ">=22.19.0"
+      },
+      "optionalDependencies": {
+        "playwright": "1.64.1"
       }
     },
     "node_modules/@anthropic-ai/sdk": {
@@ -1642,6 +1645,35 @@
       "license": "MIT",
       "engines": {
         "node": ">=8"
+      }
+    },
+    "node_modules/playwright": {
+      "version": "1.64.1",
+      "resolved": "https://registry.npmjs.org/playwright/-/playwright-1.64.1.tgz",
+      "integrity": "sha512-HCrVhHr5QQuwYoswEUGTb7gGp522yflbv/ST8nF4sFWGuLjQCt17Q/EubpGGSNKYn1tsTCPZxqHhHCfVURu7UA==",
+      "license": "Apache-2.0",
+      "optional": true,
+      "dependencies": {
+        "playwright-core": "1.64.1"
+      },
+      "bin": {
+        "playwright": "cli.js"
+      },
+      "engines": {
+        "node": ">=20"
+      }
+    },
+    "node_modules/playwright-core": {
+      "version": "1.64.1",
+      "resolved": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.64.1.tgz",
+      "integrity": "sha512-BC4s8y6SEVA6Q1rSxZTto8hI1KUI3xXlHGZgvGqP4IqPdI/a6FX9H29IDNz7vKo9l21b6LfYosScPL6M3xxyDQ==",
+      "license": "Apache-2.0",
+      "optional": true,
+      "bin": {
+        "playwright-core": "cli.js"
+      },
+      "engines": {
+        "node": ">=20"
       }
     },
     "node_modules/proper-lockfile": {

@@ -1,3 +1,4 @@
+import { explainError } from "/pida-client.js";
 const $ = id => document.getElementById(id);
 
 export function createStudio({ client, request, changed, disconnected }) {
@@ -7,7 +8,7 @@ export function createStudio({ client, request, changed, disconnected }) {
   const payloads = new Map();
   const frames = [$("studio-frame"), $("service-frame")];
   const status = text => { $("studio-run-status").textContent = text; };
-  const issue = error => status(error.code === "UI_REVISION_CONFLICT" ? "화면이 다른 작업에서 변경됐습니다. 새로고침 후 다시 선택해주세요." : `처리하지 못했습니다: ${error.message || error.code}`);
+  const issue = error => status(error.code === "UI_REVISION_CONFLICT" ? "화면이 다른 작업에서 변경됐습니다. 새로고침 후 다시 선택해주세요." : explainError(error.code));
   function controls() {
     const locked = busy || hostBusy || !connected;
     for (const id of ["choose-template", "first-template", "studio-refresh"]) $(id).disabled = locked || !available;
@@ -15,6 +16,7 @@ export function createStudio({ client, request, changed, disconnected }) {
     $("studio-send").disabled = locked || mock || !available || !state.html;
     $("studio-prompt").disabled = locked || mock || !available || !state.html;
     $("studio-new-chat").disabled = locked;
+    for (const id of ["studio-compact", "studio-handoff"]) $(id).disabled = locked || !session;
     $("studio-cancel").disabled = !busy || !session;
     $("mode-disconnect").disabled = locked;
     for (const button of $("template-grid").querySelectorAll("button")) button.disabled = locked;
@@ -99,10 +101,26 @@ export function createStudio({ client, request, changed, disconnected }) {
     article.className = role; label.textContent = role === "user" ? "YOU" : "PIDA"; body.textContent = text;
     article.append(label, body); $("studio-messages").append(article); return body;
   }
+  function contextLabel(data) {
+    const c = data.context;
+    $("studio-context").textContent = c ? `컨텍스트 ${c.percent == null ? "측정 대기" : c.percent.toFixed(0) + "%"} / ${c.contextWindow.toLocaleString()} · 자동 압축 ${data.autoCompaction ? "켜짐" : "꺼짐"}` : "대화 시작 후 컨텍스트를 표시합니다";
+  }
+  async function compact(handoff) {
+    if (!session || busy || hostBusy) return;
+    busy = true; changed(); controls(); status(handoff ? "작업 맥락을 정리해 새 대화로 옮기고 있습니다…" : "대화를 압축하고 있습니다…");
+    try {
+      const result = await client.compactSession(session, handoff);
+      session = result.sessionId; sessionStorage.setItem("pida-studio-session", session);
+      await restoreChat();
+      status(handoff ? "요약과 최근 대화를 새 세션으로 옮겼습니다. 현재 화면은 유지됩니다." : "대화를 압축했습니다. 현재 화면은 유지됩니다.");
+    } catch (error) { issue(error); }
+    finally { busy = false; changed(); controls(); }
+  }
   async function restoreChat() {
     if (!session) return;
     try {
       const data = await client.getSession(session);
+      contextLabel(data);
       $("studio-messages").replaceChildren();
       for (const item of data.messages) message(item.role, item.role === "user" ? item.text.replace(/^\[PIDA UI STUDIO\][\s\S]*?\nUSER REQUEST:\n/, "") : item.text);
       if (data.running) { status("이전 요청이 실행 중입니다. 완료 후 화면을 새로고침하세요."); }
@@ -121,21 +139,24 @@ export function createStudio({ client, request, changed, disconnected }) {
     let answer = "", result;
     try {
       if (!session) { session = (await client.createSession()).sessionId; sessionStorage.setItem("pida-studio-session", session); controls(); }
-      const prompt = `[PIDA UI STUDIO]\nYou are editing the service UI shown beside this chat. Read the current app with ui_read, preserve existing features, then implement the user's request with ui_patch for small exact changes or ui_apply for a complete replacement, using the revision you just read. Keep self-contained HTML with inline CSS and JavaScript. Use addEventListener, not onclick attributes. No external scripts, network, frames, localStorage, or parent access. Do not just return code in chat. If data is illustrative, label it as sample. Report what was actually changed. Current revision at request start: ${before}.\nUSER REQUEST:\n${text}`;
+      const prompt = `[PIDA UI STUDIO]\nYou are editing the service UI shown beside this chat. Read the current app with ui_read, preserve existing features, then implement the user's request with ui_patch for small exact changes or ui_apply for a complete replacement, using the revision you just read. Break complex work into small complete patches, re-reading the revision after each change. Keep self-contained HTML with inline CSS and JavaScript. Use addEventListener, not onclick attributes. No external scripts, network, frames, localStorage, or parent access. Do not just return code in chat. If data is illustrative, label it as sample. Report what was actually changed. Current revision at request start: ${before}.\nUSER REQUEST:\n${text}`;
       for await (const event of client.stream(session, prompt)) {
         if (event.type === "text_delta") { answer += event.delta; output.textContent = answer; }
         if (event.type === "trace") {
+          if (event.trace.type === "compaction_started") status("긴 대화를 요약하고 있습니다…");
+          if (event.trace.type === "output_retry") status("출력이 중단되어 더 작은 수정으로 다시 시도합니다…");
           if (event.trace.type === "tool_started") status(`작업 중 · ${event.trace.toolName}`);
           if (event.trace.type === "tool_completed" || event.trace.type === "tool_failed") await refresh();
         }
-        if (event.type === "result") { result = event.result; output.textContent = result.text || result.code || "응답이 없습니다."; }
+        if (event.type === "result") { result = event.result; output.textContent = [result.text, result.code ? explainError(result.code) : ""].filter(Boolean).join("\n\n") || "응답이 없습니다."; }
         $("studio-messages").scrollTop = $("studio-messages").scrollHeight;
       }
       await refresh();
+      contextLabel(await client.getSession(session));
       if (result?.status === "completed") {
         $("studio-prompt").value = "";
         status(state.revision !== before ? (renderingError ? "저장됨 · 화면 스크립트 오류를 확인하세요" : "수정 내용을 저장하고 서비스에 반영했습니다.") : "실행 완료 · 저장된 화면 변경은 없습니다.");
-      } else status(`실행 ${result?.status === "cancelled" ? "중단됨" : "미완료"} · ${result?.code || result?.status || "연결 상태를 확인하세요"}`);
+      } else status(`실행 ${result?.status === "cancelled" ? "중단됨" : "미완료"} · ${explainError(result?.code)}`);
     } catch (error) { issue(error); await refresh().catch(() => {}); }
     finally { busy = false; changed(); controls(); $("studio-prompt").focus(); }
   }
@@ -154,6 +175,8 @@ export function createStudio({ client, request, changed, disconnected }) {
     } catch (error) { $("template-dialog").close(); issue(error); await refresh().catch(() => {}); }
     finally { busy = false; changed(); controls(); }
   };
+  $("studio-compact").onclick = () => compact(false);
+  $("studio-handoff").onclick = () => compact(true);
   $("studio-form").onsubmit = send;
   $("studio-prompt").onkeydown = event => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !event.isComposing) { event.preventDefault(); $("studio-form").requestSubmit(); } };
   $("studio-new-chat").onclick = () => { if (busy || hostBusy) return; session = undefined; sessionStorage.removeItem("pida-studio-session"); $("studio-messages").replaceChildren(); status("새 제작 대화 · 현재 화면은 유지됩니다."); };
@@ -174,3 +197,4 @@ export function createStudio({ client, request, changed, disconnected }) {
     refresh,
   };
 }
+

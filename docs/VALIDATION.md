@@ -87,3 +87,8 @@ The MVP meets the tested embedded-runtime/API/tool/client contracts. Pi remains 
 Re-run tests on any Pi package or transport/auth change. Reassess storage guarantees and the architecture before remote multi-user deployment. Revoke readiness if a forbidden tool executes, an owner check fails, an interrupted stream reports success, or consumer applications need to reconstruct the agent loop.
 
 The browser acceptance script also exercises the settings form against a local Chat Completions stub: model discovery/autoselection, keyless apply, live conversation on the new model, failure retention, masked-key submission and clearing, and mobile-width overflow. These are synthetic protocol tests, not tests against LM Studio or a real company gateway. Installation checks are reproducible with `scripts/install-check.mjs`; CI now includes the three-manager matrix.
+
+
+## 0.6.1 recovery checks
+
+`test/recovery.test.mjs` covers truncated calls not executing, one bounded retry, repeated truncation, context compaction without losing the latest response, ownership and handoff of recent requirements, empty answers, selected coding guides and preservation of history when summarization is truncated. Provider tests include a reasoning-model output-budget probe. Browser acceptance includes handoff controls; `scripts/ui-check-check.mjs` tests the optional isolated renderer. No live LM Studio or Qwen result is claimed by these synthetic tests.
