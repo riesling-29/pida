@@ -1,3 +1,5 @@
+import type { ObservationBundle, ResultManifest } from "./execution-contract.js";
+export type { ObservationBundle, ResultManifest } from "./execution-contract.js";
 import type {
   RunResult,
   StreamEvent,
@@ -122,6 +124,14 @@ export class PidaClient {
   async getTrace(id: string): Promise<{ events: TraceEvent[] }> {
     return (await this.request(this.path(id) + "/trace")).json();
   }
+  async listRuns(id: string): Promise<{ runs: string[] }> { return (await this.request(this.path(id) + "/runs")).json(); }
+  async exportRun(id: string, runId: string): Promise<ObservationBundle> { return (await this.request(this.path(id) + "/runs/" + encodeURIComponent(runId) + "/export")).json(); }
+  async getManifest(id: string, runId: string): Promise<ResultManifest> { return (await this.request(this.path(id) + "/runs/" + encodeURIComponent(runId) + "/manifest")).json(); }
+  async exportRunJsonl(id: string, runId: string): Promise<{ jsonl: string; complete: boolean }> {
+    const response = await this.request(this.path(id) + "/runs/" + encodeURIComponent(runId) + "/export?format=jsonl");
+    return { jsonl: await response.text(), complete: response.headers.get("X-Pida-Complete") === "true" };
+  }
+  async getRecovery(id: string): Promise<{ sessionId: string; autoReplay: false; pendingEffects: { id: string; runId: string; toolCallId: string; toolName: string; state: string }[] }> { return (await this.request(this.path(id) + "/recovery")).json(); }
   async compactSession(id: string, handoff = false): Promise<{ sessionId: string; compacted: boolean }> {
     return (await this.request(this.path(id) + (handoff ? "/handoff" : "/compact"), "POST", {})).json();
   }
@@ -134,12 +144,12 @@ export class PidaClient {
   async *stream(
     id: string,
     prompt: string,
-    options: { signal?: AbortSignal } = {},
+    options: { signal?: AbortSignal; taskId?: string } = {},
   ): AsyncGenerator<StreamEvent> {
     const response = await this.request(
       this.path(id) + "/runs",
       "POST",
-      { prompt },
+      { prompt, ...(options.taskId !== undefined ? { taskId: options.taskId } : {}) },
       options.signal,
     );
     if (!response.body) throw new PidaClientError("MISSING_STREAM", 502);
@@ -180,6 +190,7 @@ export class PidaClient {
     prompt: string,
     options: {
       signal?: AbortSignal;
+      taskId?: string;
       onEvent?: (event: StreamEvent) => void;
     } = {},
   ): Promise<RunResult> {
@@ -207,6 +218,12 @@ export function explainError(code?: string): string {
     PROVIDER_TEST_OUTPUT_LIMIT: "서버에는 연결됐지만 연결 테스트 응답이 출력 한도에 도달했습니다.",
     PROVIDER_TEST_TIMEOUT: "연결 테스트가 시간 내에 끝나지 않았습니다. 모델 로딩 상태를 확인하세요.",
     TOOL_FAILED: "도구 실행에 실패했습니다. 현재 파일과 실행 기록을 확인하고 다시 요청하세요.",
+    EFFECT_STATE_UNKNOWN: "이전 변경의 적용 여부를 확인할 수 없어 추가 변경을 막았습니다. 실행 기록과 실제 대상을 확인한 뒤 복구하세요.",
+    TOOL_REPLAY_BLOCKED: "같은 실행에서 이미 적용한 변경의 중복 호출을 막았습니다. 현재 상태를 읽고 남은 작업을 요청하세요.",
+    EFFECT_PERSISTENCE_FAILED: "변경 실행 기록을 저장하지 못했습니다. 저장소와 실제 변경 상태를 확인하세요.",
+    TOKEN_BUDGET: "이 실행의 토큰 예산에 도달했습니다. 현재 변경을 확인하고 요청을 나누세요.",
+    COST_BUDGET: "이 실행의 설정된 비용 예산에 도달했습니다.",
+    USAGE_UNAVAILABLE: "사용량을 확인할 수 없어 설정된 실행 예산을 적용할 수 없습니다.",
     WORKSPACE_OPERATION_FAILED: "작업 공간의 도구 실행에 실패했습니다. 현재 파일과 실행 기록을 확인하세요.",
     TEST_FAILED: "테스트가 실패했습니다. 실패 내용을 확인하고 수정한 뒤 같은 테스트를 다시 실행하세요.",
     UI_EDIT_MATCH_REQUIRED: "수정할 문구가 없거나 여러 곳에 있습니다. 현재 화면을 다시 읽고 수정 위치를 지정하도록 요청하세요.",

@@ -201,12 +201,26 @@ export function createPidaServer(options: HttpOptions) {
         json(res, 201, await runtime.createSession(principal));
         return;
       }
+      const artifactRoute = path.match(/^\/v1\/sessions\/([a-f0-9-]{36})\/runs\/([a-f0-9-]{36})\/(export|manifest)$/);
+      if (artifactRoute && req.method === "GET") {
+        const bundle = runtime.exportRun(artifactRoute[1]!, artifactRoute[2]!, principal);
+        if (artifactRoute[3] === "manifest") {
+          if (!bundle.manifest) throw new PidaError("MANIFEST_NOT_FOUND", 404);
+          json(res, 200, bundle.manifest);
+        } else if (new URL(req.url!, "http://pida.invalid").searchParams.get("format") === "jsonl") {
+          res.writeHead(200, { "Content-Type": "application/x-ndjson; charset=utf-8", "X-Pida-Complete": String(bundle.complete) });
+          res.end(bundle.events.map(e => JSON.stringify(e)).join("\n") + (bundle.events.length ? "\n" : ""));
+        } else json(res, 200, bundle);
+        return;
+      }
       const match = path.match(
-        /^\/v1\/sessions\/([a-f0-9-]{36})(?:\/(runs|cancel|trace|compact|handoff))?$/,
+        /^\/v1\/sessions\/([a-f0-9-]{36})(?:\/(runs|cancel|trace|compact|handoff|recovery))?$/,
       );
       if (!match) throw new PidaError("NOT_FOUND", 404);
       const id = match[1]!,
         action = match[2];
+      if (action === "runs" && req.method === "GET") { json(res, 200, { runs: runtime.listRuns(id, principal) }); return; }
+      if (action === "recovery" && req.method === "GET") { json(res, 200, runtime.getRecovery(id, principal)); return; }
       if (!action && req.method === "GET") {
         await runtime.resumeSession(id, principal);
         json(res, 200, runtime.getSession(id, principal));
@@ -235,9 +249,10 @@ export function createPidaServer(options: HttpOptions) {
       }
       if (action === "runs" && req.method === "POST") {
         const input = await body(req);
-        keys(input, ["prompt"]);
+        keys(input, ["prompt", "taskId"]);
         if (typeof input.prompt !== "string")
           throw new PidaError("INVALID_PROMPT", 400);
+        if (input.taskId !== undefined && typeof input.taskId !== "string") throw new PidaError("INVALID_TASK_ID", 400);
         const controller = new AbortController();
         const disconnected = () => {
           if (!res.writableEnded) controller.abort();
@@ -264,6 +279,7 @@ export function createPidaServer(options: HttpOptions) {
               );
             },
             controller.signal,
+            { taskId: input.taskId as string | undefined },
           );
           res.end();
         } finally {

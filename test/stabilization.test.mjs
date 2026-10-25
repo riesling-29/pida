@@ -223,7 +223,8 @@ test("live-model smoke refuses mock configuration without importing user tools",
   const dir = await directory(t);
   initWorkspace(dir);
   await writeFile(join(dir, "tools", "lot-status.mjs"), 'throw new Error("MUST_NOT_IMPORT");');
-  const script = fileURLToPath(new URL("../scripts/real-model-smoke.mjs", import.meta.url));
+  for (const name of ["real-model-smoke.mjs", "real-model-e2e.mjs"]) {
+  const script = fileURLToPath(new URL("../scripts/" + name, import.meta.url));
   const result = spawnSync(process.execPath, [script, dir], { encoding: "utf8" });
   assert.equal(result.status, 1);
   const report = JSON.parse(result.stdout);
@@ -231,4 +232,5 @@ test("live-model smoke refuses mock configuration without importing user tools",
   assert.equal(report.error, "REAL_PROVIDER_REQUIRED");
   assert.deepEqual(report.cases, []);
   assert.ok(!result.stderr.includes("MUST_NOT_IMPORT"));
+  }
 });

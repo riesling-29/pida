@@ -55,7 +55,7 @@ if (args.length === 1 && args[0] === "--help") {
       autoCompaction: false,
       systemPrompt: "Use the registered read-only probe when requested. Report its values accurately. Never invent a probe result.",
       tools: [{
-        name: "get_runtime_probe", permission: "probe:read",
+        name: "get_runtime_probe", permission: "probe:read", effect: "read",
         description: "Return a synthetic diagnostic code and state; no external changes.",
         parameters: Type.Object({}),
         async execute() { return { code, state: "ready" }; },

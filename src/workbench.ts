@@ -1,4 +1,7 @@
 import { checkUi } from "./ui-check.js";
+import { toolEvidence, artifactSnapshot } from "./evidence.js";
+import { canonical } from "./private-state.js";
+import type { ToolEvidence } from "./execution-contract.js";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync, readdirSync, unlinkSync, rmSync } from "node:fs";
 import { resolve, join, relative, dirname } from "node:path";
@@ -15,7 +18,7 @@ export const workbenchPrompt = `You have a persistent per-user workbench. Use wo
 const schema = (properties: Record<string, any>) => Type.Object(properties, { additionalProperties: false });
 const pathSchema = Type.String({ minLength: 1, maxLength: 240 });
 const digest = (text: string) => createHash("sha256").update(text).digest("hex");
-class WorkError extends PidaError { constructor(code: string) { super(code, 400); } }
+class WorkError extends PidaError { constructor(code: string, public details?: Record<string, string | number>) { super(code, 400); } }
 function fail(code: string): never { throw new WorkError(code); }
 // Raw guest/file error messages are conversation data, never trace codes.
 const workbenchErrorCodes = new Set([
@@ -157,6 +160,10 @@ export class PidaWorkbench {
     this.authorize(principal, ["workbench:read"]);
     return this.locked(principal, area => ({ enabled: true, engine: "QuickJS WASM", files: Object.entries(snapshot(area.files)).map(([path, content]) => ({ path, bytes: Buffer.byteLength(content) })), skills: this.skills(area), history: this.history(area) }));
   }
+  async captureArtifacts(principal: Principal) {
+    this.authorize(principal, ["workbench:read"]);
+    return this.locked(principal, area => artifactSnapshot(snapshot(area.files)));
+  }
   async read(principal: Principal, path: string) {
     this.authorize(principal, ["workbench:read"]);
     return this.locked(principal, area => ({ path, content: this.readText(area, path) }));
@@ -204,26 +211,47 @@ export class PidaWorkbench {
     return result;
   }
   tools(): BusinessTool<any>[] {
+    const evidence = new WeakMap<object, ToolEvidence | Error>();
     const tool = (name: string, description: string, parameters: any, permissions: string[], fn: (area: Area, args: any, signal: AbortSignal) => Promise<unknown> | unknown): BusinessTool<any> => ({
       name, description, parameters, permission: permissions[0]!,
+      effect: permissions.includes("workbench:write") || permissions.includes("skills:write") ? "write" : "read",
+      effectResult: (value: any) => value?.ok === false
+        ? (name === "workspace_run" && Array.isArray(value.filesWritten) && value.filesWritten.length === 0) || ["UI_REVISION_CONFLICT", "UI_EDIT_MATCH_REQUIRED", "UI_FULL_DOCUMENT_REQUIRED", "INVALID_PATH", "FILE_NOT_FOUND", "FILE_TOO_LARGE", "WORKSPACE_TOO_LARGE", "SKILL_TEST_FAILED", "SKILL_EXISTS_USE_NEW_VERSION_NAME"].includes(value.error) ? "not_applied" : "unknown"
+        : "applied",
+      evidence: value => { const found = value && typeof value === "object" ? evidence.get(value) : undefined; if (found instanceof Error) throw found; return found; },
       classifyResult: (value, args: any) => {
         const failed = !!value && typeof value === "object" && "ok" in value && value.ok === false;
         // Successful UI mutations explicitly supersede an earlier failed mutation.
         // Retesting the same path can supersede its failed test. Reads/unrelated successes cannot.
         const recoveryKey = name === "ui_apply" || name === "ui_patch" ? "workbench:service-ui"
-          : name === "workspace_test" ? `workbench:test:${args.path}` : undefined;
+          : name === "workspace_test" ? `workbench:test:${args.path}`
+          : name === "ui_check" ? `workbench:ui-check:${digest(canonical(args.steps ?? []))}` : undefined;
         return {
           status: failed ? "failed" : "completed",
           code: failed && "error" in value && typeof value.error === "string" && workbenchErrorCodes.has(value.error) ? value.error : name === "workspace_test" ? "TEST_FAILED" : "WORKSPACE_OPERATION_FAILED",
           recoveryKey,
         };
       },
-      execute: async (args, context) => {
+      execute: async (args: any, context) => {
         this.authorize(context.principal, permissions);
         return this.locked(context.principal, async area => {
           if (context.signal.aborted) return { ok: false, error: "CANCELLED" };
-          try { return await fn(area, args, context.signal); }
+          let before: Record<string, string>;
+          try { before = snapshot(area.files); }
           catch (e) { return { ok: false, error: e instanceof WorkError ? e.message : "WORKSPACE_OPERATION_FAILED" }; }
+          let value: any;
+          try { value = await fn(area, args, context.signal); }
+          catch (e) { value = { ok: false, error: e instanceof WorkError ? e.message : "WORKSPACE_OPERATION_FAILED", ...(e instanceof WorkError && e.details ? { details: e.details } : {}) }; }
+          if (value && typeof value === "object") {
+            const check = name === "workspace_test" || name === "ui_check";
+            try { evidence.set(value, toolEvidence(before, snapshot(area.files), check ? {
+              scope: name === "workspace_test" ? "quickjs-assertions" : "isolated-browser",
+              status: value.ok ? "PASSED" : value.error === "BROWSER_UNAVAILABLE" ? "UNAVAILABLE" : "FAILED",
+              definition_digest: digest(canonical(name === "workspace_test" ? { path: args.path, source: before[args.path] ?? null } : { steps: args.steps ?? [], viewport: "1280x820" })),
+              ...(name === "workspace_test" ? { assertions: value.assertions ?? 0 } : {}),
+            } : undefined)); } catch { evidence.set(value, new Error("EVIDENCE_CAPTURE_FAILED")); }
+          }
+          return value;
         });
       },
     });
@@ -257,9 +285,9 @@ export class PidaWorkbench {
       tool("ui_patch", "Apply small exact text edits to the service UI without rewriting the entire document. Read with ui_read first. Each oldText must match exactly once. Uses the same revision guard and persistence as ui_apply.", schema({ expectedRevision: Type.String({ maxLength: 64 }), edits: Type.Array(schema({ oldText: Type.String({ minLength: 1, maxLength: 131072 }), newText: Type.String({ maxLength: 131072 }) }), { minItems: 1, maxItems: 32 }) }), write, (area, args) => {
         let html = this.uiDocument(area).html;
         if (this.uiDocument(area).revision !== args.expectedRevision) fail("UI_REVISION_CONFLICT");
-        for (const edit of args.edits) {
+        for (const [editIndex, edit] of args.edits.entries()) {
           const index = html.indexOf(edit.oldText);
-          if (!edit.oldText || index < 0 || index !== html.lastIndexOf(edit.oldText)) fail("UI_EDIT_MATCH_REQUIRED");
+          if (!edit.oldText || index < 0 || index !== html.lastIndexOf(edit.oldText)) throw new WorkError("UI_EDIT_MATCH_REQUIRED", { editIndex, matchCount: edit.oldText ? html.split(edit.oldText).length - 1 : 0, revision: this.uiDocument(area).revision });
           html = html.slice(0, index) + edit.newText + html.slice(index + edit.oldText.length);
         }
         return this.saveUi(area, html, args.expectedRevision);

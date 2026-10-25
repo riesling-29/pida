@@ -1,8 +1,9 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, createHash } from "node:crypto";
 import { uiFrame, uiFramePolicy } from "./ui-frame.js";
 
 /** Fresh browser per check, no credentials/profile, all external requests denied. */
 export async function checkUi(html: string, steps: { click: string; visibleText?: string }[], signal: AbortSignal) {
+  const revision = createHash("sha256").update(html).digest("hex");
   let browser: import("playwright").Browser | undefined;
   const errors: string[] = [];
   const timeout = AbortSignal.timeout(15000);
@@ -13,7 +14,7 @@ export async function checkUi(html: string, steps: { click: string; visibleText?
     const { chromium } = await import("playwright");
     browser = await chromium.launch({ headless: true, timeout: 10000,
       ...(process.env.PIDA_BROWSER_EXECUTABLE ? { executablePath: process.env.PIDA_BROWSER_EXECUTABLE } : {}) });
-    if (abort.aborted) return { ok: false, error: "UI_CHECK_CANCELLED" };
+    if (abort.aborted) return { ok: false, error: "UI_CHECK_CANCELLED", revision };
     const context = await browser.newContext({ acceptDownloads: false, serviceWorkers: "block", viewport: { width: 1280, height: 820 } });
     const nonce = randomBytes(24).toString("base64");
     await context.route("**/*", async route => {
@@ -38,9 +39,9 @@ export async function checkUi(html: string, steps: { click: string; visibleText?
       checks.push({ ...step, ok: true });
     }
     const text = await frame.locator("body").innerText();
-    return { ok: errors.length === 0, scope: "isolated-browser", viewport: "1280x820", checks, errors, visibleText: text.slice(0, 4000) };
+    return { ok: errors.length === 0, revision, scope: "isolated-browser", viewport: "1280x820", checks, errors, visibleText: text.slice(0, 4000) };
   } catch {
-    return { ok: false, error: abort.aborted ? "UI_CHECK_CANCELLED" : browser ? "UI_CHECK_FAILED" : "BROWSER_UNAVAILABLE", errors,
+    return { ok: false, revision, error: abort.aborted ? "UI_CHECK_CANCELLED" : browser ? "UI_CHECK_FAILED" : "BROWSER_UNAVAILABLE", errors,
       hint: browser ? "Check the selector, expected visible text, and script errors. No source was changed." : "Install the optional playwright package and run npx playwright install chromium on the server." };
   } finally {
     abort.removeEventListener("abort", stop); await browser?.close().catch(() => {});

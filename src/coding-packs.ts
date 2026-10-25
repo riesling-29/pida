@@ -15,7 +15,7 @@ export function codingPacks(enabled: readonly string[] = codingPackIds) {
   });
   const tools: BusinessTool<any>[] = enabled.length ? [{
     name: "coding_guide", description: `Read an installed coding guide by ID: ${enabled.join(", ")}. Use debugging for failures and verification before claiming completion.`,
-    parameters: Type.Object({ id: Type.String() }, { additionalProperties: false }), permission: "workbench:read",
+    parameters: Type.Object({ id: Type.String() }, { additionalProperties: false }), permission: "workbench:read", effect: "read",
     async execute(args: { id: string }) {
       const guidance = guides.get(args.id);
       if (!guidance) throw new PidaError("CODING_GUIDE_NOT_FOUND", 400);

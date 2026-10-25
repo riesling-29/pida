@@ -1,5 +1,7 @@
 # Pida workspace — install, configure, extend, reuse
 
+For unreleased stabilization, owned execution exports (`pida runs` / `pida export`), pending-effect recovery, optional usage limits and the five-case real-model acceptance runner, see [EXECUTION-READINESS.md](EXECUTION-READINESS.md). The delivery branch is still a draft; its test results are separated from real-model/Windows acceptance.
+
 Pida 0.6 provides a local agent workspace around the same embedded Pi runtime. It includes a CLI, approved tool directory, saved conversations and a web UI. Git and Node.js 22.19+ are required for the default workbench. npm registry publication has not been performed.
 
 ## Start from the repository

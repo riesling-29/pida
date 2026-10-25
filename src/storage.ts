@@ -19,6 +19,8 @@ export interface SavedSession extends SessionSummary {
   hasTranscript?: boolean;
   nextSequence: number;
   traces: TraceEvent[];
+  activeRunId?: string;
+  activeTaskId?: string;
 }
 
 /** Application metadata only. Conversation serialization belongs to Pi. Single process. */
@@ -71,6 +73,8 @@ export class SessionStore {
           typeof saved.title !== "string" ||
           typeof saved.createdAt !== "string" ||
           typeof saved.updatedAt !== "string"
+          || (saved.activeRunId !== undefined && !/^[a-f0-9-]{36}$/.test(saved.activeRunId))
+          || (saved.activeTaskId !== undefined && !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(saved.activeTaskId))
         ) {
           throw new Error("Invalid saved session metadata");
         }
@@ -82,7 +86,7 @@ export class SessionStore {
       }
     } catch (error) {
       this.close();
-      throw error;
+      throw new Error("SESSION_METADATA_INVALID: Invalid saved session metadata. Preserve index and transcripts; repair from a trusted backup before restarting.");
     }
   }
   list(): SavedSession[] {

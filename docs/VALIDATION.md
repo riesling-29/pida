@@ -1,3 +1,24 @@
+# Runtime stabilization through PATCH-08 — 2026-10-25
+
+Implementation details and acceptance boundaries: [EXECUTION-READINESS.md](EXECUTION-READINESS.md). Environment: Linux, Node 24.22.1, npm 11.9.0, Pi packages 1.2.0. Package/version and lockfiles remain unchanged at 0.6.1.
+
+| Executed command | Actual result |
+| --- | --- |
+| `npm run check` / `npm run build` | PASS; strict types and declarations |
+| `npm test` | **95 passed, 0 failed, 0 skipped**; model decisions synthetic |
+| `node scripts/integration-fixtures.mjs` | 11 captured/derived producer fixtures; 3 draft JSON schemas |
+| `node --test test/integration-contract.test.mjs` | PASS; positive/negative contract expectations, stale/fabricated verification and broken references |
+| `node scripts/ui-readiness-check.mjs` | PASS with actual Chromium; two Pi-driven UI edits, counter/reset, three existing navigation views, revision-bound evidence; scripted model |
+| `node scripts/ui-check-check.mjs` | PASS with actual Chromium; service renderer, click/script errors, denied external fetch |
+| `node scripts/browser-check.mjs` | PASS with actual backend/Chromium; login, chat/tool trace, refresh, restart/resume, selection, mobile overflow, cancellation, deletion, logout and provider settings against local protocol fixtures |
+| New runner JavaScript syntax / `real-model-e2e.mjs --help` | PASS; mock refusal tested without importing user modules |
+
+The browser commands used `PIDA_BROWSER_EXECUTABLE=/tmp/pida-chromium/chromium`, a temporary Chromium 153 binary from `@sparticuz/chromium@153.0.0`; optional Playwright 1.64.1 was already installed. No browser dependency was added to the package. A script label saying "live provider apply" refers to switching to its local protocol stub, not real inference.
+
+New regressions cover separate-process exit after an actual test side effect, durable uncertain receipts, blocked duplicate changes, host idempotency keys, journal failure without run cancellation, stable event IDs across restart, ownership, budget stop before effect, UI match diagnostics and stale test evidence. Integration review also corrected retention of pre-change artifact versions, phantom archive listings after unknown-run reads and unsafe raw key-parse errors.
+
+**NOT_RUN:** real-model five-scenario E2E, native Windows execution/ACLs, remote CI, company environment, and Schumpeter receiver ingestion. No live model credentials or user LM Studio connection were used. Actual-model tooling is ready, but its live paths are not accepted by these synthetic/browser results. No merge, release or deployment was performed.
+
 # Runtime stabilization PATCH-00–02 — 2026-10-25
 
 See [RUNTIME-STABILIZATION.md](RUNTIME-STABILIZATION.md) for the exact upstream baseline, environment, reproduced failures, implementation/validation matrix, results and remaining real-model gates. Earlier entries below are historical results, not new validation claims.

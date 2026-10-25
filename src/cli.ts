@@ -15,6 +15,7 @@ import {
 } from "./workspace.js";
 import { nativeProviderCatalog } from "./provider-catalog.js";
 import { unlockStore } from "./storage.js";
+import { PidaClient } from "./client.js";
 
 const help = `Pida — reusable local agent workspace
 
@@ -28,6 +29,8 @@ const help = `Pida — reusable local agent workspace
   pida tools enable FILE [directory]    Approve a module; restart to load
   pida tools disable FILE [directory]   Disable a module; restart to unload
   pida doctor [directory]               Validate config, credentials and module paths
+  pida runs SESSION [directory]         List captured run/operation IDs from a running server
+  pida export SESSION RUN [directory] [--jsonl]  Export an owned run bundle or JSONL
   pida unlock [directory]               Clear a lock only if its local process is gone
 
 Default directory: current working directory. Requires Node 22.19+.
@@ -223,6 +226,22 @@ async function main() {
   }
   const directory = resolve(args.find((a) => !a.startsWith("--")) ?? ".");
   switch (command) {
+    case "runs":
+    case "export": {
+      const sessionId = args[0], runId = command === "export" ? args[1] : undefined;
+      if (!sessionId || (command === "export" && !runId)) throw new Error("Supply session ID and, for export, run ID.");
+      const selected = resolve(args[command === "export" ? 2 : 1]?.startsWith("--") ? "." : args[command === "export" ? 2 : 1] ?? ".");
+      const config = readConfig(selected), token = workspaceEnvironment(selected).PIDA_API_TOKEN;
+      if (!token) throw new Error("Missing local token; run pida doctor.");
+      const client = new PidaClient({ baseUrl: `http://127.0.0.1:${config.port}`, token: () => token });
+      if (command === "runs") console.log(JSON.stringify(await client.listRuns(sessionId), null, 2));
+      else if (args.includes("--jsonl")) {
+        const output = await client.exportRunJsonl(sessionId, runId!);
+        process.stdout.write(output.jsonl);
+        if (!output.complete) { console.error("OBSERVATION_INCOMPLETE: export is partial; inspect the JSON bundle."); process.exitCode = 2; }
+      } else console.log(JSON.stringify(await client.exportRun(sessionId, runId!), null, 2));
+      return;
+    }
     case "init":
       initWorkspace(directory);
       console.log(

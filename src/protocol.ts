@@ -21,6 +21,7 @@ export interface TraceEvent {
   runId: string;
   type: string;
   toolName?: string;
+  toolCallId?: string;
   status?: RunStatus;
   code?: string;
   persistenceError?: "PERSISTENCE_FAILED";
@@ -31,6 +32,8 @@ export interface RunResult {
   status: RunStatus;
   text: string;
   code?: string;
+  taskId?: string;
+  recovery?: { autoRetry: false; pendingEffectIds: string[]; action: "inspect-and-reconcile" | "repair-effect-ledger" };
   /** Secondary storage failure; cancellation/timeout keep their original status and code. */
   persistenceError?: "PERSISTENCE_FAILED";
 }

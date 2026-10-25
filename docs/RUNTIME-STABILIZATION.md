@@ -1,5 +1,7 @@
 # Runtime stabilization: PATCH-00–02
 
+Historical first-batch record. PATCH-03–08 implementation, validation and remaining acceptance gates are now documented in [EXECUTION-READINESS.md](EXECUTION-READINESS.md).
+
 Date: 2026-10-25. This is the first implementation batch of the Schumpeter readiness plan, not completion of PIDA-01 through PIDA-06 or a release certification.
 
 ## Baseline and environment

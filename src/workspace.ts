@@ -71,7 +71,7 @@ const configSchema = Type.Object(
     ),
     codingPacks: Type.Optional(Type.Array(Type.Union([Type.Literal("debugging"), Type.Literal("verification")]), { uniqueItems: true })),
     browserChecks: Type.Optional(Type.Boolean()),
-    runtime: Type.Optional(Type.Object({ maxRunMs: Type.Optional(Type.Integer({ minimum: 1000, maximum: 900000 })), autoCompaction: Type.Optional(Type.Boolean()), maxOutputRetries: Type.Optional(Type.Integer({ minimum: 0, maximum: 2 })) }, { additionalProperties: false })),
+    runtime: Type.Optional(Type.Object({ maxRunMs: Type.Optional(Type.Integer({ minimum: 1000, maximum: 900000 })), autoCompaction: Type.Optional(Type.Boolean()), maxOutputRetries: Type.Optional(Type.Integer({ minimum: 0, maximum: 2 })), maxTotalTokens: Type.Optional(Type.Integer({ minimum: 1 })), maxObservationEvents: Type.Optional(Type.Integer({ minimum: 1, maximum: 10000 })) }, { additionalProperties: false })),
     workbench: Type.Optional(Type.Object({ enabled: Type.Boolean() }, { additionalProperties: false })),
     permissions: Type.Array(Type.String({ minLength: 1 }), {
       uniqueItems: true,
@@ -92,7 +92,7 @@ export interface WorkspaceConfig {
   tools: { directory: string; enabled: string[] };
   codingPacks?: string[];
   browserChecks?: boolean;
-  runtime?: { maxRunMs?: number; autoCompaction?: boolean; maxOutputRetries?: number };
+  runtime?: { maxRunMs?: number; autoCompaction?: boolean; maxOutputRetries?: number; maxTotalTokens?: number; maxObservationEvents?: number };
   workbench?: { enabled: boolean };
   permissions: string[];
 }
@@ -320,6 +320,7 @@ export async function createWorkspace(directory: string) {
   const runtime = new PidaRuntime({
     provider,
     workspaceDir: root,
+    ...(workbench ? { inspectArtifacts: (principal: import("./runtime.js").Principal) => workbench.captureArtifacts(principal) } : {}),
     tools: [...tools, ...(workbench?.tools() ?? []), ...packs.tools],
     skills: packs.skills,
     ...(workbench ? { maxTurns: 24, maxToolCalls: 48, maxRunMs: 180_000 } : {}),
