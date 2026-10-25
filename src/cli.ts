@@ -209,7 +209,7 @@ async function startWorkspace(
     void stop();
   });
   console.log(
-    `Pida ready: http://127.0.0.1:${app.config.port}\nProvider: ${app.config.provider.kind} · conversations saved locally\nUse pida open to sign in, or pida token for manual sign-in. Ctrl+C stops the server.`,
+    `Pida ready: http://127.0.0.1:${app.config.port}\nWorkspace: ${directory}\nProvider: ${app.config.provider.kind} · conversations saved locally\nUse pida open "${directory}" to sign in, or pida token "${directory}" for manual sign-in. Ctrl+C stops the server.`,
   );
   if (open)
     await openBrowser(directory, setup).catch((e) => console.error(e.message));

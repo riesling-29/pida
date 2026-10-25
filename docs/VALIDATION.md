@@ -1,3 +1,7 @@
+# Runtime stabilization PATCH-00–02 — 2026-10-25
+
+See [RUNTIME-STABILIZATION.md](RUNTIME-STABILIZATION.md) for the exact upstream baseline, environment, reproduced failures, implementation/validation matrix, results and remaining real-model gates. Earlier entries below are historical results, not new validation claims.
+
 # Terminal-style UI refresh — 2026-10-18
 
 The existing 57 automated contract/integration tests pass after the UI changes. Browser QA uses the real local Pida backend with a synthetic model, not static mock screens. Verified in cloud Chromium: session restoration, HTML file preview, inspector tab switching and arrow-key navigation, Alt+N session creation, Ctrl+Enter submission through the Pi loop (LOT-002 tool response), six execution events in the timeline, native provider catalog selection in the settings modal and Escape dismissal. No real LLM key was entered or charged. Backend/API/provider capabilities are unchanged.

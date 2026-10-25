@@ -23,6 +23,7 @@ export interface TraceEvent {
   toolName?: string;
   status?: RunStatus;
   code?: string;
+  persistenceError?: "PERSISTENCE_FAILED";
 }
 export interface RunResult {
   runId: string;
@@ -30,6 +31,8 @@ export interface RunResult {
   status: RunStatus;
   text: string;
   code?: string;
+  /** Secondary storage failure; cancellation/timeout keep their original status and code. */
+  persistenceError?: "PERSISTENCE_FAILED";
 }
 export type StreamEvent =
   | { type: "trace"; trace: TraceEvent }

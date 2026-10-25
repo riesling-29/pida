@@ -1,5 +1,7 @@
 # Pida 0.6.1: local-model recovery and coding guides
 
+For the unreleased PATCH-00–02 changes, see [RUNTIME-STABILIZATION.md](RUNTIME-STABILIZATION.md). Classified workbench failures now remain failures until explicitly superseded by a successful UI mutation or same-path test rerun. Cancellation/timeout keep the first interruption cause; a secondary final-state storage failure is exposed separately as `persistenceError`. Neither a repaired operation nor a model completion statement establishes independent verification.
+
 ## What changed
 
 - Provider response probe: up to 1,024 output tokens, 60 seconds, explicit output-limit/timeout errors. This tests a text response; it is not a tool-capability benchmark.
@@ -36,7 +38,7 @@ git status --short
 git pull --ff-only origin feat/pida-workspace
 npm ci --ignore-scripts
 npm run build
-npm start
+npm start -- .\my-agent --open
 ```
 
 If the earlier manual `src/provider-settings.ts` probe fix is still a local modification, preserve it before pulling:

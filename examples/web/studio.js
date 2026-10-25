@@ -148,7 +148,7 @@ export function createStudio({ client, request, changed, disconnected }) {
           if (event.trace.type === "tool_started") status(`작업 중 · ${event.trace.toolName}`);
           if (event.trace.type === "tool_completed" || event.trace.type === "tool_failed") await refresh();
         }
-        if (event.type === "result") { result = event.result; output.textContent = [result.text, result.code ? explainError(result.code) : ""].filter(Boolean).join("\n\n") || "응답이 없습니다."; }
+        if (event.type === "result") { result = event.result; output.textContent = [result.text, ...[...new Set([result.code, result.persistenceError])].filter(Boolean).map(explainError)].filter(Boolean).join("\n\n") || "응답이 없습니다."; }
         $("studio-messages").scrollTop = $("studio-messages").scrollHeight;
       }
       await refresh();

@@ -17,6 +17,17 @@ const pathSchema = Type.String({ minLength: 1, maxLength: 240 });
 const digest = (text: string) => createHash("sha256").update(text).digest("hex");
 class WorkError extends PidaError { constructor(code: string) { super(code, 400); } }
 function fail(code: string): never { throw new WorkError(code); }
+// Raw guest/file error messages are conversation data, never trace codes.
+const workbenchErrorCodes = new Set([
+  "INVALID_PATH", "UNSAFE_DIRECTORY", "UNSAFE_FILE", "FILE_TOO_LARGE_OR_UNSAFE",
+  "FILE_LIMIT", "FILE_TOO_LARGE", "PATH_CONFLICT", "WORKSPACE_TOO_LARGE",
+  "GIT_OPERATION_FAILED", "UI_REVISION_CONFLICT", "UI_FULL_DOCUMENT_REQUIRED",
+  "UI_TEMPLATE_NOT_FOUND", "UI_EDIT_MATCH_REQUIRED", "FILE_NOT_FOUND",
+  "SKILL_NOT_FOUND", "INVALID_SKILL_NAME", "SKILL_LIMIT", "SKILL_EXISTS_USE_NEW_VERSION_NAME",
+  "SKILL_TEST_FAILED", "INVALID_SKILL", "SKILL_CHANGED", "INVALID_CHECKPOINT",
+  "CANCELLED", "EXECUTION_TIMEOUT", "EXECUTION_FAILED", "ASYNC_NOT_SUPPORTED",
+  "NO_ASSERTIONS", "TEST_IS_READ_ONLY", "BROWSER_UNAVAILABLE", "UI_CHECK_FAILED", "UI_CHECK_CANCELLED",
+]);
 function validPath(path: string) {
   if (typeof path !== "string" || path.length > 240 || !/^[A-Za-z0-9_-][A-Za-z0-9_./ -]*$/.test(path) || path.split("/").some(p => !p || p.startsWith("."))) fail("INVALID_PATH");
   return path;
@@ -195,6 +206,18 @@ export class PidaWorkbench {
   tools(): BusinessTool<any>[] {
     const tool = (name: string, description: string, parameters: any, permissions: string[], fn: (area: Area, args: any, signal: AbortSignal) => Promise<unknown> | unknown): BusinessTool<any> => ({
       name, description, parameters, permission: permissions[0]!,
+      classifyResult: (value, args: any) => {
+        const failed = !!value && typeof value === "object" && "ok" in value && value.ok === false;
+        // Successful UI mutations explicitly supersede an earlier failed mutation.
+        // Retesting the same path can supersede its failed test. Reads/unrelated successes cannot.
+        const recoveryKey = name === "ui_apply" || name === "ui_patch" ? "workbench:service-ui"
+          : name === "workspace_test" ? `workbench:test:${args.path}` : undefined;
+        return {
+          status: failed ? "failed" : "completed",
+          code: failed && "error" in value && typeof value.error === "string" && workbenchErrorCodes.has(value.error) ? value.error : name === "workspace_test" ? "TEST_FAILED" : "WORKSPACE_OPERATION_FAILED",
+          recoveryKey,
+        };
+      },
       execute: async (args, context) => {
         this.authorize(context.principal, permissions);
         return this.locked(context.principal, async area => {

@@ -207,6 +207,10 @@ export function explainError(code?: string): string {
     PROVIDER_TEST_OUTPUT_LIMIT: "서버에는 연결됐지만 연결 테스트 응답이 출력 한도에 도달했습니다.",
     PROVIDER_TEST_TIMEOUT: "연결 테스트가 시간 내에 끝나지 않았습니다. 모델 로딩 상태를 확인하세요.",
     TOOL_FAILED: "도구 실행에 실패했습니다. 현재 파일과 실행 기록을 확인하고 다시 요청하세요.",
+    WORKSPACE_OPERATION_FAILED: "작업 공간의 도구 실행에 실패했습니다. 현재 파일과 실행 기록을 확인하세요.",
+    TEST_FAILED: "테스트가 실패했습니다. 실패 내용을 확인하고 수정한 뒤 같은 테스트를 다시 실행하세요.",
+    UI_EDIT_MATCH_REQUIRED: "수정할 문구가 없거나 여러 곳에 있습니다. 현재 화면을 다시 읽고 수정 위치를 지정하도록 요청하세요.",
+    PERSISTENCE_FAILED: "실행 상태를 저장하지 못했습니다. 현재 변경을 확인하고 저장소 문제를 해결한 뒤 재개하세요.",
     SESSION_RUN_LIMIT: "이 대화의 실행 횟수 한도에 도달했습니다. ‘요약해서 이어가기’를 사용하세요.",
     CANCELLED: "작업을 중단했습니다. 이미 저장된 변경은 유지됩니다.",
   };

@@ -122,9 +122,17 @@ function inside(root: string, path: string): string {
 }
 export function readConfig(directory: string): WorkspaceConfig {
   const root = resolve(directory);
-  const config = JSON.parse(
-    readFileSync(join(root, "pida.config.json"), "utf8"),
-  );
+  const path = join(root, "pida.config.json");
+  let content: string;
+  try { content = readFileSync(path, "utf8"); }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT")
+      throw new Error(`CONFIG_NOT_FOUND: ${path}\nSelect the directory containing pida.config.json: pida start "<workspace-directory>" --open\nFrom the source checkout: npm start -- "<workspace-directory>" --open`);
+    throw error;
+  }
+  let config: unknown;
+  try { config = JSON.parse(content); }
+  catch { throw new Error(`CONFIG_INVALID_JSON: ${path}. Fix the JSON syntax; the file was not changed.`); }
   return validateConfig(config, root);
 }
 export function validateConfig(
@@ -164,6 +172,7 @@ export function checkWorkspace(directory: string) {
   }
   return {
     ok: problems.length === 0,
+    workspaceDir: resolve(directory),
     provider: config.provider.kind,
     tools: config.tools.enabled,
     persistence: true,
@@ -310,6 +319,7 @@ export async function createWorkspace(directory: string) {
   const packs = codingPacks(workbench ? config.codingPacks : []);
   const runtime = new PidaRuntime({
     provider,
+    workspaceDir: root,
     tools: [...tools, ...(workbench?.tools() ?? []), ...packs.tools],
     skills: packs.skills,
     ...(workbench ? { maxTurns: 24, maxToolCalls: 48, maxRunMs: 180_000 } : {}),

@@ -303,6 +303,8 @@ $("form").onsubmit = async (e) => {
           "응답 없음";
         if (event.result.code)
           problem({ code: event.result.code, message: event.result.code });
+        if (event.result.persistenceError && event.result.persistenceError !== event.result.code)
+          answer.textContent += "\n\n" + explainError(event.result.persistenceError);
         if (event.result.status === "completed") $("prompt").value = "";
       }
       $("messages").scrollTop = $("messages").scrollHeight;

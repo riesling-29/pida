@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
-import { basename, join } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { SessionStore, type SavedSession } from "./storage.js";
 import type { SessionSummary, RuntimeInfo } from "./protocol.js";
 import { InMemoryCredentialStore } from "@earendil-works/pi-ai";
@@ -48,6 +48,15 @@ export interface BusinessTool<T extends TSchema = TSchema> {
   parameters: T;
   permission: string;
   execute(args: Static<T>, context: ToolContext): Promise<unknown>;
+  /** Host-owned result contract; arbitrary business payloads are not interpreted as errors.
+   * A recoveryKey explicitly identifies a failed operation that a later success supersedes.
+   * Keys stay in memory, are not exported, and are never supplied by model output.
+   */
+  classifyResult?(value: unknown, args: Static<T>): {
+    status: "completed" | "failed";
+    code?: string;
+    recoveryKey?: string;
+  };
 }
 export function defineBusinessTool<T extends TSchema>(
   tool: BusinessTool<T>,
@@ -71,6 +80,8 @@ export class PidaError extends Error {
 }
 export interface RuntimeOptions {
   provider: ProviderFactory;
+  /** Host-selected working directory, fixed at construction; does not grant file access. */
+  workspaceDir?: string;
   /** Dedicated private directory. One runtime/process at a time; unset keeps memory-only behavior. */
   storageDir?: string;
   /** Safe display labels only: never endpoint URLs or credentials. */
@@ -99,6 +110,8 @@ interface ActiveRun {
   outputTruncated?: boolean;
   toolCalls: number;
   turns: number;
+  resultFailures: Map<string, string>;
+  classifiedCalls: Map<string, string>;
 }
 interface SessionRecord {
   id: string;
@@ -161,7 +174,7 @@ export class PidaRuntime {
   private readonly limits;
   private readonly options: RuntimeOptions;
   constructor(options: RuntimeOptions) {
-    this.options = { ...options, tools: [...(options.tools ?? [])] };
+    this.options = { ...options, workspaceDir: resolve(options.workspaceDir ?? process.cwd()), tools: [...(options.tools ?? [])] };
     const names = new Set<string>();
     for (const tool of this.options.tools!) {
       if (
@@ -242,12 +255,12 @@ export class PidaRuntime {
           if (saved?.hasTranscript)
             throw new PidaError("SESSION_FILE_MISSING", 500);
           manager = SessionManager.create(
-            process.cwd(),
+            this.options.workspaceDir!,
             this.store.piDirectory,
             saved ? { id: saved.sessionId } : undefined,
           );
         }
-      } else manager = SessionManager.inMemory();
+      } else manager = SessionManager.inMemory(this.options.workspaceDir);
       const id = manager.getSessionId();
       if (saved && id !== saved.sessionId)
         throw new PidaError("SESSION_FILE_MISMATCH", 500);
@@ -258,7 +271,7 @@ export class PidaRuntime {
         description: tool.description,
         parameters: tool.parameters,
         executionMode: "sequential",
-        execute: async (_callId, args, signal) => {
+        execute: async (callId, args, signal) => {
           const run = record.active;
           if (!run) throw new Error("NO_ACTIVE_RUN");
           const combined = signal
@@ -297,7 +310,17 @@ export class PidaRuntime {
             combined.throwIfAborted();
             const text = JSON.stringify(value ?? null);
             if (text.length > 32_768) throw new Error("TOOL_RESULT_TOO_LARGE");
-            return { content: [{ type: "text" as const, text }], details: {} };
+            const outcome = tool.classifyResult?.(value, args);
+            if (outcome) {
+              // Only an explicit host recovery key can clear a previous failure.
+              const key = outcome.recoveryKey === undefined ? `call:${callId}` : `recovery:${outcome.recoveryKey}`;
+              if (outcome.status === "failed") {
+                const code = outcome.code && /^[A-Z][A-Z0-9_]{0,63}$/.test(outcome.code) ? outcome.code : "TOOL_FAILED";
+                run.resultFailures.set(key, code);
+                run.classifiedCalls.set(callId, code);
+              } else if (outcome.recoveryKey !== undefined) run.resultFailures.delete(key);
+            }
+            return { content: [{ type: "text" as const, text }], details: {}, isError: outcome?.status === "failed" };
           } catch (error) {
             if (!run.status) {
               run.status = "failed";
@@ -309,6 +332,7 @@ export class PidaRuntime {
         },
       }));
       const { session } = await createAgentSession({
+        cwd: this.options.workspaceDir,
         modelRuntime: models,
         model,
         thinkingLevel: "off",
@@ -532,6 +556,15 @@ export class PidaRuntime {
     return structuredClone(this.owned(id, principal).traces);
   }
 
+  /** First interruption wins. A settled run must never abort a subsequent run. */
+  private stopRun(record: SessionRecord, run: ActiveRun, status: RunStatus, code: string): void {
+    if (record.active !== run || run.abort.signal.aborted) return;
+    run.status = status;
+    run.code = code;
+    run.abort.abort();
+    void record.pi.abort();
+  }
+
   async run(
     id: string,
     principal: Principal,
@@ -555,6 +588,8 @@ export class PidaRuntime {
       abort: new AbortController(),
       toolCalls: 0,
       turns: 0,
+      resultFailures: new Map(),
+      classifiedCalls: new Map(),
     };
     let lastAssistant: Extract<(typeof record.pi.messages)[number], { role: "assistant" }> | undefined;
     record.active = run;
@@ -574,10 +609,7 @@ export class PidaRuntime {
       finish = resolve;
     });
     const stop = (status: RunStatus, code: string) => {
-      run.status = status;
-      run.code = code;
-      run.abort.abort();
-      void record.pi.abort();
+      this.stopRun(record, run, status, code);
     };
     const emit = (event: StreamEvent) => {
       try {
@@ -632,10 +664,13 @@ export class PidaRuntime {
       if (event.type === "tool_execution_start")
         trace("tool_started", { toolName: event.toolName });
       if (event.type === "tool_execution_end") {
+        const classified = run.classifiedCalls.get(event.toolCallId);
+        run.classifiedCalls.delete(event.toolCallId);
         trace(event.isError ? "tool_failed" : "tool_completed", {
           toolName: event.toolName,
+          ...(classified ? { code: classified } : {}),
         });
-        if (event.isError && !run.status && !run.outputTruncated) {
+        if (event.isError && !classified && !run.status && !run.outputTruncated) {
           run.status = "failed";
           run.code = "TOOL_FAILED";
         }
@@ -678,6 +713,10 @@ export class PidaRuntime {
             .map((b) => b.text)
             .join("")
         : "";
+    if (!run.status && run.resultFailures.size) {
+      run.status = "failed";
+      run.code = run.resultFailures.values().next().value!;
+    }
     if (!run.status && !text.trim()) { run.status = "failed"; run.code = "EMPTY_RESPONSE"; }
     const result: RunResult = {
       runId: run.id,
@@ -697,11 +736,15 @@ export class PidaRuntime {
     try {
       this.persist(record);
     } catch {
-      result.status = "failed";
-      result.code = "PERSISTENCE_FAILED";
-      finalTrace.status = "failed";
-      finalTrace.code = "PERSISTENCE_FAILED";
-      record.saved.lastStatus = "failed";
+      result.persistenceError = "PERSISTENCE_FAILED";
+      finalTrace.persistenceError = "PERSISTENCE_FAILED";
+      if (result.status === "completed") {
+        result.status = "failed";
+        result.code = "PERSISTENCE_FAILED";
+      }
+      finalTrace.status = result.status;
+      finalTrace.code = result.code;
+      record.saved.lastStatus = result.status;
     }
     finish();
     emit({ type: "trace", trace: { ...finalTrace } });
@@ -715,11 +758,11 @@ export class PidaRuntime {
     if (this.closed) throw new PidaError("RUNTIME_CLOSED", 503);
     if (record.active || record.deleting) throw new PidaError("SESSION_BUSY", 409);
     if (!record.pi.messages.length) throw new PidaError("NOTHING_TO_COMPACT", 400);
-    const run: ActiveRun = { id: randomUUID(), principal: principalCopy(principal), abort: new AbortController(), toolCalls: 0, turns: 0 };
+    const run: ActiveRun = { id: randomUUID(), principal: principalCopy(principal), abort: new AbortController(), toolCalls: 0, turns: 0, resultFailures: new Map(), classifiedCalls: new Map() };
     record.active = run;
     let finish!: () => void;
     record.finished = new Promise<void>(resolve => { finish = resolve; });
-    const timer = setTimeout(() => { run.code = "RUN_TIMEOUT"; run.abort.abort(); void record.pi.abort(); }, this.limits.runMs);
+    const timer = setTimeout(() => this.stopRun(record, run, "limited", "RUN_TIMEOUT"), this.limits.runMs);
     let target: string | undefined;
     let compacted = false;
     try {
@@ -761,9 +804,7 @@ export class PidaRuntime {
     if (!this.sessions.has(id)) await this.resumeSession(id, principal);
     const record = this.owned(id, principal);
     if (record.active) {
-      record.active.status = "cancelled";
-      record.active.code = "CANCELLED";
-      record.active.abort.abort();
+      this.stopRun(record, record.active, "cancelled", "CANCELLED");
       await record.pi.abort();
       await record.finished;
     }

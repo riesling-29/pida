@@ -13,6 +13,8 @@ npm run pida -- setup ./my-agent
 
 These commands work with npm in PowerShell as well as a Unix shell. The npm `pida` script builds the TypeScript source before invoking the CLI. `npm start` uses that build. No LLM key is needed for the mock demonstration.
 
+The source checkout and agent workspace may be different directories. If the checkout is `D:\pida` and the configuration is `D:\pida\my-agent\pida.config.json`, run `npm start -- .\my-agent --open` from the checkout. Plain `npm start` searches the current directory; it does not discover a nested agent automatically. Startup and `pida doctor <directory>` display the selected workspace. Its resolved root is also the Pi session's working directory, including restored sessions; this does not expand workbench file permissions.
+
 In the UI, select **새 대화**, enter `LOT-001의 상태를 알려줘`, and send. The result is synthetic. Ctrl+C stops the server; restarting and opening the UI restores the saved conversation list. Clicking a conversation reopens its Pi history.
 
 `--open` asks the OS browser to open a local authenticated URL. If no browser launcher exists, the server remains available and reports a manual login fallback:
