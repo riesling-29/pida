@@ -1,3 +1,23 @@
+# ChatGPT provider authentication — 2026-10-28 KST
+
+Patch baseline: remote `bb2a8c1e6fec82d4d6465dd5dc3a2872e25aaa12`. Package 0.6.1 and dependency/lockfile versions unchanged. Linux, Node 24.22.1, npm 11.9.0, Pi 1.2.0. Implementation/usage/contract references: [CHATGPT-AUTH.md](CHATGPT-AUTH.md).
+
+| Executed command | Result |
+| --- | --- |
+| `npm test` | **105 passed, 0 failed, 0 skipped**. Six new auth tests use actual Pi OAuth/Responses/session/tool paths with synthetic upstream responses. |
+| `npm run build` / `npm run check` | PASS; strict types/declarations |
+| `node --test --test-timeout=20000 test/chatgpt-auth.test.mjs` | Six pass; rerun for the final serialized-write guard and refresh-error redaction. |
+| `node scripts/chatgpt-browser-check.mjs` | PASS; real Chromium and Pi callback with intercepted OpenAI endpoints. Auth-mode selection, login across reload, account model list/apply, cancel preserving the connection, local disconnect without fallback, no token in browser storage, mobile width; no page errors. |
+| `node scripts/browser-check.mjs` | PASS; prior login/chat/restart/provider-settings regression flow. |
+| `node scripts/studio-browser-check.mjs` | PASS; prior file/UI/diff/evidence/restore/cancel flow. |
+| Frontend/runner `node --check`; `git diff --check` | PASS |
+
+Browser commands use `PIDA_BROWSER_EXECUTABLE=/tmp/pida-chromium/chromium`; Korean visual QA uses temporary Noto Sans KR fonts. Chromium 153, Playwright 1.64.1. No fonts/browser packages were added as dependencies. Desktop auth-settings screenshot inspected.
+
+Integration review found Pi's current Responses adapter emits flat function tools while the documented ChatGPT route requires namespaced tools. A public payload-hook adaptation now supplies that format without copying the transport or tool loop; the protocol fixture validates it and dispatches an actual Pida business tool. Login commitment checks runtime-idle state immediately before the credential write. Token-endpoint refresh error bodies are replaced with a safe code before Pi can persist them. The test workspace was kept within the package for Node self-package resolution.
+
+**NOT_RUN:** real OpenAI OAuth/consent, account eligibility, live inference/usage limits, Windows callback and ACLs, company/remote hosting, remote CI. No real credentials, paid calls, merge or release. The passing fixture/browser tests do not establish live-account acceptance.
+
 # Web work surface — 2026-10-28 KST
 
 Implementation: [UI-STUDIO.md](UI-STUDIO.md), [WORKBENCH.md](WORKBENCH.md). Direction and remaining Web/TUI trial: [INTERFACE-DIRECTION.md](INTERFACE-DIRECTION.md). Baseline: remote `fix/runtime-stabilization-00-02` at `5ac2d5220b040619c1e9ce2faa5f6f6e8b73cdbc`. Linux, Node 24.22.1, npm 11.9.0, installed Pi 1.2.0; package remains 0.6.1. No dependency/lockfile changes.

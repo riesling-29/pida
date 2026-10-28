@@ -30,6 +30,10 @@ export interface ClientOptions {
   token: () => string | Promise<string>;
   fetch?: typeof globalThis.fetch;
 }
+export interface ChatGPTLoginStatus {
+  id: string; status: "pending" | "connected" | "failed" | "cancelled"; expiresAt: number;
+  authUrl?: string; manualInput?: boolean; code?: string;
+}
 /** Browser/Node fetch SDK. Native apps may use the same documented HTTP/SSE contract. */
 export class PidaClient {
   private readonly options: ClientOptions;
@@ -84,8 +88,9 @@ export class PidaClient {
   async getProviderSettings(): Promise<{
     provider: Record<string, unknown>;
     keyConfigured: boolean;
+    chatgpt?: { connected: boolean; code?: string };
     catalog: Array<{ id: string; name: string; baseUrl?: string; apiKeyEnv: string;
-      auth: "api-key"; source: string; keyConfigured: boolean;
+      auth: "api-key"; authModes?: string[]; source: string; keyConfigured: boolean;
       models: Array<{ id: string; name: string; api: string; contextWindow: number; maxTokens: number }> }>;
 
   }> {
@@ -96,6 +101,11 @@ export class PidaClient {
   ): Promise<{ models: string[] }> {
     return (await this.request("/v1/provider/models", "POST", draft)).json();
   }
+  async startChatGPTLogin(): Promise<ChatGPTLoginStatus> { return (await this.request("/v1/provider/chatgpt/login", "POST", {})).json(); }
+  async getChatGPTLogin(id: string): Promise<ChatGPTLoginStatus> { return (await this.request("/v1/provider/chatgpt/login/" + encodeURIComponent(id))).json(); }
+  async submitChatGPTLogin(id: string, value: string): Promise<ChatGPTLoginStatus> { return (await this.request("/v1/provider/chatgpt/login/" + encodeURIComponent(id) + "/input", "POST", { value })).json(); }
+  async cancelChatGPTLogin(id: string): Promise<ChatGPTLoginStatus> { return (await this.request("/v1/provider/chatgpt/login/" + encodeURIComponent(id), "DELETE")).json(); }
+  async disconnectChatGPT(): Promise<{ connected: false }> { return (await this.request("/v1/provider/chatgpt/logout", "POST", {})).json(); }
   async testProvider(
     draft: Record<string, unknown>,
   ): Promise<{ ok: boolean; scope: string }> {
@@ -215,6 +225,20 @@ export class PidaClient {
 /** Stable, credential-free explanations shared by both bundled chat surfaces. */
 export function explainError(code?: string): string {
   const messages: Record<string, string> = {
+    CHATGPT_LOGIN_REQUIRED: "ChatGPT로 로그인한 뒤 모델을 선택해주세요.",
+    CHATGPT_LOGIN_FAILED: "ChatGPT 로그인을 완료하지 못했습니다. 로그인과 구독 사용 권한을 확인하고 다시 시도하세요. 기존 설정은 유지됩니다.",
+    CHATGPT_LOGIN_CANCELLED: "ChatGPT 로그인을 취소했습니다. 기존 연결은 유지됩니다.",
+    CHATGPT_LOGIN_TIMEOUT: "ChatGPT 로그인 대기 시간이 지났습니다. 다시 시작해주세요.",
+    CHATGPT_LOGIN_PORT_BUSY: "로그인용 1455 포트를 다른 Pi/Codex 로그인이 사용 중입니다. 해당 로그인을 끝내거나 취소한 뒤 다시 시도하세요.",
+    CHATGPT_PLAN_NOT_AUTHORIZED: "ChatGPT 구독 사용 권한이 승인되지 않았습니다. 로그인할 때 해당 권한을 확인해주세요.",
+    CHATGPT_AUTH_FAILED: "ChatGPT 계정 인증 또는 모델 접근이 거부됐습니다. 계정의 권한을 확인하고 다시 로그인해주세요.",
+    CHATGPT_CONNECTION_FAILED: "ChatGPT 연결 또는 인증 갱신에 실패했습니다. 연결 상태를 확인하고 필요하면 다시 로그인해주세요.",
+    CHATGPT_STORAGE_FAILED: "ChatGPT 인증 정보를 읽거나 저장하지 못했습니다. 서버의 저장 경로와 접근 권한을 확인해주세요.",
+    CHATGPT_MODEL_UNAVAILABLE: "선택한 모델이 계정 또는 현재 Pi SDK에서 지원되지 않습니다. 모델 목록을 다시 불러오세요.",
+    CHATGPT_LOGIN_NOT_FOUND: "로그인 요청이 만료됐거나 서버가 재시작됐습니다. 다시 로그인해주세요.",
+    CHATGPT_LOGIN_NOT_WAITING: "이 로그인 요청은 주소 입력을 기다리고 있지 않습니다. 현재 로그인 상태를 확인하세요.",
+    PROVIDER_BUSY: "진행 중인 작업이 끝난 뒤 모델 연결을 변경해주세요.",
+    SETUP_BUSY: "이전 모델 연결 작업이나 로그인이 끝난 뒤 다시 시도해주세요.",
     OUTPUT_LIMIT: "출력 한도로 수정 명령이 중단됐습니다. 이미 저장된 변경은 유지됩니다. 요청을 나누거나 출력 한도와 실행 시간을 조정하세요.",
     EMPTY_RESPONSE: "모델이 표시할 답변을 보내지 않았습니다. 출력 한도와 모델의 추론 설정을 확인하세요.",
     RUN_TIMEOUT: "실행 시간이 초과됐습니다. 저장된 변경을 확인하고 이어서 요청하거나 실행 시간을 늘리세요.",

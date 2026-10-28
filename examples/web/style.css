@@ -1538,3 +1538,9 @@ body[data-mode=studio] #toggle-sessions,body[data-mode=studio] #toggle-inspector
   #studio-file-meta { flex-basis: 100%; }
   .studio-chat { min-height: 560px; }
 }
+
+#chatgpt-auth-panel { border: 1px solid var(--line); padding: 12px; margin: 12px 0; }
+.chatgpt-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+#chatgpt-auth-panel a { color: var(--accent); overflow-wrap: anywhere; }
+#chatgpt-manual { margin: 10px 0; }
+#chatgpt-auth-panel .muted { margin: 10px 0 0; }

@@ -44,7 +44,7 @@ function problem(error) {
     errors[error.code] ?? (error.code ? explainError(error.code) : error.message) ?? "요청을 처리하지 못했습니다.";
 }
 function controls() {
-  const busy = pending || running || studio.busy;
+  const busy = pending || running || studio.busy || configuring;
   $("send").disabled = !sessionId || busy || remoteRunning;
   $("cancel").disabled = pending || !(running || remoteRunning);
   $("connect").disabled = busy;
@@ -73,7 +73,7 @@ function controls() {
   studio.update({ connected, busy: pending || running || remoteRunning || configuring });
 }
 async function action(fn) {
-  if (pending || running || studio.busy) return;
+  if (pending || running || studio.busy || configuring) return;
   pending = true;
   $("error").textContent = "";
   controls();
@@ -205,6 +205,7 @@ async function connect() {
   if (recent) await select(recent.sessionId);
   else emptyConversation();
   await studio.connect(info);
+  pollChatGPT();
 }
 $("connection-form").onsubmit = (e) => {
   e.preventDefault();
@@ -248,6 +249,7 @@ $("delete-session").onclick = () => {
 };
 $("disconnect").onclick = () => {
   connected = false;
+  clearTimeout(chatgptPoll); chatgptLogin = undefined; chatgptState = { connected: false }; chatgptModels = []; clearChatGPTLogin();
   $("settings-dialog").close();
   setDrawer("sessions", false); setDrawer("inspector", false);
   clearWorkbench();
@@ -339,7 +341,93 @@ const setupErrors = {
   INVALID_PROVIDER_URL:
     "올바른 서버 주소를 입력해주세요. 주소에 키나 쿼리 문자열을 넣지 마세요.",
 };
-let providerCatalog = [];
+let providerCatalog = [], chatgptModels = [], chatgptState = { connected: false }, chatgptLogin, chatgptPoll;
+const chatgptSelected = () => $("provider-preset").value === "openai" && $("openai-auth").value === "chatgpt";
+function clearChatGPTLogin() {
+  $("chatgpt-login-link").removeAttribute("href"); $("chatgpt-login-link").hidden = true;
+  $("chatgpt-callback").value = ""; $("chatgpt-manual").hidden = true; $("chatgpt-cancel").hidden = true;
+}
+function chatgptStatus() {
+  $("chatgpt-state").textContent = chatgptLogin?.status === "pending" ? "브라우저에서 ChatGPT 로그인과 구독 사용 권한을 확인해주세요." :
+    chatgptState.code ? explainError(chatgptState.code) : chatgptState.connected ? "ChatGPT 인증 정보 저장됨 · 모델을 선택한 뒤 연결 확인 후 적용하세요." : "ChatGPT 로그인이 필요합니다.";
+}
+async function loadChatGPTModels(selected = "") {
+  const result = await client.listProviderModels({ kind: "native", providerId: "openai", authMode: "chatgpt" });
+  chatgptModels = result.models; showNativeModels(selected);
+  if (!result.models.length) $("provider-feedback").textContent = "계정과 현재 Pi SDK가 함께 지원하는 모델이 없습니다.";
+}
+function displayChatGPTLogin(login) {
+  chatgptLogin = login;
+  if (login.authUrl) {
+    const url = new URL(login.authUrl);
+    if (url.origin !== "https://auth.openai.com") throw new Error("Unexpected login origin");
+    $("chatgpt-login-link").href = url.href; $("chatgpt-login-link").hidden = false;
+  }
+  $("chatgpt-manual").hidden = !login.manualInput;
+  $("chatgpt-cancel").hidden = login.status !== "pending";
+  chatgptStatus(); providerControls();
+}
+function pollChatGPT() {
+  clearTimeout(chatgptPoll);
+  const id = chatgptLogin?.id;
+  if (!id || chatgptLogin.status !== "pending" || !connected) return;
+  chatgptPoll = setTimeout(async () => {
+    try {
+      const login = await client.getChatGPTLogin(id);
+      if (!connected || chatgptLogin?.id !== id) return;
+      displayChatGPTLogin(login);
+      if (login.status !== "pending") {
+        sessionStorage.removeItem("pida-chatgpt-login"); clearChatGPTLogin();
+        chatgptState = (await client.getProviderSettings()).chatgpt ?? { connected: false }; chatgptStatus();
+        if (login.status === "connected") {
+          $("provider-feedback").textContent = "로그인했습니다. 계정의 모델 목록을 불러옵니다…";
+          try { await loadChatGPTModels(); $("provider-feedback").textContent = "모델을 선택하고 ‘연결 확인 후 적용’을 누르세요."; }
+          catch (error) { $("provider-feedback").textContent = explainError(error.code); }
+        } else $("provider-feedback").textContent = explainError(login.code);
+        configuring = false; controls(); return;
+      }
+    } catch (error) {
+      $("provider-feedback").textContent = explainError(error.code);
+      if (error.status === 404 || error.status === 401 || chatgptLogin?.status !== "pending") {
+        sessionStorage.removeItem("pida-chatgpt-login"); chatgptLogin = undefined; clearChatGPTLogin(); configuring = false; controls(); return;
+      }
+    }
+    pollChatGPT();
+  }, 750);
+}
+$("chatgpt-login").onclick = async () => {
+  if (configuring || running || pending || studio.busy) return;
+  configuring = true; clearChatGPTLogin(); controls();
+  try { const login = await client.startChatGPTLogin(); sessionStorage.setItem("pida-chatgpt-login", login.id); displayChatGPTLogin(login); pollChatGPT(); }
+  catch (error) { $("provider-feedback").textContent = explainError(error.code); configuring = false; controls(); }
+};
+$("chatgpt-cancel").onclick = async () => {
+  if (!chatgptLogin) return;
+  try { await client.cancelChatGPTLogin(chatgptLogin.id); }
+  catch (error) { $("provider-feedback").textContent = explainError(error.code); }
+};
+$("chatgpt-submit").onclick = async () => {
+  if (!chatgptLogin?.manualInput) return;
+  const value = $("chatgpt-callback").value.trim(); $("chatgpt-callback").value = "";
+  try { displayChatGPTLogin(await client.submitChatGPTLogin(chatgptLogin.id, value)); }
+  catch (error) { $("provider-feedback").textContent = explainError(error.code); }
+};
+$("chatgpt-logout").onclick = async () => {
+  if (configuring || running || pending || studio.busy) return;
+  configuring = true; controls();
+  try { await client.disconnectChatGPT(); chatgptState = { connected: false }; chatgptModels = []; chatgptLogin = undefined; clearChatGPTLogin(); showNativeModels(); chatgptStatus(); $("provider-feedback").textContent = "이 Pida의 ChatGPT 연결을 해제했습니다. API 키로 자동 전환하지 않습니다."; }
+  catch (error) { $("provider-feedback").textContent = explainError(error.code); }
+  finally { configuring = false; controls(); }
+};
+$("openai-auth").onchange = async () => {
+  $("provider-key").value = ""; $("provider-feedback").textContent = ""; showNativeModels(); chatgptStatus();
+  if (chatgptSelected() && chatgptState.connected) {
+    configuring = true; controls();
+    try { await loadChatGPTModels(); } catch (error) { $("provider-feedback").textContent = explainError(error.code); }
+    finally { configuring = false; }
+  }
+  controls();
+};
 const selectedNative = () => providerCatalog.find(p => p.id === $("provider-preset").value);
 function showNativeModels(selectedId = "") {
   const p = selectedNative();
@@ -349,7 +437,7 @@ function showNativeModels(selectedId = "") {
   placeholder.value = "";
   placeholder.textContent = "모델을 선택하세요";
   $("native-model-select").append(placeholder);
-  for (const model of p.models) {
+  for (const model of p.models.filter(m => !chatgptSelected() || chatgptModels.includes(m.id))) {
     const option = document.createElement("option");
     option.value = model.id;
     option.textContent = `${model.name} · ${model.id}`;
@@ -358,11 +446,18 @@ function showNativeModels(selectedId = "") {
   $("native-model-select").value = selectedId;
   $("provider-key").placeholder = `API 키 입력 또는 서버의 ${p.apiKeyEnv} 사용`;
   $("provider-key-state").textContent = p.keyConfigured ? "이 프로바이더의 저장된 키 사용 가능" : "";
-  $("native-provider-note").textContent = `${p.name} · API 키 인증. 서버 주소와 API 형식은 자동 설정됩니다. 기본 제공 모델 목록입니다. 계정별 이용 가능 여부는 연결 확인이 필요합니다. 구독 계정 OAuth 로그인은 아직 지원하지 않습니다.`;
+  $("native-provider-note").textContent = chatgptSelected() ? "ChatGPT 구독 인증 · 계정의 모델 목록과 Pi SDK 지원 모델을 확인합니다. Pida 로그인 계정과는 별도입니다." : `${p.name} · API 키 인증. 서버 주소와 API 형식은 자동 설정됩니다. 기본 제공 모델 목록이며 계정별 이용 가능 여부는 연결 확인이 필요합니다.`;
 }
 function providerControls() {
   const mock = $("provider-preset").value === "mock";
-  const native = !!selectedNative();
+  const native = !!selectedNative(), chatgpt = chatgptSelected(), loggingIn = chatgptLogin?.status === "pending";
+  $("openai-auth-row").hidden = $("provider-preset").value !== "openai";
+  $("chatgpt-auth-panel").hidden = !chatgpt;
+  $("provider-key-row").hidden = chatgpt;
+  $("chatgpt-login").disabled = configuring || running || pending || studio.busy;
+  $("chatgpt-logout").disabled = configuring || running || pending || studio.busy || (!chatgptState.connected && !chatgptState.code);
+  $("chatgpt-cancel").disabled = !loggingIn;
+  $("chatgpt-submit").disabled = !loggingIn || !chatgptLogin.manualInput;
   $("endpoint-fields").hidden = mock;
   $("custom-connection-fields").hidden = native;
   $("native-provider-note").hidden = !native;
@@ -370,18 +465,19 @@ function providerControls() {
   $("provider-model-label").htmlFor = native ? "native-model-select" : "provider-model";
   $("provider-model").hidden = native;
   $("provider-advanced").hidden = native;
-  $("load-models").hidden = native;
+  $("load-models").hidden = native && !chatgpt;
   for (const field of $("provider-form").querySelectorAll("input, select")) field.disabled = configuring;
-  $("provider-key").disabled = configuring || (!native && $("provider-no-key").checked);
+  $("provider-key").disabled = configuring || chatgpt || (!native && $("provider-no-key").checked);
+  $("chatgpt-callback").disabled = !loggingIn || !chatgptLogin.manualInput;
   $("provider-http-row").hidden = native || !$("provider-url").value.startsWith("http:");
-  $("apply-provider").disabled = configuring || running || pending || studio.busy;
-  $("load-models").disabled = configuring || mock;
+  $("apply-provider").disabled = configuring || running || pending || studio.busy || (chatgpt && (!chatgptState.connected || !$("native-model-select").value));
+  $("load-models").disabled = configuring || mock || (chatgpt && !chatgptState.connected);
 }
 function providerDraft() {
   if ($("provider-preset").value === "mock") return { kind: "mock" };
   const native = selectedNative();
   if (native) return { kind: "native", providerId: native.id,
-    modelId: $("native-model-select").value, apiKey: $("provider-key").value };
+    modelId: $("native-model-select").value, ...(chatgptSelected() ? { authMode: "chatgpt" } : { apiKey: $("provider-key").value }) };
   return {
     kind: "endpoint",
     baseUrl: $("provider-url").value.trim(),
@@ -396,7 +492,9 @@ function providerDraft() {
 }
 async function loadProviderSettings() {
   try {
-    const { provider: p, keyConfigured, catalog = [] } = await client.getProviderSettings();
+    const { provider: p, keyConfigured, catalog = [], chatgpt } = await client.getProviderSettings();
+    chatgptState = chatgpt ?? { connected: false }; chatgptModels = [];
+    $("openai-auth").value = p.authMode === "chatgpt" ? "chatgpt" : "api-key"; chatgptStatus();
     providerCatalog = catalog;
     $("native-providers").replaceChildren();
     for (const item of catalog) {
@@ -421,6 +519,14 @@ async function loadProviderSettings() {
     $("provider-key-state").textContent = keyConfigured
       ? "저장된 키 사용 가능 · 비우면 같은 서버의 키 유지" : "";
     showNativeModels(p.modelId);
+    const loginId = sessionStorage.getItem("pida-chatgpt-login");
+    if (loginId) {
+      try { const login = await client.getChatGPTLogin(loginId); if (login.status === "pending") { $("provider-preset").value = "openai"; $("openai-auth").value = "chatgpt"; configuring = true; displayChatGPTLogin(login); pollChatGPT(); } else sessionStorage.removeItem("pida-chatgpt-login"); }
+      catch { sessionStorage.removeItem("pida-chatgpt-login"); }
+    }
+    if (chatgptSelected() && chatgptState.connected && chatgptLogin?.status !== "pending") {
+      try { await loadChatGPTModels(p.modelId); } catch (error) { $("provider-feedback").textContent = explainError(error.code); }
+    }
     providerControls();
   } catch {
     $("provider-settings").hidden = true;
@@ -428,6 +534,7 @@ async function loadProviderSettings() {
 }
 $("provider-preset").onchange = () => {
   const value = $("provider-preset").value;
+  $("openai-auth").value = "api-key"; chatgptModels = []; chatgptStatus();
   const local = value === "local" || value === "ollama";
   $("provider-url").value = local ? (value === "ollama" ? "http://localhost:11434/v1" : "http://localhost:1234/v1") : "";
   $("provider-no-key").checked = local;
@@ -445,6 +552,7 @@ $("provider-preset").onchange = () => {
   providerControls();
 };
 $("provider-no-key").onchange = providerControls;
+$("native-model-select").onchange = providerControls;
 $("provider-url").oninput = () => {
   $("provider-http").checked = false;
   providerControls();
@@ -455,6 +563,7 @@ $("load-models").onclick = async () => {
   providerControls();
   $("provider-feedback").textContent = "모델 목록을 불러오는 중…";
   try {
+    if (chatgptSelected()) { await loadChatGPTModels($("native-model-select").value); $("provider-feedback").textContent = "계정의 모델 목록을 갱신했습니다."; return; }
     const { models } = await client.listProviderModels(providerDraft());
     $("provider-models").replaceChildren();
     for (const id of models) {

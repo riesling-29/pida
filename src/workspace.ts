@@ -1,6 +1,7 @@
 import { codingPacks } from "./coding-packs.js";
 import { PidaWorkbench, workbenchPermissions, workbenchPrompt } from "./workbench.js";
 import { nativeProvider, validateNativeProvider, type NativeProviderConfig } from "./provider-catalog.js";
+import { ChatGPTCredentialStore } from "./chatgpt-auth.js";
 import {
   ProviderSettings,
   providerEnvironment,
@@ -36,7 +37,7 @@ const configSchema = Type.Object(
     stateDir: Type.String({ minLength: 1 }),
     systemPrompt: Type.String({ minLength: 1 }),
     provider: Type.Union([
-      Type.Object({ kind: Type.Literal("native"), providerId: Type.String({ minLength: 1 }), modelId: Type.String({ minLength: 1 }), apiKeyEnv: Type.String({ pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }) }, { additionalProperties: false }),
+      Type.Object({ kind: Type.Literal("native"), providerId: Type.String({ minLength: 1 }), modelId: Type.String({ minLength: 1 }), apiKeyEnv: Type.String({ pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }), authMode: Type.Optional(Type.Union([Type.Literal("api-key"), Type.Literal("chatgpt")])) }, { additionalProperties: false }),
       Type.Object(
         { kind: Type.Literal("mock") },
         { additionalProperties: false },
@@ -158,11 +159,13 @@ export function checkWorkspace(directory: string) {
   if (!env.PIDA_API_TOKEN || env.PIDA_API_TOKEN.length < 32)
     problems.push("PIDA_API_TOKEN is missing or too short.");
   if (
-    config.provider.kind !== "mock" &&
+    config.provider.kind !== "mock" && config.provider.authMode !== "chatgpt" &&
     (config.provider.kind === "native" || config.provider.authMode !== "none") &&
     !env[config.provider.apiKeyEnv]
   )
     problems.push(`Missing credential variable: ${config.provider.apiKeyEnv}`);
+  if (config.provider.kind === "native" && config.provider.authMode === "chatgpt" && !new ChatGPTCredentialStore(directory, config.stateDir).status().connected)
+    problems.push("ChatGPT login is missing or its credential store is unreadable. Open model settings to reconnect.");
   for (const file of config.tools.enabled) {
     try {
       approvedToolPath(directory, config, file);
@@ -311,7 +314,7 @@ export async function createWorkspace(directory: string) {
     config.provider.kind === "mock"
       ? mockProvider
       : config.provider.kind === "native"
-        ? nativeProvider(config.provider, env)
+        ? nativeProvider(config.provider, env, undefined, new ChatGPTCredentialStore(root, config.stateDir))
         : endpointProvider({ id: "workspace", ...config.provider }, env);
   // Keep local settings reachable even when a provider key is absent. Model calls still fail closed.
   const tools = await loadWorkspaceTools(root, config);
@@ -346,6 +349,7 @@ export async function createWorkspace(directory: string) {
       },
     ]),
   });
+  server.once("close", () => { void settings.close(); });
   return { runtime, server, config, workbench };
 }
 

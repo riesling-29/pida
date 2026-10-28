@@ -185,6 +185,26 @@ export function createPidaServer(options: HttpOptions) {
       if (path.startsWith("/v1/provider") && options.providerSettings) {
         if (!principal.permissions.includes("pida:configure"))
           throw new PidaError("FORBIDDEN", 403);
+        if (path === "/v1/provider/chatgpt/login" && req.method === "POST") {
+          keys(await body(req), []);
+          json(res, 200, options.providerSettings.startChatGPT(principal.id)); return;
+        }
+        if (path === "/v1/provider/chatgpt/logout" && req.method === "POST") {
+          keys(await body(req), []);
+          json(res, 200, await options.providerSettings.logoutChatGPT()); return;
+        }
+        const login = /^\/v1\/provider\/chatgpt\/login\/([a-f0-9-]{36})(\/input)?$/.exec(path);
+        if (login && req.method === "GET" && !login[2]) {
+          json(res, 200, options.providerSettings.getChatGPTLogin(login[1]!, principal.id)); return;
+        }
+        if (login && req.method === "DELETE" && !login[2]) {
+          json(res, 200, await options.providerSettings.cancelChatGPT(login[1]!, principal.id)); return;
+        }
+        if (login && req.method === "POST" && login[2]) {
+          const input = await body(req, 12_000); keys(input, ["value"]);
+          if (typeof input.value !== "string") throw new PidaError("INVALID_BODY", 400);
+          json(res, 200, options.providerSettings.inputChatGPT(login[1]!, principal.id, input.value)); return;
+        }
         if (path === "/v1/provider" && req.method === "GET") {
           json(res, 200, options.providerSettings.get());
           return;

@@ -1,4 +1,4 @@
-import { createProvider, type Provider } from "@earendil-works/pi-ai";
+import { createProvider, type Provider, type CredentialStore } from "@earendil-works/pi-ai";
 import { openAICompletionsApi } from "@earendil-works/pi-ai/api/openai-completions.lazy";
 import { openAIResponsesApi } from "@earendil-works/pi-ai/api/openai-responses.lazy";
 import { anthropicMessagesApi } from "@earendil-works/pi-ai/api/anthropic-messages.lazy";
@@ -12,6 +12,8 @@ import {
 export interface ProviderBinding {
   provider: Provider;
   modelId: string;
+  /** Host-owned, workspace-scoped credentials. Pi serializes OAuth refresh through this store. */
+  credentials?: CredentialStore;
 }
 /** Host-owned factory, called once per session. Never accepted from HTTP input. */
 export type ProviderFactory = () => ProviderBinding | Promise<ProviderBinding>;

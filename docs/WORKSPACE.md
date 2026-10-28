@@ -119,7 +119,7 @@ Native keys use separate `<stateDir>/provider-key-<providerId>.json` files with 
 
 `GET /v1/provider` returns a secret-free `catalog` with names, key status and bundled model metadata. `POST /v1/provider/models` accepts `{ "kind": "native", "providerId": "google" }` without a key and returns catalog IDs; this is not account-specific discovery. Apply/test accepts `kind`, `providerId`, `modelId`, `apiKey` only for native providers, rejecting endpoint overrides. Unknown providers/models fail closed. Existing endpoint configurations remain supported unchanged.
 
-The local Ollama preset is `http://localhost:11434/v1`, keyless Chat Completions. Neither local-server preset starts or installs a model server. `localhost` refers to the machine running Pida. Subscription OAuth, IAM/ADC and Azure deployment configuration are not part of this release's setup flow.
+The local Ollama preset is `http://localhost:11434/v1`, keyless Chat Completions. Neither local-server preset starts or installs a model server. `localhost` refers to the machine running Pida. OpenAI ChatGPT subscription login is available as an explicit authentication choice; see [CHATGPT-AUTH.md](CHATGPT-AUTH.md). Other subscription OAuth, IAM/ADC and Azure deployment configuration remain outside the setup flow.
 
 ## Package-manager commands
 

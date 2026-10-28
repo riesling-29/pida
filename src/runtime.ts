@@ -277,7 +277,7 @@ export class PidaRuntime {
     try {
       const binding = await this.options.provider();
       const models = await ModelRuntime.create({
-        credentials: new InMemoryCredentialStore(),
+        credentials: binding.credentials ?? new InMemoryCredentialStore(),
         modelsPath: null,
         allowModelNetwork: false,
         refreshOnCreate: false,

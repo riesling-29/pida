@@ -33,7 +33,7 @@ In the browser:
 
 **LM Studio**, **Ollama**, and **사내 API · 다른 서버** remain separate choices. Local presets supply the URL and keyless mode; custom connections expose protocol and token limits under advanced settings. Their model-list button queries the chosen server. Native service catalogs come from pinned Pi 1.2.0, not a live account entitlement check; newer models require a Pi update or a custom connection.
 
-Native API keys are stored separately per provider, server-side, with private file permissions; switching back can reuse that provider's key. Keys are never returned by the settings API. **Subscription OAuth login (ChatGPT, Claude, Copilot, etc.) and AWS/Azure/Vertex credential flows are not implemented in this setup UI.** They are not interchangeable with API keys.
+Native API keys are stored separately per provider, server-side, with private file permissions; switching back can reuse that provider's key. Keys are never returned by the settings API. **OpenAI also supports ChatGPT account login** through Pi's official Sign in with ChatGPT flow. Select **OpenAI → 인증 방식 → ChatGPT 계정 · 구독 사용**, log in, select an account-supported model and apply. Credentials refresh server-side; missing subscription auth never falls back to an API key. See [ChatGPT setup, patch scope and actual validation](docs/CHATGPT-AUTH.md). Claude/Copilot subscription login and AWS/Azure/Vertex credential flows remain outside this setup UI.
 
 You can also select **데모만 사용** and try `LOT-001의 상태를 알려줘` without LLM credentials. The mock is deterministic and cannot choose arbitrary custom tools.
 

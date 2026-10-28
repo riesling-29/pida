@@ -122,12 +122,12 @@
   <dialog id="settings-dialog" aria-labelledby="settings-title"><div class="dialog-heading"><div><span class="section-label">CONFIGURATION</span><h2 id="settings-title">모델 연결</h2></div><button id="close-settings" class="quiet" aria-label="모델 설정 닫기">닫기 <kbd>Esc</kbd></button></div><details id="provider-settings" class="settings" open><summary>모델 연결 · 설정</summary>
           <form id="provider-form">
             <p>
-              프로바이더를 선택하고 API 키와 사용할 모델을 설정하세요.
-              API 키는 서버에만 저장하며 브라우저에 다시 표시하지 않습니다.
+              프로바이더와 인증 방식, 사용할 모델을 선택하세요.
+              API 키와 로그인 인증 정보는 서버에만 저장합니다.
             </p>
             <label for="provider-preset">LLM 프로바이더</label>
             <select id="provider-preset">
-              <optgroup id="native-providers" label="클라우드 서비스 · API 키"></optgroup>
+              <optgroup id="native-providers" label="클라우드 서비스"></optgroup>
               <option value="local">LM Studio</option>
               <option value="ollama">Ollama</option>
               <option value="company">사내 API · 다른 서버</option>
@@ -135,6 +135,14 @@
             </select>
             <div id="endpoint-fields">
               <p id="native-provider-note" class="muted" hidden></p>
+              <div id="openai-auth-row" hidden><label for="openai-auth">인증 방식</label><select id="openai-auth"><option value="api-key">OpenAI API 키</option><option value="chatgpt">ChatGPT 계정 · 구독 사용</option></select></div>
+              <section id="chatgpt-auth-panel" aria-label="ChatGPT 연결" hidden>
+                <p id="chatgpt-state" role="status">ChatGPT 로그인이 필요합니다.</p>
+                <div class="chatgpt-actions"><button id="chatgpt-login" type="button">Continue with ChatGPT</button><button id="chatgpt-cancel" type="button" hidden>로그인 취소</button><button id="chatgpt-logout" type="button" disabled>연결 해제</button></div>
+                <p><a id="chatgpt-login-link" target="_blank" rel="noopener noreferrer" hidden>ChatGPT 로그인 페이지 열기 ↗</a></p>
+                <details id="chatgpt-manual" hidden><summary>로그인 후 자동 연결이 안 됐나요?</summary><label for="chatgpt-callback">로그인 마지막 화면의 전체 주소</label><input id="chatgpt-callback" type="password" autocomplete="off" spellcheck="false" placeholder="http://127.0.0.1:1455/auth/callback?…" /><button id="chatgpt-submit" type="button">로그인 완료 주소 전달</button></details>
+                <p class="muted">로그인은 인증 정보를 갱신합니다. 모델 변경은 적용 후 반영됩니다. 사용 가능한 모델과 한도는 계정에 따라 다릅니다. 연결 해제는 이 Pida의 인증 정보를 삭제합니다. <a href="https://chatgpt.com/settings/usage" target="_blank" rel="noopener noreferrer">사용량·앱 권한 관리 ↗</a></p>
+              </section>
               <div id="custom-connection-fields">
               <label for="provider-url">서버 주소</label
               ><input
@@ -149,14 +157,14 @@
                 >
               </div>
               </div>
-              <label for="provider-key"
+              <div id="provider-key-row"><label for="provider-key"
                 >API 키 <span id="provider-key-state"></span></label
               ><input
                 id="provider-key"
                 type="password"
                 autocomplete="off"
                 placeholder="키를 붙여넣으세요"
-              />
+              /></div>
               <div class="row model-row">
                 <label id="provider-model-label" for="provider-model">모델</label
                 ><button id="load-models" type="button" class="secondary">
@@ -210,8 +218,8 @@
             <p id="provider-feedback" role="status"></p>
             <button id="apply-provider" type="submit">연결 확인 후 적용</button>
             <p class="muted">
-              짧은 테스트 응답을 요청합니다. 유료 API는 소량의 요금이 발생할 수
-              있습니다. 대화 실행 중에는 설정을 바꿀 수 없습니다.
+              연결 확인은 짧은 모델 요청을 보내며 API 요금 또는 구독 사용량을
+              소모할 수 있습니다. 대화 실행 중에는 설정을 바꿀 수 없습니다.
             </p>
           </form>
 </details></dialog>
