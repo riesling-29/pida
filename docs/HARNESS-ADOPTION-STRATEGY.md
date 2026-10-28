@@ -6,13 +6,16 @@ Decision date: 2026-10-28 KST. Direction supplied by minero, including the expli
 
 The user's larger project is Agent Legion Engineering based on Schumpeter and Memory Substrate. That explains why Pida should reuse replaceable coding harnesses instead of becoming a separate coding-assistant development program. It does not authorize developing Schumpeter, Memory Substrate or agent-organization infrastructure in this workstream.
 
-The scope here is Pida: adopting an existing coding/TUI environment, maintaining a small integration surface, tracking upstream updates, and making replacement practical. External systems appear below only to clarify responsibility boundaries.
+Pida's original product goal remains: see the real application beside a conversation, request a change, have a coding-capable agent implement and check it, inspect the result, and continue or recover. Coding-assistant capability is essential to that product. Reusing the coding engine does not reduce Pida to a backend connector.
+
+The scope here is Pida: delivering that visual development experience, adopting an existing coding environment, maintaining a small integration surface, tracking upstream updates, and making replacement practical. Whether general coding work belongs in the expanded Web UI or an existing TUI is an empirical product decision; see [INTERFACE-DIRECTION.md](INTERFACE-DIRECTION.md). External systems appear below only to clarify responsibility boundaries.
 
 The user directs goals, desired outcomes and material tradeoffs. Engineering owns dependency selection, adapter implementation, routine compatibility work and verification. The user should be able to adopt a working tool or discard a poor one without becoming its internal maintainer.
 
 | Component | Responsibility |
 | --- | --- |
 | External coding harness (OMP, Pi, or a better candidate) | Coding loop, editing/search, shell/build/test facilities, TUI, language tooling and harness-specific optimizations |
+| Pida product interface | Visible application/project context, natural-language direction, preview/change inspection, verification status and recovery interaction |
 | Pida integration boundary | Explicit task invocation, capability mapping, applicable execution policy, cancellation/result handling, and observed evidence export |
 | Schumpeter / Operations (external context, out of scope) | Agent coordination, mission state, process intelligence and experience reuse |
 | Memory Substrate (external context, out of scope) | Persistent memory/identity/context continuity independent of one replaceable harness |
@@ -66,7 +69,7 @@ User-facing reports should answer: does it work for our tasks, what improved or 
 This supersedes the conversational PATCH-09–13 proposal as a standalone in-house coding-profile/TUI/LSP development program. Those items were proposals, not implemented patches.
 
 1. Establish the actual company LiteLLM/model connection and reproduce the reported cache symptom. Keep infrastructure/cache diagnosis separate from coding-harness quality.
-2. Evaluate a pinned existing harness with its own TUI and tools. Reuse configuration and packages first; use a minimal fork only when it serves a concrete need.
+2. Evaluate a pinned existing harness with its tools and existing TUI as a working baseline. Compare extending Pida's Web UI for general coding with reusing that TUI; do not assume a custom TUI must be built. Reuse configuration and packages first; use a minimal fork only when it serves a concrete need.
 3. Connect the successful candidate to Pida through the smallest supported interface needed to observe and control real tasks. Preserve Pida's export boundary for future external integration.
 4. Add candidate-update checks and rollback handling once the backend and acceptance cases are known.
 5. Evaluate Pida by whether it reliably supplies useful execution, evidence and replaceability to the larger project. Work on external systems requires a separate task in their own context.

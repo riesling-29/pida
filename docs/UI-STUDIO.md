@@ -1,5 +1,7 @@
 # UI Studio (0.6)
 
+For the 2026-10-28 product/design direction and Web-versus-existing-TUI evaluation, see [INTERFACE-DIRECTION.md](INTERFACE-DIRECTION.md). That document is a proposal, not a claim of newly implemented UI or general repository execution. The behavior below describes the existing studio.
+
 The bundled local workspace now has three views:
 
 - **서비스**: the saved service app at the available browser size.
