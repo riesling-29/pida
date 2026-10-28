@@ -1,5 +1,7 @@
 # Architecture decision — Pida-core 0.5
 
+**2026-10-28 strategy update:** [HARNESS-ADOPTION-STRATEGY.md](HARNESS-ADOPTION-STRATEGY.md) governs future Pida investment and supersedes the proposed in-house coding-assistant/TUI expansion. The architecture below describes the existing Pi implementation; it does not require every future execution backend to use Pi internally. External harness integration and automated upstream adoption are planned, not implemented. Schumpeter and Memory Substrate are external context, not development scope for this workstream.
+
 Updated 2026-10-17 KST. Implements the user's Pida Initial Engineering Task, superseding the OpenCode-first assumption of the attached July Schumpeter baseline for this repository only.
 
 ## Boundaries
