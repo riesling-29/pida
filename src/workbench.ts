@@ -158,7 +158,51 @@ export class PidaWorkbench {
   }
   async status(principal: Principal) {
     this.authorize(principal, ["workbench:read"]);
-    return this.locked(principal, area => ({ enabled: true, engine: "QuickJS WASM", files: Object.entries(snapshot(area.files)).map(([path, content]) => ({ path, bytes: Buffer.byteLength(content) })), skills: this.skills(area), history: this.history(area) }));
+    return this.locked(principal, area => {
+      const files = snapshot(area.files);
+      return { enabled: true, engine: "QuickJS WASM", revision: artifactSnapshot(files).digest,
+        canCheckpoint: ["workbench:write", "workbench:history"].every(p => principal.permissions.includes(p)),
+        files: Object.entries(files).map(([path, content]) => ({ path, bytes: Buffer.byteLength(content) })), skills: this.skills(area), history: this.history(area) };
+    });
+  }
+  /** Explicit capture: includes host edits as well as tool edits. No model call. */
+  async captureCheckpoint(principal: Principal) {
+    this.authorize(principal, ["workbench:read", "workbench:write", "workbench:history"]);
+    return this.locked(principal, area => ({ checkpoint: this.checkpoint(area, "Review checkpoint"), revision: artifactSnapshot(snapshot(area.files)).digest }));
+  }
+  private requireCheckpoint(area: Area, checkpoint: string) {
+    if (!/^[a-f0-9]{40}$/.test(checkpoint)) fail("INVALID_CHECKPOINT");
+    this.git(area, ["merge-base", "--is-ancestor", checkpoint, "HEAD"]);
+  }
+  async changes(principal: Principal, base: string, head: string) {
+    this.authorize(principal, ["workbench:read", "workbench:history"]);
+    return this.locked(principal, area => {
+      this.requireCheckpoint(area, base); this.requireCheckpoint(area, head);
+      this.git(area, ["merge-base", "--is-ancestor", base, head]);
+      const files = this.git(area, ["diff", "--no-renames", "--name-only", "-z", base, head, "--"], true).split("\0").filter(Boolean);
+      const diff = this.git(area, ["diff", "--no-ext-diff", "--no-textconv", "--no-color", "--no-renames", "--unified=3", base, head, "--"], true);
+      return { base, head, files, diff: diff.slice(0, 131072), truncated: diff.length > 131072 };
+    });
+  }
+  async restoreCheckpoint(principal: Principal, checkpoint: string, expectedRevision: string, beforeRestore?: () => void) {
+    this.authorize(principal, ["workbench:read", "workbench:write", "workbench:history"]);
+    return this.locked(principal, area => {
+      beforeRestore?.();
+      if (artifactSnapshot(snapshot(area.files)).digest !== expectedRevision) throw new PidaError("WORKSPACE_REVISION_CONFLICT", 409);
+      const result = this.restoreArea(area, checkpoint);
+      return { ...result, revision: artifactSnapshot(snapshot(area.files)).digest };
+    });
+  }
+  private restoreArea(area: Area, checkpoint: string) {
+    this.requireCheckpoint(area, checkpoint);
+    const saved: Record<string, string> = Object.create(null);
+    for (const path of this.git(area, ["ls-tree", "-r", "--name-only", checkpoint]).split("\n").filter(Boolean)) saved[validPath(path)] = this.git(area, ["show", `${checkpoint}:${path}`], true);
+    validateFiles(saved);
+    const current = snapshot(area.files), before = this.checkpoint(area, "Before restore");
+    for (const path of Object.keys(current)) unlinkSync(safePath(area.files, path));
+    function clean(dir: string) { for (const e of readdirSync(dir)) { const p = join(dir, e); if (lstatSync(p).isDirectory()) { clean(p); if (!readdirSync(p).length) rmSync(p, { recursive: true }); } } }
+    clean(area.files);
+    return { ok: true, before, checkpoint: this.apply(area, saved) };
   }
   async captureArtifacts(principal: Principal) {
     this.authorize(principal, ["workbench:read"]);
@@ -302,7 +346,7 @@ export class PidaWorkbench {
       }),
       tool("workspace_test", "Run a read-only JS test. Must call assert. A failed assertion returns evidence for repair.", schema({ path: pathSchema }), ["workbench:execute", ...read], async (area, args, signal) => ({ ...await this.run(area, args.path, null, signal, true), writes: undefined })),
       tool("workspace_history", "List recent Git checkpoints.", schema({}), ["workbench:history", ...read], area => ({ checkpoints: this.history(area) })),
-      tool("workspace_restore", "Restore all workbench files to a Git checkpoint. Current files are checkpointed first.", schema({ checkpoint: Type.String({ pattern: "^[a-f0-9]{40}$" }) }), ["workbench:history", ...write], areaRestore.bind(this)),
+      tool("workspace_restore", "Restore all workbench files to a Git checkpoint. Current files are checkpointed first.", schema({ checkpoint: Type.String({ pattern: "^[a-f0-9]{40}$" }) }), ["workbench:history", ...write], (area, args) => this.restoreArea(area, args.checkpoint)),
       tool("skill_list", "Discover saved Pi SKILL.md bundles, validated scripts and tests from earlier sessions.", schema({}), read, area => ({ skills: this.skills(area) })),
       tool("skill_read", "Read a saved Pi SKILL.md procedure before reuse.", schema({ name: Type.String({ pattern: "^[a-z][a-z0-9-]{0,47}$" }) }), read, (area, args) => {
         if (!/^[a-z][a-z0-9-]{0,47}$/.test(args.name) || !this.skills(area).some(s => s.name === args.name)) fail("SKILL_NOT_FOUND");
@@ -339,21 +383,6 @@ export class PidaWorkbench {
     );
     if (this.browserChecks) result.push(tool("ui_check", "Check the current UI in an isolated browser using the service renderer. Optional ordered CSS-selector clicks and expected visible text. No source changes. Report the exact scope verified.", schema({ steps: Type.Optional(Type.Array(schema({ click: Type.String({ minLength: 1, maxLength: 500 }), visibleText: Type.Optional(Type.String({ maxLength: 500 })) }), { maxItems: 10 })) }), ["workbench:execute", "workbench:read"], (area, args, signal) => checkUi(this.uiDocument(area).html, args.steps ?? [], signal)));
     return result;
-    function areaRestore(this: PidaWorkbench, area: Area, args: any) {
-      if (!/^[a-f0-9]{40}$/.test(args.checkpoint)) fail("INVALID_CHECKPOINT");
-      this.git(area, ["merge-base", "--is-ancestor", args.checkpoint, "HEAD"]);
-      const saved: Record<string, string> = Object.create(null);
-      const paths = this.git(area, ["ls-tree", "-r", "--name-only", args.checkpoint]).split("\n").filter(Boolean);
-      for (const path of paths) saved[validPath(path)] = this.git(area, ["show", `${args.checkpoint}:${path}`], true);
-      validateFiles(saved);
-      const current = snapshot(area.files), before = this.checkpoint(area, "Before restore");
-      for (const path of Object.keys(current)) unlinkSync(safePath(area.files, path));
-      // Empty directories are harmless; remove them so file/directory shape can change.
-      function clean(dir: string) { for (const e of readdirSync(dir)) { const p = join(dir, e); if (lstatSync(p).isDirectory()) { clean(p); if (!readdirSync(p).length) rmSync(p, { recursive: true }); } } }
-      clean(area.files);
-      const checkpoint = this.apply(area, saved);
-      return { ok: true, before, checkpoint };
-    }
   }
 }
 

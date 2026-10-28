@@ -8,7 +8,7 @@ The lot-status tool is **replaceable synthetic sample data**, not a manufacturin
 
 New workspaces include a practical **work → test → repair → save/reuse** profile. Pi handles file reads/writes/edits and SKILL.md discovery; QuickJS runs bounded JavaScript in WASM; Git checkpoints changes. The web UI exposes files, static HTML previews, downloads and saved skills. Connect a real model to ask Pida to build artifacts. The default mock only demonstrates lot lookup. See [workbench usage and limits](docs/WORKBENCH.md).
 
-New in 0.6: **Service / Developer–Operator / Agent workspace** tabs. Choose a sidebar, three-column, top-navigation or blank template, then ask the connected Pida model to edit the service UI. Both views load the same saved HTML. Inline JavaScript interactions run in a separate opaque-origin frame; network/backend access and role management are not included. See [UI Studio](docs/UI-STUDIO.md).
+New in 0.6: **Service / Developer–Operator / Agent workspace** tabs. Choose a sidebar, three-column, top-navigation or blank template, then ask the connected Pida model to edit the service UI. Both views load the same saved HTML. Inline JavaScript interactions run in a separate opaque-origin frame; network/backend access and role management are not included. The developer view also supports file work without a UI template, real Git changes, revision-bound check results and guarded file restoration. See [UI Studio](docs/UI-STUDIO.md).
 
 ## Quick start — choose npm, pnpm or bun
 

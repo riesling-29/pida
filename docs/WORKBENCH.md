@@ -9,7 +9,7 @@ Pida 0.5 composes existing tools instead of replacing the agent harness:
 | Repair / recover | Pi agent loop and edit tool; host Git | Failed test results returned to the model; automatic checkpoints and explicit restore |
 | Accumulate | Pi SKILL.md format and loadSkillsFromDir | Retested immutable script/test/file bundles, discovery, instructions and reuse across sessions/restarts |
 
-This is a JavaScript artifact-building profile, not a general-purpose development VM. It does not run a shell, Python, Node modules, npm builds, browser tests or a React development server. It cannot modify Pida's installed runtime, server secrets or approved Node tool directory. The workbench is optional for embedded hosts. New CLI workspaces enable it by default and need Git on PATH. Existing workspaces retain their previous behavior.
+This is a JavaScript artifact-building profile, not a general-purpose development VM. It does not run a shell, Python, Node modules, npm builds or a React development server. An optional `ui_check` runs bounded browser checks on the self-contained service HTML; it does not run arbitrary project test commands. It cannot modify Pida's installed runtime, server secrets or approved Node tool directory. The workbench is optional for embedded hosts. New CLI workspaces enable it by default and need Git on PATH. Existing workspaces retain their previous behavior.
 
 ## Start and use
 
@@ -87,11 +87,14 @@ const server = createPidaServer({ runtime, workbench, authenticate: myIdentityVe
 
 Use exactly one workbench service per directory, in one process. Pass trusted identity-derived permissions; never copy claims from a request body. The optional HTTP routes are:
 
-- `GET /v1/workbench`: files, saved skills and latest 20 checkpoints.
+- `GET /v1/workbench`: files, saved skills, latest 20 checkpoints, complete-file `revision` digest and `canCheckpoint`.
 - `GET /v1/workbench/file?path=...`: authenticated JSON `{path,content}`.
 - `POST /v1/workbench/file`: JSON `{path,content}` upload/write.
+- `POST /v1/workbench/checkpoint`: empty JSON object; capture `{checkpoint,revision}` including current host/tool file changes; read/write/history permissions.
+- `GET /v1/workbench/changes?base=...&head=...`: two 40-character checkpoint IDs in this principal's history; returns `{base,head,files,diff,truncated}`; read/history permissions. Maximum returned diff: 131,072 characters. Raw source is authorized response data, not default observation logs.
+- `POST /v1/workbench/restore`: JSON `{checkpoint,expectedRevision}`; read/write/history permissions. Under the workbench lock, reject active runs, unresolved effects and a stale complete-file digest (`WORKSPACE_REVISION_CONFLICT`, HTTP 409); checkpoint the current files, then restore. Returns `{ok,before,checkpoint,revision}`. The returned `before` checkpoint can recover the files replaced by restoration. Skills/external effects are excluded; host filesystem failure can still interrupt a multi-file restore.
 
-`PidaClient` exposes `getWorkbench`, `readWorkspaceFile`, `writeWorkspaceFile`. Run tools through normal session chat execution; these routes do not add an unauthenticated execution API. Generated HTML is never served directly as an executable same-origin page.
+`PidaClient` exposes `getWorkbench`, `readWorkspaceFile`, `writeWorkspaceFile`, `captureCheckpoint`, `getChanges` and `restoreCheckpoint`. Embedded hosts using `workbench.restoreCheckpoint` directly must enforce runtime-idle/effect reconciliation in its trusted `beforeRestore` callback; the bundled HTTP route supplies that guard. Run tools through normal session chat execution; these routes do not add an unauthenticated execution API. Generated HTML is never served directly as an executable same-origin page.
 
 ## Limits and evidence
 

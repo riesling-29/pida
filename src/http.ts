@@ -151,6 +151,23 @@ export function createPidaServer(options: HttpOptions) {
         json(res, 200, await options.workbench.uiTemplate(principal, input.templateId, input.expectedRevision)); return;
       }
       if (path.startsWith("/v1/workbench") && options.workbench) {
+        if (path === "/v1/workbench/checkpoint" && req.method === "POST") {
+          keys(await body(req), []);
+          json(res, 200, await options.workbench.captureCheckpoint(principal)); return;
+        }
+        if (path === "/v1/workbench/changes" && req.method === "GET") {
+          const params = new URL(req.url!, "http://pida.invalid").searchParams;
+          json(res, 200, await options.workbench.changes(principal, params.get("base") ?? "", params.get("head") ?? "")); return;
+        }
+        if (path === "/v1/workbench/restore" && req.method === "POST") {
+          const input = await body(req); keys(input, ["checkpoint", "expectedRevision"]);
+          if (typeof input.checkpoint !== "string" || typeof input.expectedRevision !== "string") throw new PidaError("INVALID_BODY", 400);
+          json(res, 200, await options.workbench.restoreCheckpoint(principal, input.checkpoint, input.expectedRevision, () => {
+            const sessions = runtime.listSessions(principal);
+            if (sessions.some(s => s.running)) throw new PidaError("SESSION_BUSY", 409);
+            if (sessions.some(s => runtime.getRecovery(s.sessionId, principal).pendingEffects.length)) throw new PidaError("EFFECT_STATE_UNKNOWN", 409);
+          })); return;
+        }
         if (path === "/v1/workbench" && req.method === "GET") {
           json(res, 200, await options.workbench.status(principal)); return;
         }

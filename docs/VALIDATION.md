@@ -1,3 +1,22 @@
+# Web work surface — 2026-10-28 KST
+
+Implementation: [UI-STUDIO.md](UI-STUDIO.md), [WORKBENCH.md](WORKBENCH.md). Direction and remaining Web/TUI trial: [INTERFACE-DIRECTION.md](INTERFACE-DIRECTION.md). Baseline: remote `fix/runtime-stabilization-00-02` at `5ac2d5220b040619c1e9ce2faa5f6f6e8b73cdbc`. Linux, Node 24.22.1, npm 11.9.0, installed Pi 1.2.0; package remains 0.6.1. No dependency/lockfile changes.
+
+| Executed command | Actual result and boundary |
+| --- | --- |
+| `npm run build` / `npm run check` | PASS; strict types/declarations |
+| `npm test` | **99 passed, 0 failed, 0 skipped**; actual Pi/tools/storage/HTTP with synthetic model decisions |
+| `node --test test/studio-review.test.mjs` | PASS, 4 tests; exact diff, reversible restore, stale-write preservation, owner/permission checks, active-run and unresolved-effect rejection, explicit large-diff truncation. Rerun after adding the uncertain-effect HTTP check. |
+| `PIDA_BROWSER_EXECUTABLE=/tmp/pida-chromium/chromium node scripts/studio-browser-check.mjs` | PASS; file work without a UI template, real tool-driven edits and QuickJS test, actual browser UI check, safe source/diff presentation, revision-matching evidence, reload/login, guarded restore, cancel after a saved edit, later-file invalidation, different-client run attribution, arrow keys, Korean IME composition guard, mobile width and logout. No page errors. |
+| `PIDA_BROWSER_EXECUTABLE=/tmp/pida-chromium/chromium node scripts/browser-check.mjs` | PASS; existing workspace login/chat/trace, refresh, process restart/resume, cancellation, deletion, logout and provider-settings paths. Provider settings use local protocol fixtures, not real inference. |
+| `node --check examples/web/studio.js` / `node --check scripts/studio-browser-check.mjs` / `git diff --check` | PASS |
+
+Browser environment: Playwright 1.64.1 and temporary Chromium 153 from `@sparticuz/chromium@153.0.0`. Desktop 1440 × 1000 and mobile-width 390 × 844 screenshots inspected; temporary Noto Sans KR fonts used for Korean layout inspection, not shipped with Pida. Browser startup initially failed in the new acceptance fixture because its origin allowlist was missing; corrected the fixture. The keyboard check found a tab-navigation defect when focus differed from the selected view; movement now follows the focused tab. Review also prevents a newer run in the same session from inheriting an older comparison, clears stale event displays and clears source content on logout.
+
+**NOT_RUN / not implemented:** actual LM Studio/company-provider reasoning quality, five-scenario real-model E2E, native Windows/browser/mobile-device acceptance, screen-reader acceptance, remote CI, repository npm/shell/React execution, OMP adoption and Web-versus-upstream-TUI comparison. No claims of coding-quality parity or cognitive improvement. No merge, release or deployment.
+
+Earlier validation records below describe their historical revisions.
+
 # Runtime stabilization through PATCH-08 — 2026-10-25
 
 Implementation details and acceptance boundaries: [EXECUTION-READINESS.md](EXECUTION-READINESS.md). Environment: Linux, Node 24.22.1, npm 11.9.0, Pi packages 1.2.0. Package/version and lockfiles remain unchanged at 0.6.1.

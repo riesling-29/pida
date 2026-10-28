@@ -1,6 +1,6 @@
 # Pida interface direction
 
-Date: 2026-10-28 KST. Scope: Pida only. Status: product/design decision and evaluation plan; no UI redesign, general repository executor or TUI integration is implemented by this document.
+Date: 2026-10-28 KST. Scope: Pida only. Status: initial Web work-surface implementation and evaluation plan. Preview/file/diff views, revision-bound evidence and guarded file restoration are implemented; general repository execution and TUI integration are not.
 
 ## Product goal
 
@@ -44,7 +44,7 @@ Both surfaces need a working coding backend. Moving from Web to TUI by itself do
 
 A possible outcome is Web for visual work plus an upstream TUI for terminal work. Do not promise shared live sessions merely because both use the same model; session ownership, concurrent writes and resumption support must be explicitly integrated and tested.
 
-## Proposed Web composition
+## Web composition
 
 Use one consistent work surface with these responsibilities:
 
@@ -59,7 +59,7 @@ Routine authorized edits should produce prompt feedback without a confirmation d
 
 ## Current implementation limits
 
-The studio currently edits a single self-contained HTML document in the bounded workbench. It has actual preview refresh and revision checks. It does not provide a general npm/React/backend development environment, general shell execution, a full diff-review interface or element-selection grounding. The architecture must obtain required coding capabilities from an existing harness/tool surface and explicitly wire them into Pida.
+The studio edits a single self-contained HTML service document and supports file work in the same bounded workbench. It now provides preview/file/Git-diff tabs, a selected file as task context, manifest-derived check results, current-snapshot matching and guarded request-before file restoration. File work can start without a UI template. The diff is an inspectable unified Git diff, not a staging/merge editor. It does not provide a general npm/React/backend development environment, general shell execution or element-selection grounding. The architecture must obtain required coding capabilities from an existing harness/tool surface and explicitly wire them into Pida.
 
 The philosophy applies to Pida's host controls. Generated user applications retain the user's own design requirements; do not force every generated application to resemble the host interface.
 
@@ -74,4 +74,4 @@ Compare the current/evolved Web surface with a pinned upstream TUI using a suita
 
 Record task completion, user interventions, ability to identify actual changes/verification, task time and integration/maintenance effort. Compare cache behavior separately with equivalent requests when diagnosing LiteLLM; do not attribute a backend-routing problem to the frontend without evidence.
 
-Decide whether Web alone is sufficient, an existing TUI adds practical value, or a narrow extension is needed. Build a custom TUI only if the trial reveals a concrete unmet need that upstream reuse cannot address economically. No trial outcome, user study or cognitive improvement is claimed yet.
+Decide whether Web alone is sufficient, an existing TUI adds practical value, or a narrow extension is needed. Build a custom TUI only if the trial reveals a concrete unmet need that upstream reuse cannot address economically. The initial Web acceptance script exercises bounded JavaScript files/tests, UI edits, cancellation with saved changes and restoration using scripted model decisions and real Pi/tools/Chromium. It is not the proposed common-repository Web-versus-TUI trial. No comparative trial outcome, user study or cognitive improvement is claimed yet. See [VALIDATION.md](VALIDATION.md).

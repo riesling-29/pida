@@ -65,11 +65,18 @@ export class PidaClient {
   private path(id: string) {
     return `/v1/sessions/${encodeURIComponent(id)}`;
   }
-  async getWorkbench(): Promise<{ enabled: boolean; engine: string; files: { path: string; bytes: number }[]; skills: { name: string; description: string }[]; history: { id: string; message: string }[] }> {
+  async getWorkbench(): Promise<{ enabled: boolean; engine: string; revision?: string; canCheckpoint?: boolean; files: { path: string; bytes: number }[]; skills: { name: string; description: string }[]; history: { id: string; message: string }[] }> {
     return (await this.request("/v1/workbench")).json();
   }
   async readWorkspaceFile(path: string): Promise<{ path: string; content: string }> {
     return (await this.request("/v1/workbench/file?path=" + encodeURIComponent(path))).json();
+  }
+  async captureCheckpoint(): Promise<{ checkpoint: string; revision: string }> { return (await this.request("/v1/workbench/checkpoint", "POST", {})).json(); }
+  async getChanges(base: string, head: string): Promise<{ base: string; head: string; files: string[]; diff: string; truncated: boolean }> {
+    return (await this.request("/v1/workbench/changes?base=" + encodeURIComponent(base) + "&head=" + encodeURIComponent(head))).json();
+  }
+  async restoreCheckpoint(checkpoint: string, expectedRevision: string): Promise<{ checkpoint: string; before: string; revision: string }> {
+    return (await this.request("/v1/workbench/restore", "POST", { checkpoint, expectedRevision })).json();
   }
   async writeWorkspaceFile(path: string, content: string): Promise<{ checkpoint: string }> {
     return (await this.request("/v1/workbench/file", "POST", { path, content })).json();
@@ -212,6 +219,9 @@ export function explainError(code?: string): string {
     EMPTY_RESPONSE: "모델이 표시할 답변을 보내지 않았습니다. 출력 한도와 모델의 추론 설정을 확인하세요.",
     RUN_TIMEOUT: "실행 시간이 초과됐습니다. 저장된 변경을 확인하고 이어서 요청하거나 실행 시간을 늘리세요.",
     UI_REVISION_CONFLICT: "화면이 다른 작업에서 변경됐습니다. 현재 화면을 다시 읽고 수정하도록 요청하세요.",
+    WORKSPACE_REVISION_CONFLICT: "파일이 다른 작업에서 변경됐습니다. 새로고침 후 변경 내역을 다시 확인하세요.",
+    INVALID_CHECKPOINT: "이 작업 공간에서 사용할 수 없는 변경 기준입니다. 실행 기록을 새로고침하세요.",
+    GIT_OPERATION_FAILED: "파일 변경 이력을 처리하지 못했습니다. 현재 파일과 Git 이력 상태를 확인하세요.",
     COMPACTION_FAILED: "대화 압축에 실패했습니다. 기존 대화는 유지됩니다. 모델 상태와 출력 한도를 확인하세요.",
     HANDOFF_TOO_LARGE: "인계할 맥락이 아직 큽니다. 작업을 정리한 뒤 다시 시도하세요. 기존 대화는 유지됩니다.",
     NOTHING_TO_COMPACT: "아직 압축할 대화가 없습니다.",
