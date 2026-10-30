@@ -2,39 +2,111 @@ import { explainError } from "/pida-client.js";
 const $ = id => document.getElementById(id);
 const outcomes = { completed: "실행 완료", failed: "실행 실패", cancelled: "중단됨", limited: "실행 한도 도달", interrupted: "서버 종료로 중단됨" };
 const cleanPrompt = text => text.replace(/^\[PIDA (?:UI|CODE) STUDIO\][\s\S]*?\nUSER REQUEST:\n/, "");
+const activityLabels = { run_started: "요청 시작", turn_started: "모델 응답 대기", tool_started: "도구 실행", tool_completed: "도구 완료", tool_failed: "도구 실패", compaction_started: "컨텍스트 압축 시작", compaction_completed: "컨텍스트 압축 완료", compaction_failed: "컨텍스트 압축 실패", output_retry: "출력 한도 후 재시도", model_request: "모델 응답 대기", model_response: "모델 응답 수신", run_finished: "실행 종료" };
+const duration = ms => { const seconds = Math.max(0, Math.floor(ms / 1000)); return seconds < 60 ? `${seconds}초` : `${Math.floor(seconds / 60)}분 ${seconds % 60}초`; };
 
 export function createStudio({ client, request, changed, disconnected }) {
   let connected = false, hostBusy = false, busy = false, remoteRunning = false, mock = false, available = false;
   let state = { html: "", revision: "", templates: [] }, workspace = { files: [] }, mode = "studio", session, selectedTemplate;
   let generation = 0, refreshSequence = 0, fileSequence = 0, mobile = false, selectedFile = "", target = "ui", view = "preview", poll;
   let review, changes, bundle, reviewNote = "";
+  let activity, activityTimer, projectTools = false, previewRefreshing = false;
   const payloads = new Map(), rendered = new Map(), renderErrors = new Set();
   const frames = [$("studio-frame"), $("service-frame")];
-  const status = text => { $("studio-run-status").textContent = text; };
+  const status = text => { if ($("studio-run-status").textContent !== text) $("studio-run-status").textContent = text; };
   const issue = error => status(["UI_REVISION_CONFLICT", "WORKSPACE_REVISION_CONFLICT"].includes(error.code) ? "다른 작업에서 파일이 변경됐습니다. 새로고침 후 변경 내역을 확인하세요." : explainError(error.code));
   const reviewKey = () => "pida-studio-review:" + session;
+  function resetActivity() {
+    clearInterval(activityTimer); activityTimer = undefined; activity = undefined;
+    $("studio-activity").hidden = true; $("studio-activity-list").replaceChildren();
+    $("studio-activity-count").textContent = ""; $("studio-activity-clock").textContent = ""; $("studio-activity-stale").hidden = true;
+  }
+  function activityClock() {
+    if (!activity) return;
+    const end = activity.endedAt ?? Date.now();
+    $("studio-activity-clock").textContent = `${activity.startObserved ? "경과" : "관측 이후"} ${duration(end - activity.startedAt)} · 마지막 신호 ${duration(end - activity.lastAt)} 전`;
+    // An aging signal is not proof of a stalled model, nor a fabricated heartbeat.
+    $("studio-activity-stale").hidden = !activity.running || Date.now() - activity.lastAt < 30000;
+  }
+  function beginActivity(runId, timestamp, startObserved = false) {
+    resetActivity();
+    const time = Number.isFinite(Date.parse(timestamp)) ? Date.parse(timestamp) : Date.now();
+    activity = { runId, startedAt: time, startObserved, lastAt: time, running: true, tools: new Map(), seen: new Set(), total: 0, cancelling: false };
+    $("studio-activity").hidden = false; $("studio-activity").open = true;
+    activityTimer = setInterval(activityClock, 1000); activityClock();
+  }
+  function stopActivity(timestamp) {
+    if (!activity) return;
+    activity.running = false; activity.tools.clear();
+    activity.endedAt = Number.isFinite(Date.parse(timestamp)) ? Date.parse(timestamp) : Date.now();
+    clearInterval(activityTimer); activityTimer = undefined; activityClock();
+  }
+  function activityStatus(text) {
+    if (!activity?.running) return;
+    status(activity.cancelling ? "중단 요청 중 · 최종 상태를 기다리고 있습니다." : activity.tools.size ? `실행 중 · ${[...activity.tools.values()].join(", ")}` : text);
+  }
+  function receiveTrace(event) {
+    if (!activity || activity.runId !== event.runId) beginActivity(event.runId, event.timestamp, event.type === "run_started");
+    const key = event.sequence;
+    if (activity.seen.has(key)) return;
+    activity.seen.add(key);
+    // Only the bounded server trace is replayed; cap deduplication as well as DOM rows.
+    if (activity.seen.size > 2000) activity.seen.delete(activity.seen.values().next().value);
+    const time = Date.parse(event.timestamp);
+    if (Number.isFinite(time)) activity.lastAt = Math.max(activity.lastAt, time);
+    if (event.type === "run_started") { activity.startedAt = time || activity.startedAt; activity.startObserved = true; }
+    const label = activityLabels[event.type];
+    if (label) {
+      const li = document.createElement("li"), stamp = document.createElement("time"), text = document.createElement("span");
+      stamp.textContent = new Date(Number.isFinite(time) ? time : Date.now()).toLocaleTimeString([], { hour12: false });
+      text.textContent = `${event.type === "run_finished" ? outcomes[event.status] ?? label : label}${event.toolName ? " · " + event.toolName.slice(0, 100) : ""}${event.code ? " · " + event.code.slice(0, 100) : ""}`;
+      li.dataset.activity = event.type; li.append(stamp, text);
+      const list = $("studio-activity-list"), atEnd = list.scrollHeight - list.scrollTop - list.clientHeight < 24;
+      list.append(li); if (list.children.length > 60) list.firstElementChild.remove();
+      $("studio-activity-count").textContent = ++activity.total > 60 ? "최근 60건" : `${activity.total}건`;
+      if (atEnd) list.scrollTop = list.scrollHeight;
+    }
+    if (event.type === "tool_started") activity.tools.set(event.toolCallId ?? event.toolName, event.toolName ?? "도구");
+    if (["tool_completed", "tool_failed"].includes(event.type)) activity.tools.delete(event.toolCallId ?? event.toolName);
+    if (event.type === "run_finished") { stopActivity(event.timestamp); status(`${outcomes[event.status] ?? "실행 상태 미확인"} · 아래 변경·검증 결과를 확인하세요.`); }
+    else if (event.type === "compaction_started") activityStatus("긴 대화를 요약하고 있습니다…");
+    else if (event.type === "output_retry") activityStatus("출력 한도 이후 더 작은 수정으로 이어갑니다…");
+    else activityStatus(event.type === "tool_failed" ? "도구 실패 · 후속 응답을 기다리고 있습니다." : "모델 응답을 기다리고 있습니다.");
+    activityClock();
+  }
+  function restoreActivity(events, running, lastStatus) {
+    const latest = events.at(-1);
+    if (!latest) return;
+    for (const event of events.filter(e => e.runId === latest.runId)) receiveTrace(event);
+    if (!running) {
+      if (activity?.running) stopActivity(latest.timestamp);
+      status(`${outcomes[lastStatus] ?? "실행 상태 미확인"} · 아래 변경·검증 결과를 확인하세요.`);
+    }
+  }
   function saveReview() { if (session && review) sessionStorage.setItem(reviewKey(), JSON.stringify(review)); }
   function clearReview() {
     review = changes = bundle = undefined; reviewNote = "";
+    resetActivity();
     $("studio-goal").textContent = "목표를 입력하고 실제 변경을 확인하세요.";
     $("studio-events").replaceChildren(); renderReview();
   }
   function controls() {
     const locked = busy || remoteRunning || hostBusy || !connected;
     for (const id of ["choose-template", "first-template", "studio-refresh", "studio-target-mode", "studio-file"]) $(id).disabled = locked || !available;
+    $("studio-target-mode").disabled = locked || (!available && !projectTools);
     $("apply-template").disabled = locked || !selectedTemplate;
-    for (const id of ["studio-send", "studio-prompt"]) $(id).disabled = locked || mock || !available || (target === "ui" && !state.html);
+    for (const id of ["studio-send", "studio-prompt"]) $(id).disabled = locked || mock || (!available && !(target === "project" && projectTools)) || (target === "ui" && !state.html);
     $("studio-new-chat").disabled = locked;
     for (const id of ["studio-compact", "studio-handoff"]) $(id).disabled = locked || !session;
     $("studio-cancel").disabled = !(busy || remoteRunning) || !session;
-    $("studio-restore").disabled = locked || !workspace.canCheckpoint || !review?.base || !review?.revision || !changes?.files.length || workspace.revision !== review.revision || !!bundle?.manifest?.known_limits?.includes("EFFECT_STATE_REQUIRES_RECONCILIATION");
+    $("studio-restore").disabled = locked || target === "project" || !workspace.canCheckpoint || !review?.base || !review?.revision || !changes?.files.length || workspace.revision !== review.revision || !!bundle?.manifest?.known_limits?.includes("EFFECT_STATE_REQUIRES_RECONCILIATION");
     $("mode-disconnect").disabled = locked;
     for (const button of $("template-grid").querySelectorAll("button")) button.disabled = locked;
     $("studio-demo").hidden = !mock; $("open-service").disabled = !state.html;
     $("mode-tabs").hidden = !connected;
     $("studio-target-mode").value = target;
-    $("studio-target").textContent = target === "ui" ? "app/index.html" : selectedFile || "작업 공간 전체";
-    $("studio-prompt").placeholder = target === "ui" ? "왼쪽 메뉴에 분석 페이지를 추가하고 기존 기능을 유지해줘." : "이 파일을 수정하고 테스트를 실행해줘. 실제 검사 결과도 알려줘.";
+    $("studio-target").textContent = target === "ui" ? "app/index.html" : target === "project" ? "서버에 설정한 프로젝트 · project_* 도구" : selectedFile || "작업 공간 전체";
+    $("studio-prompt").placeholder = target === "ui" ? "왼쪽 메뉴에 분석 페이지를 추가하고 기존 기능을 유지해줘." : target === "project" ? "프로젝트 구조를 살펴보고 버그를 수정한 뒤 관련 테스트를 실행해줘." : "이 파일을 수정하고 테스트를 실행해줘. 실제 검사 결과도 알려줘.";
     showMode(mode);
   }
   function showMode(next) {
@@ -47,12 +119,14 @@ export function createStudio({ client, request, changed, disconnected }) {
   }
   function showView(next) {
     view = next;
+    document.querySelector(".studio-tabs").hidden = target === "project";
+    $("studio-project-panel").hidden = target !== "project";
     for (const name of ["preview", "files", "changes"]) {
-      $("studio-panel-" + name).hidden = name !== view;
+      $("studio-panel-" + name).hidden = target === "project" || name !== view;
       $("studio-tab-" + name).setAttribute("aria-selected", String(name === view));
       $("studio-tab-" + name).tabIndex = name === view ? 0 : -1;
     }
-    if (view === "files") void readFile();
+    if (view === "files" && target !== "project") void readFile();
     requestAnimationFrame(resize);
   }
   function resize() {
@@ -64,7 +138,7 @@ export function createStudio({ client, request, changed, disconnected }) {
   }
   new ResizeObserver(resize).observe($("studio-canvas"));
   function renderState() {
-    $("studio-sync").textContent = !state.html ? "서비스 화면 없음 · 파일 작업은 바로 시작할 수 있습니다" : `저장 ${state.revision.slice(0, 8)} · ${renderErrors.size ? "화면 스크립트 오류" : rendered.get("studio-frame") === state.revision ? "미리보기 로드됨" : "미리보기 로딩 중"}`;
+    $("studio-sync").textContent = target === "project" ? "프로젝트 변경은 서비스 작업 공간의 미리보기·파일 복원 범위에 포함되지 않습니다." : !state.html ? "서비스 화면 없음 · 파일 작업은 바로 시작할 수 있습니다" : `저장 ${state.revision.slice(0, 8)} · ${renderErrors.size ? "화면 스크립트 오류" : rendered.get("studio-frame") === state.revision ? "미리보기 로드됨" : "미리보기 로딩 중"}`;
   }
   function render(force = false) {
     $("service-empty").hidden = !!state.html; $("studio-empty").hidden = !!state.html; $("preview-viewport").hidden = !state.html;
@@ -121,6 +195,14 @@ export function createStudio({ client, request, changed, disconnected }) {
         status("이 서버에는 제작 기능 또는 접근 권한이 없습니다.");
       } else throw error;
     }
+  }
+  function refreshDuringRun() {
+    if (previewRefreshing) return;
+    previewRefreshing = true;
+    const active = generation;
+    // Keep consuming trace events even when preview/checkpoint reads are slow.
+    void refresh().catch(() => { if (active === generation) reviewNote = "실행 중 화면 갱신 실패 · 완료 후 다시 확인합니다."; })
+      .finally(() => { previewRefreshing = false; });
   }
   function renderReview() {
     $("studio-change-count").textContent = changes?.files.length ?? 0;
@@ -200,7 +282,10 @@ export function createStudio({ client, request, changed, disconnected }) {
       try {
         const data = await client.getSession(session);
         if (active !== generation) return;
-        remoteRunning = data.running; contextLabel(data); await refresh();
+        remoteRunning = data.running; contextLabel(data);
+        const traces = await client.getTrace(session);
+        if (active !== generation) return;
+        restoreActivity(traces.events, data.running, data.lastStatus); await refresh();
         if (!remoteRunning) { await restoreChat(); await finishReview(); status("이전 실행이 종료됐습니다. 실제 변경과 결과를 확인하세요."); }
       } catch (error) { if (active === generation) issue(error); }
       if (active === generation) { changed(); controls(); schedulePoll(); }
@@ -210,7 +295,8 @@ export function createStudio({ client, request, changed, disconnected }) {
     if (!session) return;
     try {
       const data = await client.getSession(session); contextLabel(data); remoteRunning = data.running;
-      const latest = (await client.getTrace(session)).events.at(-1);
+      const traces = (await client.getTrace(session)).events, latest = traces.at(-1);
+      restoreActivity(traces, data.running, data.lastStatus);
       if (latest && latest.runId !== review?.runId) {
         review = { runId: latest.runId, target, file: selectedFile }; changes = bundle = undefined;
         reviewNote = "이 실행의 요청 전 변경 기준이 없어 파일 비교·복원은 사용할 수 없습니다.";
@@ -220,7 +306,7 @@ export function createStudio({ client, request, changed, disconnected }) {
       for (const item of data.messages) message(item.role, item.role === "user" ? cleanPrompt(item.text) : item.text);
       const last = data.messages.filter(m => m.role === "user").at(-1);
       if (last) $("studio-goal").textContent = cleanPrompt(last.text).slice(0, 180);
-      if (data.running) status("이전 요청이 실행 중입니다. 상태를 확인하고 있습니다.");
+      if (data.running && !activity) status("이전 요청이 실행 중입니다. 상태를 확인하고 있습니다.");
       schedulePoll(); changed(); controls();
     } catch (error) {
       if (error.status !== 404) throw error;
@@ -240,34 +326,38 @@ export function createStudio({ client, request, changed, disconnected }) {
   }
   async function send(event) {
     event.preventDefault();
-    if (busy || remoteRunning || hostBusy || !connected || mock || !available || (target === "ui" && !state.html)) return;
+    if (busy || remoteRunning || hostBusy || !connected || mock || (!available && !(target === "project" && projectTools)) || (target === "ui" && !state.html)) return;
     const text = $("studio-prompt").value.trim(); if (!text) return;
     const before = state.revision;
     busy = true; clearReview(); review = {}; changed(); controls();
+    beginActivity(undefined, new Date().toISOString()); status("요청을 보내고 있습니다…");
     $("studio-goal").textContent = text.slice(0, 180);
     message("user", text); const output = message("assistant", "작업을 시작하고 있습니다…");
     let answer = "", result;
     try {
       if (!session) { session = (await client.createSession()).sessionId; sessionStorage.setItem("pida-studio-session", session); }
-      if (workspace.canCheckpoint) {
+      if (target === "project") reviewNote = "프로젝트 저장소 변경은 서비스 작업 공간의 파일 비교·복원 범위에 포함되지 않습니다.";
+      else if (workspace.canCheckpoint) {
         try { review.base = (await client.captureCheckpoint()).checkpoint; }
         catch { reviewNote = "요청 전 변경 기준을 기록하지 못했습니다. 변경 비교·자동 복원을 사용할 수 없습니다."; }
       } else reviewNote = "변경 기록 권한이 없어 비교·자동 복원을 사용할 수 없습니다.";
       review.target = target; review.file = selectedFile; saveReview(); controls();
       const instructions = target === "ui"
         ? `You are editing the service UI shown beside this chat. Read the current app with ui_read, preserve existing features, then use ui_patch for small changes or ui_apply for a complete replacement. Re-read revisions between changes. Keep self-contained HTML with inline CSS/JavaScript and addEventListener. No external resources, network, frames, localStorage or parent access. Current revision at request start: ${before}.`
-        : `You are working on files in the user's bounded workbench. Selected file (context, not a scope authorization): ${JSON.stringify(selectedFile || null)}. Read relevant files before editing; use the registered Pi workbench tools. JavaScript tests run in QuickJS using workspace_test. No general shell, Node.js, Python, npm or network is available. Preserve unrelated files and the service UI unless the user requests changes.`;
+        : target === "project" ? `You are working in the operator-configured host project, not the isolated service workbench. Use registered project_* tools to inspect the project and its applicable AGENTS.md instructions, read relevant files, make requested changes, and execute relevant tests when project_shell is available. Check actual registered tool capabilities and permissions. Preserve unrelated and user changes. Do not put project changes into the service workbench unless explicitly requested. The service workbench's checkpoints, diff and restore do not cover this project or external side effects. Report changed paths and actual verification outputs honestly.`
+        : `You are working on files in the isolated service workbench. Selected file (context, not a scope authorization): ${JSON.stringify(selectedFile || null)}. Read relevant files before editing; use registered workbench tools. JavaScript tests run in QuickJS using workspace_test; this workbench has no Node.js, Python, npm or network. The separately configured host project, if any, is a different target. Preserve unrelated files and the service UI unless the user requests changes.`;
       const prompt = `[PIDA ${target === "ui" ? "UI" : "CODE"} STUDIO]\n${instructions} Apply requested changes with tools, not just a code block in chat. Run relevant available checks and report their scope honestly. Rendering is not verification.\nUSER REQUEST:\n${text}`;
-      for await (const event of client.stream(session, prompt)) {
-        if (event.type === "text_delta") { answer += event.delta; output.textContent = answer; }
-        if (event.type === "trace") {
-          if (event.trace.type === "run_started") { review.runId = event.trace.runId; saveReview(); }
-          if (event.trace.type === "compaction_started") status("긴 대화를 요약하고 있습니다…");
-          if (event.trace.type === "output_retry") status("출력 한도 이후 더 작은 수정으로 이어갑니다…");
-          if (event.trace.type === "tool_started") status(`실행 중 · ${event.trace.toolName}`);
-          if (["tool_completed", "tool_failed"].includes(event.trace.type)) await refresh().catch(() => { reviewNote = "실행 중 화면 갱신 실패 · 완료 후 다시 확인합니다."; });
+      for await (const event of client.stream(session, prompt, { disconnectPolicy: "continue" })) {
+        if (event.type === "text_delta") {
+          answer += event.delta; output.textContent = answer;
+          if (activity?.running) { activity.lastAt = Date.now(); activityStatus("모델 응답을 받고 있습니다."); activityClock(); }
         }
-        if (event.type === "result") { result = event.result; review.runId = result.runId; saveReview(); output.textContent = [result.text, ...[...new Set([result.code, result.persistenceError])].filter(Boolean).map(explainError)].filter(Boolean).join("\n\n") || "응답이 없습니다."; }
+        if (event.type === "trace") {
+          receiveTrace(event.trace);
+          if (event.trace.type === "run_started") { review.runId = event.trace.runId; saveReview(); }
+          if (["tool_completed", "tool_failed"].includes(event.trace.type)) refreshDuringRun();
+        }
+        if (event.type === "result") { result = event.result; if (activity?.running) stopActivity(); review.runId = result.runId; saveReview(); output.textContent = [result.text, ...[...new Set([result.code, result.persistenceError])].filter(Boolean).map(explainError)].filter(Boolean).join("\n\n") || "응답이 없습니다."; }
         $("studio-messages").scrollTop = $("studio-messages").scrollHeight;
       }
       if (result?.status === "completed") $("studio-prompt").value = "";
@@ -275,7 +365,11 @@ export function createStudio({ client, request, changed, disconnected }) {
     } catch (error) { issue(error); }
     finally {
       try { const data = session && await client.getSession(session); if (data) { contextLabel(data); remoteRunning = data.running; } }
-      catch { reviewNote = "서버 실행 상태를 다시 확인하지 못했습니다. 새로고침 후 확인하세요."; }
+      catch {
+        reviewNote = "서버 실행 상태를 다시 확인하지 못했습니다. 새로고침 후 확인하세요.";
+        if (session && activity?.runId) { remoteRunning = true; status("서버 실행 상태 미확인 · 연결을 다시 확인하고 있습니다."); }
+      }
+      if (!remoteRunning && activity?.running) stopActivity();
       if (!remoteRunning) await finishReview().catch(() => { reviewNote = "결과 조회 실패 · 새로고침으로 다시 확인하세요."; renderReview(); });
       busy = false; changed(); controls(); schedulePoll(); $("studio-prompt").focus();
     }
@@ -287,7 +381,7 @@ export function createStudio({ client, request, changed, disconnected }) {
     const next = event.key === "ArrowRight" ? (index + 1) % 3 : event.key === "ArrowLeft" ? (index + 2) % 3 : event.key === "Home" ? 0 : event.key === "End" ? 2 : undefined;
     if (next !== undefined) { event.preventDefault(); showView(names[next]); $("studio-tab-" + names[next]).focus(); }
   };
-  $("studio-target-mode").onchange = () => { target = $("studio-target-mode").value; showView(target === "ui" ? "preview" : "files"); controls(); };
+  $("studio-target-mode").onchange = () => { target = $("studio-target-mode").value; showView(target === "files" ? "files" : "preview"); renderState(); controls(); };
   $("studio-file").onchange = () => { selectedFile = $("studio-file").value; target = "files"; controls(); void readFile(); };
   $("start-building").onclick = () => showMode("studio"); $("open-service").onclick = () => showMode("service"); $("mode-disconnect").onclick = disconnected;
   $("choose-template").onclick = templates; $("first-template").onclick = templates; $("close-templates").onclick = () => $("template-dialog").close();
@@ -308,7 +402,12 @@ export function createStudio({ client, request, changed, disconnected }) {
   $("studio-compact").onclick = () => compact(false); $("studio-handoff").onclick = () => compact(true); $("studio-form").onsubmit = send;
   $("studio-prompt").onkeydown = event => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !event.isComposing) { event.preventDefault(); $("studio-form").requestSubmit(); } };
   $("studio-new-chat").onclick = () => { if (busy || remoteRunning || hostBusy) return; session = undefined; sessionStorage.removeItem("pida-studio-session"); clearReview(); $("studio-messages").replaceChildren(); status("새 대화 · 현재 파일은 유지됩니다."); controls(); };
-  $("studio-cancel").onclick = async () => { $("studio-cancel").disabled = true; try { await client.cancel(session); status("중단 요청을 처리했습니다. 이미 저장된 변경은 유지됩니다."); } catch (error) { issue(error); } };
+  $("studio-cancel").onclick = async () => {
+    $("studio-cancel").disabled = true;
+    if (activity?.running) { activity.cancelling = true; activityStatus(""); }
+    try { await client.cancel(session); if (activity?.running) status("중단 요청을 전달했습니다. 최종 상태를 기다리고 있습니다."); }
+    catch (error) { if (activity) activity.cancelling = false; issue(error); controls(); }
+  };
   $("studio-refresh").onclick = async () => { try { await refresh(true); await restoreChat(); if (!remoteRunning) await finishReview(); } catch (error) { issue(error); } };
   for (const button of document.querySelectorAll("[data-suggestion]")) button.onclick = () => { $("studio-prompt").value = button.dataset.suggestion; $("studio-prompt").focus(); };
   for (const size of ["desktop", "mobile"]) $("preview-" + size).onclick = () => { mobile = size === "mobile"; $("preview-desktop").setAttribute("aria-pressed", String(!mobile)); $("preview-mobile").setAttribute("aria-pressed", String(mobile)); resize(); };
@@ -317,10 +416,16 @@ export function createStudio({ client, request, changed, disconnected }) {
     update({ connected: value, busy: parentBusy }) { connected = value; hostBusy = parentBusy; controls(); },
     async connect(info) {
       generation++; clearTimeout(poll); connected = true; mock = info.provider?.mode === "mock";
+      projectTools = info.tools?.some(tool => tool.permitted && tool.name.startsWith("project_")) ?? false;
+      $("studio-project-option").hidden = !projectTools; $("studio-project-option").disabled = !projectTools;
+      const browserChecks = info.tools?.some(tool => tool.permitted && tool.name === "ui_check");
+      $("studio-capability").textContent = `현재 실행 환경: 화면 편집 · 파일 수정 · JavaScript 검사${browserChecks ? " · 브라우저 검사 도구" : " · 브라우저 검사 도구 없음"}${projectTools ? " · 별도 프로젝트 도구 (파일 복원 범위 밖)" : ""}`;
       $("studio-model").textContent = info.provider ? info.provider.model : "연결된 모델";
       session = sessionStorage.getItem("pida-studio-session") || undefined; clearReview();
-      try { const saved = session && JSON.parse(sessionStorage.getItem(reviewKey()) || "null"); if (saved && typeof saved === "object") { review = saved; target = saved.target === "files" ? "files" : "ui"; selectedFile = typeof saved.file === "string" ? saved.file : ""; } } catch { /* Optional tab-local metadata is recoverable. */ }
-      await refresh(); await restoreChat(); if (!remoteRunning) await finishReview(); controls();
+      try { const saved = session && JSON.parse(sessionStorage.getItem(reviewKey()) || "null"); if (saved && typeof saved === "object") { review = saved; target = saved.target === "project" && projectTools ? "project" : saved.target === "files" ? "files" : "ui"; selectedFile = typeof saved.file === "string" ? saved.file : ""; } } catch { /* Optional tab-local metadata is recoverable. */ }
+      if (review?.target === "project") reviewNote = "프로젝트 저장소 변경은 서비스 작업 공간의 파일 비교·복원 범위에 포함되지 않습니다.";
+      await refresh(); if (!available && projectTools) target = "project";
+      await restoreChat(); if (!remoteRunning) await finishReview(); showView(target === "files" ? "files" : "preview"); renderState(); controls();
     },
     reset() {
       generation++; fileSequence++; clearTimeout(poll); connected = busy = remoteRunning = available = false; state = { html: "", revision: "", templates: [] }; workspace = { files: [] }; session = undefined; selectedFile = ""; target = "ui";

@@ -9,6 +9,7 @@ import {
   createWorkspace,
   initWorkspace,
   readConfig,
+  validateConfig,
   listToolFiles,
   setToolEnabled,
   workspaceEnvironment,
@@ -32,6 +33,9 @@ const help = `Pida — reusable local agent workspace
   pida runs SESSION [directory]         List captured run/operation IDs from a running server
   pida export SESSION RUN [directory] [--jsonl]  Export an owned run bundle or JSONL
   pida unlock [directory]               Clear a lock only if its local process is gone
+  pida browser enable [directory]       Probe Chromium, then enable isolated UI checks
+  pida project enable ROOT [directory] [--trusted-host]  Enable Pi project tools; flag also enables host shell
+  pida project disable [directory]      Disable project tools (restart required)
 
 Default directory: current working directory. Requires Node 22.19+.
 The default mock demonstrates LOT-001/LOT-002; it is not a language model.
@@ -90,10 +94,15 @@ async function configure(directory: string) {
       const previous =
         config.provider.kind === "endpoint" ? config.provider : undefined;
       const api = await ask("Protocol", previous?.api ?? "openai-completions");
-      const baseUrl = await ask(
+      const enteredUrl = await ask(
         "Base URL",
         previous?.baseUrl ?? "http://localhost:1234/v1",
       );
+      const normalizeUrl = (value: string) => new URL(value.trim()).href
+        .replace(/\/$/, "")
+        .replace(/\/(chat\/completions|responses|messages)$/, "");
+      const baseUrl = normalizeUrl(enteredUrl);
+      const sameEndpoint = previous?.api === api && normalizeUrl(previous.baseUrl) === baseUrl;
       const modelId = await ask(
         "Exact model/deployment ID",
         previous?.modelId ?? "your-model-id",
@@ -126,6 +135,9 @@ async function configure(directory: string) {
         maxTokens,
         apiKeyEnv,
         allowInsecureHttp,
+        ...(sameEndpoint && previous?.authMode ? { authMode: previous.authMode } : {}),
+        ...(sameEndpoint && previous?.headersEnv ? { headersEnv: previous.headersEnv } : {}),
+        ...(sameEndpoint && previous?.compat ? { compat: previous.compat } : {}),
       };
     } else {
       const selected = catalog.find(p => p.id === mode);
@@ -226,6 +238,37 @@ async function main() {
   }
   const directory = resolve(args.find((a) => !a.startsWith("--")) ?? ".");
   switch (command) {
+    case "browser": {
+      if (args[0] !== "enable") throw new Error("Use pida browser enable [workspace-directory].");
+      const selected = resolve(args[1] ?? "."), config = readConfig(selected);
+      const browserExecutable = workspaceEnvironment(selected).PIDA_BROWSER_EXECUTABLE;
+      if (browserExecutable) process.env.PIDA_BROWSER_EXECUTABLE = browserExecutable;
+      const { checkUi } = await import("./ui-check.js");
+      const result = await checkUi("<!doctype html><html><body>Pida browser ready</body></html>", [], new AbortController().signal);
+      if (!result.ok) throw new Error(`${result.error ?? "UI_CHECK_FAILED"}: install Chromium with npx playwright install chromium, or set PIDA_BROWSER_EXECUTABLE to an existing browser. Configuration was not changed.`);
+      config.browserChecks = true;
+      validateConfig(config, selected);
+      writeFileSync(join(selected, "pida.config.json"), JSON.stringify(config, null, 2) + "\n");
+      console.log("Isolated browser probe passed; browserChecks enabled. Restart Pida to register ui_check.");
+      return;
+    }
+    case "project": {
+      const enable = args[0] === "enable";
+      if (!enable && args[0] !== "disable") throw new Error("Use pida project enable ROOT [workspace] [--trusted-host], or pida project disable [workspace].");
+      if (enable && (!args[1] || args[1].startsWith("--"))) throw new Error("Supply the project root directory.");
+      const candidate = args[enable ? 2 : 1];
+      const selected = resolve(candidate && !candidate.startsWith("--") ? candidate : "."), config = readConfig(selected);
+      config.permissions = config.permissions.filter(p => !["project:read", "project:write", "project:execute"].includes(p));
+      if (enable) {
+        const trustedHost = args.includes("--trusted-host");
+        config.project = { enabled: true, root: resolve(args[1]!), trustedHost, timeoutSeconds: 120 };
+        config.permissions.push("project:read", "project:write", ...(trustedHost ? ["project:execute"] : []));
+      } else delete config.project;
+      validateConfig(config, selected);
+      writeFileSync(join(selected, "pida.config.json"), JSON.stringify(config, null, 2) + "\n");
+      console.log(enable ? `Project tools enabled: ${config.project!.root}\n${config.project!.trustedHost ? "Host shell enabled with your OS account privileges; this is not a sandbox." : "File tools only; host shell disabled."}\nRestart Pida. Workbench checkpoints do not restore project files.` : "Project tools disabled. Restart Pida.");
+      return;
+    }
     case "runs":
     case "export": {
       const sessionId = args[0], runId = command === "export" ? args[1] : undefined;

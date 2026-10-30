@@ -57,6 +57,8 @@ export interface BusinessTool<T extends TSchema = TSchema> {
   permission: string;
   /** Undeclared tools are conservatively treated as writes. Host declaration, not model input. */
   effect?: "read" | "write" | "idempotent";
+  /** Host-only revision for replay protection (e.g. an observed project edit generation). */
+  effectRevision?(): string;
   effectResult?(value: unknown): "applied" | "not_applied" | "unknown";
   /** Metadata captured by the trusted tool under its own mutation lock. */
   evidence?(value: unknown): ToolEvidence | undefined;
@@ -96,6 +98,10 @@ export interface RuntimeOptions {
   agentId?: string;
   observationSink?: ObservationSink;
   inspectArtifacts?: (principal: Principal) => Promise<ArtifactSnapshot>;
+  /** Host-declared evidence gaps for optional execution profiles. */
+  evidenceLimits?: readonly string[];
+  /** Serialize all task runs when they share a writable host project. */
+  singleWriter?: boolean;
   maxObservationEvents?: number;
   maxTotalTokens?: number;
   maxCostUsd?: number;
@@ -343,7 +349,8 @@ export class PidaRuntime {
               throw new Error("TOOL_FORBIDDEN");
             }
             if (tool.effect !== "read") {
-              try { receipt = this.effects.begin(id, run.id, callId, tool.name, args, tool.effect === "idempotent"); }
+              try { receipt = this.effects.begin(id, run.id, callId, tool.name,
+                tool.effectRevision ? { args, revision: tool.effectRevision() } : args, tool.effect === "idempotent"); }
               catch (error) {
                 const code = error instanceof Error && ["EFFECT_STATE_UNKNOWN", "TOOL_REPLAY_BLOCKED", "EFFECT_LEDGER_LIMIT"].includes(error.message) ? error.message : "EFFECT_PERSISTENCE_FAILED";
                 throw new PidaError(code, 409);
@@ -696,6 +703,8 @@ export class PidaRuntime {
       throw new PidaError("INVALID_PROMPT", 400);
     if (record.deleting) throw new PidaError("SESSION_NOT_FOUND", 404);
     if (record.active) throw new PidaError("SESSION_BUSY", 409);
+    if (this.options.singleWriter && [...this.sessions.values()].some(session => session.active))
+      throw new PidaError("WORKSPACE_BUSY", 409);
     if (record.runs >= this.limits.runs)
       throw new PidaError("SESSION_RUN_LIMIT", 429);
     if (signal?.aborted) throw new PidaError("REQUEST_ABORTED", 400);
@@ -898,7 +907,7 @@ export class PidaRuntime {
       record.saved.lastStatus = result.status;
     }
     const manifest = resultManifest({ taskId: run.taskId, runId: run.id, sessionId: id, agentId: this.observations.agentId, status: result.status, code: result.code, version: runtimeVersion, snapshot: run.snapshot, artifacts: [...run.artifacts.values()], inspectedAtEnd: run.inspectedAtEnd, verification: run.verification,
-      limits: ["PI_INTERNAL_REQUEST_USAGE_NOT_EXPORTED", ...(!this.options.pricingVerified ? ["COST_UNKNOWN"] : []), ...(result.recovery ? ["EFFECT_STATE_REQUIRES_RECONCILIATION"] : []), ...(run.evidenceFailed || result.persistenceError ? ["EVIDENCE_OR_STORAGE_INCOMPLETE"] : [])] });
+      limits: ["PI_INTERNAL_REQUEST_USAGE_NOT_EXPORTED", ...(this.options.evidenceLimits ?? []), ...(!this.options.pricingVerified ? ["COST_UNKNOWN"] : []), ...(result.recovery ? ["EFFECT_STATE_REQUIRES_RECONCILIATION"] : []), ...(run.evidenceFailed || result.persistenceError ? ["EVIDENCE_OR_STORAGE_INCOMPLETE"] : [])] });
     this.observe(id, run, "run_finished", { status: result.status, code: result.code ?? null, persistence_error: result.persistenceError ?? null });
     this.observations.finish({ sessionId: id, taskId: run.taskId, runId: run.id }, manifest);
     finish();

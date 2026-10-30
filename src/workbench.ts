@@ -1,4 +1,4 @@
-import { checkUi } from "./ui-check.js";
+import { checkUi, uiCheckDefinition, uiCheckParameters } from "./ui-check.js";
 import { toolEvidence, artifactSnapshot } from "./evidence.js";
 import { canonical } from "./private-state.js";
 import type { ToolEvidence } from "./execution-contract.js";
@@ -29,7 +29,7 @@ const workbenchErrorCodes = new Set([
   "SKILL_NOT_FOUND", "INVALID_SKILL_NAME", "SKILL_LIMIT", "SKILL_EXISTS_USE_NEW_VERSION_NAME",
   "SKILL_TEST_FAILED", "INVALID_SKILL", "SKILL_CHANGED", "INVALID_CHECKPOINT",
   "CANCELLED", "EXECUTION_TIMEOUT", "EXECUTION_FAILED", "ASYNC_NOT_SUPPORTED",
-  "NO_ASSERTIONS", "TEST_IS_READ_ONLY", "BROWSER_UNAVAILABLE", "UI_CHECK_FAILED", "UI_CHECK_CANCELLED",
+  "NO_ASSERTIONS", "TEST_IS_READ_ONLY", "BROWSER_UNAVAILABLE", "UI_CHECK_FAILED", "UI_CHECK_CANCELLED", "UI_CHECK_TIMEOUT", "INVALID_UI_CHECK",
 ]);
 function validPath(path: string) {
   if (typeof path !== "string" || path.length > 240 || !/^[A-Za-z0-9_-][A-Za-z0-9_./ -]*$/.test(path) || path.split("/").some(p => !p || p.startsWith("."))) fail("INVALID_PATH");
@@ -269,7 +269,7 @@ export class PidaWorkbench {
         // Retesting the same path can supersede its failed test. Reads/unrelated successes cannot.
         const recoveryKey = name === "ui_apply" || name === "ui_patch" ? "workbench:service-ui"
           : name === "workspace_test" ? `workbench:test:${args.path}`
-          : name === "ui_check" ? `workbench:ui-check:${digest(canonical(args.steps ?? []))}` : undefined;
+          : name === "ui_check" ? `workbench:ui-check:${digest(canonical(uiCheckDefinition(args.steps, args.viewport)))}` : undefined;
         return {
           status: failed ? "failed" : "completed",
           code: failed && "error" in value && typeof value.error === "string" && workbenchErrorCodes.has(value.error) ? value.error : name === "workspace_test" ? "TEST_FAILED" : "WORKSPACE_OPERATION_FAILED",
@@ -291,7 +291,7 @@ export class PidaWorkbench {
             try { evidence.set(value, toolEvidence(before, snapshot(area.files), check ? {
               scope: name === "workspace_test" ? "quickjs-assertions" : "isolated-browser",
               status: value.ok ? "PASSED" : value.error === "BROWSER_UNAVAILABLE" ? "UNAVAILABLE" : "FAILED",
-              definition_digest: digest(canonical(name === "workspace_test" ? { path: args.path, source: before[args.path] ?? null } : { steps: args.steps ?? [], viewport: "1280x820" })),
+              definition_digest: digest(canonical(name === "workspace_test" ? { path: args.path, source: before[args.path] ?? null } : uiCheckDefinition(args.steps, args.viewport))),
               ...(name === "workspace_test" ? { assertions: value.assertions ?? 0 } : {}),
             } : undefined)); } catch { evidence.set(value, new Error("EVIDENCE_CAPTURE_FAILED")); }
           }
@@ -381,7 +381,7 @@ export class PidaWorkbench {
         return { ...r, writes: undefined, filesWritten: r.ok ? Object.keys(r.writes) : [] };
       }),
     );
-    if (this.browserChecks) result.push(tool("ui_check", "Check the current UI in an isolated browser using the service renderer. Optional ordered CSS-selector clicks and expected visible text. No source changes. Report the exact scope verified.", schema({ steps: Type.Optional(Type.Array(schema({ click: Type.String({ minLength: 1, maxLength: 500 }), visibleText: Type.Optional(Type.String({ maxLength: 500 })) }), { maxItems: 10 })) }), ["workbench:execute", "workbench:read"], (area, args, signal) => checkUi(this.uiDocument(area).html, args.steps ?? [], signal)));
+    if (this.browserChecks) result.push(tool("ui_check", "Check the current UI in an isolated browser using the service renderer. Up to 20 ordered steps: click selector; fill/select selector with value; visible selector; count selector with equals; or visibleText. Actions can also assert visibleText. Count includes hidden matches unless :visible is specified. Optional bounded viewport width/height for responsive checks. No source changes. Report the exact scope verified, including failedStep (zero-based).", uiCheckParameters, ["workbench:execute", "workbench:read"], (area, args, signal) => checkUi(this.uiDocument(area).html, args.steps ?? [], signal, { viewport: args.viewport })));
     return result;
   }
 }

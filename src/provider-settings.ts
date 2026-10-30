@@ -11,7 +11,7 @@ import {
 import { join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { PidaRuntime, PidaError } from "./runtime.js";
-import { endpointProvider, mockProvider } from "./providers.js";
+import { endpointProvider, endpointHeaders, mockProvider } from "./providers.js";
 import {
   readConfig,
   validateConfig,
@@ -138,6 +138,7 @@ export class ProviderSettings {
       "allowInsecureHttp",
       "contextWindow",
       "maxTokens",
+      "compat",
     ];
     if (Object.keys(input).some((k) => !allowed.includes(k)))
       throw new PidaError("UNKNOWN_FIELD", 400);
@@ -197,6 +198,7 @@ export class ProviderSettings {
     } catch {
       throw new PidaError("INVALID_PROVIDER_URL", 400);
     }
+    const sameEndpoint = current.kind === "endpoint" && current.baseUrl === baseUrl && current.api === (input.api ?? "openai-completions");
     const provider = {
       kind: "endpoint",
       baseUrl,
@@ -208,6 +210,9 @@ export class ProviderSettings {
       contextWindow: input.contextWindow ?? 8192,
       maxTokens: input.maxTokens ?? 1024,
       allowInsecureHttp: input.allowInsecureHttp ?? false,
+      ...(sameEndpoint && current.headersEnv ? { headersEnv: current.headersEnv } : {}),
+      ...(input.compat !== undefined ? { compat: input.compat }
+        : sameEndpoint && current.compat ? { compat: current.compat } : {}),
     };
     let next: WorkspaceConfig;
     try {
@@ -223,8 +228,16 @@ export class ProviderSettings {
       (sameTarget(current, next.provider)
         ? providerEnvironment(this.directory, config)[provider.apiKeyEnv]
         : undefined);
+    // Header references are host-configured only; HTTP callers cannot select arbitrary
+    // server environment variables. A changed URL/protocol loses all old references.
+    if (sameEndpoint && current.headersEnv) {
+      const hostEnv = workspaceEnvironment(this.directory);
+      for (const variable of Object.values(current.headersEnv)) env[variable] ??= hostEnv[variable];
+    }
     if (provider.authMode !== "none" && !env[provider.apiKeyEnv])
       throw new PidaError("PROVIDER_KEY_REQUIRED", 400);
+    try { endpointHeaders({ id: "workspace", ...(next.provider as Extract<ProviderConfig, { kind: "endpoint" }>) }, env); }
+    catch { throw new PidaError("PROVIDER_HEADERS_UNAVAILABLE", 400); }
     return { config: next, env, apiKey };
   }
   private async exclusive<T>(operation: () => Promise<T>): Promise<T> {
@@ -246,14 +259,7 @@ export class ProviderSettings {
         models: nativeProviderDefaults(p.providerId).provider.getModels().map(m => m.id),
         source: "bundled-pi-catalog",
       };
-      const headers: Record<string, string> = {};
-      if (p.api === "anthropic-messages")
-        headers["anthropic-version"] = "2023-06-01";
-      if (p.authMode !== "none") {
-        if (p.api === "anthropic-messages")
-          headers["x-api-key"] = env[p.apiKeyEnv]!;
-        else headers.Authorization = `Bearer ${env[p.apiKeyEnv]}`;
-      }
+      const headers = endpointHeaders({ id: "workspace", ...p }, env);
       try {
         const response = await fetch(`${p.baseUrl}/models`, {
           headers,

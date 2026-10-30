@@ -1,4 +1,5 @@
 import { codingPacks } from "./coding-packs.js";
+import { createProjectTools, type ProjectConfig } from "./project-tools.js";
 import { PidaWorkbench, workbenchPermissions, workbenchPrompt } from "./workbench.js";
 import { nativeProvider, validateNativeProvider, type NativeProviderConfig } from "./provider-catalog.js";
 import { ChatGPTCredentialStore } from "./chatgpt-auth.js";
@@ -25,6 +26,7 @@ import { Value } from "typebox/value";
 import { PidaRuntime, type BusinessTool } from "./runtime.js";
 import {
   endpointProvider,
+  endpointHeaders,
   mockProvider,
   type EndpointConfig,
 } from "./providers.js";
@@ -59,6 +61,13 @@ const configSchema = Type.Object(
           authMode: Type.Optional(
             Type.Union([Type.Literal("api-key"), Type.Literal("none")]),
           ),
+          headersEnv: Type.Optional(Type.Record(Type.String(), Type.String({ pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }))),
+          compat: Type.Optional(Type.Object({
+            maxTokensField: Type.Optional(Type.Union([Type.Literal("max_tokens"), Type.Literal("max_completion_tokens")])),
+            supportsUsageInStreaming: Type.Optional(Type.Boolean()),
+            supportsStore: Type.Optional(Type.Boolean()),
+            supportsDeveloperRole: Type.Optional(Type.Boolean()),
+          }, { additionalProperties: false })),
         },
         { additionalProperties: false },
       ),
@@ -72,6 +81,11 @@ const configSchema = Type.Object(
     ),
     codingPacks: Type.Optional(Type.Array(Type.Union([Type.Literal("debugging"), Type.Literal("verification")]), { uniqueItems: true })),
     browserChecks: Type.Optional(Type.Boolean()),
+    project: Type.Optional(Type.Object({
+      enabled: Type.Boolean(), root: Type.String({ minLength: 1 }), trustedHost: Type.Boolean(),
+      shell: Type.Optional(Type.Union([Type.Literal("bash"), Type.Literal("powershell")])),
+      timeoutSeconds: Type.Optional(Type.Integer({ minimum: 1, maximum: 600 })),
+    }, { additionalProperties: false })),
     runtime: Type.Optional(Type.Object({ maxRunMs: Type.Optional(Type.Integer({ minimum: 1000, maximum: 900000 })), autoCompaction: Type.Optional(Type.Boolean()), maxOutputRetries: Type.Optional(Type.Integer({ minimum: 0, maximum: 2 })), maxTotalTokens: Type.Optional(Type.Integer({ minimum: 1 })), maxObservationEvents: Type.Optional(Type.Integer({ minimum: 1, maximum: 10000 })) }, { additionalProperties: false })),
     workbench: Type.Optional(Type.Object({ enabled: Type.Boolean() }, { additionalProperties: false })),
     permissions: Type.Array(Type.String({ minLength: 1 }), {
@@ -93,6 +107,7 @@ export interface WorkspaceConfig {
   tools: { directory: string; enabled: string[] };
   codingPacks?: string[];
   browserChecks?: boolean;
+  project?: ProjectConfig;
   runtime?: { maxRunMs?: number; autoCompaction?: boolean; maxOutputRetries?: number; maxTotalTokens?: number; maxObservationEvents?: number };
   workbench?: { enabled: boolean };
   permissions: string[];
@@ -150,6 +165,11 @@ export function validateConfig(
   if (config.provider.kind === "endpoint")
     endpointProvider({ id: "workspace", ...config.provider });
   if (config.provider.kind === "native") validateNativeProvider(config.provider);
+  if (config.project?.enabled) {
+    const projectRoot = resolve(root, config.project.root);
+    if (!existsSync(projectRoot) || !lstatSync(projectRoot).isDirectory() || lstatSync(projectRoot).isSymbolicLink())
+      throw new Error("PROJECT_ROOT_INVALID: choose an existing project directory.");
+  }
   return config;
 }
 export function checkWorkspace(directory: string) {
@@ -166,6 +186,10 @@ export function checkWorkspace(directory: string) {
     problems.push(`Missing credential variable: ${config.provider.apiKeyEnv}`);
   if (config.provider.kind === "native" && config.provider.authMode === "chatgpt" && !new ChatGPTCredentialStore(directory, config.stateDir).status().connected)
     problems.push("ChatGPT login is missing or its credential store is unreadable. Open model settings to reconnect.");
+  if (config.provider.kind === "endpoint" && config.provider.headersEnv) {
+    try { endpointHeaders({ id: "workspace", ...config.provider }, env); }
+    catch { problems.push("Provider authentication/header environment is missing or invalid; values are not displayed."); }
+  }
   for (const file of config.tools.enabled) {
     try {
       approvedToolPath(directory, config, file);
@@ -179,6 +203,8 @@ export function checkWorkspace(directory: string) {
     provider: config.provider.kind,
     tools: config.tools.enabled,
     persistence: true,
+    project: config.project?.enabled ? { enabled: true, shell: config.project.trustedHost, fileRestore: false } : { enabled: false },
+    browserChecks: config.browserChecks ?? false,
     problems,
     note: "Configuration checks only. No tool module imported and no model request sent. Restart after configuration changes.",
   };
@@ -320,16 +346,20 @@ export async function createWorkspace(directory: string) {
   const tools = await loadWorkspaceTools(root, config);
   const workbench = config.workbench?.enabled ? new PidaWorkbench(join(inside(root, config.stateDir), "workbench"), config.browserChecks ?? false) : undefined;
   const packs = codingPacks(workbench ? config.codingPacks : []);
+  const project = config.project?.enabled ? createProjectTools({ ...config.project, root: resolve(root, config.project.root) }, {
+    protectedPaths: [join(root, "pida.config.json"), join(root, ".env"), inside(root, config.stateDir)],
+  }) : undefined;
   const runtime = new PidaRuntime({
     provider,
     workspaceDir: root,
     ...(workbench ? { inspectArtifacts: (principal: import("./runtime.js").Principal) => workbench.captureArtifacts(principal) } : {}),
-    tools: [...tools, ...(workbench?.tools() ?? []), ...packs.tools],
+    tools: [...tools, ...(workbench?.tools() ?? []), ...packs.tools, ...(project?.tools ?? [])],
+    ...(project ? { singleWriter: true, evidenceLimits: ["HOST_PROJECT_ARTIFACTS_NOT_CAPTURED", ...(config.project?.trustedHost ? ["HOST_SHELL_IS_NOT_SANDBOXED"] : [])] } : {}),
     skills: packs.skills,
     ...(workbench ? { maxTurns: 24, maxToolCalls: 48, maxRunMs: 180_000 } : {}),
     ...config.runtime,
     storageDir: inside(root, config.stateDir),
-    systemPrompt: config.systemPrompt + (workbench ? "\n\n" + workbenchPrompt : "") + packs.prompt,
+    systemPrompt: config.systemPrompt + (workbench ? "\n\n" + workbenchPrompt : "") + packs.prompt + (project ? "\n\n" + project.prompt : ""),
     providerInfo: providerLabel(config.provider),
   });
   const settings = new ProviderSettings(root, runtime);

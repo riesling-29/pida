@@ -7,3 +7,4 @@ export { lotStatusTool } from "./tools.js";
 export { nativeProvider, nativeProviderCatalog, type NativeProviderConfig } from "./provider-catalog.js";
 
 export { PidaWorkbench, workbenchPermissions, workbenchPrompt } from "./workbench.js";
+export { createProjectTools, type ProjectConfig } from "./project-tools.js";

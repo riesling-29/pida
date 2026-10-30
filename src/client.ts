@@ -161,12 +161,13 @@ export class PidaClient {
   async *stream(
     id: string,
     prompt: string,
-    options: { signal?: AbortSignal; taskId?: string } = {},
+    options: { signal?: AbortSignal; taskId?: string; disconnectPolicy?: "cancel" | "continue" } = {},
   ): AsyncGenerator<StreamEvent> {
     const response = await this.request(
       this.path(id) + "/runs",
       "POST",
-      { prompt, ...(options.taskId !== undefined ? { taskId: options.taskId } : {}) },
+      { prompt, ...(options.taskId !== undefined ? { taskId: options.taskId } : {}),
+        ...(options.disconnectPolicy !== undefined ? { disconnectPolicy: options.disconnectPolicy } : {}) },
       options.signal,
     );
     if (!response.body) throw new PidaClientError("MISSING_STREAM", 502);
@@ -208,6 +209,8 @@ export class PidaClient {
     options: {
       signal?: AbortSignal;
       taskId?: string;
+      /** continue detaches observation on abort/disconnect; call cancel(id) to stop the run. */
+      disconnectPolicy?: "cancel" | "continue";
       onEvent?: (event: StreamEvent) => void;
     } = {},
   ): Promise<RunResult> {
@@ -238,6 +241,9 @@ export function explainError(code?: string): string {
     CHATGPT_LOGIN_NOT_FOUND: "로그인 요청이 만료됐거나 서버가 재시작됐습니다. 다시 로그인해주세요.",
     CHATGPT_LOGIN_NOT_WAITING: "이 로그인 요청은 주소 입력을 기다리고 있지 않습니다. 현재 로그인 상태를 확인하세요.",
     PROVIDER_BUSY: "진행 중인 작업이 끝난 뒤 모델 연결을 변경해주세요.",
+    PROVIDER_HEADERS_UNAVAILABLE: "사내 인증 헤더의 환경변수가 없거나 올바르지 않습니다. 서버 설정을 확인하세요.",
+    WORKSPACE_BUSY: "같은 저장소에서 다른 작업이 진행 중입니다. 완료하거나 중단한 뒤 요청하세요.",
+    STREAM_INTERRUPTED: "실행 화면과 연결이 끊겼습니다. 서버의 작업 상태를 다시 확인하세요. 같은 요청을 바로 재전송하지 마세요.",
     SETUP_BUSY: "이전 모델 연결 작업이나 로그인이 끝난 뒤 다시 시도해주세요.",
     OUTPUT_LIMIT: "출력 한도로 수정 명령이 중단됐습니다. 이미 저장된 변경은 유지됩니다. 요청을 나누거나 출력 한도와 실행 시간을 조정하세요.",
     EMPTY_RESPONSE: "모델이 표시할 답변을 보내지 않았습니다. 출력 한도와 모델의 추론 설정을 확인하세요.",

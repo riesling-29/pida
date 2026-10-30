@@ -2,7 +2,9 @@
 
 An embedded, reusable **Pi-based agent harness** for applications. Bring the package into a host backend, register business tools, and connect a web or app interface through the client SDK. The host does not implement the agent loop.
 
-**Workspace MVP 0.6.1:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces now persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call business authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+**Workspace MVP 0.7.0:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+
+New in 0.7: live Studio activity and elapsed time, reconnectable server-owned runs, richer isolated browser checks, opt-in existing-project coding with Pi tools, and company endpoint compatibility/header settings. See the [MAGI source audit and patch decisions](docs/MAGI-ADOPTION-PATCH-PLAN.md), [project coding](docs/PROJECT-CODING.md), [browser checks](docs/UI-CHECKS.md) and [LightLLM/company API setup](docs/COMPANY-ENDPOINTS.md). Host project tools do not turn the service preview into a React/dev-server preview; project files are outside workbench restore and artifact verification.
 
 The lot-status tool is **replaceable synthetic sample data**, not a manufacturing-specific restriction. The default mock is deterministic and not an intelligent model.
 
@@ -50,7 +52,7 @@ The package has **not** been published to npm. Create and install a local packag
 ```sh
 npm pack
 # Run from your host application directory:
-npm install /absolute/path/to/pida-core-0.6.1.tgz
+npm install /absolute/path/to/pida-core-0.7.0.tgz
 ```
 
 Entry points separate standalone configuration, server code and browser code:

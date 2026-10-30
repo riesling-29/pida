@@ -286,13 +286,16 @@ export function createPidaServer(options: HttpOptions) {
       }
       if (action === "runs" && req.method === "POST") {
         const input = await body(req);
-        keys(input, ["prompt", "taskId"]);
+        keys(input, ["prompt", "taskId", "disconnectPolicy"]);
         if (typeof input.prompt !== "string")
           throw new PidaError("INVALID_PROMPT", 400);
         if (input.taskId !== undefined && typeof input.taskId !== "string") throw new PidaError("INVALID_TASK_ID", 400);
+        if (input.disconnectPolicy !== undefined && !["cancel", "continue"].includes(input.disconnectPolicy as string))
+          throw new PidaError("INVALID_DISCONNECT_POLICY", 400);
+        const keepRunning = input.disconnectPolicy === "continue";
         const controller = new AbortController();
         const disconnected = () => {
-          if (!res.writableEnded) controller.abort();
+          if (!keepRunning && !res.writableEnded) controller.abort();
         };
         res.on("close", disconnected);
         try {
@@ -302,8 +305,9 @@ export function createPidaServer(options: HttpOptions) {
             input.prompt,
             (event) => {
               if (res.destroyed || res.writableLength > 1_048_576) {
-                controller.abort();
                 res.destroy();
+                if (keepRunning) return;
+                controller.abort();
                 throw new Error("STREAM_CLOSED");
               }
               if (!res.headersSent)
@@ -318,7 +322,7 @@ export function createPidaServer(options: HttpOptions) {
             controller.signal,
             { taskId: input.taskId as string | undefined },
           );
-          res.end();
+          if (!res.destroyed) res.end();
         } finally {
           res.off("close", disconnected);
         }

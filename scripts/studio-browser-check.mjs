@@ -4,6 +4,7 @@ import { mkdtemp, rm, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { once } from "node:events";
+import { Type } from "typebox";
 import { fauxProvider, fauxAssistantMessage as answer, fauxToolCall as call } from "@earendil-works/pi-ai/providers/faux";
 import { PidaRuntime, PidaWorkbench, workbenchPermissions, workbenchPrompt } from "../dist/index.js";
 import { createPidaServer, staticTokenAuth } from "../dist/http.js";
@@ -13,9 +14,12 @@ const owner = { id: "studio-browser", permissions: workbenchPermissions }, token
 const tool = (name, args) => answer(call(name, args), { stopReason: "toolUse" });
 const lastTool = context => JSON.parse(context.messages.filter(m => m.role === "toolResult").at(-1).content.filter(b => b.type === "text").map(b => b.text).join(""));
 let browser, runtime, server;
+const toolGate = Promise.withResolvers(), modelGate = Promise.withResolvers();
 try {
   const bench = new PidaWorkbench(join(directory, "workbench"), true), f = fauxProvider({ tokensPerSecond: 100000 });
-  runtime = new PidaRuntime({ provider: () => ({ provider: f.provider, modelId: f.getModel().id }), providerInfo: { mode: "endpoint", model: "Scripted browser acceptance" }, tools: bench.tools(), systemPrompt: workbenchPrompt, storageDir: join(directory, "state"), inspectArtifacts: p => bench.captureArtifacts(p) });
+  const progressProbe = { name: "coding_guide", description: "Controlled read-only fixture", parameters: Type.Object({}), permission: "workbench:read", effect: "read", async execute() { await toolGate.promise; return { note: "private-tool-output-canary" }; } };
+  const projectProbe = { name: "project_ls", description: "Read-only project UI route fixture", parameters: Type.Object({}), permission: "workbench:read", effect: "read", async execute() { return { files: ["package.json"] }; } };
+  runtime = new PidaRuntime({ provider: () => ({ provider: f.provider, modelId: f.getModel().id }), providerInfo: { mode: "endpoint", model: "Scripted browser acceptance" }, tools: [...bench.tools(), progressProbe, projectProbe], systemPrompt: workbenchPrompt, storageDir: join(directory, "state"), inspectArtifacts: p => bench.captureArtifacts(p) });
   const httpOptions = { runtime, workbench: bench, serveDemo: true, authenticate: staticTokenAuth([{ token, principal: owner }]) };
   server = createPidaServer(httpOptions);
   server.listen(0, "127.0.0.1"); await once(server, "listening");
@@ -33,11 +37,26 @@ try {
   // File work starts without a UI template and uses the registered Pi tools.
   await page.locator("#studio-target-mode").selectOption("files");
   f.setResponses([
-    tool("workspace_write", { path: "sum.js", content: "globalThis.sum = xs => xs.reduce((a,b) => a+b, 0);\n" }),
+    tool("coding_guide", {}),
+    async () => { await modelGate.promise; return tool("workspace_write", { path: "sum.js", content: "globalThis.sum = xs => xs.reduce((a,b) => a+b, 0);\n" }); },
     tool("workspace_write", { path: "sum.test.js", content: 'eval(pida.readText("sum.js")); assert(sum([2,3]) === 5);' }),
     tool("workspace_test", { path: "sum.test.js" }), answer("두 파일을 저장하고 합계 검사를 실행했습니다."),
   ]);
   await page.locator("#studio-prompt").fill("합계 함수와 테스트를 만들고 실제로 검사해줘."); await page.locator("#studio-send").click();
+  await page.waitForFunction(() => document.querySelector("#studio-run-status").textContent.includes("실행 중 · coding_guide"));
+  assert.match(await page.locator("#studio-activity-list").textContent(), /도구 실행 · coding_guide/);
+  toolGate.resolve();
+  await page.waitForFunction(() => document.querySelector("#studio-run-status").textContent.includes("모델 응답을 기다리고"));
+  assert.match(await page.locator("#studio-activity-list").textContent(), /도구 완료 · coding_guide/);
+  assert.doesNotMatch(await page.locator("#studio-activity-list").textContent(), /private-tool-output-canary/);
+  await page.waitForFunction(() => /경과 [1-9]/.test(document.querySelector("#studio-activity-clock").textContent));
+  // Reconnect while the model is still waiting: execution and the before-checkpoint survive the UI.
+  const pendingSession = await page.evaluate(() => sessionStorage.getItem("pida-studio-session"));
+  await page.reload(); await page.locator("#token").fill(token); await page.locator("#connect").click();
+  await page.waitForFunction(() => document.querySelector("#studio-activity-list").textContent.includes("도구 완료 · coding_guide"));
+  assert.match(await page.locator("#studio-run-status").textContent(), /모델 응답을 기다리고/);
+  assert.equal(runtime.getSession(pendingSession, owner).running, true);
+  modelGate.resolve();
   await page.waitForFunction(() => document.querySelector("#studio-verification").textContent.includes("현재 파일과 일치"));
   assert.match(await page.locator("#studio-outcome").textContent(), /실행 완료/);
   await page.locator("#studio-tab-changes").click(); assert.match(await page.locator("#studio-change-summary").textContent(), /2개 파일/);
@@ -70,11 +89,37 @@ try {
   assert.equal((await bench.uiState(owner)).html, original.html);
   assert.match(await page.locator("#studio-verification").textContent(), /현재 파일에 유효한 검증으로 볼 수 없음/);
   assert.equal(await page.locator("#studio-restore").isDisabled(), true);
+  // The host project is explicitly selectable, without pretending the bounded file viewer covers it.
+  await page.locator("#studio-target-mode").selectOption("project");
+  assert.equal(await page.locator("#studio-project-panel").isVisible(), true);
+  assert.equal(await page.locator("#studio-panel-files").isVisible(), false);
+  f.setResponses([ctx => {
+    const input = ctx.messages.filter(m => m.role === "user").at(-1).content;
+    const text = typeof input === "string" ? input : input.filter(b => b.type === "text").map(b => b.text).join("");
+    assert.match(text, /operator-configured host project/);
+    assert.doesNotMatch(text, /No general shell/);
+    return tool("project_ls", {});
+  }, answer("프로젝트 파일 목록을 확인했습니다.")]);
+  await page.locator("#studio-prompt").fill("프로젝트 파일 목록을 확인해줘."); await page.locator("#studio-send").click();
+  await page.waitForFunction(() => document.querySelector("#studio-outcome").textContent.includes("실행 완료"));
+  assert.equal(await page.locator("#studio-restore").isDisabled(), true);
+  assert.match(await page.locator("#studio-evidence-scope").textContent(), /프로젝트 저장소 변경은.*범위에 포함되지/);
+  assert.match(await page.locator("#studio-activity-list").textContent(), /도구 완료 · project_ls/);
+  await page.locator("#studio-target-mode").selectOption("ui");
+  // A failed real tool call is visible as failure, independently of the model's prose.
+  await bench.write(owner, "fail.test.js", 'assert(false, "expected fixture failure");');
+  f.setResponses([tool("workspace_test", { path: "fail.test.js" }), answer("검사 실패를 확인했습니다.")]);
+  await page.locator("#studio-prompt").fill("실패하는 검사를 실행해줘."); await page.locator("#studio-send").click();
+  await page.waitForFunction(() => document.querySelector("#studio-outcome").textContent.includes("실행 실패"));
+  assert.match(await page.locator("#studio-activity-list").textContent(), /도구 실패 · workspace_test/);
+  assert.match(await page.locator("#studio-run-status").textContent(), /실행 실패/);
   // A cancelled request can leave saved changes; the result must expose them.
   f.setResponses([tool("ui_read", {}), ctx => tool("ui_patch", { expectedRevision: lastTool(ctx).revision, edits: [{ oldText: "</main>", newText: '<p id="partial">중단 전 저장됨</p></main>' }] }), async (_ctx, options) => { if (!options.signal.aborted) await new Promise(resolve => options.signal.addEventListener("abort", resolve, { once: true })); return answer("", { stopReason: "aborted" }); }]);
   await page.locator("#studio-prompt").fill("부분 변경 후 기다려줘."); await page.locator("#studio-send").click();
   await page.frameLocator("#studio-frame").locator("#partial").waitFor(); await page.locator("#studio-cancel").click();
   await page.waitForFunction(() => document.querySelector("#studio-outcome").textContent.includes("중단됨"));
+  assert.match(await page.locator("#studio-run-status").textContent(), /중단됨/);
+  assert.match(await page.locator("#studio-activity-list").textContent(), /중단됨/);
   await page.locator("#studio-tab-changes").click(); assert.match(await page.locator("#studio-diff").textContent(), /중단 전 저장됨/);
   assert.match(await page.locator("#studio-verification").textContent(), /검증 결과 없음/);
   // Independent later edits disable restoration against the old inspected revision.
@@ -102,5 +147,6 @@ try {
   assert.equal(await page.locator("#studio-restore").isDisabled(), true);
   await page.locator("#mode-disconnect").click(); assert.equal(await page.locator("#studio-source").textContent(), "");
   assert.equal(await page.locator("#studio-diff").textContent(), ""); assert.deepEqual(errors, []);
-  console.log("PASS: actual Web UI file/code work without template, source/diff, revision-bound evidence, reload, guarded restore, saved partial changes on cancel, stale evidence, keyboard/IME, mobile width and logout. Model scripted; browser/Pi/tools real.");
-} finally { await browser?.close(); if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } await runtime?.close(); await rm(directory, { recursive: true, force: true }); }
+  assert.equal(await page.locator("#studio-activity-list li").count(), 0);
+  console.log("PASS: actual Web UI progress through tool execution/model wait, elapsed clock, live reconnect, tool failure/cancellation; file/code work, source/diff, revision-bound evidence, guarded restore, stale evidence, keyboard/IME, mobile width and logout. Model scripted; browser/Pi/tools real.");
+} finally { toolGate.resolve(); modelGate.resolve(); await browser?.close(); if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } await runtime?.close(); await rm(directory, { recursive: true, force: true }); }
