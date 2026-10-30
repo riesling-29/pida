@@ -11,6 +11,7 @@ import { readConfig } from "../dist/workspace.js";
 import { providerEnvironment } from "../dist/provider-settings.js";
 import { endpointProvider } from "../dist/providers.js";
 import { nativeProvider } from "../dist/provider-catalog.js";
+import { ChatGPTCredentialStore } from "../dist/chatgpt-auth.js";
 import { checkUi } from "../dist/ui-check.js";
 const owner = { id: "e2e-owner", permissions: workbenchPermissions };
 const args = process.argv.slice(2);
@@ -18,7 +19,11 @@ function setup(workspace, directory) {
   const config = readConfig(workspace);
   if (config.provider.kind === "mock") throw new Error("REAL_PROVIDER_REQUIRED");
   const env = providerEnvironment(workspace, config);
-  const provider = config.provider.kind === "native" ? nativeProvider(config.provider, env) : endpointProvider({ id: "live-e2e", ...config.provider }, env);
+  // Keep OAuth credentials in the configured workspace, including after child-process resume.
+  // Only test artifacts/sessions belong in the disposable directory.
+  const credentials = config.provider.kind === "native" && config.provider.authMode === "chatgpt"
+    ? new ChatGPTCredentialStore(workspace, config.stateDir) : undefined;
+  const provider = config.provider.kind === "native" ? nativeProvider(config.provider, env, undefined, credentials) : endpointProvider({ id: "live-e2e", ...config.provider }, env);
   const bench = new PidaWorkbench(join(directory, "workbench"), true);
   const runtime = new PidaRuntime({ provider, tools: bench.tools(), systemPrompt: workbenchPrompt,
     workspaceDir: directory, storageDir: join(directory, "state"), inspectArtifacts: p => bench.captureArtifacts(p),

@@ -16,6 +16,20 @@ Login writes/replaces this workspace's ChatGPT credential; it does not change th
 
 ## Configuration and integration
 
+### Live acceptance using the selected account
+
+After selecting and applying a ChatGPT model in settings, stop the workspace server with Ctrl+C before running this separate process. The OAuth store serializes refresh inside one process only; do not run another Pida instance against the same credentials during the test.
+
+```powershell
+cd D:\pida
+npm run build
+node scripts/real-model-e2e.mjs .\my-agent > chatgpt-e2e.json
+```
+
+The runner and its sequential restart child use the original workspace credential store, including rotated refresh tokens. Credentials are not copied into its disposable test directory or report. Tests make actual model calls and consume plan usage. They cover tool use, JavaScript repair/checks, successive UI edits/browser checks, manual compaction and process restart. These are bounded workbench tests, not general repository coding tests. A browser must be available through Playwright or `PIDA_BROWSER_EXECUTABLE`; otherwise the browser case is `NOT_RUN`.
+
+For a later internal OpenAI-compatible API trial, configure a separate workspace for that endpoint and pass its path to the same runner. Provider compatibility, internal model tool calling and closed-network browser/dependency installation must be verified there. This OAuth trial does not establish those results. Keep the ChatGPT trial on non-sensitive sample data.
+
 Existing configurations remain valid; API-key authentication is the default. OAuth is allowed only for the native OpenAI provider:
 
 ```json
