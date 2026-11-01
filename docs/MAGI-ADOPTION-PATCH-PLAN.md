@@ -1,5 +1,7 @@
 # MAGI reference audit and Pida implementation plan
 
+Product-scope update, 2026-11-02: this is the historical 0.7.0 implementation batch. Its deferred items are not a complete product roadmap. [Core and home-harness requirements](CORE-AND-HOME-HARNESS.md) now track the required reusable core and complete coding/personal-assistant experience; missing basic capabilities remain unfinished work.
+
 Decision: 2026-10-31 KST. Scope: Pida only. Analyze MAGI first, implement the applicable changes, and leave real company/model acceptance to explicit user trials. No MAGI code is copied and no runtime is replaced by this patch set.
 
 ## Baseline and sources

@@ -1,5 +1,7 @@
 # Pida harness strategy: reuse, evaluate, replace
 
+Updated scope, 2026-11-02: [CORE-AND-HOME-HARNESS.md](CORE-AND-HOME-HARNESS.md) defines the two required products: a reusable core and a complete home coding/personal-assistant harness. The minimal interfaces and deferrals below describe earlier adoption stages; they are not permission to omit required user capabilities. Reuse remains the implementation strategy, and full user workflows remain the acceptance standard.
+
 Decision date: 2026-10-28 KST. Direction supplied by minero, including the explicit clarification that this conversation and work scope are Pida only. This changes the development strategy; it does not assert that a new backend, fork, updater or integration is already implemented.
 
 ## Objective and ownership
@@ -23,6 +25,8 @@ The user directs goals, desired outcomes and material tradeoffs. Engineering own
 The existing Pi-based runtime is a usable backend and an integration asset. It is not a requirement to reproduce every capability of OMP inside pida-core. Existing PATCH-00–08 implementation and its documented acceptance limits remain unchanged.
 
 ## Adoption order
+
+2026-11-02 clarification: direct source reuse/vendoring and ports are explicitly allowed alongside forks, packages and native executables. Prefer the smallest maintained upstream implementation that fulfills the whole capability; do not default to reimplementing from inspiration. Keep source/version provenance, applicable LICENSE/NOTICE/third-party terms and clear modifications. Reuse must reach the user's actual execution path and interface.
 
 1. Use a pinned upstream release with configuration and existing extensions when sufficient.
 2. Actively use a fork when we need a controlled distribution, a small fix, or a reproducible upstream-sync branch. Keep the upstream delta small and explicit.
