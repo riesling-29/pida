@@ -1,0 +1,225 @@
+{
+  "type": "object",
+  "required": [
+    "schema_version",
+    "task_id",
+    "run_id",
+    "session_id",
+    "agent_id",
+    "reported_status",
+    "reported_by",
+    "verification_status",
+    "artifact_refs",
+    "current_artifact_refs",
+    "evidence_refs",
+    "verification_results",
+    "runtime_version",
+    "known_limits"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "pida.result/0.1-draft"
+    },
+    "task_id": {
+      "type": "string",
+      "maxLength": 512
+    },
+    "run_id": {
+      "type": "string",
+      "maxLength": 512
+    },
+    "session_id": {
+      "type": "string",
+      "maxLength": 512
+    },
+    "agent_id": {
+      "type": "string",
+      "maxLength": 512
+    },
+    "reported_status": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "completed"
+        },
+        {
+          "type": "string",
+          "const": "failed"
+        },
+        {
+          "type": "string",
+          "const": "cancelled"
+        },
+        {
+          "type": "string",
+          "const": "limited"
+        },
+        {
+          "type": "string",
+          "const": "interrupted"
+        }
+      ]
+    },
+    "reported_by": {
+      "type": "string",
+      "const": "runtime"
+    },
+    "verification_status": {
+      "type": "string",
+      "const": "UNKNOWN"
+    },
+    "artifact_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "path",
+          "sha256",
+          "bytes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "current_artifact_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 512
+      },
+      "maxItems": 10000
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 512
+      },
+      "maxItems": 10000
+    },
+    "verification_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "scope",
+          "status",
+          "definition_digest",
+          "artifact_snapshot_digest",
+          "artifact_refs",
+          "occurred_at",
+          "actor",
+          "independence",
+          "current_at_run_end"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "quickjs-assertions"
+              },
+              {
+                "type": "string",
+                "const": "isolated-browser"
+              }
+            ]
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "PASSED"
+              },
+              {
+                "type": "string",
+                "const": "FAILED"
+              },
+              {
+                "type": "string",
+                "const": "UNAVAILABLE"
+              }
+            ]
+          },
+          "definition_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "artifact_snapshot_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "artifact_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 512
+            },
+            "maxItems": 10000
+          },
+          "occurred_at": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "assertions": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "actor": {
+            "type": "string",
+            "const": "host-tool"
+          },
+          "independence": {
+            "type": "string",
+            "const": "agent-supplied-check"
+          },
+          "current_at_run_end": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "runtime_version": {
+      "type": "string",
+      "maxLength": 512
+    },
+    "known_limits": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 512
+      },
+      "maxItems": 10000
+    },
+    "code": {
+      "type": "string",
+      "maxLength": 512
+    }
+  },
+  "additionalProperties": false
+}

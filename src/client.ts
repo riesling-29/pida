@@ -1,9 +1,22 @@
+import type { AgentProfile, AgentJob } from "./agent-supervisor.js";
+import type { CommandManager, CommandView } from "./commands.js";
+export type { CommandView, CommandStatus } from "./commands.js";
+import type { CompositionReport } from "./composition.js";
+export type { CompositionReport } from "./composition.js";
+import type { AgentMemoryView, AgentPersona, AgentExperience, InformationTransition, AgentInformationState } from "./agent-memory.js";
+import type { ProjectChanges, ProjectEntry } from "./project-view.js";
+export type { AgentProfile, AgentJob } from "./agent-supervisor.js";
+export type { AgentMemoryView, InformationTransition } from "./agent-memory.js";
+import type { ObservationBundle, ResultManifest } from "./execution-contract.js";
+export type { ObservationBundle, ResultManifest } from "./execution-contract.js";
 import type {
   RunResult,
   StreamEvent,
   TraceEvent,
   SessionSummary,
   RuntimeInfo,
+  SessionTools,
+  TracePage,
 } from "./protocol.js";
 export type {
   RunResult,
@@ -12,6 +25,9 @@ export type {
   RunStatus,
   SessionSummary,
   RuntimeInfo,
+  ToolDetail,
+  SessionTools,
+  TracePage,
 } from "./protocol.js";
 
 export class PidaClientError extends Error {
@@ -28,6 +44,18 @@ export interface ClientOptions {
   token: () => string | Promise<string>;
   fetch?: typeof globalThis.fetch;
 }
+export interface ChatGPTLoginStatus {
+  id: string; status: "pending" | "connected" | "failed" | "cancelled"; expiresAt: number;
+  authUrl?: string; manualInput?: boolean; code?: string;
+}
+export interface CommandList {
+  commands: CommandView[];
+  capabilities: ReturnType<CommandManager["capabilities"]>;
+  permissions: { cancel: boolean; recover: boolean };
+}
+export type CommandRead = ReturnType<CommandManager["read"]>;
+export interface CommandReadOptions { offset?: number; maxBytes?: number }
+export interface CommandWaitOptions { waitTimeoutMs?: number; signal?: AbortSignal }
 /** Browser/Node fetch SDK. Native apps may use the same documented HTTP/SSE contract. */
 export class PidaClient {
   private readonly options: ClientOptions;
@@ -63,11 +91,68 @@ export class PidaClient {
   private path(id: string) {
     return `/v1/sessions/${encodeURIComponent(id)}`;
   }
-  async getWorkbench(): Promise<{ enabled: boolean; engine: string; files: { path: string; bytes: number }[]; skills: { name: string; description: string }[]; history: { id: string; message: string }[] }> {
+  private agentPath(id: string) { return `/v1/agents/${encodeURIComponent(id)}`; }
+  private commandPath(id: string, commandId?: string) { return this.path(id) + "/commands" + (commandId ? "/" + encodeURIComponent(commandId) : ""); }
+  private agentCommandPath(id: string, jobId: string, commandId?: string) { return this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/commands" + (commandId ? "/" + encodeURIComponent(commandId) : ""); }
+  private async commandRead(path: string, options: CommandReadOptions): Promise<CommandRead> {
+    const query = new URLSearchParams();
+    if (options.offset !== undefined) query.set("offset", String(options.offset));
+    if (options.maxBytes !== undefined) query.set("maxBytes", String(options.maxBytes));
+    return (await this.request(path + (query.size ? "?" + query : ""))).json();
+  }
+  private async commandWait(path: string, options: CommandWaitOptions): Promise<Awaited<ReturnType<CommandManager["wait"]>>> {
+    return (await this.request(path + "/wait" + (options.waitTimeoutMs === undefined ? "" : "?waitTimeoutMs=" + encodeURIComponent(options.waitTimeoutMs)), "GET", undefined, options.signal)).json();
+  }
+  /** Start is deliberately model-tool-only; these methods observe or control existing owned handles. */
+  async listCommands(id: string): Promise<CommandList> { return (await this.request(this.commandPath(id))).json(); }
+  async readCommand(id: string, commandId: string, options: CommandReadOptions = {}): Promise<CommandRead> { return this.commandRead(this.commandPath(id, commandId), options); }
+  async waitCommand(id: string, commandId: string, options: CommandWaitOptions = {}): Promise<Awaited<ReturnType<CommandManager["wait"]>>> { return this.commandWait(this.commandPath(id, commandId), options); }
+  async cancelCommand(id: string, commandId: string): Promise<ReturnType<CommandManager["cancel"]>> { return (await this.request(this.commandPath(id, commandId) + "/cancel", "POST", {})).json(); }
+  async acknowledgeCommandRecovery(id: string, commandId: string, input: { inspected: true }): Promise<{command: CommandView}> { return (await this.request(this.commandPath(id, commandId) + "/recovery", "POST", input)).json(); }
+  async listAgentJobCommands(id: string, jobId: string): Promise<CommandList> { return (await this.request(this.agentCommandPath(id, jobId))).json(); }
+  async readAgentJobCommand(id: string, jobId: string, commandId: string, options: CommandReadOptions = {}): Promise<CommandRead> { return this.commandRead(this.agentCommandPath(id, jobId, commandId), options); }
+  async waitAgentJobCommand(id: string, jobId: string, commandId: string, options: CommandWaitOptions = {}): Promise<Awaited<ReturnType<CommandManager["wait"]>>> { return this.commandWait(this.agentCommandPath(id, jobId, commandId), options); }
+  async cancelAgentJobCommand(id: string, jobId: string, commandId: string): Promise<ReturnType<CommandManager["cancel"]>> { return (await this.request(this.agentCommandPath(id, jobId, commandId) + "/cancel", "POST", {})).json(); }
+  async acknowledgeAgentJobCommandRecovery(id: string, jobId: string, commandId: string, input: { inspected: true }): Promise<{command: CommandView}> { return (await this.request(this.agentCommandPath(id, jobId, commandId) + "/recovery", "POST", input)).json(); }
+  async listAgents(): Promise<{ agents: AgentProfile[] }> { return (await this.request("/v1/agents")).json(); }
+  async createAgent(input: {name: string; role?: string; persona?: string}): Promise<AgentProfile> { return (await this.request("/v1/agents", "POST", input)).json(); }
+  async getAgent(id: string): Promise<AgentProfile> { return (await this.request(this.agentPath(id))).json(); }
+  async pauseAgent(id: string): Promise<AgentProfile> { return (await this.request(this.agentPath(id) + "/pause", "POST", {})).json(); }
+  async resumeAgent(id: string): Promise<AgentProfile> { return (await this.request(this.agentPath(id) + "/resume", "POST", {})).json(); }
+  async listAgentJobs(id: string): Promise<{jobs: AgentJob[]}> { return (await this.request(this.agentPath(id) + "/jobs")).json(); }
+  async getAgentJob(id: string, jobId: string): Promise<AgentJob> { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId))).json(); }
+  async enqueueAgentJob(id: string, input: {input: string; requestId: string; parentJobId?: string}): Promise<AgentJob> { return (await this.request(this.agentPath(id) + "/jobs", "POST", input)).json(); }
+  async cancelAgentJob(id: string, jobId: string): Promise<AgentJob> { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/cancel", "POST", {})).json(); }
+  async steerAgentJob(id: string, jobId: string, text: string, expectedRunId: string) { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/steer", "POST", {text, expectedRunId})).json(); }
+  async getAgentJobRecovery(id: string, jobId: string) { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/recovery")).json(); }
+  async reconcileAgent(id: string, input: {inspected: true; effects: {id: string; state: "applied" | "not_applied"}[]; note?: string}): Promise<AgentProfile> { return (await this.request(this.agentPath(id) + "/reconcile", "POST", input)).json(); }
+  async exportAgentJob(id: string, jobId: string): Promise<ObservationBundle> { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/export")).json(); }
+  async getAgentMemory(id: string): Promise<AgentMemoryView> { return (await this.request(this.agentPath(id) + "/memory")).json(); }
+  async reviseAgentPersona(id: string, input: {expectedRevision: number | null; text: string; sourceRefs: string[]}): Promise<AgentPersona> { return (await this.request(this.agentPath(id) + "/memory/persona", "POST", input)).json(); }
+  async rememberAgentExperience(id: string, input: {kind: "fact" | "decision" | "correction"; text: string; sourceRefs: string[]; supersedes?: string[]}): Promise<AgentExperience> { return (await this.request(this.agentPath(id) + "/memory/experiences", "POST", input)).json(); }
+  async retractAgentExperience(id: string, input: {id: string; expectedRevision: number; reason: string; sourceRefs: string[]}): Promise<AgentExperience> { return (await this.request(this.agentPath(id) + "/memory/retract", "POST", input)).json(); }
+  async transitionAgentMemory(id: string, input: InformationTransition): Promise<AgentInformationState> { return (await this.request(this.agentPath(id) + "/memory/states", "POST", input)).json(); }
+  async getAgentWorkbench(id: string): Promise<Awaited<ReturnType<PidaClient["getWorkbench"]>>> { return (await this.request(this.agentPath(id) + "/workbench")).json(); }
+  async readAgentFile(id: string, path: string): Promise<{path: string; content: string}> { return (await this.request(this.agentPath(id) + "/workbench/file?path=" + encodeURIComponent(path))).json(); }
+  async getPrograms(): Promise<ReturnType<import("./program-registry.js").ProgramRegistry["list"]>> { return (await this.request("/v1/programs")).json(); }
+  async draftProgram(input: {candidateId: string; sourceDigest: string}): Promise<ReturnType<import("./program-registry.js").ProgramRegistry["draft"]>> { return (await this.request("/v1/programs/draft", "POST", input)).json(); }
+  async getProject(path = "."): Promise<{enabled: true; path: string; files: ProjectEntry[]; truncated: boolean}> { return (await this.request("/v1/project?path=" + encodeURIComponent(path))).json(); }
+  async readProjectFile(path: string): Promise<{path: string; content: string; bytes: number; revision: string}> { return (await this.request("/v1/project/file?path=" + encodeURIComponent(path))).json(); }
+  async getProjectChanges(): Promise<ProjectChanges> { return (await this.request("/v1/project/changes")).json(); }
+  async steer(id: string, text: string, expectedRunId: string) { return (await this.request(this.path(id) + "/steer", "POST", { text, expectedRunId })).json(); }
+  async followUp(id: string, text: string, expectedRunId: string) { return (await this.request(this.path(id) + "/follow-up", "POST", { text, expectedRunId })).json(); }
+  async getWorkbench(): Promise<{ enabled: boolean; engine: string; revision?: string; canCheckpoint?: boolean; files: { path: string; bytes: number }[]; skills: { name: string; description: string }[]; history: { id: string; message: string }[] }> {
     return (await this.request("/v1/workbench")).json();
   }
   async readWorkspaceFile(path: string): Promise<{ path: string; content: string }> {
     return (await this.request("/v1/workbench/file?path=" + encodeURIComponent(path))).json();
+  }
+  async captureCheckpoint(): Promise<{ checkpoint: string; revision: string }> { return (await this.request("/v1/workbench/checkpoint", "POST", {})).json(); }
+  async getChanges(base: string, head: string): Promise<{ base: string; head: string; files: string[]; diff: string; truncated: boolean }> {
+    return (await this.request("/v1/workbench/changes?base=" + encodeURIComponent(base) + "&head=" + encodeURIComponent(head))).json();
+  }
+  async restoreCheckpoint(checkpoint: string, expectedRevision: string): Promise<{ checkpoint: string; before: string; revision: string }> {
+    return (await this.request("/v1/workbench/restore", "POST", { checkpoint, expectedRevision })).json();
   }
   async writeWorkspaceFile(path: string, content: string): Promise<{ checkpoint: string }> {
     return (await this.request("/v1/workbench/file", "POST", { path, content })).json();
@@ -75,8 +160,9 @@ export class PidaClient {
   async getProviderSettings(): Promise<{
     provider: Record<string, unknown>;
     keyConfigured: boolean;
+    chatgpt?: { connected: boolean; code?: string };
     catalog: Array<{ id: string; name: string; baseUrl?: string; apiKeyEnv: string;
-      auth: "api-key"; source: string; keyConfigured: boolean;
+      auth: "api-key"; authModes?: string[]; source: string; keyConfigured: boolean;
       models: Array<{ id: string; name: string; api: string; contextWindow: number; maxTokens: number }> }>;
 
   }> {
@@ -87,6 +173,11 @@ export class PidaClient {
   ): Promise<{ models: string[] }> {
     return (await this.request("/v1/provider/models", "POST", draft)).json();
   }
+  async startChatGPTLogin(): Promise<ChatGPTLoginStatus> { return (await this.request("/v1/provider/chatgpt/login", "POST", {})).json(); }
+  async getChatGPTLogin(id: string): Promise<ChatGPTLoginStatus> { return (await this.request("/v1/provider/chatgpt/login/" + encodeURIComponent(id))).json(); }
+  async submitChatGPTLogin(id: string, value: string): Promise<ChatGPTLoginStatus> { return (await this.request("/v1/provider/chatgpt/login/" + encodeURIComponent(id) + "/input", "POST", { value })).json(); }
+  async cancelChatGPTLogin(id: string): Promise<ChatGPTLoginStatus> { return (await this.request("/v1/provider/chatgpt/login/" + encodeURIComponent(id), "DELETE")).json(); }
+  async disconnectChatGPT(): Promise<{ connected: false }> { return (await this.request("/v1/provider/chatgpt/logout", "POST", {})).json(); }
   async testProvider(
     draft: Record<string, unknown>,
   ): Promise<{ ok: boolean; scope: string }> {
@@ -103,6 +194,7 @@ export class PidaClient {
   async getInfo(): Promise<RuntimeInfo> {
     return (await this.request("/v1/info")).json();
   }
+  async getComposition(): Promise<CompositionReport> { return (await this.request("/v1/composition")).json(); }
   async createSession(): Promise<{ sessionId: string }> {
     return (await this.request("/v1/sessions", "POST", {})).json();
   }
@@ -110,6 +202,8 @@ export class PidaClient {
     sessionId: string;
     title: string;
     lastStatus?: SessionSummary["lastStatus"];
+    contextDescriptor?: import("./run-context.js").LoadedRunContext;
+    handoff?: import("./run-context.js").SessionHandoff;
     running: boolean;
     runs: number;
     tools: string[];
@@ -119,9 +213,20 @@ export class PidaClient {
   }> {
     return (await this.request(this.path(id))).json();
   }
-  async getTrace(id: string): Promise<{ events: TraceEvent[] }> {
-    return (await this.request(this.path(id) + "/trace")).json();
+  async getTrace(id: string, afterSequence?: number): Promise<TracePage> {
+    return (await this.request(this.path(id) + "/trace" + (afterSequence === undefined ? "" : "?afterSequence=" + encodeURIComponent(afterSequence)))).json();
   }
+  async getSessionTools(id: string): Promise<SessionTools> { return (await this.request(this.path(id) + "/tools")).json(); }
+  async getAgentJobTools(id: string, jobId: string): Promise<SessionTools> { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/tools")).json(); }
+  async listRuns(id: string): Promise<{ runs: string[] }> { return (await this.request(this.path(id) + "/runs")).json(); }
+  async exportRun(id: string, runId: string): Promise<ObservationBundle> { return (await this.request(this.path(id) + "/runs/" + encodeURIComponent(runId) + "/export")).json(); }
+  async getManifest(id: string, runId: string): Promise<ResultManifest> { return (await this.request(this.path(id) + "/runs/" + encodeURIComponent(runId) + "/manifest")).json(); }
+  async exportRunJsonl(id: string, runId: string): Promise<{ jsonl: string; complete: boolean }> {
+    const response = await this.request(this.path(id) + "/runs/" + encodeURIComponent(runId) + "/export?format=jsonl");
+    return { jsonl: await response.text(), complete: response.headers.get("X-Pida-Complete") === "true" };
+  }
+  async getRecovery(id: string): Promise<{ sessionId: string; autoReplay: false; pendingEffects: { id: string; runId: string; toolCallId: string; toolName: string; state: string }[] }> { return (await this.request(this.path(id) + "/recovery")).json(); }
+  async reconcileSession(id: string, effects: {id: string; state: "applied" | "not_applied"}[]): Promise<Awaited<ReturnType<PidaClient["getRecovery"]>>> { return (await this.request(this.path(id) + "/recovery", "POST", { inspected: true, effects })).json(); }
   async compactSession(id: string, handoff = false): Promise<{ sessionId: string; compacted: boolean }> {
     return (await this.request(this.path(id) + (handoff ? "/handoff" : "/compact"), "POST", {})).json();
   }
@@ -134,12 +239,13 @@ export class PidaClient {
   async *stream(
     id: string,
     prompt: string,
-    options: { signal?: AbortSignal } = {},
+    options: { signal?: AbortSignal; taskId?: string; disconnectPolicy?: "cancel" | "continue" } = {},
   ): AsyncGenerator<StreamEvent> {
     const response = await this.request(
       this.path(id) + "/runs",
       "POST",
-      { prompt },
+      { prompt, ...(options.taskId !== undefined ? { taskId: options.taskId } : {}),
+        ...(options.disconnectPolicy !== undefined ? { disconnectPolicy: options.disconnectPolicy } : {}) },
       options.signal,
     );
     if (!response.body) throw new PidaClientError("MISSING_STREAM", 502);
@@ -180,6 +286,9 @@ export class PidaClient {
     prompt: string,
     options: {
       signal?: AbortSignal;
+      taskId?: string;
+      /** continue detaches observation on abort/disconnect; call cancel(id) to stop the run. */
+      disconnectPolicy?: "cancel" | "continue";
       onEvent?: (event: StreamEvent) => void;
     } = {},
   ): Promise<RunResult> {
@@ -197,16 +306,67 @@ export class PidaClient {
 /** Stable, credential-free explanations shared by both bundled chat surfaces. */
 export function explainError(code?: string): string {
   const messages: Record<string, string> = {
+    COMMANDS_DISABLED: "이 서버에는 실행 명령 관리가 연결되지 않았습니다.",
+    COMMAND_NOT_FOUND: "이 대화나 작업에서 접근할 수 있는 명령을 찾지 못했습니다.",
+    COMMAND_ARGUMENT_INVALID: "명령 출력 범위나 대기 시간을 확인하세요.",
+    COMMAND_INSPECTION_REQUIRED: "실제 파일과 프로세스 상태를 확인한 뒤 확인란을 선택하세요.",
+    COMMAND_STILL_RUNNING: "명령이 아직 실행 또는 중단 처리 중입니다. 실제 종료 상태를 먼저 확인하세요.",
+    COMMAND_RECOVERY_REQUIRED: "이전 명령의 실제 파일·프로세스 상태를 확인하고 ‘실행 명령’에서 상태 확인을 기록하세요.",
+    PROJECT_COMMAND_ACTIVE: "프로젝트 명령이 실행 중입니다. ‘실행 명령’에서 출력과 종료 상태를 확인하세요.",
+    COMMAND_PROCESS_LOST: "서버가 이전 프로세스의 실행 소유권을 잃었습니다. 자동으로 재실행하지 않았습니다.",
+    COMMAND_RESPONSE_MISMATCH: "현재 선택한 명령과 출력 응답이 일치하지 않습니다. 상태를 다시 조회하세요.",
+    COMMAND_WAIT_CANCELLED: "명령 상태 대기만 취소했습니다. 명령 실행은 별도로 확인하세요.",
+    AGENTS_DISABLED: "이 워크스페이스에서 상주 에이전트가 꺼져 있습니다.",
+    AGENT_RECOVERY_REQUIRED: "중단된 에이전트의 실제 변경 상태를 확인하고 복구 기록을 제출한 뒤 재개하세요.",
+    PROGRAM_APPROVAL_MISMATCH: "프로그램 또는 실행 계약이 변경됐습니다. 호스트에서 내용을 확인하고 programs enable로 다시 등록하세요.",
+    PROGRAM_ADAPTER_REQUIRED: "이 프로그램은 실행 환경과 입출력 어댑터를 먼저 지정해야 합니다.",
+    PROGRAM_SOURCE_CHANGED: "저장소 원본이 바뀌었습니다. 후보를 다시 조회하세요.",
+    PROVIDER_HOST_MANAGED: "호스트 전용 커넥터를 사용 중입니다. 호스트 설정에서 변경하세요.",
+    MEMORY_HEAD_CONFLICT: "다른 정보 상태가 먼저 저장됐습니다. 현재 상태를 다시 읽고 이어주세요.",
+    PERSONA_REVISION_CONFLICT: "페르소나가 먼저 변경됐습니다. 현재 개정을 확인하고 다시 편집하세요.",
+    CHATGPT_LOGIN_REQUIRED: "ChatGPT로 로그인한 뒤 모델을 선택해주세요.",
+    CHATGPT_LOGIN_FAILED: "ChatGPT 로그인을 완료하지 못했습니다. 로그인과 구독 사용 권한을 확인하고 다시 시도하세요. 기존 설정은 유지됩니다.",
+    CHATGPT_LOGIN_CANCELLED: "ChatGPT 로그인을 취소했습니다. 기존 연결은 유지됩니다.",
+    CHATGPT_LOGIN_TIMEOUT: "ChatGPT 로그인 대기 시간이 지났습니다. 다시 시작해주세요.",
+    CHATGPT_LOGIN_PORT_BUSY: "로그인용 1455 포트를 다른 Pi/Codex 로그인이 사용 중입니다. 해당 로그인을 끝내거나 취소한 뒤 다시 시도하세요.",
+    CHATGPT_PLAN_NOT_AUTHORIZED: "ChatGPT 구독 사용 권한이 승인되지 않았습니다. 로그인할 때 해당 권한을 확인해주세요.",
+    CHATGPT_AUTH_FAILED: "ChatGPT 계정 인증 또는 모델 접근이 거부됐습니다. 계정의 권한을 확인하고 다시 로그인해주세요.",
+    CHATGPT_CONNECTION_FAILED: "ChatGPT 연결 또는 인증 갱신에 실패했습니다. 연결 상태를 확인하고 필요하면 다시 로그인해주세요.",
+    CHATGPT_STORAGE_FAILED: "ChatGPT 인증 정보를 읽거나 저장하지 못했습니다. 서버의 저장 경로와 접근 권한을 확인해주세요.",
+    CHATGPT_MODEL_UNAVAILABLE: "선택한 모델이 계정 또는 현재 Pi SDK에서 지원되지 않습니다. 모델 목록을 다시 불러오세요.",
+    CHATGPT_LOGIN_NOT_FOUND: "로그인 요청이 만료됐거나 서버가 재시작됐습니다. 다시 로그인해주세요.",
+    CHATGPT_LOGIN_NOT_WAITING: "이 로그인 요청은 주소 입력을 기다리고 있지 않습니다. 현재 로그인 상태를 확인하세요.",
+    PROVIDER_BUSY: "진행 중인 작업이 끝난 뒤 모델 연결을 변경해주세요.",
+    PROVIDER_HEADERS_UNAVAILABLE: "사내 인증 헤더의 환경변수가 없거나 올바르지 않습니다. 서버 설정을 확인하세요.",
+    WORKSPACE_BUSY: "같은 저장소에서 다른 작업이 진행 중입니다. 완료하거나 중단한 뒤 요청하세요.",
+    STREAM_INTERRUPTED: "실행 화면과 연결이 끊겼습니다. 서버의 작업 상태를 다시 확인하세요. 같은 요청을 바로 재전송하지 마세요.",
+    SETUP_BUSY: "이전 모델 연결 작업이나 로그인이 끝난 뒤 다시 시도해주세요.",
     OUTPUT_LIMIT: "출력 한도로 수정 명령이 중단됐습니다. 이미 저장된 변경은 유지됩니다. 요청을 나누거나 출력 한도와 실행 시간을 조정하세요.",
     EMPTY_RESPONSE: "모델이 표시할 답변을 보내지 않았습니다. 출력 한도와 모델의 추론 설정을 확인하세요.",
     RUN_TIMEOUT: "실행 시간이 초과됐습니다. 저장된 변경을 확인하고 이어서 요청하거나 실행 시간을 늘리세요.",
+    PROVIDER_IDLE_TIMEOUT: "모델 서버의 응답 스트림이 멈췄습니다. 저장된 변경과 서버 상태를 확인한 뒤 이어서 요청하세요.",
+    PROVIDER_RETRY_EXHAUSTED: "일시적 모델 오류의 재시도 한도에 도달했습니다. 모델 서버 상태를 확인하세요.",
+    COMPACTION_NO_PROGRESS: "대화 압축 후 문맥이 줄지 않아 반복을 중단했습니다. 기존 대화를 확인하고 요약해서 이어가세요.",
     UI_REVISION_CONFLICT: "화면이 다른 작업에서 변경됐습니다. 현재 화면을 다시 읽고 수정하도록 요청하세요.",
+    WORKSPACE_REVISION_CONFLICT: "파일이 다른 작업에서 변경됐습니다. 새로고침 후 변경 내역을 다시 확인하세요.",
+    INVALID_CHECKPOINT: "이 작업 공간에서 사용할 수 없는 변경 기준입니다. 실행 기록을 새로고침하세요.",
+    GIT_OPERATION_FAILED: "파일 변경 이력을 처리하지 못했습니다. 현재 파일과 Git 이력 상태를 확인하세요.",
     COMPACTION_FAILED: "대화 압축에 실패했습니다. 기존 대화는 유지됩니다. 모델 상태와 출력 한도를 확인하세요.",
     HANDOFF_TOO_LARGE: "인계할 맥락이 아직 큽니다. 작업을 정리한 뒤 다시 시도하세요. 기존 대화는 유지됩니다.",
     NOTHING_TO_COMPACT: "아직 압축할 대화가 없습니다.",
     PROVIDER_TEST_OUTPUT_LIMIT: "서버에는 연결됐지만 연결 테스트 응답이 출력 한도에 도달했습니다.",
     PROVIDER_TEST_TIMEOUT: "연결 테스트가 시간 내에 끝나지 않았습니다. 모델 로딩 상태를 확인하세요.",
     TOOL_FAILED: "도구 실행에 실패했습니다. 현재 파일과 실행 기록을 확인하고 다시 요청하세요.",
+    EFFECT_STATE_UNKNOWN: "이전 변경의 적용 여부를 확인할 수 없어 추가 변경을 막았습니다. 실행 기록과 실제 대상을 확인한 뒤 복구하세요.",
+    TOOL_REPLAY_BLOCKED: "같은 실행에서 이미 적용한 변경의 중복 호출을 막았습니다. 현재 상태를 읽고 남은 작업을 요청하세요.",
+    EFFECT_PERSISTENCE_FAILED: "변경 실행 기록을 저장하지 못했습니다. 저장소와 실제 변경 상태를 확인하세요.",
+    TOKEN_BUDGET: "이 실행의 토큰 예산에 도달했습니다. 현재 변경을 확인하고 요청을 나누세요.",
+    COST_BUDGET: "이 실행의 설정된 비용 예산에 도달했습니다.",
+    USAGE_UNAVAILABLE: "사용량을 확인할 수 없어 설정된 실행 예산을 적용할 수 없습니다.",
+    WORKSPACE_OPERATION_FAILED: "작업 공간의 도구 실행에 실패했습니다. 현재 파일과 실행 기록을 확인하세요.",
+    TEST_FAILED: "테스트가 실패했습니다. 실패 내용을 확인하고 수정한 뒤 같은 테스트를 다시 실행하세요.",
+    UI_EDIT_MATCH_REQUIRED: "수정할 문구가 없거나 여러 곳에 있습니다. 현재 화면을 다시 읽고 수정 위치를 지정하도록 요청하세요.",
+    PERSISTENCE_FAILED: "실행 상태를 저장하지 못했습니다. 현재 변경을 확인하고 저장소 문제를 해결한 뒤 재개하세요.",
     SESSION_RUN_LIMIT: "이 대화의 실행 횟수 한도에 도달했습니다. ‘요약해서 이어가기’를 사용하세요.",
     CANCELLED: "작업을 중단했습니다. 이미 저장된 변경은 유지됩니다.",
   };

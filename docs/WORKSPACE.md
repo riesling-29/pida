@@ -1,5 +1,7 @@
 # Pida workspace — install, configure, extend, reuse
 
+For unreleased stabilization, owned execution exports (`pida runs` / `pida export`), pending-effect recovery, optional usage limits and the five-case real-model acceptance runner, see [EXECUTION-READINESS.md](EXECUTION-READINESS.md). The delivery branch is still a draft; its test results are separated from real-model/Windows acceptance.
+
 Pida 0.6 provides a local agent workspace around the same embedded Pi runtime. It includes a CLI, approved tool directory, saved conversations and a web UI. Git and Node.js 22.19+ are required for the default workbench. npm registry publication has not been performed.
 
 ## Start from the repository
@@ -12,6 +14,8 @@ npm run pida -- setup ./my-agent
 ```
 
 These commands work with npm in PowerShell as well as a Unix shell. The npm `pida` script builds the TypeScript source before invoking the CLI. `npm start` uses that build. No LLM key is needed for the mock demonstration.
+
+The source checkout and agent workspace may be different directories. If the checkout is `D:\pida` and the configuration is `D:\pida\my-agent\pida.config.json`, run `npm start -- .\my-agent --open` from the checkout. Plain `npm start` searches the current directory; it does not discover a nested agent automatically. Startup and `pida doctor <directory>` display the selected workspace. Its resolved root is also the Pi session's working directory, including restored sessions; this does not expand workbench file permissions.
 
 In the UI, select **새 대화**, enter `LOT-001의 상태를 알려줘`, and send. The result is synthetic. Ctrl+C stops the server; restarting and opening the UI restores the saved conversation list. Clicking a conversation reopens its Pi history.
 
@@ -115,7 +119,7 @@ Native keys use separate `<stateDir>/provider-key-<providerId>.json` files with 
 
 `GET /v1/provider` returns a secret-free `catalog` with names, key status and bundled model metadata. `POST /v1/provider/models` accepts `{ "kind": "native", "providerId": "google" }` without a key and returns catalog IDs; this is not account-specific discovery. Apply/test accepts `kind`, `providerId`, `modelId`, `apiKey` only for native providers, rejecting endpoint overrides. Unknown providers/models fail closed. Existing endpoint configurations remain supported unchanged.
 
-The local Ollama preset is `http://localhost:11434/v1`, keyless Chat Completions. Neither local-server preset starts or installs a model server. `localhost` refers to the machine running Pida. Subscription OAuth, IAM/ADC and Azure deployment configuration are not part of this release's setup flow.
+The local Ollama preset is `http://localhost:11434/v1`, keyless Chat Completions. Neither local-server preset starts or installs a model server. `localhost` refers to the machine running Pida. OpenAI ChatGPT subscription login is available as an explicit authentication choice; see [CHATGPT-AUTH.md](CHATGPT-AUTH.md). Other subscription OAuth, IAM/ADC and Azure deployment configuration remain outside the setup flow.
 
 ## Package-manager commands
 

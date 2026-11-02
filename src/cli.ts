@@ -3,18 +3,23 @@ import { once } from "node:events";
 import { resolve, join } from "node:path";
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline/promises";
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, writeFileSync, mkdirSync, lstatSync } from "node:fs";
 import { stdin, stdout } from "node:process";
 import {
   createWorkspace,
   initWorkspace,
   readConfig,
+  validateConfig,
   listToolFiles,
   setToolEnabled,
   workspaceEnvironment,
 } from "./workspace.js";
 import { nativeProviderCatalog } from "./provider-catalog.js";
-import { unlockStore } from "./storage.js";
+import { unlockWorkspaceState } from "./workspace-unlock.js";
+import { PidaClient } from "./client.js";
+import { discoverPrograms, createManifest } from "./program-catalog.js";
+import { inspectProgramProxy } from "./program-proxy.js";
+import { savePrivate } from "./private-state.js";
 
 const help = `Pida — reusable local agent workspace
 
@@ -24,11 +29,23 @@ const help = `Pida — reusable local agent workspace
   pida start [directory] [--open]        Serve web UI and API; save conversations
   pida open [directory]                 Open the UI with local authentication
   pida token [directory]                Explicitly print the local UI token
+  pida programs scan ROOT              Discover declared repository programs without execution
+  pida programs draft ROOT ID [dir]    Write a callable proxy contract for a discovered candidate
+  pida programs enable ROOT FILE [dir] Pin a host-trusted program and grant its tool permission
+  pida programs disable ID [dir]       Disable a registered proxy (restart required)
   pida tools [directory]                List tool files without importing them
   pida tools enable FILE [directory]    Approve a module; restart to load
   pida tools disable FILE [directory]   Disable a module; restart to unload
   pida doctor [directory]               Validate config, credentials and module paths
+  pida runs SESSION [directory]         List captured run/operation IDs from a running server
+  pida export SESSION RUN [directory] [--jsonl]  Export an owned run bundle or JSONL
+  pida recovery SESSION [dir]          Inspect main-session unknown effects
+  pida recovery resolve SESSION EFFECT applied|not_applied [dir]
+                                      Record an inspected effect outcome; never replay it
   pida unlock [directory]               Clear a lock only if its local process is gone
+  pida browser enable [directory]       Probe Chromium, then enable isolated UI checks
+  pida project enable ROOT [directory] [--trusted-host]  Enable Pi project tools; flag also enables host shell
+  pida project disable [directory]      Disable project tools (restart required)
 
 Default directory: current working directory. Requires Node 22.19+.
 The default mock demonstrates LOT-001/LOT-002; it is not a language model.
@@ -87,10 +104,15 @@ async function configure(directory: string) {
       const previous =
         config.provider.kind === "endpoint" ? config.provider : undefined;
       const api = await ask("Protocol", previous?.api ?? "openai-completions");
-      const baseUrl = await ask(
+      const enteredUrl = await ask(
         "Base URL",
         previous?.baseUrl ?? "http://localhost:1234/v1",
       );
+      const normalizeUrl = (value: string) => new URL(value.trim()).href
+        .replace(/\/$/, "")
+        .replace(/\/(chat\/completions|responses|messages)$/, "");
+      const baseUrl = normalizeUrl(enteredUrl);
+      const sameEndpoint = previous?.api === api && normalizeUrl(previous.baseUrl) === baseUrl;
       const modelId = await ask(
         "Exact model/deployment ID",
         previous?.modelId ?? "your-model-id",
@@ -123,6 +145,9 @@ async function configure(directory: string) {
         maxTokens,
         apiKeyEnv,
         allowInsecureHttp,
+        ...(sameEndpoint && previous?.authMode ? { authMode: previous.authMode } : {}),
+        ...(sameEndpoint && previous?.headersEnv ? { headersEnv: previous.headersEnv } : {}),
+        ...(sameEndpoint && previous?.compat ? { compat: previous.compat } : {}),
       };
     } else {
       const selected = catalog.find(p => p.id === mode);
@@ -192,14 +217,14 @@ async function startWorkspace(
     if (closing) return;
     closing = true;
     app.server.close();
-    await app.runtime.close();
+    await app.close();
     app.server.closeAllConnections();
   };
   try {
     app.server.listen(app.config.port, "127.0.0.1");
     await once(app.server, "listening");
   } catch (error) {
-    await app.runtime.close();
+    await app.close();
     throw error;
   }
   process.once("SIGINT", () => {
@@ -209,7 +234,7 @@ async function startWorkspace(
     void stop();
   });
   console.log(
-    `Pida ready: http://127.0.0.1:${app.config.port}\nProvider: ${app.config.provider.kind} · conversations saved locally\nUse pida open to sign in, or pida token for manual sign-in. Ctrl+C stops the server.`,
+    `Pida ready: http://127.0.0.1:${app.config.port}\nWorkspace: ${directory}\nProvider: ${app.config.provider.kind} · conversations saved locally\nUse pida open "${directory}" to sign in, or pida token "${directory}" for manual sign-in. Ctrl+C stops the server.`,
   );
   if (open)
     await openBrowser(directory, setup).catch((e) => console.error(e.message));
@@ -223,6 +248,53 @@ async function main() {
   }
   const directory = resolve(args.find((a) => !a.startsWith("--")) ?? ".");
   switch (command) {
+    case "browser": {
+      if (args[0] !== "enable") throw new Error("Use pida browser enable [workspace-directory].");
+      const selected = resolve(args[1] ?? "."), config = readConfig(selected);
+      const browserExecutable = workspaceEnvironment(selected).PIDA_BROWSER_EXECUTABLE;
+      if (browserExecutable) process.env.PIDA_BROWSER_EXECUTABLE = browserExecutable;
+      const { checkUi } = await import("./ui-check.js");
+      const result = await checkUi("<!doctype html><html><body>Pida browser ready</body></html>", [], new AbortController().signal);
+      if (!result.ok) throw new Error(`${result.error ?? "UI_CHECK_FAILED"}: install Chromium with npx playwright install chromium, or set PIDA_BROWSER_EXECUTABLE to an existing browser. Configuration was not changed.`);
+      config.browserChecks = true;
+      validateConfig(config, selected);
+      writeFileSync(join(selected, "pida.config.json"), JSON.stringify(config, null, 2) + "\n");
+      console.log("Isolated browser probe passed; browserChecks enabled. Restart Pida to register ui_check.");
+      return;
+    }
+    case "project": {
+      const enable = args[0] === "enable";
+      if (!enable && args[0] !== "disable") throw new Error("Use pida project enable ROOT [workspace] [--trusted-host], or pida project disable [workspace].");
+      if (enable && (!args[1] || args[1].startsWith("--"))) throw new Error("Supply the project root directory.");
+      const candidate = args[enable ? 2 : 1];
+      const selected = resolve(candidate && !candidate.startsWith("--") ? candidate : "."), config = readConfig(selected);
+      config.permissions = config.permissions.filter(p => !["project:read", "project:write", "project:execute"].includes(p));
+      if (enable) {
+        const trustedHost = args.includes("--trusted-host");
+        config.project = { enabled: true, root: resolve(args[1]!), trustedHost, timeoutSeconds: 120 };
+        config.permissions.push("project:read", "project:write", ...(trustedHost ? ["project:execute"] : []));
+      } else delete config.project;
+      validateConfig(config, selected);
+      writeFileSync(join(selected, "pida.config.json"), JSON.stringify(config, null, 2) + "\n");
+      console.log(enable ? `Project tools enabled: ${config.project!.root}\n${config.project!.trustedHost ? "Host shell enabled with your OS account privileges; this is not a sandbox." : "File tools only; host shell disabled."}\nRestart Pida. Workbench checkpoints do not restore project files.` : "Project tools disabled. Restart Pida.");
+      return;
+    }
+    case "runs":
+    case "export": {
+      const sessionId = args[0], runId = command === "export" ? args[1] : undefined;
+      if (!sessionId || (command === "export" && !runId)) throw new Error("Supply session ID and, for export, run ID.");
+      const selected = resolve(args[command === "export" ? 2 : 1]?.startsWith("--") ? "." : args[command === "export" ? 2 : 1] ?? ".");
+      const config = readConfig(selected), token = workspaceEnvironment(selected).PIDA_API_TOKEN;
+      if (!token) throw new Error("Missing local token; run pida doctor.");
+      const client = new PidaClient({ baseUrl: `http://127.0.0.1:${config.port}`, token: () => token });
+      if (command === "runs") console.log(JSON.stringify(await client.listRuns(sessionId), null, 2));
+      else if (args.includes("--jsonl")) {
+        const output = await client.exportRunJsonl(sessionId, runId!);
+        process.stdout.write(output.jsonl);
+        if (!output.complete) { console.error("OBSERVATION_INCOMPLETE: export is partial; inspect the JSON bundle."); process.exitCode = 2; }
+      } else console.log(JSON.stringify(await client.exportRun(sessionId, runId!), null, 2));
+      return;
+    }
     case "init":
       initWorkspace(directory);
       console.log(
@@ -250,8 +322,54 @@ async function main() {
     case "open":
       await openBrowser(directory);
       return;
+    case "recovery": {
+      const resolving = args[0] === "resolve", sessionId = args[resolving ? 1 : 0];
+      if (!sessionId) throw new Error("Supply the main session ID.");
+      const selected = resolve(args[resolving ? 4 : 1] ?? "."), config = readConfig(selected), env = workspaceEnvironment(selected);
+      if (!env.PIDA_API_TOKEN) throw new Error("Missing local application token.");
+      const client = new PidaClient({ baseUrl: `http://127.0.0.1:${config.port}`, token: () => env.PIDA_API_TOKEN! });
+      if (resolving) {
+        const id = args[2], state = args[3];
+        if (!id || !["applied", "not_applied"].includes(state ?? "")) throw new Error("Supply effect ID and inspected state applied or not_applied.");
+        console.log(JSON.stringify(await client.reconcileSession(sessionId, [{ id, state: state as "applied" | "not_applied" }]), null, 2));
+      } else console.log(JSON.stringify(await client.getRecovery(sessionId), null, 2));
+      return;
+    }
+    case "programs": {
+      const action = args[0];
+      if (action === "scan" && args[1]) { console.log(JSON.stringify(discoverPrograms(resolve(args[1])), null, 2)); return; }
+      if (action === "draft" && args[1] && args[2]) {
+        const source = resolve(args[1]), selected = resolve(args[3] ?? ".");
+        readConfig(selected);
+        const candidate = discoverPrograms(source).candidates.find(item => item.id === args[2]);
+        if (!candidate) throw new Error("PROGRAM_CANDIDATE_NOT_FOUND: scan the repository again.");
+        const manifest = createManifest(candidate), folder = join(selected, "programs");
+        if (existsSync(folder) && (!lstatSync(folder).isDirectory() || lstatSync(folder).isSymbolicLink())) throw new Error("PROGRAM_REGISTRY_UNSAFE");
+        mkdirSync(folder, { recursive: true, mode: 0o700 });
+        const file = join(folder, manifest.id + ".json");
+        writeFileSync(file, JSON.stringify(manifest, null, 2) + "\n", { flag: "wx", mode: 0o600 });
+        console.log(`Proxy contract saved: ${file}\nInspect the fixed command/input/output contract, then use programs enable with the source root and this file. No program was run or enabled.`); return;
+      }
+      if (action === "enable" && args[1] && args[2]) {
+        const source = resolve(args[1]), file = resolve(args[2]), selected = resolve(args[3] ?? "."), config = readConfig(selected);
+        const inspected = await inspectProgramProxy(source, file);
+        const registration = { id: inspected.manifest.id, enabled: true, root: source, manifest: file, approval: inspected.approval };
+        config.programs = [...(config.programs ?? []).filter(item => item.id !== registration.id), registration];
+        config.permissions = [...new Set([...config.permissions, `program:${registration.id}`])];
+        validateConfig(config, selected); savePrivate(join(selected, "pida.config.json"), config);
+        console.log(`Pinned program ${registration.id}; permission program:${registration.id}. Restart Pida to register the callable proxy. No program was run.`); return;
+      }
+      if (action === "disable" && args[1]) {
+        const selected = resolve(args[2] ?? "."), config = readConfig(selected), id = args[1];
+        const item = config.programs?.find(item => item.id === id);
+        if (!item) throw new Error("PROGRAM_NOT_FOUND");
+        item.enabled = false; config.permissions = config.permissions.filter(permission => permission !== `program:${id}`);
+        savePrivate(join(selected, "pida.config.json"), config); console.log("Program proxy disabled. Restart Pida."); return;
+      }
+      throw new Error("Use programs scan ROOT, draft ROOT ID [workspace], enable ROOT MANIFEST [workspace], or disable ID [workspace].");
+    }
     case "unlock":
-      unlockStore(join(directory, readConfig(directory).stateDir));
+      unlockWorkspaceState(join(directory, readConfig(directory).stateDir));
       console.log("No stale lock remains.");
       return;
     case "tools": {

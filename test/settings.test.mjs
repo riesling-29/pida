@@ -22,7 +22,7 @@ async function fixture(t) {
   initWorkspace(dir);
   const calls = [];
   const endpoint = createServer(async (req, res) => {
-    calls.push({ path: req.url, auth: req.headers.authorization });
+    calls.push({ path: req.url, auth: req.headers.authorization, gateway: req.headers["x-company-gateway"] });
     if (req.url === "/v1/models") {
       res.setHeader("content-type", "application/json");
       res.end(
@@ -41,6 +41,7 @@ async function fixture(t) {
     for await (const c of req) raw += c;
     const body = JSON.parse(raw);
     calls.at(-1).maxOutput = body.max_completion_tokens;
+    calls.at(-1).body = body;
     if (body.model === "reasoning-probe") assert.ok(body.max_completion_tokens >= 1024, "reasoning probe needs room for its final answer");
     if (body.model === "fail") {
       res.writeHead(401);
@@ -237,4 +238,61 @@ test("reasoning-capable local model probe reserves enough output for a final ans
   const { settings, draft, calls } = await fixture(t);
   assert.equal((await settings.test({ ...draft, modelId: "reasoning-probe", maxTokens: 4096 })).ok, true);
   assert.equal(calls.at(-1).maxOutput, 1024);
+});
+
+test("host header references and compatibility survive same-target settings and never follow destination changes", async t => {
+  const { dir, settings, draft, calls } = await fixture(t);
+  const compat = { maxTokensField: "max_tokens", supportsStore: false, supportsUsageInStreaming: false };
+  const headersEnv = { "X-Company-Gateway": "PIDA_TEST_GATEWAY" };
+  const config = readConfig(dir);
+  config.provider = { ...draft, api: "openai-completions", apiKeyEnv: "PIDA_LLM_API_KEY", contextWindow: 8192, maxTokens: 1024, compat, headersEnv };
+  await writeFile(join(dir, "pida.config.json"), JSON.stringify(config));
+  const existingEnv = await readFile(join(dir, ".env"), "utf8");
+  await writeFile(join(dir, ".env"), existingEnv + '\nPIDA_TEST_GATEWAY="synthetic-company-secret"\n');
+  assert.deepEqual((await settings.models(draft)).models, ["local-model"]);
+  assert.equal(calls.at(-1).gateway, "synthetic-company-secret");
+  await settings.apply(draft);
+  assert.deepEqual(readConfig(dir).provider.compat, compat);
+  assert.deepEqual(readConfig(dir).provider.headersEnv, headersEnv);
+  assert.equal(calls.at(-1).body.max_tokens, 1024);
+  assert.equal(calls.at(-1).gateway, "synthetic-company-secret");
+  assert.equal(JSON.stringify(settings.get()).includes("synthetic-company-secret"), false);
+  await assert.rejects(settings.models({ ...draft, headersEnv: { "X-Steal": "ANY_SERVER_SECRET" } }), /UNKNOWN_FIELD/);
+  await settings.apply({ ...draft, baseUrl: draft.baseUrl.replace("/v1", "/other") });
+  assert.equal(calls.at(-1).gateway, undefined);
+  assert.equal(calls.at(-1).body.max_completion_tokens, 1024);
+  assert.equal(readConfig(dir).provider.headersEnv, undefined);
+  assert.equal(readConfig(dir).provider.compat, undefined);
+});
+
+test("unavailable host header credentials fail without values and do not issue a request", async t => {
+  const { dir, settings, draft, calls } = await fixture(t);
+  const config = readConfig(dir);
+  config.provider = { ...draft, api: "openai-completions", apiKeyEnv: "PIDA_LLM_API_KEY", contextWindow: 8192, maxTokens: 1024,
+    headersEnv: { "X-Company-Gateway": "PIDA_TEST_MISSING_GATEWAY" } };
+  await writeFile(join(dir, "pida.config.json"), JSON.stringify(config));
+  await assert.rejects(settings.models(draft), /PROVIDER_HEADERS_UNAVAILABLE/);
+  await assert.rejects(settings.apply(draft), /PROVIDER_HEADERS_UNAVAILABLE/);
+  assert.equal(calls.length, 0);
+});
+
+test("model capability settings survive unchanged selection and reset when the model or target changes", async t => {
+  const { dir, settings, draft, calls } = await fixture(t);
+  const capabilities = { reasoning: true, input: ["text", "image"], thinkingLevel: "high", thinkingLevelMap: { high: "intensive", xhigh: null } };
+  await settings.apply({ ...draft, ...capabilities });
+  assert.equal(calls.at(-1).body.reasoning_effort, "intensive");
+  await settings.apply(draft);
+  for (const [key, value] of Object.entries(capabilities)) assert.deepEqual(readConfig(dir).provider[key], value);
+  const before = calls.length;
+  await assert.rejects(settings.test({ ...draft, thinkingLevel: "xhigh" }), /INVALID_PROVIDER/);
+  assert.equal(calls.length, before);
+  await settings.apply({ ...draft, reasoning: false });
+  assert.equal(readConfig(dir).provider.thinkingLevel, "off"); assert.equal(readConfig(dir).provider.thinkingLevelMap, undefined);
+  await settings.apply({ ...draft, ...capabilities });
+  await settings.apply({ ...draft, modelId: "other-model" });
+  for (const key of Object.keys(capabilities)) assert.equal(readConfig(dir).provider[key], undefined);
+  assert.equal(calls.at(-1).body.reasoning_effort, undefined);
+  await settings.apply({ ...draft, ...capabilities });
+  await settings.apply({ ...draft, baseUrl: draft.baseUrl.replace("/v1", "/other") });
+  for (const key of Object.keys(capabilities)) assert.equal(readConfig(dir).provider[key], undefined);
 });

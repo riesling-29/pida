@@ -47,7 +47,8 @@ test("actual Pi loop writes, fails a test, repairs with Pi edit, retests, builds
   assert.ok(observedFailure && observedPass);
   assert.match((await workbench.read(owner, "artifacts/dashboard.html")).content, /Total: 60/);
   assert.deepEqual((await workbench.status(owner)).skills.map(s => s.name), ["sales-dashboard"]);
-  assert.equal(runtime.getTrace(sessionId, owner).filter(e => e.type === "tool_completed").length, 8);
+  assert.equal(runtime.getTrace(sessionId, owner).filter(e => e.type === "tool_completed").length, 7);
+  assert.deepEqual(runtime.getTrace(sessionId, owner).filter(e => e.type === "tool_failed").map(e => [e.toolName, e.code]), [["workspace_test", "TEST_FAILED"]]);
   await runtime.close();
   const resumed = new PidaWorkbench(dir);
   await resumed.write(owner, "total.js", "throw new Error('current file is broken')");

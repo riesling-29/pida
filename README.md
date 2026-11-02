@@ -2,13 +2,25 @@
 
 An embedded, reusable **Pi-based agent harness** for applications. Bring the package into a host backend, register business tools, and connect a web or app interface through the client SDK. The host does not implement the agent loop.
 
-**Workspace MVP 0.6.1:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces now persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call business authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+**Product goals (2026-11-02):** a reusable core for different agent forms, plus a ready-to-use home harness for coding and personal-assistant work that can replace the user's Codex/OpenClaw workflows. Tools, channels and private provider connectors must be attachable without editing the core. These are delivery requirements, not claims of current feature parity. See [core and home-harness requirements, missing capabilities and acceptance gates](docs/CORE-AND-HOME-HARNESS.md).
+
+**Workspace 0.8.3:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+
+New in 0.8: **persistent agents with independent sessions/workbenches, a durable job queue, three-tier sourced memory, bounded asynchronous delegation, real project instructions/skills, guarded steering, host private-provider connectors and project files/Git changes in the UI**. Restart recovery does not replay interrupted work. See the [patch plan](docs/PERSISTENT-CORE-PATCH-PLAN.md), [usage and boundaries](docs/PERSISTENT-AGENTS.md), [private connectors](docs/PRIVATE-CONNECTORS.md) and [validation record](docs/PERSISTENT-CORE-VALIDATION.md). Repository program discovery and callable Node/npm/native program proxies are also included; see [program proxy usage](docs/PROGRAM-PROXIES.md). These are foundations for the home harness; PTY/sandbox executors, messaging/schedules and full Codex/OpenClaw parity are not claimed.
+
+New in 0.7: live Studio activity and elapsed time, reconnectable server-owned runs, richer isolated browser checks, opt-in existing-project coding with Pi tools, and company endpoint compatibility/header settings. See the [MAGI source audit and patch decisions](docs/MAGI-ADOPTION-PATCH-PLAN.md), [project coding](docs/PROJECT-CODING.md), [browser checks](docs/UI-CHECKS.md) and [LightLLM/company API setup](docs/COMPANY-ENDPOINTS.md). Host project tools do not turn the service preview into a React/dev-server preview; project files are outside workbench restore and artifact verification.
 
 The lot-status tool is **replaceable synthetic sample data**, not a manufacturing-specific restriction. The default mock is deterministic and not an intelligent model.
 
 New workspaces include a practical **work → test → repair → save/reuse** profile. Pi handles file reads/writes/edits and SKILL.md discovery; QuickJS runs bounded JavaScript in WASM; Git checkpoints changes. The web UI exposes files, static HTML previews, downloads and saved skills. Connect a real model to ask Pida to build artifacts. The default mock only demonstrates lot lookup. See [workbench usage and limits](docs/WORKBENCH.md).
 
-New in 0.6: **Service / Developer–Operator / Agent workspace** tabs. Choose a sidebar, three-column, top-navigation or blank template, then ask the connected Pida model to edit the service UI. Both views load the same saved HTML. Inline JavaScript interactions run in a separate opaque-origin frame; network/backend access and role management are not included. See [UI Studio](docs/UI-STUDIO.md).
+New in 0.6: **Service / Developer–Operator / Agent workspace** tabs. Choose a sidebar, three-column, top-navigation or blank template, then ask the connected Pida model to edit the service UI. Both views load the same saved HTML. Inline JavaScript interactions run in a separate opaque-origin frame; network/backend access and role management are not included. The developer view also supports file work without a UI template, real Git changes, revision-bound check results and guarded file restoration. See [UI Studio](docs/UI-STUDIO.md).
+
+New in 0.8.1: live steering/follow-up controls, private command/result details, explicit model thinking capabilities and attempt/cache-usage metadata, plus retained large program output. See the [DeepSeek source review](docs/DEEPSEEK-HARNESS-REVIEW.md) and [versioned implementation/validation record](docs/DEEPSEEK-PATCH-VALIDATION.md).
+
+New in 0.8.2: bounded Pi-owned model recovery, stream-idle detection, compaction progress guards, sourced memory snapshots/handoff lineage, scoped extension factories, named presets and managed MCP. Model settings includes the actual composition inventory. See [extensions and presets](docs/EXTENSIONS.md), [MCP configuration](docs/MANAGED-MCP.md) and the validation record above.
+
+New in 0.8.3: optional official Pi Codemode with authorized nested calls, managed long-running project commands with independent output cursors and cancellation/recovery UI, and shared-project mutation guards. See [tool composition](docs/CODEMODE.md) and [managed commands and exact executor limits](docs/COMMANDS.md). Interactive PTY and an enforcing OS sandbox are not supplied by the default backend.
 
 ## Quick start — choose npm, pnpm or bun
 
@@ -33,7 +45,7 @@ In the browser:
 
 **LM Studio**, **Ollama**, and **사내 API · 다른 서버** remain separate choices. Local presets supply the URL and keyless mode; custom connections expose protocol and token limits under advanced settings. Their model-list button queries the chosen server. Native service catalogs come from pinned Pi 1.2.0, not a live account entitlement check; newer models require a Pi update or a custom connection.
 
-Native API keys are stored separately per provider, server-side, with private file permissions; switching back can reuse that provider's key. Keys are never returned by the settings API. **Subscription OAuth login (ChatGPT, Claude, Copilot, etc.) and AWS/Azure/Vertex credential flows are not implemented in this setup UI.** They are not interchangeable with API keys.
+Native API keys are stored separately per provider, server-side, with private file permissions; switching back can reuse that provider's key. Keys are never returned by the settings API. **OpenAI also supports ChatGPT account login** through Pi's official Sign in with ChatGPT flow. Select **OpenAI → 인증 방식 → ChatGPT 계정 · 구독 사용**, log in, select an account-supported model and apply. Credentials refresh server-side; missing subscription auth never falls back to an API key. See [ChatGPT setup, patch scope and actual validation](docs/CHATGPT-AUTH.md). Claude/Copilot subscription login and AWS/Azure/Vertex credential flows remain outside this setup UI.
 
 You can also select **데모만 사용** and try `LOT-001의 상태를 알려줘` without LLM credentials. The mock is deterministic and cannot choose arbitrary custom tools.
 
@@ -50,7 +62,7 @@ The package has **not** been published to npm. Create and install a local packag
 ```sh
 npm pack
 # Run from your host application directory:
-npm install /absolute/path/to/pida-core-0.6.1.tgz
+npm install /absolute/path/to/pida-core-0.8.3.tgz
 ```
 
 Entry points separate standalone configuration, server code and browser code:

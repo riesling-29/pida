@@ -1,5 +1,7 @@
 # Architecture decision — Pida-core 0.5
 
+**2026-10-28 strategy update:** [HARNESS-ADOPTION-STRATEGY.md](HARNESS-ADOPTION-STRATEGY.md) governs future Pida investment and supersedes the proposed in-house coding-assistant/TUI expansion. The architecture below describes the existing Pi implementation; it does not require every future execution backend to use Pi internally. External harness integration and automated upstream adoption are planned, not implemented. Schumpeter and Memory Substrate are external context, not development scope for this workstream.
+
 Updated 2026-10-17 KST. Implements the user's Pida Initial Engineering Task, superseding the OpenCode-first assumption of the attached July Schumpeter baseline for this repository only.
 
 ## Boundaries
@@ -66,6 +68,6 @@ Source build/test scripts invoke Node and the installed compiler directly instea
 
 ## Native provider selection in 0.5
 
-`provider-catalog.ts` imports eight official Pi provider factories. Pida maintains only an explicit selection allowlist and credential-variable mapping, not model catalogs or provider protocols. Native models retain Pi metadata and streaming dispatch, including OpenRouter's per-model API routing. The auth wrapper invokes Pi API-key resolution with the workspace-scoped key and no fallback to ambient auth files or other credentials. OAuth is not advertised by this wrapper.
+`provider-catalog.ts` imports eight official Pi provider factories. Pida maintains only an explicit selection allowlist and credential-variable mapping, not model catalogs or provider protocols. Native models retain Pi metadata and streaming dispatch, including OpenRouter's per-model API routing. The auth wrapper invokes Pi API-key resolution with the workspace-scoped key and no fallback to ambient auth files or other credentials. OpenAI can alternatively select the separate ChatGPT OAuth wrapper, which accepts only the workspace CredentialStore and disables API-key fallback. Pi owns login/refresh and Responses transport; a small `onPayload` adapter supplies the current ChatGPT tool-namespace contract. See [CHATGPT-AUTH.md](CHATGPT-AUTH.md).
 
 Native catalog discovery is offline and requires no key. Provider settings remain administrator-only. Native request bodies cannot override URLs, protocol or token metadata. Native saved keys are isolated by provider ID, while existing custom keys retain their URL/protocol binding. Applying any provider still requires a successful no-tool probe and an idle runtime. No account entitlements or live-service availability are inferred from a bundled catalog entry.

@@ -1,0 +1,83 @@
+{
+  "contract": "pida-native-draft",
+  "schumpeter_contract_confirmed": false,
+  "model": "scripted-faux",
+  "fixtures": [
+    {
+      "file": "scoped-verification.json",
+      "valid": true,
+      "issues": [],
+      "duplicateEventIds": []
+    },
+    {
+      "file": "stale-verification.json",
+      "valid": true,
+      "issues": [],
+      "duplicateEventIds": []
+    },
+    {
+      "file": "claim-without-evidence.json",
+      "valid": true,
+      "issues": [],
+      "duplicateEventIds": []
+    },
+    {
+      "file": "cancelled.json",
+      "valid": true,
+      "issues": [],
+      "duplicateEventIds": []
+    },
+    {
+      "file": "timeout.json",
+      "valid": true,
+      "issues": [],
+      "duplicateEventIds": []
+    },
+    {
+      "file": "output-retry.json",
+      "valid": true,
+      "issues": [],
+      "duplicateEventIds": []
+    },
+    {
+      "file": "duplicate-delivery.json",
+      "valid": true,
+      "issues": [],
+      "duplicateEventIds": [
+        "cb6fd981-e7a2-4c7e-86f4-843b0570ae00"
+      ]
+    },
+    {
+      "file": "sequence-gap.json",
+      "valid": false,
+      "issues": [
+        "SEQUENCE_GAP"
+      ],
+      "duplicateEventIds": []
+    },
+    {
+      "file": "tampered-digest.json",
+      "valid": false,
+      "issues": [
+        "PAYLOAD_DIGEST_MISMATCH"
+      ],
+      "duplicateEventIds": []
+    },
+    {
+      "file": "unsupported-verified-claim.json",
+      "valid": false,
+      "issues": [
+        "SCHEMA_INVALID"
+      ],
+      "duplicateEventIds": []
+    },
+    {
+      "file": "forbidden-payload-field.json",
+      "valid": false,
+      "issues": [
+        "SCHEMA_INVALID"
+      ],
+      "duplicateEventIds": []
+    }
+  ]
+}

@@ -1,3 +1,10 @@
+import type { ProgramRegistry } from "./program-registry.js";
+import type { CommandManager } from "./commands.js";
+import { compositionReport, type CompositionSnapshot } from "./composition.js";
+import type { AgentSupervisor } from "./agent-supervisor.js";
+import type { AgentMemoryStore } from "./agent-memory.js";
+import type { ProjectView } from "./project-view.js";
+import type { ProviderConnectorManifest } from "./provider-connector.js";
 import type { PidaWorkbench } from "./workbench.js";
 import {
   createServer,
@@ -13,6 +20,16 @@ import { PidaError, type PidaRuntime, type Principal } from "./runtime.js";
 export interface HttpOptions {
   runtime: PidaRuntime;
   workbench?: PidaWorkbench;
+  agents?: AgentSupervisor;
+  agentMemory?: (agentId: string) => AgentMemoryStore;
+  agentWorkbench?: (agentId: string) => PidaWorkbench;
+  projectView?: ProjectView;
+  programs?: ProgramRegistry;
+  /** Host-owned command handles. Starting a command is only available through guarded model tools. */
+  commands?: CommandManager;
+  connector?: ProviderConnectorManifest;
+  /** Host settings inventory, filtered/redacted at the HTTP boundary. */
+  getComposition?: () => CompositionSnapshot | Promise<CompositionSnapshot>;
   /** Optional local workspace administration; never enable for arbitrary tenant users. */
   providerSettings?: ProviderSettings;
   /** Verify a bearer token with the host identity service. Never trust body claims. */
@@ -69,6 +86,46 @@ function keys(value: Record<string, unknown>, allowed: string[]) {
     throw new PidaError("UNKNOWN_FIELD", 400);
 }
 
+/** Every caller first establishes runtime/session ownership. The manager then checks command permissions and ownership. */
+async function commandResponse(req: IncomingMessage, res: ServerResponse, manager: CommandManager | undefined, principal: Principal,
+  sessionId: string, commandId?: string, action?: string, runId?: string) {
+  if (!manager) throw new PidaError("COMMANDS_DISABLED", 404);
+  const query = new URL(req.url!, "http://pida.invalid").searchParams;
+  const allowed = !commandId ? [] : action === "wait" ? ["waitTimeoutMs"] : !action ? ["offset", "maxBytes"] : [];
+  for (const key of query.keys()) if (!allowed.includes(key)) throw new PidaError("COMMAND_ARGUMENT_INVALID", 400);
+  const integer = (key: string) => {
+    if (!query.has(key)) return undefined;
+    const value = query.get(key)!;
+    if (query.getAll(key).length !== 1 || !/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) throw new PidaError("COMMAND_ARGUMENT_INVALID", 400);
+    return Number(value);
+  };
+  // Agent jobs can reuse a session. Never read or mutate another job's command in that session.
+  if (runId !== undefined && commandId && !manager.list(principal, sessionId).some(command => command.id === commandId && command.runId === runId)) throw new PidaError("COMMAND_NOT_FOUND", 404);
+  if (!commandId && req.method === "GET") {
+    const commands = manager.list(principal, sessionId).filter(command => runId === undefined || command.runId === runId);
+    json(res, 200, { commands, capabilities: manager.capabilities(), permissions: { cancel: principal.permissions.includes("project:execute"), recover: principal.permissions.includes("project:execute") && principal.permissions.includes("pida:recover") } }); return;
+  }
+  if (commandId && !action && req.method === "GET") {
+    json(res, 200, manager.read(principal, sessionId, commandId, { offset: integer("offset"), maxBytes: integer("maxBytes") })); return;
+  }
+  if (commandId && action === "wait" && req.method === "GET") {
+    const controller = new AbortController(), disconnected = () => controller.abort();
+    res.once("close", disconnected);
+    try { const result = await manager.wait(principal, sessionId, commandId, integer("waitTimeoutMs"), controller.signal); if (!res.destroyed) json(res, 200, result); }
+    finally { res.off("close", disconnected); }
+    return;
+  }
+  if (commandId && action === "cancel" && req.method === "POST") {
+    keys(await body(req), []); json(res, 200, manager.cancel(principal, sessionId, commandId)); return;
+  }
+  if (commandId && action === "recovery" && req.method === "POST") {
+    const input = await body(req); keys(input, ["inspected"]);
+    if (input.inspected !== true) throw new PidaError("COMMAND_INSPECTION_REQUIRED", 400);
+    json(res, 200, { command: manager.acknowledgeRecovery(principal, sessionId, commandId) }); return;
+  }
+  throw new PidaError("METHOD_NOT_ALLOWED", 405);
+}
+
 export function createPidaServer(options: HttpOptions) {
   const { runtime } = options;
   const server = createServer(async (req, res) => {
@@ -115,7 +172,7 @@ export function createPidaServer(options: HttpOptions) {
       if (
         options.serveDemo &&
         req.method === "GET" &&
-        ["/", "/app.js", "/studio.js", "/style.css", "/pida-client.js"].includes(path)
+        ["/", "/app.js", "/studio.js", "/agents.js", "/run-state.js", "/run-input.js", "/run-details.js", "/commands.js", "/composition.js", "/style.css", "/pida-client.js"].includes(path)
       ) {
         const file = path === "/" ? "index.html" : path.slice(1);
         const contents = await readFile(
@@ -142,6 +199,122 @@ export function createPidaServer(options: HttpOptions) {
         throw new PidaError("UNAUTHORIZED", 401);
       const principal = await options.authenticate(auth.slice(7));
       if (!principal) throw new PidaError("UNAUTHORIZED", 401);
+      if (path === "/v1/composition") {
+        if (!principal.permissions.includes("pida:configure")) throw new PidaError("FORBIDDEN", 403);
+        if (req.method !== "GET") throw new PidaError("METHOD_NOT_ALLOWED", 405);
+        if (!options.getComposition) throw new PidaError("COMPOSITION_UNAVAILABLE", 404);
+        json(res, 200, compositionReport(await options.getComposition(), principal, options.agents?.list(principal).map(agent => agent.id) ?? [])); return;
+      }
+      if (path === "/v1/programs" && req.method === "GET") {
+        json(res, 200, options.programs?.list(principal) ?? { enabled: [] }); return;
+      }
+      if (path === "/v1/programs/draft" && req.method === "POST") {
+        if (!options.programs) throw new PidaError("PROGRAMS_UNAVAILABLE", 404);
+        const input = await body(req); keys(input, ["candidateId", "sourceDigest"]);
+        if (typeof input.candidateId !== "string" || typeof input.sourceDigest !== "string") throw new PidaError("INVALID_BODY", 400);
+        json(res, 200, options.programs.draft(principal, input.candidateId, input.sourceDigest)); return;
+      }
+      if (path === "/v1/project" || path.startsWith("/v1/project/")) {
+        if (!options.projectView) throw new PidaError("PROJECT_DISABLED", 404);
+        if (req.method !== "GET") throw new PidaError("METHOD_NOT_ALLOWED", 405);
+        const query = new URL(req.url!, "http://pida.invalid").searchParams;
+        if (path === "/v1/project") json(res, 200, { enabled: true, ...await options.projectView.list(principal, query.get("path") ?? ".") });
+        else if (path === "/v1/project/file") json(res, 200, await options.projectView.read(principal, query.get("path") ?? ""));
+        else if (path === "/v1/project/changes") json(res, 200, await options.projectView.changes(principal));
+        else throw new PidaError("NOT_FOUND", 404);
+        return;
+      }
+      if (path === "/v1/agents" || path.startsWith("/v1/agents/")) {
+        if (!principal.permissions.includes("pida:agents")) throw new PidaError("FORBIDDEN", 403);
+        const agents = options.agents;
+        if (!agents) throw new PidaError("AGENTS_DISABLED", 404);
+        if (path === "/v1/agents" && req.method === "GET") { json(res, 200, { agents: agents.list(principal) }); return; }
+        if (path === "/v1/agents" && req.method === "POST") {
+          const input = await body(req); keys(input, ["name", "role", "persona"]);
+          const agent = await agents.register(principal, input as any);
+          if (agent.persona && options.agentMemory) options.agentMemory(agent.id).revisePersona({ expectedRevision: null, text: agent.persona, sourceRefs: ["owner:registration"] });
+          json(res, 201, agent); return;
+        }
+        const route = /^\/v1\/agents\/([a-f0-9-]{36})(?:\/(.*))?$/.exec(path);
+        if (!route) throw new PidaError("NOT_FOUND", 404);
+        const agentId = route[1]!, action = route[2];
+        const agent = agents.get(agentId, principal);
+        if (!action && req.method === "GET") { json(res, 200, agent); return; }
+        if (action === "jobs" && req.method === "GET") { json(res, 200, { jobs: agents.jobs(agentId, principal) }); return; }
+        if (action === "jobs" && req.method === "POST") {
+          const input = await body(req); keys(input, ["input", "requestId", "parentJobId"]);
+          json(res, 202, await agents.enqueue(agentId, principal, input as any)); return;
+        }
+        if ((action === "pause" || action === "resume") && req.method === "POST") {
+          keys(await body(req), []);
+          if (action === "pause") await agents.pause(agentId, principal); else await agents.resume(agentId, principal);
+          json(res, 200, agents.get(agentId, principal)); return;
+        }
+        const jobCommands = /^jobs\/([a-f0-9-]{36})\/commands(?:\/(cmd_[a-f0-9]{32})(?:\/(wait|cancel|recovery))?)?$/.exec(action ?? "");
+        if (jobCommands) {
+          const job = agents.getJob(jobCommands[1]!, principal);
+          if (job.agentId !== agentId) throw new PidaError("NOT_FOUND", 404);
+          if (!job.sessionId || !job.runId) throw new PidaError("RUN_NOT_FOUND", 404);
+          // The supervisor already checked agent/job ownership. Command access must remain
+          // available even when rebuilding that agent's model runtime would fail.
+          await commandResponse(req, res, options.commands, principal, job.sessionId, jobCommands[2], jobCommands[3], job.runId); return;
+        }
+        const jobRoute = /^jobs\/([a-f0-9-]{36})(?:\/(cancel|steer|follow-up|export|recovery|tools))?$/.exec(action ?? "");
+        if (jobRoute) {
+          const job = agents.getJob(jobRoute[1]!, principal);
+          if (job.agentId !== agentId) throw new PidaError("NOT_FOUND", 404);
+          if (!jobRoute[2] && req.method === "GET") { json(res, 200, job); return; }
+          if (jobRoute[2] === "tools" && req.method === "GET") {
+            if (!job.sessionId) throw new PidaError("RUN_NOT_FOUND", 404);
+            const target = await agents.getRuntime(agentId, principal);
+            await target.resumeSession(job.sessionId, principal);
+            const detail = target.getSessionTools(job.sessionId, principal);
+            json(res, 200, { ...detail, items: detail.items.filter(item => item.runId === job.runId) }); return;
+          }
+          if (jobRoute[2] === "cancel" && req.method === "POST") { keys(await body(req), []); await agents.cancel(job.id, principal); json(res, 200, agents.getJob(job.id, principal)); return; }
+          if ((jobRoute[2] === "steer" || jobRoute[2] === "follow-up") && req.method === "POST") {
+            const input = await body(req); keys(input, ["text", "expectedRunId"]);
+            if (typeof input.text !== "string" || typeof input.expectedRunId !== "string" || !job.sessionId || job.status !== "running") throw new PidaError("RUN_NOT_ACTIVE", 409);
+            const target = await agents.getRuntime(agentId, principal);
+            json(res, 200, await (jobRoute[2] === "steer" ? target.steer(job.sessionId, principal, input.text, input.expectedRunId) : target.followUp(job.sessionId, principal, input.text, input.expectedRunId))); return;
+          }
+          if (jobRoute[2] === "export" && req.method === "GET") {
+            if (!job.sessionId || !job.runId) throw new PidaError("RUN_NOT_FOUND", 404);
+            json(res, 200, (await agents.getRuntime(agentId, principal)).exportRun(job.sessionId, job.runId, principal)); return;
+          }
+          if (jobRoute[2] === "recovery" && req.method === "GET") {
+            if (!job.sessionId) { json(res, 200, { sessionId: null, autoReplay: false, pendingEffects: [] }); return; }
+            json(res, 200, (await agents.getRuntime(agentId, principal)).getRecovery(job.sessionId, principal)); return;
+          }
+        }
+        if (action === "reconcile" && req.method === "POST") {
+          const input = await body(req); keys(input, ["inspected", "effects", "note"]);
+          await agents.reconcile(agentId, principal, input as any); json(res, 200, agents.get(agentId, principal)); return;
+        }
+        if (action === "memory" || action?.startsWith("memory/")) {
+          const store = options.agentMemory?.(agentId);
+          if (!store) throw new PidaError("MEMORY_UNAVAILABLE", 404);
+          if (action === "memory" && req.method === "GET") {
+            if (!principal.permissions.includes("agent:memory:read")) throw new PidaError("FORBIDDEN", 403);
+            json(res, 200, store.view()); return;
+          }
+          if (req.method !== "POST") throw new PidaError("METHOD_NOT_ALLOWED", 405);
+          if (!principal.permissions.includes("agent:memory:write")) throw new PidaError("FORBIDDEN", 403);
+          const input = await body(req, 131_072);
+          if (action === "memory/persona") json(res, 200, store.revisePersona(input as any));
+          else if (action === "memory/experiences") { keys(input, ["kind", "text", "sourceRefs", "supersedes"]); json(res, 201, store.remember({ ...input, authority: "owner" } as any)); }
+          else if (action === "memory/retract") json(res, 200, store.retractExperience(input as any));
+          else if (action === "memory/states") json(res, 201, store.transition(input as any));
+          else throw new PidaError("NOT_FOUND", 404);
+          return;
+        }
+        if ((action === "workbench" || action === "workbench/file") && req.method === "GET") {
+          const area = options.agentWorkbench?.(agentId);
+          if (!area) throw new PidaError("WORKBENCH_UNAVAILABLE", 404);
+          json(res, 200, action === "workbench" ? await area.status(principal) : await area.read(principal, new URL(req.url!, "http://pida.invalid").searchParams.get("path") ?? "")); return;
+        }
+        throw new PidaError("NOT_FOUND", 404);
+      }
       if (options.workbench && path === "/v1/studio" && req.method === "GET") {
         json(res, 200, await options.workbench.uiState(principal)); return;
       }
@@ -151,6 +324,23 @@ export function createPidaServer(options: HttpOptions) {
         json(res, 200, await options.workbench.uiTemplate(principal, input.templateId, input.expectedRevision)); return;
       }
       if (path.startsWith("/v1/workbench") && options.workbench) {
+        if (path === "/v1/workbench/checkpoint" && req.method === "POST") {
+          keys(await body(req), []);
+          json(res, 200, await options.workbench.captureCheckpoint(principal)); return;
+        }
+        if (path === "/v1/workbench/changes" && req.method === "GET") {
+          const params = new URL(req.url!, "http://pida.invalid").searchParams;
+          json(res, 200, await options.workbench.changes(principal, params.get("base") ?? "", params.get("head") ?? "")); return;
+        }
+        if (path === "/v1/workbench/restore" && req.method === "POST") {
+          const input = await body(req); keys(input, ["checkpoint", "expectedRevision"]);
+          if (typeof input.checkpoint !== "string" || typeof input.expectedRevision !== "string") throw new PidaError("INVALID_BODY", 400);
+          json(res, 200, await options.workbench.restoreCheckpoint(principal, input.checkpoint, input.expectedRevision, () => {
+            const sessions = runtime.listSessions(principal);
+            if (sessions.some(s => s.running)) throw new PidaError("SESSION_BUSY", 409);
+            if (sessions.some(s => runtime.getRecovery(s.sessionId, principal).pendingEffects.length)) throw new PidaError("EFFECT_STATE_UNKNOWN", 409);
+          })); return;
+        }
         if (path === "/v1/workbench" && req.method === "GET") {
           json(res, 200, await options.workbench.status(principal)); return;
         }
@@ -168,8 +358,29 @@ export function createPidaServer(options: HttpOptions) {
       if (path.startsWith("/v1/provider") && options.providerSettings) {
         if (!principal.permissions.includes("pida:configure"))
           throw new PidaError("FORBIDDEN", 403);
+        if (options.connector && !(path === "/v1/provider" && req.method === "GET")) throw new PidaError("PROVIDER_HOST_MANAGED", 409);
+        if (path === "/v1/provider/chatgpt/login" && req.method === "POST") {
+          keys(await body(req), []);
+          json(res, 200, options.providerSettings.startChatGPT(principal.id)); return;
+        }
+        if (path === "/v1/provider/chatgpt/logout" && req.method === "POST") {
+          keys(await body(req), []);
+          json(res, 200, await options.providerSettings.logoutChatGPT()); return;
+        }
+        const login = /^\/v1\/provider\/chatgpt\/login\/([a-f0-9-]{36})(\/input)?$/.exec(path);
+        if (login && req.method === "GET" && !login[2]) {
+          json(res, 200, options.providerSettings.getChatGPTLogin(login[1]!, principal.id)); return;
+        }
+        if (login && req.method === "DELETE" && !login[2]) {
+          json(res, 200, await options.providerSettings.cancelChatGPT(login[1]!, principal.id)); return;
+        }
+        if (login && req.method === "POST" && login[2]) {
+          const input = await body(req, 12_000); keys(input, ["value"]);
+          if (typeof input.value !== "string") throw new PidaError("INVALID_BODY", 400);
+          json(res, 200, options.providerSettings.inputChatGPT(login[1]!, principal.id, input.value)); return;
+        }
         if (path === "/v1/provider" && req.method === "GET") {
-          json(res, 200, options.providerSettings.get());
+          json(res, 200, { ...options.providerSettings.get(), ...(options.connector ? { connector: { ...options.connector, managed: true } } : {}) });
           return;
         }
         if (
@@ -201,12 +412,44 @@ export function createPidaServer(options: HttpOptions) {
         json(res, 201, await runtime.createSession(principal));
         return;
       }
+      const artifactRoute = path.match(/^\/v1\/sessions\/([a-f0-9-]{36})\/runs\/([a-f0-9-]{36})\/(export|manifest)$/);
+      if (artifactRoute && req.method === "GET") {
+        const bundle = runtime.exportRun(artifactRoute[1]!, artifactRoute[2]!, principal);
+        if (artifactRoute[3] === "manifest") {
+          if (!bundle.manifest) throw new PidaError("MANIFEST_NOT_FOUND", 404);
+          json(res, 200, bundle.manifest);
+        } else if (new URL(req.url!, "http://pida.invalid").searchParams.get("format") === "jsonl") {
+          res.writeHead(200, { "Content-Type": "application/x-ndjson; charset=utf-8", "X-Pida-Complete": String(bundle.complete) });
+          res.end(bundle.events.map(e => JSON.stringify(e)).join("\n") + (bundle.events.length ? "\n" : ""));
+        } else json(res, 200, bundle);
+        return;
+      }
+      const sessionCommands = /^\/v1\/sessions\/([a-f0-9-]{36})\/commands(?:\/(cmd_[a-f0-9]{32})(?:\/(wait|cancel|recovery))?)?$/.exec(path);
+      if (sessionCommands) {
+        runtime.assertSessionOwner(sessionCommands[1]!, principal);
+        await commandResponse(req, res, options.commands, principal, sessionCommands[1]!, sessionCommands[2], sessionCommands[3]); return;
+      }
       const match = path.match(
-        /^\/v1\/sessions\/([a-f0-9-]{36})(?:\/(runs|cancel|trace|compact|handoff))?$/,
+        /^\/v1\/sessions\/([a-f0-9-]{36})(?:\/(runs|cancel|trace|tools|compact|handoff|recovery|steer|follow-up))?$/,
       );
       if (!match) throw new PidaError("NOT_FOUND", 404);
       const id = match[1]!,
         action = match[2];
+      if ((action === "steer" || action === "follow-up") && req.method === "POST") {
+        const input = await body(req); keys(input, ["text", "expectedRunId"]);
+        if (typeof input.text !== "string" || typeof input.expectedRunId !== "string") throw new PidaError("INVALID_BODY", 400);
+        json(res, 200, await (action === "steer" ? runtime.steer(id, principal, input.text, input.expectedRunId) : runtime.followUp(id, principal, input.text, input.expectedRunId))); return;
+      }
+      if (action === "runs" && req.method === "GET") { json(res, 200, { runs: runtime.listRuns(id, principal) }); return; }
+      if (action === "recovery" && req.method === "POST") {
+        if (!principal.permissions.includes("pida:recover")) throw new PidaError("FORBIDDEN", 403);
+        const input = await body(req); keys(input, ["inspected", "effects"]);
+        if (input.inspected !== true || !Array.isArray(input.effects) || input.effects.length > 100 || input.effects.some(e => !e || typeof e.id !== "string" || !["applied", "not_applied"].includes(e.state))) throw new PidaError("INVALID_BODY", 400);
+        await runtime.resumeSession(id, principal);
+        for (const effect of input.effects) runtime.reconcileEffect(id, principal, effect.id, effect.state);
+        json(res, 200, runtime.getRecovery(id, principal)); return;
+      }
+      if (action === "recovery" && req.method === "GET") { json(res, 200, runtime.getRecovery(id, principal)); return; }
       if (!action && req.method === "GET") {
         await runtime.resumeSession(id, principal);
         json(res, 200, runtime.getSession(id, principal));
@@ -220,8 +463,14 @@ export function createPidaServer(options: HttpOptions) {
       }
       if (action === "trace" && req.method === "GET") {
         await runtime.resumeSession(id, principal);
-        json(res, 200, { events: runtime.getTrace(id, principal) });
+        const cursor = new URL(req.url!, "http://pida.invalid").searchParams.get("afterSequence");
+        if (cursor !== null && !/^\d+$/.test(cursor)) throw new PidaError("INVALID_CURSOR", 400);
+        json(res, 200, runtime.getTracePage(id, principal, cursor === null ? 0 : Number(cursor)));
         return;
+      }
+      if (action === "tools" && req.method === "GET") {
+        await runtime.resumeSession(id, principal);
+        json(res, 200, runtime.getSessionTools(id, principal)); return;
       }
       if ((action === "compact" || action === "handoff") && req.method === "POST") {
         keys(await body(req), []);
@@ -235,12 +484,16 @@ export function createPidaServer(options: HttpOptions) {
       }
       if (action === "runs" && req.method === "POST") {
         const input = await body(req);
-        keys(input, ["prompt"]);
+        keys(input, ["prompt", "taskId", "disconnectPolicy"]);
         if (typeof input.prompt !== "string")
           throw new PidaError("INVALID_PROMPT", 400);
+        if (input.taskId !== undefined && typeof input.taskId !== "string") throw new PidaError("INVALID_TASK_ID", 400);
+        if (input.disconnectPolicy !== undefined && !["cancel", "continue"].includes(input.disconnectPolicy as string))
+          throw new PidaError("INVALID_DISCONNECT_POLICY", 400);
+        const keepRunning = input.disconnectPolicy === "continue";
         const controller = new AbortController();
         const disconnected = () => {
-          if (!res.writableEnded) controller.abort();
+          if (!keepRunning && !res.writableEnded) controller.abort();
         };
         res.on("close", disconnected);
         try {
@@ -250,8 +503,9 @@ export function createPidaServer(options: HttpOptions) {
             input.prompt,
             (event) => {
               if (res.destroyed || res.writableLength > 1_048_576) {
-                controller.abort();
                 res.destroy();
+                if (keepRunning) return;
+                controller.abort();
                 throw new Error("STREAM_CLOSED");
               }
               if (!res.headersSent)
@@ -264,8 +518,9 @@ export function createPidaServer(options: HttpOptions) {
               );
             },
             controller.signal,
+            { taskId: input.taskId as string | undefined },
           );
-          res.end();
+          if (!res.destroyed) res.end();
         } finally {
           res.off("close", disconnected);
         }
