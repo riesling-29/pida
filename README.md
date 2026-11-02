@@ -4,7 +4,9 @@ An embedded, reusable **Pi-based agent harness** for applications. Bring the pac
 
 **Product goals (2026-11-02):** a reusable core for different agent forms, plus a ready-to-use home harness for coding and personal-assistant work that can replace the user's Codex/OpenClaw workflows. Tools, channels and private provider connectors must be attachable without editing the core. These are delivery requirements, not claims of current feature parity. See [core and home-harness requirements, missing capabilities and acceptance gates](docs/CORE-AND-HOME-HARNESS.md).
 
-**Workspace MVP 0.7.0:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+**Workspace 0.8.0:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+
+New in 0.8: **persistent agents with independent sessions/workbenches, a durable job queue, three-tier sourced memory, bounded asynchronous delegation, real project instructions/skills, guarded steering, host private-provider connectors and project files/Git changes in the UI**. Restart recovery does not replay interrupted work. See the [patch plan](docs/PERSISTENT-CORE-PATCH-PLAN.md), [usage and boundaries](docs/PERSISTENT-AGENTS.md), [private connectors](docs/PRIVATE-CONNECTORS.md) and [validation record](docs/PERSISTENT-CORE-VALIDATION.md). Repository program discovery and callable Node/npm/native program proxies are also included; see [program proxy usage](docs/PROGRAM-PROXIES.md). These are foundations for the home harness; PTY/sandbox executors, messaging/schedules and full Codex/OpenClaw parity are not claimed.
 
 New in 0.7: live Studio activity and elapsed time, reconnectable server-owned runs, richer isolated browser checks, opt-in existing-project coding with Pi tools, and company endpoint compatibility/header settings. See the [MAGI source audit and patch decisions](docs/MAGI-ADOPTION-PATCH-PLAN.md), [project coding](docs/PROJECT-CODING.md), [browser checks](docs/UI-CHECKS.md) and [LightLLM/company API setup](docs/COMPANY-ENDPOINTS.md). Host project tools do not turn the service preview into a React/dev-server preview; project files are outside workbench restore and artifact verification.
 
@@ -54,7 +56,7 @@ The package has **not** been published to npm. Create and install a local packag
 ```sh
 npm pack
 # Run from your host application directory:
-npm install /absolute/path/to/pida-core-0.7.0.tgz
+npm install /absolute/path/to/pida-core-0.8.0.tgz
 ```
 
 Entry points separate standalone configuration, server code and browser code:

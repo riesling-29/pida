@@ -1,4 +1,5 @@
 import { createStudio } from "/studio.js";
+import { createAgents } from "/agents.js";
 import { PidaClient, explainError } from "/pida-client.js";
 const $ = (id) => document.getElementById(id);
 let token = "",
@@ -6,8 +7,10 @@ let token = "",
   connected = false,
   pending = false,
   running = false,
-  remoteRunning = false;
+  remoteRunning = false,
+  sessionPoll;
 const client = new PidaClient({ baseUrl: location.origin, token: () => token });
+const agents = createAgents({ client });
 const studio = createStudio({
   client,
   async request(path, options = {}) {
@@ -162,11 +165,28 @@ async function select(id) {
   $("trace").replaceChildren();
   for (const event of (await client.getTrace(id)).events) trace(event);
   $("status").textContent = data.running
-    ? "실행 중 · 새로고침으로 확인"
+    ? "실행 중 · 서버 상태 확인 중"
     : (labels[data.lastStatus] ?? "대기");
   await list();
   controls();
   $("messages").scrollTop = $("messages").scrollHeight;
+  scheduleSessionPoll();
+}
+function scheduleSessionPoll() {
+  clearTimeout(sessionPoll);
+  if (!connected || !remoteRunning || running || !sessionId) return;
+  const id = sessionId, credential = token;
+  sessionPoll = setTimeout(async () => {
+    try {
+      const [data, activity] = await Promise.all([client.getSession(id), client.getTrace(id)]);
+      if (!connected || sessionId !== id || credential !== token) return;
+      remoteRunning = data.running;
+      $("trace").replaceChildren(); for (const event of activity.events) trace(event);
+      $("status").textContent = data.running ? "실행 중 · 서버 상태 연결됨" : labels[data.lastStatus] ?? "대기";
+      if (!remoteRunning) { await select(id); await refreshWorkbench(); }
+    } catch (error) { if (connected && sessionId === id && credential === token) { problem(error); $("status").textContent = "서버 실행 상태 확인 중"; } }
+    finally { if (connected && sessionId === id && credential === token) { controls(); scheduleSessionPoll(); } }
+  }, 1800);
 }
 async function connect() {
   token = $("token").value;
@@ -205,6 +225,7 @@ async function connect() {
   if (recent) await select(recent.sessionId);
   else emptyConversation();
   await studio.connect(info);
+  await agents.connect();
   pollChatGPT();
 }
 $("connection-form").onsubmit = (e) => {
@@ -249,11 +270,13 @@ $("delete-session").onclick = () => {
 };
 $("disconnect").onclick = () => {
   connected = false;
+  clearTimeout(sessionPoll);
   clearTimeout(chatgptPoll); chatgptLogin = undefined; chatgptState = { connected: false }; chatgptModels = []; clearChatGPTLogin();
   $("settings-dialog").close();
   setDrawer("sessions", false); setDrawer("inspector", false);
   clearWorkbench();
   studio.reset();
+  agents.reset();
   token = "";
   $("provider-key").value = "";
   sessionId = undefined;
@@ -289,7 +312,7 @@ $("form").onsubmit = async (e) => {
   const answer = message("assistant", "응답을 기다리고 있습니다…");
   let text = "";
   try {
-    for await (const event of client.stream(sessionId, prompt)) {
+    for await (const event of client.stream(sessionId, prompt, { disconnectPolicy: "continue" })) {
       if (event.type === "text_delta") {
         text += event.delta;
         answer.textContent = text;
@@ -317,9 +340,11 @@ $("form").onsubmit = async (e) => {
   } catch (error) {
     problem(error);
     $("status").textContent = "연결 확인 필요";
+    remoteRunning = true;
   } finally {
     running = false;
     controls();
+    scheduleSessionPoll();
     $("prompt").focus();
   }
 };
@@ -341,7 +366,7 @@ const setupErrors = {
   INVALID_PROVIDER_URL:
     "올바른 서버 주소를 입력해주세요. 주소에 키나 쿼리 문자열을 넣지 마세요.",
 };
-let providerCatalog = [], chatgptModels = [], chatgptState = { connected: false }, chatgptLogin, chatgptPoll;
+let providerCatalog = [], chatgptModels = [], chatgptState = { connected: false }, chatgptLogin, chatgptPoll, managedConnector;
 const chatgptSelected = () => $("provider-preset").value === "openai" && $("openai-auth").value === "chatgpt";
 function clearChatGPTLogin() {
   $("chatgpt-login-link").removeAttribute("href"); $("chatgpt-login-link").hidden = true;
@@ -449,6 +474,9 @@ function showNativeModels(selectedId = "") {
   $("native-provider-note").textContent = chatgptSelected() ? "ChatGPT 구독 인증 · 계정의 모델 목록과 Pi SDK 지원 모델을 확인합니다. Pida 로그인 계정과는 별도입니다." : `${p.name} · API 키 인증. 서버 주소와 API 형식은 자동 설정됩니다. 기본 제공 모델 목록이며 계정별 이용 가능 여부는 연결 확인이 필요합니다.`;
 }
 function providerControls() {
+  $("provider-form").hidden = !!managedConnector;
+  $("provider-managed").hidden = !managedConnector;
+  if (managedConnector) return;
   const mock = $("provider-preset").value === "mock";
   const native = !!selectedNative(), chatgpt = chatgptSelected(), loggingIn = chatgptLogin?.status === "pending";
   $("openai-auth-row").hidden = $("provider-preset").value !== "openai";
@@ -492,7 +520,10 @@ function providerDraft() {
 }
 async function loadProviderSettings() {
   try {
-    const { provider: p, keyConfigured, catalog = [], chatgpt } = await client.getProviderSettings();
+    const { provider: p, keyConfigured, catalog = [], chatgpt, connector } = await client.getProviderSettings();
+    managedConnector = connector?.managed ? connector : undefined;
+    $("provider-settings").hidden = false;
+    if (managedConnector) { $("provider-managed").textContent = `${connector.displayName ?? connector.id} · 전용 커넥터 사용 중 · 변경은 호스트 설정에서 합니다.`; providerControls(); return; }
     chatgptState = chatgpt ?? { connected: false }; chatgptModels = [];
     $("openai-auth").value = p.authMode === "chatgpt" ? "chatgpt" : "api-key"; chatgptStatus();
     providerCatalog = catalog;

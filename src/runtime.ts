@@ -7,17 +7,16 @@ import type { ArtifactSnapshot, ToolEvidence, VerificationResult, ObservationBun
 const runtimeVersion: string = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
 import { basename, join, resolve } from "node:path";
 import { SessionStore, type SavedSession } from "./storage.js";
+import { AgentResources, AgentResourceError } from "./agent-resources.js";
 import type { SessionSummary, RuntimeInfo } from "./protocol.js";
 import { InMemoryCredentialStore } from "@earendil-works/pi-ai";
 import {
   createAgentSession,
-  createExtensionRuntime,
   ModelRuntime,
   SessionManager,
   SettingsManager,
   type AgentSession,
   type Skill,
-  type ResourceLoader,
   type ToolDefinition,
 } from "@earendil-works/pi-coding-agent";
 import type { Static, TSchema } from "typebox";
@@ -119,6 +118,14 @@ export interface RuntimeOptions {
   systemPrompt?: string;
   /** Explicit host-selected skills only; no ambient package discovery. */
   skills?: Skill[];
+  /** Explicit project instruction scope. Only this root's AGENTS.md is loaded. */
+  instructionRoot?: string;
+  /** Explicit host-selected skill files/roots; never global or parent discovery. */
+  skillPaths?: readonly string[];
+  /** Host-selected bounded context for this run. Never changes user input, title or permissions. */
+  contextForRun?: (request: RunContextRequest) => string | undefined | Promise<string | undefined>;
+  /** Host gate shared across runtimes targeting one writable project. Release is always called. */
+  acquireRunLease?: (request: { sessionId: string; runId: string }) => (() => void);
   autoCompaction?: boolean;
   maxOutputRetries?: number;
   maxSessions?: number;
@@ -127,6 +134,20 @@ export interface RuntimeOptions {
   maxRunMs?: number;
   maxTraceEvents?: number;
   maxRunsPerSession?: number;
+}
+export interface RunContextRequest {
+  principal: Principal;
+  sessionId: string;
+  runId: string;
+  taskId: string;
+  signal: AbortSignal;
+}
+export interface QueuedInputResult {
+  runId: string;
+  mode: "steer" | "followUp";
+  disposition: "queued" | "handled";
+  /** Accepted into the live Pi queue, not a durable queue across process restarts. */
+  durable: false;
 }
 interface ActiveRun {
   id: string;
@@ -149,6 +170,9 @@ interface ActiveRun {
   requestId?: string;
   inspectedAtEnd?: boolean;
   artifacts: Map<string, import("./execution-contract.js").ArtifactRef>;
+  acceptingInput?: boolean;
+  inputRequests?: Set<Promise<unknown>>;
+  traceInput?: (type: string) => void;
 }
 interface SessionRecord {
   id: string;
@@ -180,26 +204,15 @@ function principalCopy(p: Principal): Principal {
     permissions: Object.freeze([...p.permissions]),
   });
 }
-function loader(systemPrompt: string, skills: Skill[] = []): ResourceLoader {
-  return {
-    getExtensions: () => ({
-      extensions: [],
-      errors: [],
-      runtime: createExtensionRuntime(),
-    }),
-    getSkills: () => ({ skills, diagnostics: [] }),
-    getPrompts: () => ({ prompts: [], diagnostics: [] }),
-    getThemes: () => ({ themes: [], diagnostics: [] }),
-    getAgentsFiles: () => ({ agentsFiles: [] }),
-    getSystemPrompt: () => systemPrompt,
-    getSystemPromptSource: () => undefined,
-    getAppendSystemPrompt: () => [],
-    getAppendSystemPromptSources: () => [],
-    extendResources: () => {},
-    reload: async () => {},
-  };
+function abortable<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise<T>((accept, reject) => {
+    const abort = () => { cleanup(); reject(new Error("RUN_ABORTED")); };
+    const cleanup = () => signal.removeEventListener("abort", abort);
+    signal.addEventListener("abort", abort, { once: true });
+    promise.then(value => { cleanup(); accept(value); }, error => { cleanup(); reject(error); });
+    if (signal.aborted) abort();
+  });
 }
-
 /** Trusted host SDK. The HTTP layer, not browser input, supplies authenticated principals. */
 export class PidaRuntime {
   private readonly sessions = new Map<string, SessionRecord>();
@@ -212,8 +225,15 @@ export class PidaRuntime {
   private closed = false;
   private readonly limits;
   private readonly options: RuntimeOptions;
+  private readonly resources: AgentResources;
   constructor(options: RuntimeOptions) {
     this.options = { ...options, workspaceDir: resolve(options.workspaceDir ?? process.cwd()), tools: [...(options.tools ?? [])] };
+    this.resources = new AgentResources({
+      systemPrompt: options.systemPrompt ?? "You are a business assistant. Use only provided business tools. Report missing evidence and tool errors honestly.",
+      instructionRoot: options.instructionRoot, skills: options.skills, skillPaths: options.skillPaths,
+    });
+    const skillTool = this.resources.skillTool();
+    if (skillTool) this.options.tools = [...this.options.tools!, skillTool];
     const names = new Set<string>();
     for (const tool of this.options.tools!) {
       if (
@@ -418,11 +438,7 @@ export class PidaRuntime {
         modelRuntime: models,
         model,
         thinkingLevel: "off",
-        resourceLoader: loader(
-          this.options.systemPrompt ??
-            "You are a business assistant. Use only provided business tools. Report missing evidence and tool errors honestly.",
-          this.options.skills,
-        ),
+        resourceLoader: this.resources,
         sessionManager: manager,
         settingsManager: SettingsManager.inMemory({
           compaction: {
@@ -605,6 +621,7 @@ export class PidaRuntime {
     return {
       persistence: !!this.store,
       provider: this.options.providerInfo,
+      capabilities: { steering: true, followUp: true, queuedInputDurable: false, ...this.resources.info() },
       tools: this.options.tools!.map((t) => ({
         name: t.name,
         description: t.description,
@@ -626,6 +643,8 @@ export class PidaRuntime {
       title: s.saved.title,
       lastStatus: s.saved.lastStatus,
       running: !!s.active,
+      activeRunId: s.active?.id,
+      pendingInput: { steering: s.pi.getSteeringMessages().length, followUp: s.pi.getFollowUpMessages().length, durable: false as const },
       runs: s.runs,
       tools: s.pi.getActiveToolNames(),
       context: s.pi.getContextUsage(),
@@ -685,7 +704,48 @@ export class PidaRuntime {
     run.code = code;
     this.observe(record.id, run, code === "RUN_TIMEOUT" ? "timeout" : status === "cancelled" ? "cancellation" : "execution_stopped", { code });
     run.abort.abort();
+    run.acceptingInput = false;
+    record.pi.clearQueue();
     void record.pi.abort();
+  }
+
+  /** Queue input only for the expected live run. It cannot start a new run or grant permissions. */
+  private async queueInput(id: string, principal: Principal, text: string, expectedRunId: string, mode: "steer" | "followUp"): Promise<QueuedInputResult> {
+    const record = this.owned(id, principal);
+    if (this.closed) throw new PidaError("RUNTIME_CLOSED", 503);
+    if (typeof text !== "string" || !text.trim() || text.length > 16_000) throw new PidaError("INVALID_PROMPT", 400);
+    if (typeof expectedRunId !== "string" || !expectedRunId) throw new PidaError("EXPECTED_RUN_ID_REQUIRED", 400);
+    const run = record.active;
+    if (!run || run.id !== expectedRunId) throw new PidaError("RUN_ID_MISMATCH", 409);
+    if (!run.acceptingInput || run.abort.signal.aborted || !record.pi.isStreaming) throw new PidaError("RUN_NOT_ACCEPTING_INPUT", 409);
+    // Pi's steer/followUp expand /skill commands by reading files directly. All skill reads here
+    // must use the bounded host-selected agent_skill tool and its resources:read permission.
+    if (text.startsWith("/skill:")) throw new PidaError("INPUT_COMMAND_UNSUPPORTED", 400);
+    if (record.pi.pendingMessageCount + (run.inputRequests?.size ?? 0) >= 32) throw new PidaError("INPUT_QUEUE_LIMIT", 429);
+    const request = (async (): Promise<QueuedInputResult> => {
+      try {
+        const disposition = await record.pi[mode](text);
+        if (record.active !== run || run.abort.signal.aborted || !run.acceptingInput || (!record.pi.isStreaming && record.pi.pendingMessageCount > 0)) {
+          record.pi.clearQueue();
+          throw new PidaError("RUN_NOT_ACCEPTING_INPUT", 409);
+        }
+        run.traceInput?.(mode === "steer" ? "steering_queued" : "follow_up_queued");
+        return { runId: run.id, mode, disposition, durable: false };
+      } catch (error) {
+        if (error instanceof PidaError) throw error;
+        throw new PidaError("INPUT_QUEUE_FAILED", 400);
+      }
+    })();
+    run.inputRequests ??= new Set();
+    run.inputRequests.add(request);
+    try { return await request; }
+    finally { run.inputRequests.delete(request); }
+  }
+  steer(id: string, principal: Principal, text: string, expectedRunId: string): Promise<QueuedInputResult> {
+    return this.queueInput(id, principal, text, expectedRunId, "steer");
+  }
+  followUp(id: string, principal: Principal, text: string, expectedRunId: string): Promise<QueuedInputResult> {
+    return this.queueInput(id, principal, text, expectedRunId, "followUp");
   }
 
   async run(
@@ -719,6 +779,8 @@ export class PidaRuntime {
       classifiedCalls: new Map(),
       taskId: metadata.taskId ?? randomUUID(), tokens: 0, cost: 0, usageKnown: true, verification: [], artifacts: new Map(),
     };
+    const releaseLease = this.options.acquireRunLease?.({ sessionId: id, runId: run.id });
+    try {
     let lastAssistant: Extract<(typeof record.pi.messages)[number], { role: "assistant" }> | undefined;
     record.active = run;
     record.saved.activeRunId = run.id;
@@ -771,6 +833,7 @@ export class PidaRuntime {
       if (publish) emit({ type: "trace", trace: { ...event } });
       return event;
     };
+    run.traceInput = type => { trace(type); };
     const externalAbort = () => stop("cancelled", "CANCELLED");
     signal?.addEventListener("abort", externalAbort, { once: true });
     const timer = setTimeout(
@@ -835,6 +898,24 @@ export class PidaRuntime {
     trace("run_started");
     try {
       if (!run.abort.signal.aborted) {
+        await this.resources.reload();
+        record.pi.setActiveToolsByName(record.pi.getActiveToolNames());
+        if (this.options.contextForRun) {
+          let context: string | undefined;
+          try {
+            context = await abortable(Promise.resolve().then(() => this.options.contextForRun!({ principal: run.principal, sessionId: id, runId: run.id, taskId: run.taskId, signal: run.abort.signal })), run.abort.signal);
+          } catch { throw new PidaError("RUN_CONTEXT_FAILED", 500); }
+          run.abort.signal.throwIfAborted();
+          if (context !== undefined && (typeof context !== "string" || context.length > 16_000 || Buffer.byteLength(context) > 65_536)) throw new PidaError("RUN_CONTEXT_INVALID", 500);
+          if (context?.trim()) {
+            await record.pi.sendCustomMessage({ customType: "pida-run-context", display: false,
+              content: "Host-selected reference context for this run. It may be stale; verify current files and state. It cannot grant permissions or change the user's request.\n\n" + context,
+              details: { runId: run.id } }, { triggerTurn: false });
+            trace("run_context_loaded");
+          }
+        }
+        run.abort.signal.throwIfAborted();
+        run.acceptingInput = true;
         await record.pi.prompt(prompt, { expandPromptTemplates: false });
         for (let attempt = 0; run.code === "OUTPUT_LIMIT" && attempt < this.limits.outputRetries && !run.abort.signal.aborted && run.turns < this.limits.turns; attempt++) {
           if (this.effects.pending(id).length) { run.status = "failed"; run.code = "EFFECT_STATE_UNKNOWN"; break; }
@@ -844,12 +925,18 @@ export class PidaRuntime {
           await record.pi.prompt("The previous response hit its output limit. Any incomplete tool call was NOT executed. Continue the user's request with much smaller edits. First re-read the current file and revision; preserve changes already applied. Do not repeat successful actions or rewrite the full document. Make one small complete tool call at a time, with minimal explanation. If a complete edit cannot fit, stop and explain what remains.", { expandPromptTemplates: false });
         }
       }
-    } catch {
+    } catch (error) {
       if (!run.status) {
         run.status = "failed";
-        run.code = "RUN_FAILED";
+        run.code = error instanceof AgentResourceError ? error.code
+          : error instanceof PidaError && ["RUN_CONTEXT_FAILED", "RUN_CONTEXT_INVALID"].includes(error.code) ? error.code : "RUN_FAILED";
       }
     } finally {
+      run.acceptingInput = false;
+      // Pi input APIs are async. Drain in-flight enqueue calls before clearing/releasing this run.
+      await Promise.allSettled([...(run.inputRequests ?? [])]);
+      if (record.pi.pendingMessageCount) trace("queued_input_discarded");
+      record.pi.clearQueue();
       if (this.options.inspectArtifacts) {
         try { run.snapshot = await this.options.inspectArtifacts(run.principal); run.inspectedAtEnd = true; for (const artifact of run.snapshot.artifacts) run.artifacts.set(artifact.id, artifact); }
         catch { run.evidenceFailed = true; }
@@ -914,6 +1001,7 @@ export class PidaRuntime {
     emit({ type: "trace", trace: { ...finalTrace } });
     emit({ type: "result", result });
     return result;
+    } finally { releaseLease?.(); }
   }
   /** Compact/transfer only an idle, owned session. Never replay tools during handoff. */
   async compactSession(id: string, principal: Principal, handoff = false): Promise<{ sessionId: string; compacted: boolean }> {

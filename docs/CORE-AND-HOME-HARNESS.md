@@ -1,3 +1,5 @@
+> 0.8 implementation update: [persistent core patch plan](PERSISTENT-CORE-PATCH-PLAN.md) and [implemented usage/boundaries](PERSISTENT-AGENTS.md). Agent registry/queue, three-tier information-state memory, bounded delegation, project resources, live steering, private connectors and project file/diff UI are now implemented; the remaining requirements below are not all delivered.
+
 # Pida: 범용 core와 실사용 기본 하네스
 
 기준일: 2026-11-02 KST. 상태: **사용자 요구사항과 개발 완료 기준**. 이 문서는 기능 구현 완료 보고가 아니다. 확인한 구현 기준은 개발 브랜치 `af86242365d6745d3737373042647ea46766ccc7`, Pida 0.7.0이다.

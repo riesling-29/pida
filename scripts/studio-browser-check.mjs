@@ -1,6 +1,8 @@
 // Actual browser + actual Pi/workbench/API. Model decisions are scripted, not real-model acceptance.
 import assert from "node:assert/strict";
-import { mkdtemp, rm, mkdir } from "node:fs/promises";
+import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { once } from "node:events";
@@ -8,23 +10,60 @@ import { Type } from "typebox";
 import { fauxProvider, fauxAssistantMessage as answer, fauxToolCall as call } from "@earendil-works/pi-ai/providers/faux";
 import { PidaRuntime, PidaWorkbench, workbenchPermissions, workbenchPrompt } from "../dist/index.js";
 import { createPidaServer, staticTokenAuth } from "../dist/http.js";
+import { ProjectView } from "../dist/project-view.js";
+import { createProjectTools } from "../dist/project-tools.js";
+import { createProgramRegistry } from "../dist/program-registry.js";
 const { chromium } = await import("playwright");
 const directory = await mkdtemp(join(tmpdir(), "pida-studio-browser-"));
-const owner = { id: "studio-browser", permissions: workbenchPermissions }, token = "b".repeat(32);
+const owner = { id: "studio-browser", permissions: [...workbenchPermissions, "project:read", "pida:agents"] }, token = "b".repeat(32);
 const tool = (name, args) => answer(call(name, args), { stopReason: "toolUse" });
 const lastTool = context => JSON.parse(context.messages.filter(m => m.role === "toolResult").at(-1).content.filter(b => b.type === "text").map(b => b.text).join(""));
 let browser, runtime, server;
 const toolGate = Promise.withResolvers(), modelGate = Promise.withResolvers();
 try {
+  const projectRoot = join(directory, "project"), privateRoot = join(projectRoot, "private-host"), run = promisify(execFile);
+  const packageSource = JSON.stringify({ name: "pida-fixture", type: "module", scripts: { check: "node src/main.js" } }, null, 2) + "\n";
+  await mkdir(join(projectRoot, "src"), { recursive: true }); await mkdir(privateRoot);
+  await Promise.all([writeFile(join(projectRoot, "README.md"), "# Project fixture\n"), writeFile(join(projectRoot, "src", "main.js"), "export const value = 1;\n"), writeFile(join(privateRoot, "secret.txt"), "protected-project-canary"), writeFile(join(projectRoot, "pida.config.json"), "{\"private\":true}\n")]);
+  await Promise.all([writeFile(join(projectRoot, "package.json"), packageSource), writeFile(join(projectRoot, "pyproject.toml"), '[project.scripts]\nfixture = "fixture:main"\n'), writeFile(join(privateRoot, "package.json"), '{"scripts":{"private":"never-run"}}')]);
+  await run("git", ["init", "-q"], { cwd: projectRoot });
+  await run("git", ["add", "README.md", "src/main.js", "package.json", "pyproject.toml"], { cwd: projectRoot });
+  await run("git", ["-c", "user.name=Pida fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "fixture baseline"], { cwd: projectRoot });
+  await writeFile(join(projectRoot, "src", "main.js"), "export const value = 2;\n");
+  const projectConfig = { enabled: true, root: projectRoot, trustedHost: false };
+  const protectedPaths = [privateRoot, join(projectRoot, "pida.config.json"), join(directory, "state"), join(directory, "workbench")];
+  const projectView = new ProjectView(projectConfig, { protectedPaths }), projectTools = createProjectTools(projectConfig, { protectedPaths });
+  const programs = await createProgramRegistry(directory, [], { projectRoot, protectedPaths });
   const bench = new PidaWorkbench(join(directory, "workbench"), true), f = fauxProvider({ tokensPerSecond: 100000 });
   const progressProbe = { name: "coding_guide", description: "Controlled read-only fixture", parameters: Type.Object({}), permission: "workbench:read", effect: "read", async execute() { await toolGate.promise; return { note: "private-tool-output-canary" }; } };
-  const projectProbe = { name: "project_ls", description: "Read-only project UI route fixture", parameters: Type.Object({}), permission: "workbench:read", effect: "read", async execute() { return { files: ["package.json"] }; } };
-  runtime = new PidaRuntime({ provider: () => ({ provider: f.provider, modelId: f.getModel().id }), providerInfo: { mode: "endpoint", model: "Scripted browser acceptance" }, tools: [...bench.tools(), progressProbe, projectProbe], systemPrompt: workbenchPrompt, storageDir: join(directory, "state"), inspectArtifacts: p => bench.captureArtifacts(p) });
-  const httpOptions = { runtime, workbench: bench, serveDemo: true, authenticate: staticTokenAuth([{ token, principal: owner }]) };
+  runtime = new PidaRuntime({ provider: () => ({ provider: f.provider, modelId: f.getModel().id }), providerInfo: { mode: "endpoint", model: "Scripted browser acceptance" }, tools: [...bench.tools(), progressProbe, ...projectTools.tools, ...programs.tools], systemPrompt: workbenchPrompt, storageDir: join(directory, "state"), inspectArtifacts: p => bench.captureArtifacts(p) });
+  const httpOptions = { runtime, workbench: bench, projectView, programs, serveDemo: true, authenticate: staticTokenAuth([{ token, principal: owner }]) };
   server = createPidaServer(httpOptions);
   server.listen(0, "127.0.0.1"); await once(server, "listening");
   const url = `http://127.0.0.1:${server.address().port}`;
   httpOptions.allowedOrigin = url;
+  // Independent real HTTP preflight remains usable when this environment has no browser binary.
+  const api = (path, options = {}) => fetch(url + path, { ...options, headers: { Authorization: `Bearer ${token}`, ...(options.body ? { "Content-Type": "application/json" } : {}) } });
+  const projectListing = await (await api("/v1/project")).json();
+  assert(projectListing.files.some(file => file.path === "src" && file.type === "directory"));
+  assert(!projectListing.files.some(file => /private-host|pida.config/.test(file.path)));
+  assert.equal((await api("/v1/project/file?path=private-host%2Fsecret.txt")).status, 403);
+  assert.match((await (await api("/v1/project/file?path=src%2Fmain.js")).json()).content, /value = 2/);
+  assert.match((await (await api("/v1/project/changes")).json()).diff, /\+export const value = 2/);
+  const disabledAgents = await api("/v1/agents"); assert.equal(disabledAgents.status, 404); assert.equal((await disabledAgents.json()).error, "AGENTS_DISABLED");
+  const catalog = await (await api("/v1/programs")).json();
+  const ready = catalog.catalog.candidates.find(candidate => candidate.kind === "npm-script"), adapter = catalog.catalog.candidates.find(candidate => candidate.kind === "python-entrypoint");
+  assert.equal(ready.status, "ready"); assert.equal(adapter.status, "adapter-required"); assert.deepEqual(catalog.enabled, []);
+  assert(!catalog.catalog.candidates.some(candidate => candidate.path.includes("private-host")));
+  const draftBody = JSON.stringify({ candidateId: ready.id, sourceDigest: ready.sourceDigest });
+  const draft = await api("/v1/programs/draft", { method: "POST", body: draftBody }); assert.equal(draft.status, 200);
+  assert.equal((await draft.json()).manifest.inputMode, "none");
+  await writeFile(join(projectRoot, "package.json"), packageSource + "\n");
+  const staleDraft = await api("/v1/programs/draft", { method: "POST", body: draftBody }); assert.equal(staleDraft.status, 409); assert.equal((await staleDraft.json()).error, "PROGRAM_SOURCE_CHANGED");
+  await writeFile(join(projectRoot, "package.json"), packageSource);
+  if (process.env.PIDA_CHECK_API_ONLY === "1") {
+    console.log("PASS: actual ProjectView HTTP listing/file/diff, protected paths, unavailable agents API, program discovery/reviewable draft/source conflict. Browser intentionally not executed.");
+  } else {
   browser = await chromium.launch({ headless: true, ...(process.env.PIDA_BROWSER_EXECUTABLE ? { executablePath: process.env.PIDA_BROWSER_EXECUTABLE } : {}), args: ["--no-sandbox", "--disable-dev-shm-usage"] });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } }); page.setDefaultTimeout(15000);
   const errors = []; page.on("pageerror", e => errors.push(e.message));
@@ -34,6 +73,10 @@ try {
   page.on("requestfailed", request => diagnostic.push(`${new URL(request.url()).pathname}: ${request.failure()?.errorText}`));
   await page.goto(`${url}/#token=${token}`);
   await page.locator("#mode-tabs").waitFor({ state: "visible" }).catch(async error => { console.error({ pageErrors: errors, diagnostic, connectionError: await page.locator("#error").textContent() }); throw error; });
+  await page.locator('[data-mode="agents"]').click();
+  await page.waitForFunction(() => document.querySelector("#agents-status").textContent.includes("상주 에이전트가 연결되지"));
+  assert.equal(await page.locator("#agent-create-form button").isDisabled(), true);
+  await page.locator('[data-mode="studio"]').click();
   // File work starts without a UI template and uses the registered Pi tools.
   await page.locator("#studio-target-mode").selectOption("files");
   f.setResponses([
@@ -89,16 +132,33 @@ try {
   assert.equal((await bench.uiState(owner)).html, original.html);
   assert.match(await page.locator("#studio-verification").textContent(), /현재 파일에 유효한 검증으로 볼 수 없음/);
   assert.equal(await page.locator("#studio-restore").isDisabled(), true);
-  // The host project is explicitly selectable, without pretending the bounded file viewer covers it.
+  // The selected host project uses its real filesystem/diff APIs, not the workbench's files.
   await page.locator("#studio-target-mode").selectOption("project");
   assert.equal(await page.locator("#studio-project-panel").isVisible(), true);
-  assert.equal(await page.locator("#studio-panel-files").isVisible(), false);
+  assert.equal(await page.locator("#studio-panel-files").isVisible(), true);
+  await page.waitForFunction(() => [...document.querySelector("#studio-file").options].some(option => option.value === "src"));
+  assert.doesNotMatch(await page.locator("#studio-file").textContent(), /private-host|pida.config/);
+  await page.locator("#studio-file").selectOption("src");
+  await page.waitForFunction(() => document.querySelector("#studio-source").textContent.includes("export const value = 2"));
+  await page.locator("#studio-tab-changes").click();
+  assert.match(await page.locator("#studio-diff").textContent(), /\+export const value = 2/);
+  await page.locator("#studio-tab-files").click(); await page.locator("#studio-file").selectOption("..");
+  await page.waitForFunction(() => [...document.querySelector("#studio-file").options].some(option => option.value === "README.md"));
+  await page.locator("#studio-programs summary").click();
+  await page.waitForFunction(() => document.querySelector("#studio-programs-status").textContent.includes("개 후보"));
+  await page.locator("#studio-program-candidate").selectOption(ready.id); await page.locator("#studio-program-draft").click();
+  await page.waitForFunction(() => document.querySelector("#studio-program-manifest").textContent.includes('"inputMode": "none"'));
+  assert.match(await page.locator("#studio-program-download").getAttribute("href"), /^blob:/);
+  assert.deepEqual((await (await api("/v1/programs")).json()).enabled, []);
+  await page.locator("#studio-program-candidate").selectOption(adapter.id); assert.equal(await page.locator("#studio-program-draft").isDisabled(), true);
+  assert.match(await page.locator("#studio-program-source").textContent(), /별도 어댑터 필요/);
+  await page.locator("#studio-programs summary").click();
   f.setResponses([ctx => {
     const input = ctx.messages.filter(m => m.role === "user").at(-1).content;
     const text = typeof input === "string" ? input : input.filter(b => b.type === "text").map(b => b.text).join("");
     assert.match(text, /operator-configured host project/);
     assert.doesNotMatch(text, /No general shell/);
-    return tool("project_ls", {});
+    return tool("project_ls", { path: "." });
   }, answer("프로젝트 파일 목록을 확인했습니다.")]);
   await page.locator("#studio-prompt").fill("프로젝트 파일 목록을 확인해줘."); await page.locator("#studio-send").click();
   await page.waitForFunction(() => document.querySelector("#studio-outcome").textContent.includes("실행 완료"));
@@ -149,4 +209,5 @@ try {
   assert.equal(await page.locator("#studio-diff").textContent(), ""); assert.deepEqual(errors, []);
   assert.equal(await page.locator("#studio-activity-list li").count(), 0);
   console.log("PASS: actual Web UI progress through tool execution/model wait, elapsed clock, live reconnect, tool failure/cancellation; file/code work, source/diff, revision-bound evidence, guarded restore, stale evidence, keyboard/IME, mobile width and logout. Model scripted; browser/Pi/tools real.");
+  }
 } finally { toolGate.resolve(); modelGate.resolve(); await browser?.close(); if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } await runtime?.close(); await rm(directory, { recursive: true, force: true }); }

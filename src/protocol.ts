@@ -13,6 +13,11 @@ export interface RuntimeInfo {
   persistence: boolean;
   tools: { name: string; description: string; permitted: boolean }[];
   provider?: { mode: string; model: string };
+  capabilities?: {
+    steering: boolean; followUp: boolean; queuedInputDurable: false;
+    instructions: { scope: "project-root" | "none"; files: number };
+    skills: number; ambientExtensions: false;
+  };
 }
 export interface TraceEvent {
   sequence: number;

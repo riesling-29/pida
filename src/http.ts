@@ -1,3 +1,8 @@
+import type { ProgramRegistry } from "./program-registry.js";
+import type { AgentSupervisor } from "./agent-supervisor.js";
+import type { AgentMemoryStore } from "./agent-memory.js";
+import type { ProjectView } from "./project-view.js";
+import type { ProviderConnectorManifest } from "./provider-connector.js";
 import type { PidaWorkbench } from "./workbench.js";
 import {
   createServer,
@@ -13,6 +18,12 @@ import { PidaError, type PidaRuntime, type Principal } from "./runtime.js";
 export interface HttpOptions {
   runtime: PidaRuntime;
   workbench?: PidaWorkbench;
+  agents?: AgentSupervisor;
+  agentMemory?: (agentId: string) => AgentMemoryStore;
+  agentWorkbench?: (agentId: string) => PidaWorkbench;
+  projectView?: ProjectView;
+  programs?: ProgramRegistry;
+  connector?: ProviderConnectorManifest;
   /** Optional local workspace administration; never enable for arbitrary tenant users. */
   providerSettings?: ProviderSettings;
   /** Verify a bearer token with the host identity service. Never trust body claims. */
@@ -115,7 +126,7 @@ export function createPidaServer(options: HttpOptions) {
       if (
         options.serveDemo &&
         req.method === "GET" &&
-        ["/", "/app.js", "/studio.js", "/style.css", "/pida-client.js"].includes(path)
+        ["/", "/app.js", "/studio.js", "/agents.js", "/style.css", "/pida-client.js"].includes(path)
       ) {
         const file = path === "/" ? "index.html" : path.slice(1);
         const contents = await readFile(
@@ -142,6 +153,100 @@ export function createPidaServer(options: HttpOptions) {
         throw new PidaError("UNAUTHORIZED", 401);
       const principal = await options.authenticate(auth.slice(7));
       if (!principal) throw new PidaError("UNAUTHORIZED", 401);
+      if (path === "/v1/programs" && req.method === "GET") {
+        json(res, 200, options.programs?.list(principal) ?? { enabled: [] }); return;
+      }
+      if (path === "/v1/programs/draft" && req.method === "POST") {
+        if (!options.programs) throw new PidaError("PROGRAMS_UNAVAILABLE", 404);
+        const input = await body(req); keys(input, ["candidateId", "sourceDigest"]);
+        if (typeof input.candidateId !== "string" || typeof input.sourceDigest !== "string") throw new PidaError("INVALID_BODY", 400);
+        json(res, 200, options.programs.draft(principal, input.candidateId, input.sourceDigest)); return;
+      }
+      if (path === "/v1/project" || path.startsWith("/v1/project/")) {
+        if (!options.projectView) throw new PidaError("PROJECT_DISABLED", 404);
+        if (req.method !== "GET") throw new PidaError("METHOD_NOT_ALLOWED", 405);
+        const query = new URL(req.url!, "http://pida.invalid").searchParams;
+        if (path === "/v1/project") json(res, 200, { enabled: true, ...await options.projectView.list(principal, query.get("path") ?? ".") });
+        else if (path === "/v1/project/file") json(res, 200, await options.projectView.read(principal, query.get("path") ?? ""));
+        else if (path === "/v1/project/changes") json(res, 200, await options.projectView.changes(principal));
+        else throw new PidaError("NOT_FOUND", 404);
+        return;
+      }
+      if (path === "/v1/agents" || path.startsWith("/v1/agents/")) {
+        if (!principal.permissions.includes("pida:agents")) throw new PidaError("FORBIDDEN", 403);
+        const agents = options.agents;
+        if (!agents) throw new PidaError("AGENTS_DISABLED", 404);
+        if (path === "/v1/agents" && req.method === "GET") { json(res, 200, { agents: agents.list(principal) }); return; }
+        if (path === "/v1/agents" && req.method === "POST") {
+          const input = await body(req); keys(input, ["name", "role", "persona"]);
+          const agent = await agents.register(principal, input as any);
+          if (agent.persona && options.agentMemory) options.agentMemory(agent.id).revisePersona({ expectedRevision: null, text: agent.persona, sourceRefs: ["owner:registration"] });
+          json(res, 201, agent); return;
+        }
+        const route = /^\/v1\/agents\/([a-f0-9-]{36})(?:\/(.*))?$/.exec(path);
+        if (!route) throw new PidaError("NOT_FOUND", 404);
+        const agentId = route[1]!, action = route[2];
+        const agent = agents.get(agentId, principal);
+        if (!action && req.method === "GET") { json(res, 200, agent); return; }
+        if (action === "jobs" && req.method === "GET") { json(res, 200, { jobs: agents.jobs(agentId, principal) }); return; }
+        if (action === "jobs" && req.method === "POST") {
+          const input = await body(req); keys(input, ["input", "requestId", "parentJobId"]);
+          json(res, 202, await agents.enqueue(agentId, principal, input as any)); return;
+        }
+        if ((action === "pause" || action === "resume") && req.method === "POST") {
+          keys(await body(req), []);
+          if (action === "pause") await agents.pause(agentId, principal); else await agents.resume(agentId, principal);
+          json(res, 200, agents.get(agentId, principal)); return;
+        }
+        const jobRoute = /^jobs\/([a-f0-9-]{36})(?:\/(cancel|steer|follow-up|export|recovery))?$/.exec(action ?? "");
+        if (jobRoute) {
+          const job = agents.getJob(jobRoute[1]!, principal);
+          if (job.agentId !== agentId) throw new PidaError("NOT_FOUND", 404);
+          if (!jobRoute[2] && req.method === "GET") { json(res, 200, job); return; }
+          if (jobRoute[2] === "cancel" && req.method === "POST") { keys(await body(req), []); await agents.cancel(job.id, principal); json(res, 200, agents.getJob(job.id, principal)); return; }
+          if ((jobRoute[2] === "steer" || jobRoute[2] === "follow-up") && req.method === "POST") {
+            const input = await body(req); keys(input, ["text", "expectedRunId"]);
+            if (typeof input.text !== "string" || typeof input.expectedRunId !== "string" || !job.sessionId || job.status !== "running") throw new PidaError("RUN_NOT_ACTIVE", 409);
+            const target = await agents.getRuntime(agentId, principal);
+            json(res, 200, await (jobRoute[2] === "steer" ? target.steer(job.sessionId, principal, input.text, input.expectedRunId) : target.followUp(job.sessionId, principal, input.text, input.expectedRunId))); return;
+          }
+          if (jobRoute[2] === "export" && req.method === "GET") {
+            if (!job.sessionId || !job.runId) throw new PidaError("RUN_NOT_FOUND", 404);
+            json(res, 200, (await agents.getRuntime(agentId, principal)).exportRun(job.sessionId, job.runId, principal)); return;
+          }
+          if (jobRoute[2] === "recovery" && req.method === "GET") {
+            if (!job.sessionId) { json(res, 200, { sessionId: null, autoReplay: false, pendingEffects: [] }); return; }
+            json(res, 200, (await agents.getRuntime(agentId, principal)).getRecovery(job.sessionId, principal)); return;
+          }
+        }
+        if (action === "reconcile" && req.method === "POST") {
+          const input = await body(req); keys(input, ["inspected", "effects", "note"]);
+          await agents.reconcile(agentId, principal, input as any); json(res, 200, agents.get(agentId, principal)); return;
+        }
+        if (action === "memory" || action?.startsWith("memory/")) {
+          const store = options.agentMemory?.(agentId);
+          if (!store) throw new PidaError("MEMORY_UNAVAILABLE", 404);
+          if (action === "memory" && req.method === "GET") {
+            if (!principal.permissions.includes("agent:memory:read")) throw new PidaError("FORBIDDEN", 403);
+            json(res, 200, store.view()); return;
+          }
+          if (req.method !== "POST") throw new PidaError("METHOD_NOT_ALLOWED", 405);
+          if (!principal.permissions.includes("agent:memory:write")) throw new PidaError("FORBIDDEN", 403);
+          const input = await body(req, 131_072);
+          if (action === "memory/persona") json(res, 200, store.revisePersona(input as any));
+          else if (action === "memory/experiences") { keys(input, ["kind", "text", "sourceRefs", "supersedes"]); json(res, 201, store.remember({ ...input, authority: "owner" } as any)); }
+          else if (action === "memory/retract") json(res, 200, store.retractExperience(input as any));
+          else if (action === "memory/states") json(res, 201, store.transition(input as any));
+          else throw new PidaError("NOT_FOUND", 404);
+          return;
+        }
+        if ((action === "workbench" || action === "workbench/file") && req.method === "GET") {
+          const area = options.agentWorkbench?.(agentId);
+          if (!area) throw new PidaError("WORKBENCH_UNAVAILABLE", 404);
+          json(res, 200, action === "workbench" ? await area.status(principal) : await area.read(principal, new URL(req.url!, "http://pida.invalid").searchParams.get("path") ?? "")); return;
+        }
+        throw new PidaError("NOT_FOUND", 404);
+      }
       if (options.workbench && path === "/v1/studio" && req.method === "GET") {
         json(res, 200, await options.workbench.uiState(principal)); return;
       }
@@ -185,6 +290,7 @@ export function createPidaServer(options: HttpOptions) {
       if (path.startsWith("/v1/provider") && options.providerSettings) {
         if (!principal.permissions.includes("pida:configure"))
           throw new PidaError("FORBIDDEN", 403);
+        if (options.connector && !(path === "/v1/provider" && req.method === "GET")) throw new PidaError("PROVIDER_HOST_MANAGED", 409);
         if (path === "/v1/provider/chatgpt/login" && req.method === "POST") {
           keys(await body(req), []);
           json(res, 200, options.providerSettings.startChatGPT(principal.id)); return;
@@ -206,7 +312,7 @@ export function createPidaServer(options: HttpOptions) {
           json(res, 200, options.providerSettings.inputChatGPT(login[1]!, principal.id, input.value)); return;
         }
         if (path === "/v1/provider" && req.method === "GET") {
-          json(res, 200, options.providerSettings.get());
+          json(res, 200, { ...options.providerSettings.get(), ...(options.connector ? { connector: { ...options.connector, managed: true } } : {}) });
           return;
         }
         if (
@@ -251,12 +357,25 @@ export function createPidaServer(options: HttpOptions) {
         return;
       }
       const match = path.match(
-        /^\/v1\/sessions\/([a-f0-9-]{36})(?:\/(runs|cancel|trace|compact|handoff|recovery))?$/,
+        /^\/v1\/sessions\/([a-f0-9-]{36})(?:\/(runs|cancel|trace|compact|handoff|recovery|steer|follow-up))?$/,
       );
       if (!match) throw new PidaError("NOT_FOUND", 404);
       const id = match[1]!,
         action = match[2];
+      if ((action === "steer" || action === "follow-up") && req.method === "POST") {
+        const input = await body(req); keys(input, ["text", "expectedRunId"]);
+        if (typeof input.text !== "string" || typeof input.expectedRunId !== "string") throw new PidaError("INVALID_BODY", 400);
+        json(res, 200, await (action === "steer" ? runtime.steer(id, principal, input.text, input.expectedRunId) : runtime.followUp(id, principal, input.text, input.expectedRunId))); return;
+      }
       if (action === "runs" && req.method === "GET") { json(res, 200, { runs: runtime.listRuns(id, principal) }); return; }
+      if (action === "recovery" && req.method === "POST") {
+        if (!principal.permissions.includes("pida:recover")) throw new PidaError("FORBIDDEN", 403);
+        const input = await body(req); keys(input, ["inspected", "effects"]);
+        if (input.inspected !== true || !Array.isArray(input.effects) || input.effects.length > 100 || input.effects.some(e => !e || typeof e.id !== "string" || !["applied", "not_applied"].includes(e.state))) throw new PidaError("INVALID_BODY", 400);
+        await runtime.resumeSession(id, principal);
+        for (const effect of input.effects) runtime.reconcileEffect(id, principal, effect.id, effect.state);
+        json(res, 200, runtime.getRecovery(id, principal)); return;
+      }
       if (action === "recovery" && req.method === "GET") { json(res, 200, runtime.getRecovery(id, principal)); return; }
       if (!action && req.method === "GET") {
         await runtime.resumeSession(id, principal);

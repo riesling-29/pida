@@ -1,3 +1,8 @@
+import type { AgentProfile, AgentJob } from "./agent-supervisor.js";
+import type { AgentMemoryView, AgentPersona, AgentExperience, InformationTransition, AgentInformationState } from "./agent-memory.js";
+import type { ProjectChanges, ProjectEntry } from "./project-view.js";
+export type { AgentProfile, AgentJob } from "./agent-supervisor.js";
+export type { AgentMemoryView, InformationTransition } from "./agent-memory.js";
 import type { ObservationBundle, ResultManifest } from "./execution-contract.js";
 export type { ObservationBundle, ResultManifest } from "./execution-contract.js";
 import type {
@@ -69,6 +74,34 @@ export class PidaClient {
   private path(id: string) {
     return `/v1/sessions/${encodeURIComponent(id)}`;
   }
+  private agentPath(id: string) { return `/v1/agents/${encodeURIComponent(id)}`; }
+  async listAgents(): Promise<{ agents: AgentProfile[] }> { return (await this.request("/v1/agents")).json(); }
+  async createAgent(input: {name: string; role?: string; persona?: string}): Promise<AgentProfile> { return (await this.request("/v1/agents", "POST", input)).json(); }
+  async getAgent(id: string): Promise<AgentProfile> { return (await this.request(this.agentPath(id))).json(); }
+  async pauseAgent(id: string): Promise<AgentProfile> { return (await this.request(this.agentPath(id) + "/pause", "POST", {})).json(); }
+  async resumeAgent(id: string): Promise<AgentProfile> { return (await this.request(this.agentPath(id) + "/resume", "POST", {})).json(); }
+  async listAgentJobs(id: string): Promise<{jobs: AgentJob[]}> { return (await this.request(this.agentPath(id) + "/jobs")).json(); }
+  async getAgentJob(id: string, jobId: string): Promise<AgentJob> { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId))).json(); }
+  async enqueueAgentJob(id: string, input: {input: string; requestId: string; parentJobId?: string}): Promise<AgentJob> { return (await this.request(this.agentPath(id) + "/jobs", "POST", input)).json(); }
+  async cancelAgentJob(id: string, jobId: string): Promise<AgentJob> { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/cancel", "POST", {})).json(); }
+  async steerAgentJob(id: string, jobId: string, text: string, expectedRunId: string) { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/steer", "POST", {text, expectedRunId})).json(); }
+  async getAgentJobRecovery(id: string, jobId: string) { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/recovery")).json(); }
+  async reconcileAgent(id: string, input: {inspected: true; effects: {id: string; state: "applied" | "not_applied"}[]; note?: string}): Promise<AgentProfile> { return (await this.request(this.agentPath(id) + "/reconcile", "POST", input)).json(); }
+  async exportAgentJob(id: string, jobId: string): Promise<ObservationBundle> { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/export")).json(); }
+  async getAgentMemory(id: string): Promise<AgentMemoryView> { return (await this.request(this.agentPath(id) + "/memory")).json(); }
+  async reviseAgentPersona(id: string, input: {expectedRevision: number | null; text: string; sourceRefs: string[]}): Promise<AgentPersona> { return (await this.request(this.agentPath(id) + "/memory/persona", "POST", input)).json(); }
+  async rememberAgentExperience(id: string, input: {kind: "fact" | "decision" | "correction"; text: string; sourceRefs: string[]; supersedes?: string[]}): Promise<AgentExperience> { return (await this.request(this.agentPath(id) + "/memory/experiences", "POST", input)).json(); }
+  async retractAgentExperience(id: string, input: {id: string; expectedRevision: number; reason: string; sourceRefs: string[]}): Promise<AgentExperience> { return (await this.request(this.agentPath(id) + "/memory/retract", "POST", input)).json(); }
+  async transitionAgentMemory(id: string, input: InformationTransition): Promise<AgentInformationState> { return (await this.request(this.agentPath(id) + "/memory/states", "POST", input)).json(); }
+  async getAgentWorkbench(id: string): Promise<Awaited<ReturnType<PidaClient["getWorkbench"]>>> { return (await this.request(this.agentPath(id) + "/workbench")).json(); }
+  async readAgentFile(id: string, path: string): Promise<{path: string; content: string}> { return (await this.request(this.agentPath(id) + "/workbench/file?path=" + encodeURIComponent(path))).json(); }
+  async getPrograms(): Promise<ReturnType<import("./program-registry.js").ProgramRegistry["list"]>> { return (await this.request("/v1/programs")).json(); }
+  async draftProgram(input: {candidateId: string; sourceDigest: string}): Promise<ReturnType<import("./program-registry.js").ProgramRegistry["draft"]>> { return (await this.request("/v1/programs/draft", "POST", input)).json(); }
+  async getProject(path = "."): Promise<{enabled: true; path: string; files: ProjectEntry[]; truncated: boolean}> { return (await this.request("/v1/project?path=" + encodeURIComponent(path))).json(); }
+  async readProjectFile(path: string): Promise<{path: string; content: string; bytes: number; revision: string}> { return (await this.request("/v1/project/file?path=" + encodeURIComponent(path))).json(); }
+  async getProjectChanges(): Promise<ProjectChanges> { return (await this.request("/v1/project/changes")).json(); }
+  async steer(id: string, text: string, expectedRunId: string) { return (await this.request(this.path(id) + "/steer", "POST", { text, expectedRunId })).json(); }
+  async followUp(id: string, text: string, expectedRunId: string) { return (await this.request(this.path(id) + "/follow-up", "POST", { text, expectedRunId })).json(); }
   async getWorkbench(): Promise<{ enabled: boolean; engine: string; revision?: string; canCheckpoint?: boolean; files: { path: string; bytes: number }[]; skills: { name: string; description: string }[]; history: { id: string; message: string }[] }> {
     return (await this.request("/v1/workbench")).json();
   }
@@ -149,6 +182,7 @@ export class PidaClient {
     return { jsonl: await response.text(), complete: response.headers.get("X-Pida-Complete") === "true" };
   }
   async getRecovery(id: string): Promise<{ sessionId: string; autoReplay: false; pendingEffects: { id: string; runId: string; toolCallId: string; toolName: string; state: string }[] }> { return (await this.request(this.path(id) + "/recovery")).json(); }
+  async reconcileSession(id: string, effects: {id: string; state: "applied" | "not_applied"}[]): Promise<Awaited<ReturnType<PidaClient["getRecovery"]>>> { return (await this.request(this.path(id) + "/recovery", "POST", { inspected: true, effects })).json(); }
   async compactSession(id: string, handoff = false): Promise<{ sessionId: string; compacted: boolean }> {
     return (await this.request(this.path(id) + (handoff ? "/handoff" : "/compact"), "POST", {})).json();
   }
@@ -228,6 +262,14 @@ export class PidaClient {
 /** Stable, credential-free explanations shared by both bundled chat surfaces. */
 export function explainError(code?: string): string {
   const messages: Record<string, string> = {
+    AGENTS_DISABLED: "이 워크스페이스에서 상주 에이전트가 꺼져 있습니다.",
+    AGENT_RECOVERY_REQUIRED: "중단된 에이전트의 실제 변경 상태를 확인하고 복구 기록을 제출한 뒤 재개하세요.",
+    PROGRAM_APPROVAL_MISMATCH: "프로그램 또는 실행 계약이 변경됐습니다. 호스트에서 내용을 확인하고 programs enable로 다시 등록하세요.",
+    PROGRAM_ADAPTER_REQUIRED: "이 프로그램은 실행 환경과 입출력 어댑터를 먼저 지정해야 합니다.",
+    PROGRAM_SOURCE_CHANGED: "저장소 원본이 바뀌었습니다. 후보를 다시 조회하세요.",
+    PROVIDER_HOST_MANAGED: "호스트 전용 커넥터를 사용 중입니다. 호스트 설정에서 변경하세요.",
+    MEMORY_HEAD_CONFLICT: "다른 정보 상태가 먼저 저장됐습니다. 현재 상태를 다시 읽고 이어주세요.",
+    PERSONA_REVISION_CONFLICT: "페르소나가 먼저 변경됐습니다. 현재 개정을 확인하고 다시 편집하세요.",
     CHATGPT_LOGIN_REQUIRED: "ChatGPT로 로그인한 뒤 모델을 선택해주세요.",
     CHATGPT_LOGIN_FAILED: "ChatGPT 로그인을 완료하지 못했습니다. 로그인과 구독 사용 권한을 확인하고 다시 시도하세요. 기존 설정은 유지됩니다.",
     CHATGPT_LOGIN_CANCELLED: "ChatGPT 로그인을 취소했습니다. 기존 연결은 유지됩니다.",

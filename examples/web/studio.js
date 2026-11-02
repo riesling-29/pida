@@ -11,6 +11,8 @@ export function createStudio({ client, request, changed, disconnected }) {
   let generation = 0, refreshSequence = 0, fileSequence = 0, mobile = false, selectedFile = "", target = "ui", view = "preview", poll;
   let review, changes, bundle, reviewNote = "";
   let activity, activityTimer, projectTools = false, previewRefreshing = false;
+  let project = { files: [] }, projectPath = ".", projectChanges, projectSequence = 0;
+  let programs, programsLoading = false, programDrafting = false, programSequence = 0, programDownloadUrl;
   const payloads = new Map(), rendered = new Map(), renderErrors = new Set();
   const frames = [$("studio-frame"), $("service-frame")];
   const status = text => { if ($("studio-run-status").textContent !== text) $("studio-run-status").textContent = text; };
@@ -92,7 +94,8 @@ export function createStudio({ client, request, changed, disconnected }) {
   }
   function controls() {
     const locked = busy || remoteRunning || hostBusy || !connected;
-    for (const id of ["choose-template", "first-template", "studio-refresh", "studio-target-mode", "studio-file"]) $(id).disabled = locked || !available;
+    for (const id of ["choose-template", "first-template", "studio-refresh", "studio-target-mode", "studio-file"]) $(id).disabled = locked || (!available && !(target === "project" && projectTools));
+    for (const id of ["choose-template", "first-template"]) $(id).disabled = locked || !available || target === "project";
     $("studio-target-mode").disabled = locked || (!available && !projectTools);
     $("apply-template").disabled = locked || !selectedTemplate;
     for (const id of ["studio-send", "studio-prompt"]) $(id).disabled = locked || mock || (!available && !(target === "project" && projectTools)) || (target === "ui" && !state.html);
@@ -103,6 +106,9 @@ export function createStudio({ client, request, changed, disconnected }) {
     $("mode-disconnect").disabled = locked;
     for (const button of $("template-grid").querySelectorAll("button")) button.disabled = locked;
     $("studio-demo").hidden = !mock; $("open-service").disabled = !state.html;
+    $("studio-programs-refresh").disabled = !connected || programsLoading || programDrafting;
+    $("studio-program-candidate").disabled = programsLoading || programDrafting;
+    $("studio-program-draft").disabled = locked || programsLoading || programDrafting || !programs?.catalog?.candidates.some(candidate => candidate.id === $("studio-program-candidate").value && candidate.status === "ready");
     $("mode-tabs").hidden = !connected;
     $("studio-target-mode").value = target;
     $("studio-target").textContent = target === "ui" ? "app/index.html" : target === "project" ? "서버에 설정한 프로젝트 · project_* 도구" : selectedFile || "작업 공간 전체";
@@ -111,7 +117,7 @@ export function createStudio({ client, request, changed, disconnected }) {
   }
   function showMode(next) {
     mode = next;
-    for (const name of ["service", "studio", "workspace"]) {
+    for (const name of ["service", "studio", "workspace", "agents"]) {
       $(name === "workspace" ? "workspace" : name + "-view").hidden = !connected || name !== mode;
       document.querySelector(`#mode-tabs [data-mode="${name}"]`).setAttribute("aria-pressed", String(name === mode));
     }
@@ -119,14 +125,17 @@ export function createStudio({ client, request, changed, disconnected }) {
   }
   function showView(next) {
     view = next;
-    document.querySelector(".studio-tabs").hidden = target === "project";
+    document.querySelector(".studio-tabs").hidden = false;
     $("studio-project-panel").hidden = target !== "project";
+    $("studio-programs").hidden = target !== "project";
+    $("studio-tab-preview").hidden = target === "project";
+    if (target === "project" && view === "preview") view = "files";
     for (const name of ["preview", "files", "changes"]) {
-      $("studio-panel-" + name).hidden = target === "project" || name !== view;
+      $("studio-panel-" + name).hidden = name !== view;
       $("studio-tab-" + name).setAttribute("aria-selected", String(name === view));
       $("studio-tab-" + name).tabIndex = name === view ? 0 : -1;
     }
-    if (view === "files" && target !== "project") void readFile();
+    if (view === "files") void readFile();
     requestAnimationFrame(resize);
   }
   function resize() {
@@ -138,7 +147,7 @@ export function createStudio({ client, request, changed, disconnected }) {
   }
   new ResizeObserver(resize).observe($("studio-canvas"));
   function renderState() {
-    $("studio-sync").textContent = target === "project" ? "프로젝트 변경은 서비스 작업 공간의 미리보기·파일 복원 범위에 포함되지 않습니다." : !state.html ? "서비스 화면 없음 · 파일 작업은 바로 시작할 수 있습니다" : `저장 ${state.revision.slice(0, 8)} · ${renderErrors.size ? "화면 스크립트 오류" : rendered.get("studio-frame") === state.revision ? "미리보기 로드됨" : "미리보기 로딩 중"}`;
+    $("studio-sync").textContent = target === "project" ? `프로젝트 /${project.path ?? projectPath} · ${project.files.length}개 항목${project.truncated ? " · 일부만 표시" : ""} · 읽기 전용 조회` : !state.html ? "서비스 화면 없음 · 파일 작업은 바로 시작할 수 있습니다" : `저장 ${state.revision.slice(0, 8)} · ${renderErrors.size ? "화면 스크립트 오류" : rendered.get("studio-frame") === state.revision ? "미리보기 로드됨" : "미리보기 로딩 중"}`;
   }
   function render(force = false) {
     $("service-empty").hidden = !!state.html; $("studio-empty").hidden = !!state.html; $("preview-viewport").hidden = !state.html;
@@ -162,26 +171,29 @@ export function createStudio({ client, request, changed, disconnected }) {
     renderState(); // Loading signals are not verification evidence.
   });
   async function readFile() {
-    const active = generation, sequence = ++fileSequence, path = selectedFile;
-    $("studio-source").textContent = path ? "파일을 읽고 있습니다…" : "대화로 파일을 만들거나 작업 공간에서 올리세요.";
+    const active = generation, sequence = ++fileSequence, path = selectedFile, currentTarget = target;
+    $("studio-source").textContent = path ? "파일을 읽고 있습니다…" : currentTarget === "project" ? "프로젝트의 파일 또는 폴더를 선택하세요." : "대화로 파일을 만들거나 작업 공간에서 올리세요.";
     $("studio-file-meta").textContent = "";
     if (!path) return;
     try {
-      const file = await client.readWorkspaceFile(path);
-      if (active !== generation || sequence !== fileSequence) return;
+      const file = await (currentTarget === "project" ? client.readProjectFile(path) : client.readWorkspaceFile(path));
+      if (active !== generation || sequence !== fileSequence || currentTarget !== target) return;
       $("studio-source").textContent = file.content;
       $("studio-file-meta").textContent = `${new TextEncoder().encode(file.content).length.toLocaleString()} bytes · 읽기 전용 보기`;
     } catch (error) { if (active === generation && sequence === fileSequence) $("studio-source").textContent = explainError(error.code); }
   }
   function renderFiles() {
-    if (!workspace.files.some(f => f.path === selectedFile)) selectedFile = workspace.files[0]?.path ?? "";
+    const files = target === "project" ? project.files : workspace.files;
+    if (!files.some(f => f.path === selectedFile && f.type !== "directory")) selectedFile = files.find(f => f.type !== "directory")?.path ?? "";
     $("studio-file").replaceChildren();
-    for (const file of workspace.files) { const option = document.createElement("option"); option.value = file.path; option.textContent = file.path; $("studio-file").append(option); }
-    if (!workspace.files.length) { const option = document.createElement("option"); option.value = ""; option.textContent = "선택한 파일 없음"; $("studio-file").append(option); }
+    if (target === "project" && projectPath && projectPath !== ".") { const option = document.createElement("option"); option.value = ".."; option.textContent = "↑ 상위 폴더"; $("studio-file").append(option); }
+    if (!selectedFile) { const option = document.createElement("option"); option.value = ""; option.textContent = files.length ? "파일 또는 폴더 선택" : "조회 가능한 파일 없음"; $("studio-file").append(option); }
+    for (const file of files) { const option = document.createElement("option"); option.value = file.path; option.textContent = (file.type === "directory" ? "▸ " : "") + file.path; $("studio-file").append(option); }
     $("studio-file").value = selectedFile;
     if (view === "files") void readFile();
   }
   async function refresh(force = false) {
+    if (target === "project") { await refreshProject(); renderReview(); return; }
     const active = generation, sequence = ++refreshSequence;
     try {
       const [result, files] = await Promise.all([request("/v1/studio"), client.getWorkbench()]);
@@ -196,6 +208,61 @@ export function createStudio({ client, request, changed, disconnected }) {
       } else throw error;
     }
   }
+  async function refreshProject(path = projectPath) {
+    const active = generation, sequence = ++projectSequence;
+    const [listingResult, diffResult] = await Promise.allSettled([client.getProject(path), client.getProjectChanges()]);
+    if (active !== generation || sequence !== projectSequence || target !== "project") return;
+    if (listingResult.status === "rejected") throw listingResult.reason;
+    const listing = listingResult.value;
+    project = listing; projectPath = listing.path ?? path;
+    projectChanges = diffResult.status === "fulfilled" ? diffResult.value : { available: false, files: [], untracked: [], diff: "", truncated: false };
+    renderFiles(); renderState(); renderReview(); controls();
+  }
+  function clearProgramDraft() {
+    if (programDownloadUrl) URL.revokeObjectURL(programDownloadUrl);
+    programDownloadUrl = undefined; $("studio-program-review").hidden = true;
+    $("studio-program-manifest").textContent = ""; $("studio-program-download").removeAttribute("href");
+  }
+  function programSource() {
+    const candidate = programs?.catalog?.candidates.find(candidate => candidate.id === $("studio-program-candidate").value);
+    $("studio-program-source").textContent = candidate ? `${candidate.kind} · ${candidate.path} · ${candidate.status === "ready" ? "초안 생성 가능" : "별도 어댑터 필요"}\n${candidate.description}\n출처 ${candidate.sourceDigest}` : "";
+    controls();
+  }
+  async function refreshPrograms() {
+    if (!connected || programsLoading || programDrafting) return;
+    const active = generation, sequence = ++programSequence; programsLoading = true; controls();
+    $("studio-programs-status").textContent = "서버에 설정한 프로젝트를 조회하고 있습니다…";
+    try {
+      const result = await request("/v1/programs"); if (active !== generation || sequence !== programSequence) return;
+      const previous = $("studio-program-candidate").value; programs = result; clearProgramDraft();
+      $("studio-programs-enabled").replaceChildren();
+      for (const tool of result.enabled) { const li = document.createElement("li"); li.textContent = `${tool.name} · ${tool.toolName} · ${tool.permitted ? "허용" : "권한 없음"} (${tool.permission}) · ${tool.effect} · ${tool.inputMode} → ${tool.outputMode}\n${tool.description}`; $("studio-programs-enabled").append(li); }
+      if (!result.enabled.length) { const li = document.createElement("li"); li.textContent = "연결된 프로그램 도구가 없습니다."; $("studio-programs-enabled").append(li); }
+      $("studio-program-candidate").replaceChildren();
+      for (const candidate of result.catalog?.candidates ?? []) { const option = document.createElement("option"); option.value = candidate.id; option.textContent = `${candidate.name} · ${candidate.path} · ${candidate.status === "ready" ? "초안 가능" : "어댑터 필요"}`; $("studio-program-candidate").append(option); }
+      if (!result.catalog?.candidates.length) { const option = document.createElement("option"); option.value = ""; option.textContent = result.catalog ? "발견한 후보 없음" : "검색할 프로젝트가 설정되지 않음"; $("studio-program-candidate").append(option); }
+      if (result.catalog?.candidates.some(candidate => candidate.id === previous)) $("studio-program-candidate").value = previous;
+      $("studio-programs-status").textContent = `${result.catalog?.candidates.length ?? 0}개 후보${result.catalog?.truncated ? " · 일부만 표시" : ""}${result.catalog?.warnings?.length ? " · " + result.catalog.warnings.map(warning => typeof warning === "string" ? warning : `${warning.path}: ${warning.code}`).join(" · ") : ""}`;
+      programSource();
+    } catch (error) {
+      if (active === generation && sequence === programSequence) { programs = undefined; clearProgramDraft(); $("studio-programs-enabled").replaceChildren(); $("studio-program-candidate").replaceChildren(); $("studio-program-source").textContent = ""; $("studio-programs-status").textContent = error.status === 404 ? "이 서버에는 프로그램 연결 API가 없습니다." : `${explainError(error.code)}${error.code ? " · " + error.code : ""}`; }
+    } finally { if (active === generation && sequence === programSequence) { programsLoading = false; controls(); } }
+  }
+  async function draftProgram() {
+    const candidate = programs?.catalog?.candidates.find(candidate => candidate.id === $("studio-program-candidate").value);
+    if (!candidate || $("studio-program-draft").disabled) return;
+    const active = generation; programDrafting = true; clearProgramDraft(); controls(); $("studio-programs-status").textContent = "원본 변경 여부를 확인하고 초안을 생성합니다…";
+    try {
+      const result = await request("/v1/programs/draft", { method: "POST", body: { candidateId: candidate.id, sourceDigest: candidate.sourceDigest } });
+      if (active !== generation) return;
+      const content = JSON.stringify(result.manifest, null, 2) + "\n";
+      $("studio-program-manifest").textContent = content;
+      programDownloadUrl = URL.createObjectURL(new Blob([content], { type: "application/json" }));
+      $("studio-program-download").href = programDownloadUrl; $("studio-program-download").download = String(result.suggestedFile).split(/[\\/]/).at(-1).replace(/[^a-zA-Z0-9._-]/g, "_") || "pida-program.json";
+      $("studio-program-review").hidden = false; $("studio-programs-status").textContent = "초안 생성됨 · 도구 등록·권한 부여·실행은 아직 하지 않았습니다.";
+    } catch (error) { if (active === generation) $("studio-programs-status").textContent = error.code?.includes("CHANGED") || error.code?.includes("CONFLICT") ? "원본 파일이 변경됐습니다. 목록을 새로고침한 뒤 다시 생성하세요." : `${explainError(error.code)}${error.code ? " · " + error.code : ""}`; }
+    finally { if (active === generation) { programDrafting = false; controls(); } }
+  }
   function refreshDuringRun() {
     if (previewRefreshing) return;
     previewRefreshing = true;
@@ -205,11 +272,12 @@ export function createStudio({ client, request, changed, disconnected }) {
       .finally(() => { previewRefreshing = false; });
   }
   function renderReview() {
-    $("studio-change-count").textContent = changes?.files.length ?? 0;
-    $("studio-change-summary").textContent = changes ? `${changes.files.length}개 파일 변경 · ${changes.base.slice(0, 8)} → ${changes.head.slice(0, 8)}${changes.truncated ? " · diff 일부만 표시" : ""}${review?.revision && workspace.revision !== review.revision ? " · 이후 변경 있음" : ""}` : reviewNote || "요청 전후의 파일 변경을 여기에 표시합니다.";
-    $("studio-diff").textContent = changes?.diff || (changes ? "파일 변경 없음" : "");
+    const shown = target === "project" ? projectChanges : changes;
+    $("studio-change-count").textContent = shown?.files.length ?? 0;
+    $("studio-change-summary").textContent = target === "project" ? !shown ? "프로젝트 변경 내역을 조회하세요." : !shown.available ? "Git 변경 비교를 사용할 수 없는 프로젝트입니다." : `${shown.files.length}개 변경 · 현재 Git staged + working tree${shown.truncated ? " · diff 일부만 표시" : ""}${shown.untracked?.length ? ` · 미추적 ${shown.untracked.length}개` : ""}` : changes ? `${changes.files.length}개 파일 변경 · ${changes.base.slice(0, 8)} → ${changes.head.slice(0, 8)}${changes.truncated ? " · diff 일부만 표시" : ""}${review?.revision && workspace.revision !== review.revision ? " · 이후 변경 있음" : ""}` : reviewNote || "요청 전후의 파일 변경을 여기에 표시합니다.";
+    $("studio-diff").textContent = shown?.diff || (shown ? target === "project" && shown.untracked?.length ? "미추적 파일은 파일 탭에서 내용을 확인하세요." : "표시할 diff 없음" : "");
     $("studio-changed-files").replaceChildren();
-    for (const path of changes?.files ?? []) { const li = document.createElement("li"); li.textContent = path; $("studio-changed-files").append(li); }
+    for (const path of shown?.files ?? []) { const li = document.createElement("li"); li.textContent = path; $("studio-changed-files").append(li); }
     const manifest = bundle?.manifest;
     $("studio-outcome").textContent = manifest ? `${outcomes[manifest.reported_status] ?? "상태 미확인"}${manifest.code ? " · " + explainError(manifest.code) : ""}` : review ? "실행 결과 미확인 · 아직 검증되지 않았습니다" : "아직 실행한 요청이 없습니다.";
     $("studio-verification").replaceChildren();
@@ -374,15 +442,26 @@ export function createStudio({ client, request, changed, disconnected }) {
       busy = false; changed(); controls(); schedulePoll(); $("studio-prompt").focus();
     }
   }
-  for (const button of document.querySelectorAll("#mode-tabs [data-mode]")) button.onclick = () => { showMode(button.dataset.mode); if (button.dataset.mode !== "workspace") refresh().catch(issue); };
+  for (const button of document.querySelectorAll("#mode-tabs [data-mode]")) button.onclick = () => { showMode(button.dataset.mode); if (["studio", "service"].includes(button.dataset.mode)) refresh().catch(issue); };
   for (const name of ["preview", "files", "changes"]) $("studio-tab-" + name).onclick = () => showView(name);
   document.querySelector(".studio-tabs").onkeydown = event => {
-    const names = ["preview", "files", "changes"], focused = names.find(name => event.target === $("studio-tab-" + name)), index = names.indexOf(focused ?? view);
-    const next = event.key === "ArrowRight" ? (index + 1) % 3 : event.key === "ArrowLeft" ? (index + 2) % 3 : event.key === "Home" ? 0 : event.key === "End" ? 2 : undefined;
+    const names = target === "project" ? ["files", "changes"] : ["preview", "files", "changes"], focused = names.find(name => event.target === $("studio-tab-" + name)), index = names.indexOf(focused ?? view);
+    const next = event.key === "ArrowRight" ? (index + 1) % names.length : event.key === "ArrowLeft" ? (index + names.length - 1) % names.length : event.key === "Home" ? 0 : event.key === "End" ? names.length - 1 : undefined;
     if (next !== undefined) { event.preventDefault(); showView(names[next]); $("studio-tab-" + names[next]).focus(); }
   };
-  $("studio-target-mode").onchange = () => { target = $("studio-target-mode").value; showView(target === "files" ? "files" : "preview"); renderState(); controls(); };
-  $("studio-file").onchange = () => { selectedFile = $("studio-file").value; target = "files"; controls(); void readFile(); };
+  $("studio-target-mode").onchange = () => { target = $("studio-target-mode").value; selectedFile = ""; fileSequence++; showView(target === "ui" ? "preview" : "files"); renderFiles(); renderState(); controls(); void refresh().catch(issue); };
+  $("studio-file").onchange = () => {
+    const path = $("studio-file").value;
+    if (target === "project") {
+      if (path === ".." || project.files.find(f => f.path === path)?.type === "directory") { selectedFile = ""; void refreshProject(path === ".." ? projectPath.split("/").slice(0, -1).join("/") || "." : path).catch(issue); return; }
+      selectedFile = path;
+    } else { selectedFile = path; target = "files"; }
+    controls(); void readFile();
+  };
+  $("studio-programs").ontoggle = () => { if ($("studio-programs").open && !programs) void refreshPrograms(); };
+  $("studio-programs-refresh").onclick = () => void refreshPrograms();
+  $("studio-program-candidate").onchange = () => { clearProgramDraft(); programSource(); };
+  $("studio-program-draft").onclick = () => void draftProgram();
   $("start-building").onclick = () => showMode("studio"); $("open-service").onclick = () => showMode("service"); $("mode-disconnect").onclick = disconnected;
   $("choose-template").onclick = templates; $("first-template").onclick = templates; $("close-templates").onclick = () => $("template-dialog").close();
   $("apply-template").onclick = async () => {
@@ -416,6 +495,7 @@ export function createStudio({ client, request, changed, disconnected }) {
     update({ connected: value, busy: parentBusy }) { connected = value; hostBusy = parentBusy; controls(); },
     async connect(info) {
       generation++; clearTimeout(poll); connected = true; mock = info.provider?.mode === "mock";
+      programSequence++; programs = undefined; programsLoading = programDrafting = false; clearProgramDraft();
       projectTools = info.tools?.some(tool => tool.permitted && tool.name.startsWith("project_")) ?? false;
       $("studio-project-option").hidden = !projectTools; $("studio-project-option").disabled = !projectTools;
       const browserChecks = info.tools?.some(tool => tool.permitted && tool.name === "ui_check");
@@ -426,9 +506,11 @@ export function createStudio({ client, request, changed, disconnected }) {
       if (review?.target === "project") reviewNote = "프로젝트 저장소 변경은 서비스 작업 공간의 파일 비교·복원 범위에 포함되지 않습니다.";
       await refresh(); if (!available && projectTools) target = "project";
       await restoreChat(); if (!remoteRunning) await finishReview(); showView(target === "files" ? "files" : "preview"); renderState(); controls();
+      if ($("studio-programs").open) void refreshPrograms();
     },
     reset() {
-      generation++; fileSequence++; clearTimeout(poll); connected = busy = remoteRunning = available = false; state = { html: "", revision: "", templates: [] }; workspace = { files: [] }; session = undefined; selectedFile = ""; target = "ui";
+      programSequence++; programs = undefined; programsLoading = programDrafting = false; clearProgramDraft(); $("studio-programs-enabled").replaceChildren(); $("studio-program-candidate").replaceChildren(); $("studio-program-source").textContent = ""; $("studio-programs-status").textContent = ""; $("studio-programs").open = false;
+      generation++; fileSequence++; projectSequence++; clearTimeout(poll); connected = busy = remoteRunning = available = false; state = { html: "", revision: "", templates: [] }; workspace = { files: [] }; project = { files: [] }; projectPath = "."; projectChanges = undefined; session = undefined; selectedFile = ""; target = "ui";
       payloads.clear(); rendered.clear(); renderErrors.clear(); for (const frame of frames) frame.removeAttribute("src");
       $("studio-messages").replaceChildren(); $("studio-source").textContent = ""; $("studio-file-meta").textContent = ""; $("template-dialog").close(); clearReview(); showView("preview"); renderFiles(); controls();
     },
