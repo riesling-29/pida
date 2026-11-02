@@ -2,7 +2,7 @@ import { createRunDetails } from "/run-details.js";
 import { explainError } from "/pida-client.js";
 const $ = id => document.getElementById(id);
 const statuses = { queued: "대기", running: "실행 중", completed: "실행 완료", failed: "실패", cancelled: "중단됨", interrupted: "서버 종료로 중단됨", limited: "실행 한도 도달" };
-const activities = { run_started: "작업 시작", turn_started: "모델 응답 대기", tool_started: "도구 실행", tool_completed: "도구 완료", tool_failed: "도구 실패", run_finished: "실행 종료", compaction_started: "컨텍스트 압축", compaction_completed: "압축 완료", output_retry: "출력 한도 재시도" };
+const activities = { retry_scheduled: "모델 재시도 대기", retry_finished: "재시도 결과", summarization_retry_attempt_start: "압축 재시도", summarization_retry_finished: "압축 재시도 결과", run_started: "작업 시작", turn_started: "모델 응답 대기", tool_started: "도구 실행", tool_completed: "도구 완료", tool_failed: "도구 실패", run_finished: "실행 종료", compaction_started: "컨텍스트 압축", compaction_completed: "압축 완료", output_retry: "출력 한도 재시도" };
 const stamp = value => value ? new Date(value).toLocaleString("ko-KR") : "시간 미기록";
 const textNode = (tag, text, className) => { const node = document.createElement(tag); node.textContent = text; if (className) node.className = className; return node; };
 

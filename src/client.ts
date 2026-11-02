@@ -1,4 +1,6 @@
 import type { AgentProfile, AgentJob } from "./agent-supervisor.js";
+import type { CompositionReport } from "./composition.js";
+export type { CompositionReport } from "./composition.js";
 import type { AgentMemoryView, AgentPersona, AgentExperience, InformationTransition, AgentInformationState } from "./agent-memory.js";
 import type { ProjectChanges, ProjectEntry } from "./project-view.js";
 export type { AgentProfile, AgentJob } from "./agent-supervisor.js";
@@ -160,6 +162,7 @@ export class PidaClient {
   async getInfo(): Promise<RuntimeInfo> {
     return (await this.request("/v1/info")).json();
   }
+  async getComposition(): Promise<CompositionReport> { return (await this.request("/v1/composition")).json(); }
   async createSession(): Promise<{ sessionId: string }> {
     return (await this.request("/v1/sessions", "POST", {})).json();
   }
@@ -167,6 +170,8 @@ export class PidaClient {
     sessionId: string;
     title: string;
     lastStatus?: SessionSummary["lastStatus"];
+    contextDescriptor?: import("./run-context.js").LoadedRunContext;
+    handoff?: import("./run-context.js").SessionHandoff;
     running: boolean;
     runs: number;
     tools: string[];
@@ -297,6 +302,9 @@ export function explainError(code?: string): string {
     OUTPUT_LIMIT: "출력 한도로 수정 명령이 중단됐습니다. 이미 저장된 변경은 유지됩니다. 요청을 나누거나 출력 한도와 실행 시간을 조정하세요.",
     EMPTY_RESPONSE: "모델이 표시할 답변을 보내지 않았습니다. 출력 한도와 모델의 추론 설정을 확인하세요.",
     RUN_TIMEOUT: "실행 시간이 초과됐습니다. 저장된 변경을 확인하고 이어서 요청하거나 실행 시간을 늘리세요.",
+    PROVIDER_IDLE_TIMEOUT: "모델 서버의 응답 스트림이 멈췄습니다. 저장된 변경과 서버 상태를 확인한 뒤 이어서 요청하세요.",
+    PROVIDER_RETRY_EXHAUSTED: "일시적 모델 오류의 재시도 한도에 도달했습니다. 모델 서버 상태를 확인하세요.",
+    COMPACTION_NO_PROGRESS: "대화 압축 후 문맥이 줄지 않아 반복을 중단했습니다. 기존 대화를 확인하고 요약해서 이어가세요.",
     UI_REVISION_CONFLICT: "화면이 다른 작업에서 변경됐습니다. 현재 화면을 다시 읽고 수정하도록 요청하세요.",
     WORKSPACE_REVISION_CONFLICT: "파일이 다른 작업에서 변경됐습니다. 새로고침 후 변경 내역을 다시 확인하세요.",
     INVALID_CHECKPOINT: "이 작업 공간에서 사용할 수 없는 변경 기준입니다. 실행 기록을 새로고침하세요.",

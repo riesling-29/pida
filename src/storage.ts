@@ -10,6 +10,7 @@ import {
 import { basename, join, resolve } from "node:path";
 import { hostname } from "node:os";
 import { randomUUID } from "node:crypto";
+import { validContextDescriptor, validHandoff, type LoadedRunContext } from "./run-context.js";
 import type { SessionSummary, TraceEvent } from "./protocol.js";
 
 export interface SavedSession extends SessionSummary {
@@ -21,6 +22,8 @@ export interface SavedSession extends SessionSummary {
   traces: TraceEvent[];
   activeRunId?: string;
   activeTaskId?: string;
+  lastRunId?: string;
+  contextDescriptor?: LoadedRunContext;
 }
 
 /** Application metadata only. Conversation serialization belongs to Pi. Single process. */
@@ -56,6 +59,8 @@ export class SessionStore {
         const saved = JSON.parse(
           readFileSync(join(this.indexDirectory, file), "utf8"),
         ) as SavedSession;
+        if (Number.isInteger(saved.version) && saved.version > 1) throw new Error("SESSION_SCHEMA_UNSUPPORTED");
+        if (saved.contextDescriptor && Number.isInteger(saved.contextDescriptor.schemaVersion) && saved.contextDescriptor.schemaVersion > 1) throw new Error("SESSION_SCHEMA_UNSUPPORTED");
         if (
           saved.version !== 1 ||
           !/^[a-f0-9-]{36}$/.test(saved.sessionId) ||
@@ -74,6 +79,9 @@ export class SessionStore {
           typeof saved.createdAt !== "string" ||
           typeof saved.updatedAt !== "string"
           || (saved.activeRunId !== undefined && !/^[a-f0-9-]{36}$/.test(saved.activeRunId))
+          || (saved.lastRunId !== undefined && !/^[a-f0-9-]{36}$/.test(saved.lastRunId))
+          || (saved.contextDescriptor !== undefined && !validContextDescriptor(saved.contextDescriptor, true))
+          || (saved.handoff !== undefined && !validHandoff(saved.handoff))
           || (saved.activeTaskId !== undefined && !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(saved.activeTaskId))
         ) {
           throw new Error("Invalid saved session metadata");
@@ -86,6 +94,7 @@ export class SessionStore {
       }
     } catch (error) {
       this.close();
+      if (error instanceof Error && error.message === "SESSION_SCHEMA_UNSUPPORTED") throw new Error("SESSION_SCHEMA_UNSUPPORTED: A newer Pida version is required. Original metadata and transcripts were preserved.");
       throw new Error("SESSION_METADATA_INVALID: Invalid saved session metadata. Preserve index and transcripts; repair from a trusted backup before restarting.");
     }
   }

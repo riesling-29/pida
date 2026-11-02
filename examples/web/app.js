@@ -3,6 +3,7 @@ import { RunState } from "/run-state.js";
 import { createRunInput } from "/run-input.js";
 import { createRunDetails } from "/run-details.js";
 import { createAgents } from "/agents.js";
+import { createComposition } from "/composition.js";
 import { PidaClient, explainError } from "/pida-client.js";
 const $ = (id) => document.getElementById(id);
 let token = "",
@@ -17,6 +18,7 @@ const run = new RunState();
 let capabilities = {}, selectionRequest = 0;
 const runInput = createRunInput({ client, run, textarea: $("prompt"), selector: $("workspace-input-mode"), section: $("workspace-live-input"), note: $("workspace-input-note"), receipt: $("workspace-input-receipt"), changed: () => controls(), explain: explainError });
 const runDetails = createRunDetails({ container: $("workspace-run-details"), load: () => client.getSessionTools(sessionId), explain: explainError });
+const composition = createComposition({ client });
 const agents = createAgents({ client });
 const studio = createStudio({
   client,
@@ -75,7 +77,7 @@ function controls() {
   $("connection-state").textContent = connected ? "connected" : "offline";
   $("footer-state").textContent = !connected ? "연결 대기" : running || remoteRunning ? "실행 중" : "작업 공간 연결됨";
   $("composer-state").textContent = !sessionId ? "새 대화를 시작하세요" : running || remoteRunning ? "작업을 수행하고 있습니다" : "준비됨";
-  $("open-settings").disabled = !connected || $("provider-settings").hidden;
+  $("open-settings").disabled = !connected || ($("provider-settings").hidden && !composition.available);
   $("toggle-sessions").disabled = !connected;
   $("toggle-inspector").disabled = !connected;
   $("refresh-workbench").disabled = busy;
@@ -111,7 +113,7 @@ function message(role, text) {
   $("messages").append(article);
   return content;
 }
-const traceLabels = { run_started: "작업 시작", turn_started: "모델 응답", tool_started: "도구 실행", tool_completed: "도구 실행 완료", tool_failed: "도구 실행 실패", run_finished: "작업 종료" };
+const traceLabels = { retry_scheduled: "모델 재시도 대기", retry_finished: "재시도 결과", summarization_retry_attempt_start: "압축 재시도", summarization_retry_finished: "압축 재시도 결과", run_started: "작업 시작", turn_started: "모델 응답", tool_started: "도구 실행", tool_completed: "도구 실행 완료", tool_failed: "도구 실행 실패", run_finished: "작업 종료" };
 function trace(event) {
   if (!run.acceptTrace(event)) return false;
   renderTrace(event); runDetails.select(sessionId, run.runId); controls();
@@ -232,6 +234,7 @@ async function connect() {
   $("tool-count").textContent = info.tools.length;
   if (!info.tools.length) $("tools").textContent = "등록된 도구 없음";
   await loadProviderSettings();
+  await composition.refresh();
   await refreshWorkbench();
   if (
     new URLSearchParams(location.hash.slice(1)).get("setup") === "1" ||
@@ -300,6 +303,7 @@ $("disconnect").onclick = () => {
   clearWorkbench();
   studio.reset();
   agents.reset();
+  composition.reset();
   token = "";
   $("provider-key").value = "";
   sessionId = undefined;
@@ -772,7 +776,8 @@ $("download-file").onclick = () => {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 function openSettings() {
-  if ($("provider-settings").hidden) return;
+  if ($("provider-settings").hidden && !composition.available) return;
+  void composition.refresh();
   $("provider-settings").open = true;
   if (!$("settings-dialog").open) $("settings-dialog").showModal();
 }

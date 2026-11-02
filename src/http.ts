@@ -1,4 +1,5 @@
 import type { ProgramRegistry } from "./program-registry.js";
+import { compositionReport, type CompositionSnapshot } from "./composition.js";
 import type { AgentSupervisor } from "./agent-supervisor.js";
 import type { AgentMemoryStore } from "./agent-memory.js";
 import type { ProjectView } from "./project-view.js";
@@ -24,6 +25,8 @@ export interface HttpOptions {
   projectView?: ProjectView;
   programs?: ProgramRegistry;
   connector?: ProviderConnectorManifest;
+  /** Host settings inventory, filtered/redacted at the HTTP boundary. */
+  getComposition?: () => CompositionSnapshot | Promise<CompositionSnapshot>;
   /** Optional local workspace administration; never enable for arbitrary tenant users. */
   providerSettings?: ProviderSettings;
   /** Verify a bearer token with the host identity service. Never trust body claims. */
@@ -126,7 +129,7 @@ export function createPidaServer(options: HttpOptions) {
       if (
         options.serveDemo &&
         req.method === "GET" &&
-        ["/", "/app.js", "/studio.js", "/agents.js", "/run-state.js", "/run-input.js", "/run-details.js", "/style.css", "/pida-client.js"].includes(path)
+        ["/", "/app.js", "/studio.js", "/agents.js", "/run-state.js", "/run-input.js", "/run-details.js", "/composition.js", "/style.css", "/pida-client.js"].includes(path)
       ) {
         const file = path === "/" ? "index.html" : path.slice(1);
         const contents = await readFile(
@@ -153,6 +156,12 @@ export function createPidaServer(options: HttpOptions) {
         throw new PidaError("UNAUTHORIZED", 401);
       const principal = await options.authenticate(auth.slice(7));
       if (!principal) throw new PidaError("UNAUTHORIZED", 401);
+      if (path === "/v1/composition") {
+        if (!principal.permissions.includes("pida:configure")) throw new PidaError("FORBIDDEN", 403);
+        if (req.method !== "GET") throw new PidaError("METHOD_NOT_ALLOWED", 405);
+        if (!options.getComposition) throw new PidaError("COMPOSITION_UNAVAILABLE", 404);
+        json(res, 200, compositionReport(await options.getComposition(), principal, options.agents?.list(principal).map(agent => agent.id) ?? [])); return;
+      }
       if (path === "/v1/programs" && req.method === "GET") {
         json(res, 200, options.programs?.list(principal) ?? { enabled: [] }); return;
       }

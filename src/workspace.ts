@@ -1,6 +1,9 @@
 import { createProgramRegistry, type ProgramRegistration } from "./program-registry.js";
+import { managedMcpConfigSchema, managedMcpExtension, type ManagedMcpConfig, type ManagedMcpActivation } from "./mcp.js";
+import { activateExtensions, assertBusinessTool, assertExtension, ResourceLifetime, type WorkspaceExtension } from "./extensions.js";
+import { composeTools, compositionInventory, compositionRevision, resolveComposition, type WorkspacePreset, type CompositionInventory, type ToolContribution } from "./composition.js";
 import { createAgentTools, agentToolPermissions } from "./agent-tools.js";
-import { AgentSupervisor } from "./agent-supervisor.js";
+import { AgentSupervisor, type AgentProfile } from "./agent-supervisor.js";
 import { AgentMemoryStore, memoryTools, agentMemoryPermissions } from "./agent-memory.js";
 import { loadProviderConnector, type ProviderConnectorConfig } from "./provider-connector.js";
 import { ProjectView } from "./project-view.js";
@@ -25,7 +28,7 @@ import {
 } from "node:fs";
 import { join, resolve, relative, isAbsolute } from "node:path";
 import { pathToFileURL } from "node:url";
-import { randomBytes, createHash } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { parseEnv } from "node:util";
 import { Type } from "typebox";
 import { Value } from "typebox/value";
@@ -43,6 +46,7 @@ const thinkingLevelSchema = Type.Union(thinkingLevels.map(level => Type.Literal(
 const configSchema = Type.Object(
   {
     version: Type.Literal(1),
+    preset: Type.Optional(Type.Union([Type.Literal("coding"), Type.Literal("personal"), Type.Literal("headless")])),
     port: Type.Integer({ minimum: 1, maximum: 65535 }),
     stateDir: Type.String({ minLength: 1 }),
     systemPrompt: Type.String({ minLength: 1 }),
@@ -93,6 +97,7 @@ const configSchema = Type.Object(
     ),
     programs: Type.Optional(Type.Array(Type.Object({ id: Type.String({ pattern: "^[a-z][a-z0-9_]{0,39}$" }), enabled: Type.Boolean(), root: Type.String({ minLength: 1 }), manifest: Type.String({ minLength: 1 }), approval: Type.Object({ manifestDigest: Type.String({ pattern: "^[a-f0-9]{64}$" }), commandDigest: Type.String({ pattern: "^[a-f0-9]{64}$" }), entrypointDigest: Type.Optional(Type.String({ pattern: "^[a-f0-9]{64}$" })), runnerDigest: Type.Optional(Type.String({ pattern: "^[a-f0-9]{64}$" })) }, { additionalProperties: false }) }, { additionalProperties: false }), { maxItems: 64 })),
     providerConnector: Type.Optional(Type.Object({ module: Type.String({ minLength: 1 }), options: Type.Optional(Type.Record(Type.String(), Type.Unknown())) }, { additionalProperties: false })),
+    mcp: Type.Optional(managedMcpConfigSchema),
     skills: Type.Optional(Type.Array(Type.String({ minLength: 1 }), { maxItems: 16, uniqueItems: true })),
     agents: Type.Optional(Type.Object({ enabled: Type.Boolean(), maxConcurrent: Type.Optional(Type.Integer({ minimum: 1, maximum: 8 })) }, { additionalProperties: false })),
     codingPacks: Type.Optional(Type.Array(Type.Union([Type.Literal("debugging"), Type.Literal("verification")]), { uniqueItems: true })),
@@ -102,7 +107,7 @@ const configSchema = Type.Object(
       shell: Type.Optional(Type.Union([Type.Literal("bash"), Type.Literal("powershell")])),
       timeoutSeconds: Type.Optional(Type.Integer({ minimum: 1, maximum: 600 })),
     }, { additionalProperties: false })),
-    runtime: Type.Optional(Type.Object({ maxRunMs: Type.Optional(Type.Integer({ minimum: 1000, maximum: 900000 })), autoCompaction: Type.Optional(Type.Boolean()), maxOutputRetries: Type.Optional(Type.Integer({ minimum: 0, maximum: 2 })), maxTotalTokens: Type.Optional(Type.Integer({ minimum: 1 })), maxObservationEvents: Type.Optional(Type.Integer({ minimum: 1, maximum: 10000 })) }, { additionalProperties: false })),
+    runtime: Type.Optional(Type.Object({ maxRunMs: Type.Optional(Type.Integer({ minimum: 1000, maximum: 900000 })), httpIdleTimeoutMs: Type.Optional(Type.Integer({ minimum: 1000, maximum: 900000 })), maxProviderRetries: Type.Optional(Type.Integer({ minimum: 0, maximum: 5 })), retryBaseDelayMs: Type.Optional(Type.Integer({ minimum: 0, maximum: 60000 })), retryMaxDelayMs: Type.Optional(Type.Integer({ minimum: 0, maximum: 300000 })), autoCompaction: Type.Optional(Type.Boolean()), maxOutputRetries: Type.Optional(Type.Integer({ minimum: 0, maximum: 2 })), maxTotalTokens: Type.Optional(Type.Integer({ minimum: 1 })), maxObservationEvents: Type.Optional(Type.Integer({ minimum: 1, maximum: 10000 })) }, { additionalProperties: false })),
     workbench: Type.Optional(Type.Object({ enabled: Type.Boolean() }, { additionalProperties: false })),
     permissions: Type.Array(Type.String({ minLength: 1 }), {
       uniqueItems: true,
@@ -113,6 +118,7 @@ const configSchema = Type.Object(
 
 export interface WorkspaceConfig {
   version: 1;
+  preset?: WorkspacePreset;
   port: number;
   stateDir: string;
   systemPrompt: string;
@@ -123,12 +129,13 @@ export interface WorkspaceConfig {
   tools: { directory: string; enabled: string[] };
   programs?: ProgramRegistration[];
   providerConnector?: ProviderConnectorConfig;
+  mcp?: ManagedMcpConfig;
   skills?: string[];
   agents?: { enabled: boolean; maxConcurrent?: number };
   codingPacks?: string[];
   browserChecks?: boolean;
   project?: ProjectConfig;
-  runtime?: { maxRunMs?: number; autoCompaction?: boolean; maxOutputRetries?: number; maxTotalTokens?: number; maxObservationEvents?: number };
+  runtime?: { maxRunMs?: number; httpIdleTimeoutMs?: number; maxProviderRetries?: number; retryBaseDelayMs?: number; retryMaxDelayMs?: number; autoCompaction?: boolean; maxOutputRetries?: number; maxTotalTokens?: number; maxObservationEvents?: number };
   workbench?: { enabled: boolean };
   permissions: string[];
 }
@@ -332,153 +339,231 @@ export async function loadWorkspaceTools(
     approvedToolPath(directory, config, file),
   );
   for (const path of paths) {
-    const tool = (await import(pathToFileURL(path).href)).default;
-    if (
-      !tool ||
-      typeof tool.name !== "string" ||
-      typeof tool.description !== "string" ||
-      !tool.parameters ||
-      tool.parameters.type !== "object" ||
-      typeof tool.permission !== "string" ||
-      typeof tool.execute !== "function"
-    )
-      throw new Error(
-        "A tool module must default-export a BusinessTool with an object input schema.",
-      );
+    const tool = await importApprovedModule(path);
+    assertBusinessTool(tool);
     tools.push(tool);
   }
   return tools;
 }
-export async function createWorkspace(directory: string) {
-  const root = resolve(directory),
-    config = readConfig(root),
-    env = providerEnvironment(root, config);
-  if (!env.PIDA_API_TOKEN || env.PIDA_API_TOKEN.length < 32)
-    throw new Error(
-      "Set PIDA_API_TOKEN (at least 32 random characters) in .env or the environment.",
-    );
-  const connector = config.providerConnector ? await loadProviderConnector(root, config.providerConnector, env) : undefined;
-  const provider = connector?.provider ?? (
-    config.provider.kind === "mock"
-      ? mockProvider
-      : config.provider.kind === "native"
-        ? nativeProvider(config.provider, env, undefined, new ChatGPTCredentialStore(root, config.stateDir))
-        : endpointProvider({ id: "workspace", ...config.provider }, env));
-  // Keep local settings reachable even when a provider key is absent. Model calls still fail closed.
-  const tools = await loadWorkspaceTools(root, config);
-  const protectedPaths = [join(root, "pida.config.json"), join(root, ".env"), join(root, "connectors"), join(root, "programs"), join(root, config.tools.directory), inside(root, config.stateDir), ...(config.programs ?? []).map(p => resolve(root, p.manifest))];
-  const programs = await createProgramRegistry(root, config.programs, { projectRoot: config.project?.enabled ? resolve(root, config.project.root) : undefined, protectedPaths, outputDirectory: join(inside(root, config.stateDir), "program-output") });
-  const sharedWorkspaceKey = config.project?.enabled ? resolve(root, config.project.root) : programs.tools.some(t => t.effect !== "read") ? "host-programs" : undefined;
-  const workbench = config.workbench?.enabled ? new PidaWorkbench(join(inside(root, config.stateDir), "workbench"), config.browserChecks ?? false) : undefined;
-  const packs = codingPacks(workbench ? config.codingPacks : []);
-  const project = config.project?.enabled ? createProjectTools({ ...config.project, root: resolve(root, config.project.root) }, {
-    protectedPaths,
-  }) : undefined;
-  const principal: Principal = { id: "local-user", permissions: [...new Set([...config.permissions, "pida:configure", "pida:agents", "pida:recover", ...agentMemoryPermissions, ...agentToolPermissions, ...((config.skills?.length || packs.skills.length) ? ["resources:read"] : [])])] };
-  const label = connector ? { mode: "host-connector", model: connector.manifest.displayName } : providerLabel(config.provider);
-  let projectBusy = false;
-  let providerGeneration = 0;
-  let blockedWorkspaceKeys = () => [] as string[];
-  const acquireRunLease = sharedWorkspaceKey ? () => {
-    if (blockedWorkspaceKeys().includes(sharedWorkspaceKey)) throw new PidaError("AGENT_RECOVERY_REQUIRED", 409);
-    if (runtime.listSessions(principal).some(session => runtime.getRecovery(session.sessionId, principal).pendingEffects.length)) throw new PidaError("EFFECT_STATE_UNKNOWN", 409);
-    if (projectBusy) throw new PidaError("WORKSPACE_BUSY", 409);
-    projectBusy = true;
-    return () => { projectBusy = false; };
-  } : undefined;
-  const runtime = new PidaRuntime({
-    provider,
-    workspaceDir: root,
-    instructionRoot: config.project?.enabled ? resolve(root, config.project.root) : undefined,
-    skillPaths: config.skills?.map(path => inside(root, path)),
-    acquireRunLease,
-    ...(workbench ? { inspectArtifacts: (principal: import("./runtime.js").Principal) => workbench.captureArtifacts(principal) } : {}),
-    tools: [...tools, ...(workbench?.tools() ?? []), ...packs.tools, ...(project?.tools ?? []), ...programs.tools],
-    ...(project ? { singleWriter: true, evidenceLimits: ["HOST_PROJECT_ARTIFACTS_NOT_CAPTURED", ...(config.project?.trustedHost ? ["HOST_SHELL_IS_NOT_SANDBOXED"] : [])] } : {}),
-    skills: packs.skills,
-    ...(config.programs?.some(p => p.enabled) ? { evidenceLimits: ["HOST_PROGRAM_NOT_SANDBOXED", "PROGRAM_DEPENDENCIES_NOT_PINNED", "PROGRAM_DESCENDANTS_NOT_GUARANTEED_STOPPED", ...(project ? ["HOST_PROJECT_ARTIFACTS_NOT_CAPTURED", ...(config.project?.trustedHost ? ["HOST_SHELL_IS_NOT_SANDBOXED"] : [])] : [])] } : {}),
-    ...(workbench ? { maxTurns: 24, maxToolCalls: 48, maxRunMs: 180_000 } : {}),
-    ...config.runtime,
-    storageDir: inside(root, config.stateDir),
-    systemPrompt: config.systemPrompt + (workbench ? "\n\n" + workbenchPrompt : "") + packs.prompt + (project ? "\n\n" + project.prompt : ""),
-    providerInfo: label,
-  });
-  try {
-  const agentDirectory = join(inside(root, config.stateDir), "agents-service");
-  const memories = new Map<string, AgentMemoryStore>();
-  const agentWorkbenches = new Map<string, PidaWorkbench>();
-  const memory = (id: string) => {
-    let value = memories.get(id);
-    if (!value) { value = new AgentMemoryStore(join(agentDirectory, "memory"), id); memories.set(id, value); }
-    return value;
-  };
-  const agentWorkbench = (id: string) => {
-    let value = agentWorkbenches.get(id);
-    if (!value) { value = new PidaWorkbench(join(agentDirectory, "agents", id, "workbench"), config.browserChecks ?? false); agentWorkbenches.set(id, value); }
-    return value;
-  };
-  const agents: AgentSupervisor | undefined = config.agents?.enabled === false ? undefined : await AgentSupervisor.open({
-    directory: agentDirectory,
-    maxConcurrent: config.agents?.maxConcurrent ?? 3,
-    runtimeKey: () => { const selected = readConfig(root); return createHash("sha256").update(JSON.stringify({ provider: selected.provider, connector: selected.providerConnector, generation: providerGeneration })).digest("hex"); },
-    workspaceKey: profile => sharedWorkspaceKey ?? profile.id,
-    resolvePrincipal: id => id === principal.id ? structuredClone(principal) : undefined,
-    createRuntime: async (profile): Promise<PidaRuntime> => {
-      const store = memory(profile.id);
-      if (!store.view().persona && profile.persona) store.revisePersona({ expectedRevision: null, text: profile.persona, sourceRefs: ["owner:registration"] });
-      const area = agentWorkbench(profile.id);
-      const selected = readConfig(root);
-      const selectedEnv = providerEnvironment(root, selected);
-      const selectedConnector = selected.providerConnector ? await loadProviderConnector(root, selected.providerConnector, selectedEnv) : undefined;
-      const selectedProvider = selectedConnector?.provider ?? (selected.provider.kind === "mock" ? mockProvider : selected.provider.kind === "native" ? nativeProvider(selected.provider, selectedEnv, undefined, new ChatGPTCredentialStore(root, selected.stateDir)) : endpointProvider({ id: "workspace", ...selected.provider }, selectedEnv));
-      return new PidaRuntime({
-        agentId: profile.id, provider: selectedProvider,
-        providerInfo: selectedConnector ? { mode: "host-connector", model: selectedConnector.manifest.displayName } : providerLabel(selected.provider),
-        workspaceDir: root, storageDir: join(agentDirectory, "agents", profile.id, "runtime"),
-        instructionRoot: config.project?.enabled ? resolve(root, config.project.root) : undefined,
-        skillPaths: config.skills?.map(path => inside(root, path)),
-        skills: packs.skills,
-        tools: [...tools, ...area.tools(), ...packs.tools, ...(project?.tools ?? []), ...memoryTools(store), ...createAgentTools(agents!, profile.id), ...programs.tools],
-        acquireRunLease,
-        contextForRun: () => store.context(12000),
-        inspectArtifacts: p => area.captureArtifacts(p),
-        ...(project ? { singleWriter: true, acquireRunLease, evidenceLimits: ["HOST_PROJECT_ARTIFACTS_NOT_CAPTURED", ...(config.project?.trustedHost ? ["HOST_SHELL_IS_NOT_SANDBOXED"] : [])] } : {}),
-        ...(config.programs?.some(p => p.enabled) ? { evidenceLimits: ["HOST_PROGRAM_NOT_SANDBOXED", "PROGRAM_DEPENDENCIES_NOT_PINNED", "PROGRAM_DESCENDANTS_NOT_GUARANTEED_STOPPED", ...(project ? ["HOST_PROJECT_ARTIFACTS_NOT_CAPTURED", ...(config.project?.trustedHost ? ["HOST_SHELL_IS_NOT_SANDBOXED"] : [])] : [])] } : {}),
-        maxTurns: 24, maxToolCalls: 48, maxRunMs: 180_000, ...config.runtime,
-        systemPrompt: config.systemPrompt + "\n\nAgent role: " + profile.role + "\n" + workbenchPrompt + packs.prompt + (project ? "\n" + project.prompt : "") + "\nUse agent_memory_recall for prior information. Record meaningful changes to understanding with agent_memory_transition and sourced experience with agent_memory_remember. Persona edits belong to the owner. A job status is not an information-state transition.",
-      });
-    },
-  });
-  blockedWorkspaceKeys = () => agents?.blockedWorkspaceKeys() ?? [];
-  const assertRuntimeIdle = runtime.assertIdle.bind(runtime);
-  runtime.assertIdle = () => { assertRuntimeIdle(); agents?.assertIdle(); };
-  const configureMainProvider = runtime.configureProvider.bind(runtime);
-  runtime.configureProvider = (provider, info) => { configureMainProvider(provider, info); providerGeneration++; };
-  const projectView = config.project?.enabled ? new ProjectView({ ...config.project, root: resolve(root, config.project.root) }, { protectedPaths }) : undefined;
-  const settings = new ProviderSettings(root, runtime);
-  const server = createPidaServer({
-    providerSettings: settings,
-    agents, agentMemory: memory, agentWorkbench, projectView, programs,
-    connector: connector?.manifest,
-    workbench,
-    runtime,
-    serveDemo: true,
-    allowedOrigin: `http://127.0.0.1:${config.port}`,
-    authenticate: staticTokenAuth([
-      {
-        token: env.PIDA_API_TOKEN,
-        principal,
-      },
-    ]),
-  });
-  const closeRuntime = runtime.close.bind(runtime);
-  let closing: Promise<void> | undefined;
-  const close = () => closing ??= (async () => { await agents?.close(); await closeRuntime(); await settings.close(); })();
-  // Preserve the pre-0.8 host lifecycle contract: runtime.close() releases the whole workspace.
-  runtime.close = close;
-  server.once("close", () => { void close(); });
-  agents?.start();
-  return { runtime, server, config, workbench, agents, close };
-  } catch (error) { await runtime.close(); throw error; }
+const importedToolSources = new Map<string, { revision: string; url: string }>();
+async function importApprovedModule(path: string) {
+  const revision = compositionRevision(readFileSync(path, "utf8")), url = pathToFileURL(path).href;
+  const previous = importedToolSources.get(url);
+  // The initial import keeps legacy object identity. A changed source gets a new Node module identity.
+  const selected = previous?.revision === revision ? previous.url : previous ? `${url}?pida_revision=${revision}` : url;
+  const module = await import(selected);
+  importedToolSources.set(url, { revision, url: selected });
+  return module.default;
+}
+/** Approved files may opt into a factory and disposer; legacy BusinessTool exports remain workspace-scoped. */
+export async function loadWorkspaceExtensions(directory: string, config = readConfig(directory)): Promise<WorkspaceExtension[]> {
+  const paths = config.tools.enabled.map(file => ({ file, path: approvedToolPath(directory, config, file) }));
+  const definitions: WorkspaceExtension[] = [];
+  for (const { file, path } of paths) {
+    const revision = compositionRevision(readFileSync(path, "utf8"));
+    const value = await importApprovedModule(path);
+    if (value && typeof value.activate === "function") {
+      assertExtension(value);
+      definitions.push({ ...value, revision: compositionRevision({ source: revision, declared: value.revision }) });
+    } else {
+      assertBusinessTool(value);
+      definitions.push({ id: `tool:${file}`, scope: "workspace", revision, activate: () => ({ tools: [value] }) });
+    }
+  }
+  return definitions;
+}
+export interface CreateWorkspaceOptions {
+  /** Executable factories supplied by the embedding host, never by an HTTP/model request. */
+  extensions?: readonly WorkspaceExtension[];
+  onCloseError?(error: unknown): void;
 }
 
+export async function createWorkspace(directory: string, options: CreateWorkspaceOptions = {}) {
+  const root = resolve(directory), config = readConfig(root), env = providerEnvironment(root, config);
+  if (!env.PIDA_API_TOKEN || env.PIDA_API_TOKEN.length < 32)
+    throw new Error("Set PIDA_API_TOKEN (at least 32 random characters) in .env or the environment.");
+  const lifetime = new ResourceLifetime();
+  try {
+    let mcp: Pick<ManagedMcpActivation, "tools" | "inventory"> | undefined;
+    const mcpDefinition = config.mcp ? managedMcpExtension(config.mcp, { env, cwd: root }) : undefined;
+    const definitions: WorkspaceExtension[] = [...await loadWorkspaceExtensions(root, config), ...(options.extensions ?? []),
+      ...(mcpDefinition ? [{ ...mcpDefinition, async activate(context: Parameters<WorkspaceExtension["activate"]>[0]) {
+        mcp = await mcpDefinition.activate(context);
+        // The adapter registers close with onDispose. Runtime tool schemas stay fixed until restart.
+        return { tools: mcp.tools };
+      } }] : []),
+    ];
+    const ids = new Set<string>();
+    for (const definition of definitions) {
+      assertExtension(definition);
+      if (ids.has(definition.id)) throw new PidaError("EXTENSION_DUPLICATE", 400);
+      ids.add(definition.id);
+    }
+    const extensionRevisions = definitions.map(({ id, scope, revision }) => ({ id, scope, revision: revision ?? "unversioned" }));
+    const selectedMain = resolveComposition(config, "main"), selectedAgent = resolveComposition(config, "agent");
+    const workspaceExtensions = await activateExtensions(definitions.filter(d => d.scope === "workspace"), { workspaceDir: root, signal: lifetime.controller.signal });
+    lifetime.add(() => workspaceExtensions.close());
+    const protectedPaths = [join(root, "pida.config.json"), join(root, ".env"), join(root, "connectors"), join(root, "programs"), join(root, config.tools.directory), inside(root, config.stateDir), ...(config.programs ?? []).map(p => resolve(root, p.manifest))];
+    const programs = await createProgramRegistry(root, config.programs, { projectRoot: config.project?.enabled ? resolve(root, config.project.root) : undefined, protectedPaths, outputDirectory: join(inside(root, config.stateDir), "program-output") });
+    const project = config.project?.enabled ? createProjectTools({ ...config.project, root: resolve(root, config.project.root) }, { protectedPaths }) : undefined;
+    const sharedWorkspaceKey = config.project?.enabled ? resolve(root, config.project.root)
+      : programs.tools.some(t => t.effect !== "read") ? "host-programs"
+      : workspaceExtensions.tools.some(t => t.effect !== "read") || definitions.some(d => d.scope === "agent") ? "host-extensions" : undefined;
+    const workbench = selectedMain.workbench ? new PidaWorkbench(join(inside(root, config.stateDir), "workbench"), config.browserChecks ?? false) : undefined;
+    const packCache = new Map<string, ReturnType<typeof codingPacks>>();
+    const packsFor = (target: "main" | "agent") => {
+      const selected = resolveComposition(config, target), key = JSON.stringify(selected.codingPacks ?? null);
+      let value = packCache.get(key);
+      if (!value) { value = codingPacks(selected.codingPacks); packCache.set(key, value); }
+      return value;
+    };
+    const principal: Principal = { id: "local-user", permissions: [...new Set([...config.permissions, "pida:configure", "pida:agents", "pida:recover", ...agentMemoryPermissions, ...agentToolPermissions, ...((config.skills?.length || packsFor("main").skills.length || packsFor("agent").skills.length) ? ["resources:read"] : [])])] };
+    const agentDirectory = join(inside(root, config.stateDir), "agents-service");
+    const memories = new Map<string, AgentMemoryStore>(), agentWorkbenches = new Map<string, PidaWorkbench>();
+    const inventories = new Map<string, CompositionInventory>();
+    const memory = (id: string) => {
+      let value = memories.get(id);
+      if (!value) { value = new AgentMemoryStore(join(agentDirectory, "memory"), id); memories.set(id, value); }
+      return value;
+    };
+    const agentWorkbench = (id: string) => {
+      let value = agentWorkbenches.get(id);
+      if (!value) { value = new PidaWorkbench(join(agentDirectory, "agents", id, "workbench"), config.browserChecks ?? false); agentWorkbenches.set(id, value); }
+      return value;
+    };
+    let projectBusy = false, providerGeneration = 0;
+    let runtime: PidaRuntime;
+    let agents: AgentSupervisor | undefined;
+    // Provider settings may change at idle. Other capability changes require a workspace restart,
+    // so a newly created agent never silently mixes new configuration with old activated tools.
+    const capabilityConfig = (value: WorkspaceConfig) => { const { provider: _provider, providerConnector: _connector, ...rest } = value; return rest; };
+    const toolSources = (selected: WorkspaceConfig) => selected.tools.enabled.map(file => ({ file, digest: compositionRevision(readFileSync(approvedToolPath(root, selected, file), "utf8")) }));
+    const initialToolSources = toolSources(config);
+    const capabilityRevision = compositionRevision({ config: capabilityConfig(config), extensions: extensionRevisions, toolSources: initialToolSources });
+    const activeConfig = () => {
+      const selected = readConfig(root);
+      if (compositionRevision({ config: capabilityConfig(selected), extensions: extensionRevisions, toolSources: toolSources(selected) }) !== capabilityRevision)
+        throw new PidaError("WORKSPACE_RESTART_REQUIRED", 409);
+      return selected;
+    };
+    const revisionOf = (selected: WorkspaceConfig) => compositionRevision({ config: selected, extensions: extensionRevisions, toolSources: toolSources(selected), providerGeneration });
+    const activeRevisionOf = (selected: WorkspaceConfig) => compositionRevision({
+      config: { ...config, provider: selected.provider, providerConnector: selected.providerConnector },
+      extensions: extensionRevisions, toolSources: initialToolSources, providerGeneration,
+    });
+    const acquireRunLease = sharedWorkspaceKey ? () => {
+      if (agents?.blockedWorkspaceKeys().includes(sharedWorkspaceKey)) throw new PidaError("AGENT_RECOVERY_REQUIRED", 409);
+      if (runtime.listSessions(principal).some(session => runtime.getRecovery(session.sessionId, principal).pendingEffects.length)) throw new PidaError("EFFECT_STATE_UNKNOWN", 409);
+      if (projectBusy) throw new PidaError("WORKSPACE_BUSY", 409);
+      projectBusy = true;
+      return () => { projectBusy = false; };
+    } : undefined;
+    let connectorManifest: Awaited<ReturnType<typeof loadProviderConnector>>["manifest"] | undefined;
+    const buildRuntime = async (profile?: AgentProfile, context?: { signal: AbortSignal }): Promise<PidaRuntime> => {
+      const owner = new ResourceLifetime(context?.signal ?? lifetime.controller.signal), target = profile ? "agent" : "main", agentId = profile?.id ?? "main";
+      try {
+        owner.controller.signal.throwIfAborted();
+        const selected = activeConfig(), selectedEnv = providerEnvironment(root, selected);
+        const connector = selected.providerConnector ? await loadProviderConnector(root, selected.providerConnector, selectedEnv) : undefined;
+        if (!profile) connectorManifest = connector?.manifest;
+        const provider = connector?.provider ?? (selected.provider.kind === "mock" ? mockProvider : selected.provider.kind === "native"
+          ? nativeProvider(selected.provider, selectedEnv, undefined, new ChatGPTCredentialStore(root, selected.stateDir))
+          : endpointProvider({ id: "workspace", ...selected.provider }, selectedEnv));
+        const agentExtensions = await activateExtensions(definitions.filter(d => d.scope === "agent"), { workspaceDir: root, agentId, signal: owner.controller.signal });
+        owner.add(() => agentExtensions.close());
+        owner.controller.signal.throwIfAborted();
+        const area = profile ? (selectedAgent.workbench ? agentWorkbench(profile.id) : undefined) : workbench;
+        const packs = packsFor(target), store = profile ? memory(profile.id) : undefined;
+        if (store && !store.view().persona && profile?.persona)
+          store.revisePersona({ expectedRevision: null, text: profile.persona, sourceRefs: ["owner:registration"] });
+        const contributions: ToolContribution[] = [
+          ...workspaceExtensions.inventory.map(entry => ({ source: entry.id, scope: entry.scope, tools: workspaceExtensions.tools.filter(t => entry.tools.includes(t.name)) })),
+          ...agentExtensions.inventory.map(entry => ({ source: entry.id, scope: entry.scope, tools: agentExtensions.tools.filter(t => entry.tools.includes(t.name)) })),
+          { source: "workbench", scope: "agent", tools: area?.tools() ?? [] },
+          { source: "coding-packs", scope: "workspace", tools: packs.tools },
+          { source: "project", scope: "workspace", tools: project?.tools ?? [] },
+          { source: "programs", scope: "workspace", tools: programs.tools },
+          ...(profile && store ? [
+            { source: "memory", scope: "agent" as const, tools: memoryTools(store) },
+            { source: "agents", scope: "agent" as const, tools: createAgentTools(agents!, profile.id) },
+          ] : []),
+        ];
+        const evidenceLimits = [
+          ...(project ? ["HOST_PROJECT_ARTIFACTS_NOT_CAPTURED", ...(config.project?.trustedHost ? ["HOST_SHELL_IS_NOT_SANDBOXED"] : [])] : []),
+          ...(config.programs?.some(p => p.enabled) ? ["HOST_PROGRAM_NOT_SANDBOXED", "PROGRAM_DEPENDENCIES_NOT_PINNED", "PROGRAM_DESCENDANTS_NOT_GUARANTEED_STOPPED"] : []),
+        ];
+        const created = new PidaRuntime({
+          ...(profile ? { agentId: profile.id } : {}), provider,
+          providerInfo: connector ? { mode: "host-connector", model: connector.manifest.displayName } : providerLabel(selected.provider),
+          workspaceDir: root, storageDir: profile ? join(agentDirectory, "agents", profile.id, "runtime") : inside(root, config.stateDir),
+          instructionRoot: config.project?.enabled ? resolve(root, config.project.root) : undefined,
+          skillPaths: config.skills?.map(path => inside(root, path)), skills: packs.skills,
+          tools: composeTools(contributions), acquireRunLease,
+          ...(area ? { inspectArtifacts: (p: Principal) => area.captureArtifacts(p) } : {}),
+          ...(store ? { contextForRun: () => store.contextForRun(12000) } : {}),
+          ...(project ? { singleWriter: true } : {}), evidenceLimits,
+          ...(area || profile ? { maxTurns: 24, maxToolCalls: 48, maxRunMs: 180_000 } : {}), ...config.runtime,
+          systemPrompt: config.systemPrompt + (profile ? "\n\nAgent role: " + profile.role : "") + (area ? "\n\n" + workbenchPrompt : "") + packs.prompt + (project ? "\n\n" + project.prompt : "")
+            + (profile ? "\nUse agent_memory_recall for prior information. Record meaningful changes to understanding with agent_memory_transition and sourced experience with agent_memory_remember. Persona edits belong to the owner. A job status is not an information-state transition." : ""),
+        });
+        const closeRuntime = created.close.bind(created);
+        owner.add(closeRuntime);
+        const inventory = compositionInventory(config, target, activeRevisionOf(selected), contributions, [...workspaceExtensions.inventory, ...agentExtensions.inventory], principal);
+        inventories.set(agentId, inventory);
+        owner.add(() => { if (inventories.get(agentId) === inventory) inventories.delete(agentId); });
+        created.close = () => owner.close();
+        return created;
+      } catch (error) { return owner.fail(error); }
+    };
+    runtime = await buildRuntime();
+    const closeMain = runtime.close.bind(runtime);
+    lifetime.add(closeMain);
+    agents = selectedMain.agents ? await AgentSupervisor.open({
+      directory: agentDirectory, maxConcurrent: config.agents?.maxConcurrent ?? 3,
+      runtimeKey: () => revisionOf(activeConfig()),
+      workspaceKey: profile => sharedWorkspaceKey ?? profile.id,
+      resolvePrincipal: id => id === principal.id ? structuredClone(principal) : undefined,
+      createRuntime: buildRuntime,
+    }) : undefined;
+    if (agents) lifetime.add(() => agents!.close());
+    const assertRuntimeIdle = runtime.assertIdle.bind(runtime);
+    runtime.assertIdle = () => { assertRuntimeIdle(); agents?.assertIdle(); };
+    const configureMainProvider = runtime.configureProvider.bind(runtime);
+    runtime.configureProvider = (provider, info) => {
+      configureMainProvider(provider, info); providerGeneration++;
+      const main = inventories.get("main"); if (main) main.revision = activeRevisionOf(readConfig(root));
+    };
+    const projectView = config.project?.enabled ? new ProjectView({ ...config.project, root: resolve(root, config.project.root) }, { protectedPaths }) : undefined;
+    const settings = new ProviderSettings(root, runtime);
+    lifetime.add(() => settings.close());
+    const server = createPidaServer({
+      providerSettings: settings, agents, agentMemory: memory,
+      ...(selectedAgent.workbench ? { agentWorkbench } : {}), projectView, programs,
+      connector: connectorManifest, workbench, runtime, serveDemo: selectedMain.web,
+      getComposition: () => getComposition(),
+      allowedOrigin: `http://127.0.0.1:${config.port}`,
+      authenticate: staticTokenAuth([{ token: env.PIDA_API_TOKEN, principal }]),
+    });
+    let closeError: unknown;
+    let closePromise: Promise<void> | undefined;
+    const close = () => closePromise ??= lifetime.close().catch(error => { closeError = error; throw error; });
+    runtime.close = close; // Preserve the existing whole-workspace lifecycle contract.
+    server.once("close", () => { void close().catch(error => {
+      closeError = error;
+      if (options.onCloseError) options.onCloseError(error);
+      else process.stderr.write("Pida: workspace cleanup failed; await workspace.close() for details.\n");
+    }); });
+    const getComposition = () => {
+      const selected = readConfig(root), configuredRevision = revisionOf(selected);
+      const mcpInventory = mcp?.inventory(principal) ?? [];
+      return {
+        configuredRevision,
+        restartRequired: compositionRevision({ config: capabilityConfig(selected), extensions: extensionRevisions, toolSources: toolSources(selected) }) !== capabilityRevision || mcpInventory.some(server => server.restartRequired),
+        active: structuredClone([...inventories.entries()].map(([agentId, value]) => ({ agentId, ...value }))),
+        mcp: mcpInventory,
+      };
+    };
+    agents?.start();
+    return { runtime, server, config, workbench, agents, close, getComposition, get closeError() { return closeError; } };
+  } catch (error) { return lifetime.fail(error); }
+}

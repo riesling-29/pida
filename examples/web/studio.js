@@ -5,7 +5,7 @@ import { explainError } from "/pida-client.js";
 const $ = id => document.getElementById(id);
 const outcomes = { completed: "실행 완료", failed: "실행 실패", cancelled: "중단됨", limited: "실행 한도 도달", interrupted: "서버 종료로 중단됨" };
 const cleanPrompt = text => text.replace(/^\[PIDA (?:UI|CODE) STUDIO\][\s\S]*?\nUSER REQUEST:\n/, "");
-const activityLabels = { run_started: "요청 시작", turn_started: "모델 응답 대기", tool_started: "도구 실행", tool_completed: "도구 완료", tool_failed: "도구 실패", compaction_started: "컨텍스트 압축 시작", compaction_completed: "컨텍스트 압축 완료", compaction_failed: "컨텍스트 압축 실패", output_retry: "출력 한도 후 재시도", model_request: "모델 응답 대기", model_response: "모델 응답 수신", run_finished: "실행 종료" };
+const activityLabels = { retry_scheduled: "모델 재시도 대기", retry_finished: "재시도 결과", summarization_retry_attempt_start: "압축 재시도", summarization_retry_finished: "압축 재시도 결과", run_started: "요청 시작", turn_started: "모델 응답 대기", tool_started: "도구 실행", tool_completed: "도구 완료", tool_failed: "도구 실패", compaction_started: "컨텍스트 압축 시작", compaction_completed: "컨텍스트 압축 완료", compaction_failed: "컨텍스트 압축 실패", output_retry: "출력 한도 후 재시도", model_request: "모델 응답 대기", model_response: "모델 응답 수신", run_finished: "실행 종료" };
 const duration = ms => { const seconds = Math.max(0, Math.floor(ms / 1000)); return seconds < 60 ? `${seconds}초` : `${Math.floor(seconds / 60)}분 ${seconds % 60}초`; };
 
 export function createStudio({ client, request, changed, disconnected }) {

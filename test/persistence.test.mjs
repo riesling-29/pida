@@ -113,7 +113,8 @@ test("unloaded sessions can be deleted without initializing a provider; corrupt 
   await r.deleteSession(id, alice);
   await r.close();
   await writeFile(join(dir, "index", "bad.json"), '{"version":42}');
-  assert.throws(open, /Invalid saved session/);
+  assert.throws(open, /SESSION_SCHEMA_UNSUPPORTED/);
+  assert.equal(await readFile(join(dir, "index", "bad.json"), "utf8"), '{"version":42}');
   assert.ok(!(await readdir(dir)).includes("runtime.lock"));
 });
 test("abrupt process termination records interrupted execution and never retries a tool on restore", async (t) => {

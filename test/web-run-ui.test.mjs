@@ -34,7 +34,7 @@ function environment() {
   const doc={getElementById:$,createElement:t=>new Node(t),createTextNode:t=>({textContent:t}),body:new Node('body'),hidden:false,addEventListener(){},querySelector:selector=>modeTabs.find(n=>selector.includes(`data-mode="${n.dataset.mode}"`))??new Node(),querySelectorAll:selector=>selector.includes('#mode-tabs')?modeTabs:[]};
   const storage=new Map(), timers=new Map();let timer=0;
   const context={document:doc,RunState,submitQueuedInput,Date,Map,Set,URL,URLSearchParams,TextEncoder,Blob,crypto:webcrypto,console,explainError:x=>x??'',ResizeObserver:class{observe(){}},requestAnimationFrame:()=>{},setInterval:()=>1,clearInterval(){},setTimeout:fn=>{timers.set(++timer,fn);return timer;},clearTimeout:id=>timers.delete(id),window:{addEventListener(){}},location:{origin:'http://fixture.invalid',hash:'',pathname:'/',search:''},history:{replaceState(){}},sessionStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)}};
-  for(const [path,name] of [['run-input.js','createRunInput'],['run-details.js','createRunDetails']]) runInNewContext(read('examples/web/'+path).replace(/^import .*\n/gm,'').replace(`export function ${name}`,`function ${name}`)+`\nthis.${name}=${name};`,context);
+  for(const [path,name] of [['run-input.js','createRunInput'],['run-details.js','createRunDetails'],['composition.js','createComposition']]) runInNewContext(read('examples/web/'+path).replace(/^import .*\n/gm,'').replace(/export function /g,'function ')+`\nthis.${name}=${name};`,context);
   return {context,$,storage,timers,doc};
 }
 const row=(sequence,type,runId='r1')=>({sessionId:'s1',runId,sequence,type,timestamp:new Date().toISOString()});

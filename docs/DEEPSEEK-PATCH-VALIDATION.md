@@ -19,3 +19,16 @@ Validation:
 - One integrated review found three defects: unsupported native `off` selection, lost stderr/output-artifact labels in details, and unreported control-byte preview loss. All were corrected. `npm run build` and `node --test test/run-details.test.mjs test/program-proxy.test.mjs test/web-run-ui.test.mjs`: **19/19 passed** after the fixes; app syntax and diff checks passed.
 
 Limits: no live model, real browser engine, Windows process containment, or company-gateway execution in this environment. Native PTY/sandbox, external runners, schedules and channel adapters are not included in this release. Existing Pi loop/session ownership and explicit permission/effect boundaries remain in force.
+
+## 0.8.2 — recovery, lifecycle, presets and MCP
+
+- Reuses Pi AgentSession retry events/settings, with SDK transport retry still disabled. Default retry count is 2; host configuration supports 0–5 and bounded backoff. Unknown effects block continuation. Whole-run deadlines, stalled-provider streams, cancellation and retry exhaustion remain distinct outcomes.
+- A committed compaction must reduce the estimated context before overflow recovery proceeds. A failed or ineffective compaction does not silently retry forever.
+- Memory text and its persona/state/experience revisions are projected from one snapshot. The descriptor and local keyed digest survive session restart. Handoff records source session/run and artifact snapshot when available, with `filesRestored:false`. Future session/memory formats are rejected without rewriting the source.
+- One composition builder serves main and persistent agents. Named `coding`, `personal`, `headless` presets supply defaults without permissions. Scoped host extension factories have activation cleanup and shared close promises. Configuration/source changes expose `restartRequired` rather than mixing new capabilities into an old runtime.
+- Directly depends on installed `@earendil-works/pi-mcp@1.2.0`. Real stdio and Streamable HTTP discovery, calls, cancellation, bounded reconnect, generation/schema fencing, source policy and error classification use Pi's client. Dispatched tools are never automatically replayed by reconnect.
+- `GET /v1/composition` and the bundled settings panel show actual tools, permissions, sources, revisions and MCP health. The HTTP DTO excludes command lines, endpoints, environment, schemas and server instructions.
+
+Validation: `npm test` **245/245 passed**, no skips, after updating the combined DOM fixture to load the new composition module. `npm ls --depth=0` confirms pinned direct dependencies. Real local HTTP fault servers, child MCP servers, Pi faux loops and filesystem restarts were exercised; these are not live-model or real-browser acceptance tests.
+
+Integrated review identified two lifecycle defects: pending agent activation was not signalled during shutdown, and cancelled/timed-out HTTP MCP requests remained alive in the upstream transport. Both were corrected: shutdown aborts pending factory activation before awaiting cleanup; MCP retires and closes the affected transport generation before bounded reconnect. `npm run build` passed; MCP/recovery regressions **18/18** and lifecycle/supervisor/composition regressions **20/20** passed after the fixes. No tool replay was introduced.

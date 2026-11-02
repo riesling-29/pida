@@ -1,3 +1,4 @@
+import type { SessionHandoff } from "./run-context.js";
 /** Transport-only types: safe to import into browser/native client projects. */
 export type RunStatus = "completed" | "failed" | "cancelled" | "limited";
 export interface SessionSummary {
@@ -8,6 +9,7 @@ export interface SessionSummary {
   running: boolean;
   runs: number;
   lastStatus?: RunStatus | "interrupted";
+  handoff?: SessionHandoff;
 }
 export interface RuntimeInfo {
   persistence: boolean;

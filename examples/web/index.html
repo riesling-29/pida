@@ -15,7 +15,7 @@
       <div class="brand" aria-label="Pida">pida<span class="cursor-mark" aria-hidden="true">_</span></div>
       <span class="app-divider" aria-hidden="true">/</span>
       <h1>workspace</h1>
-      <span class="version">core 0.8.1</span>
+      <span class="version">core 0.8.2</span>
       <div class="app-actions">
         <button id="toggle-sessions" class="mobile-control" aria-controls="session-navigation" aria-expanded="false" disabled>대화 목록</button>
         <button id="toggle-inspector" class="inspector-control" aria-controls="inspector" aria-expanded="false" disabled>작업 패널</button>
@@ -162,7 +162,9 @@
     </section>
     <footer class="status-bar"><span><span class="status-dot" aria-hidden="true"></span> <span id="footer-state">연결 대기</span></span><span class="footer-center">PI RUNTIME <span>/</span> PIDA WORKSPACE</span><span><kbd>Alt</kbd> + <kbd>N</kbd> 새 대화</span></footer>
   </main>
-  <dialog id="settings-dialog" aria-labelledby="settings-title"><div class="dialog-heading"><div><span class="section-label">CONFIGURATION</span><h2 id="settings-title">모델 연결</h2></div><button id="close-settings" class="quiet" aria-label="모델 설정 닫기">닫기 <kbd>Esc</kbd></button></div><details id="provider-settings" class="settings" open><summary>모델 연결 · 설정</summary>
+  <dialog id="settings-dialog" aria-labelledby="settings-title"><div class="dialog-heading"><div><span class="section-label">CONFIGURATION</span><h2 id="settings-title">모델 · 실행 구성</h2></div><button id="close-settings" class="quiet" aria-label="설정 닫기">닫기 <kbd>Esc</kbd></button></div>
+    <details id="composition-settings" class="composition-panel" hidden><summary>실제 적용 구성 · 도구 · MCP</summary><div class="composition-toolbar"><span id="composition-status" role="status" aria-live="polite"></span><button id="composition-refresh" type="button" class="quiet">상태 새로고침</button></div><div id="composition-content"></div></details>
+    <details id="provider-settings" class="settings" open><summary>모델 연결 · 설정</summary>
           <p id="provider-managed" class="notice" hidden></p>
           <form id="provider-form">
             <p>

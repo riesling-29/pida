@@ -27,7 +27,7 @@ export interface AgentSupervisorOptions {
   maxJobs?: number;
   maxDelegationDepth?: number;
   /** Host policy only. Profiles contain no supplied paths, tool grants or provider credentials. */
-  createRuntime(profile: AgentProfile): Promise<PidaRuntime> | PidaRuntime;
+  createRuntime(profile: AgentProfile, context: { signal: AbortSignal }): Promise<PidaRuntime> | PidaRuntime;
   /** Re-resolved when a job starts. Saved permissions are never replayed. */
   resolvePrincipal(owner: string): Promise<Principal | undefined> | Principal | undefined;
   /** Equal keys share one writer. Default serializes every agent against the same host workspace. */
@@ -59,10 +59,14 @@ export class AgentSupervisor {
   private readonly runtimes = new Map<string, Promise<PidaRuntime>>();
   private readonly active = new Map<string, Active>();
   private readonly runtimeKeys = new Map<string, string>();
+  private readonly failedRuntimeClosures = new Set<string>();
+  private readonly retiredRuntimes = new Set<Promise<PidaRuntime>>();
   private pendingRuntimeLoads = 0;
+  private readonly runtimeCreation = new AbortController();
   private readonly maxConcurrent: number;
   private started = false;
   private closed = false;
+  private closing?: Promise<void>;
   private faulted = false;
   private scheduled = false;
   private retryTimer?: ReturnType<typeof setTimeout>;
@@ -230,18 +234,35 @@ export class AgentSupervisor {
   }
   async getRuntime(agentId: string, principal: Principal): Promise<PidaRuntime> {
     this.usable(); const p = this.owned(agentId, principal);
+    if (this.failedRuntimeClosures.has(agentId)) denied("AGENT_RUNTIME_CLOSE_FAILED", 503);
     let runtime = this.runtimes.get(agentId);
     const key = this.options.runtimeKey?.(copy(p)) ?? "";
     if (!runtime || this.runtimeKeys.get(agentId) !== key) {
       const previous = runtime;
+      const previousKey = this.runtimeKeys.get(agentId);
+      let preservePrevious = false;
       this.pendingRuntimeLoads++;
       runtime = Promise.resolve().then(async () => {
-        if (previous) await (await previous).close();
-        return this.options.createRuntime(copy(p));
+        this.runtimeCreation.signal.throwIfAborted();
+        if (previous) {
+          const retiring = await previous;
+          preservePrevious = true;
+          retiring.assertIdle(); // Never replace a runtime that still owns an executing run.
+          preservePrevious = false;
+          this.retiredRuntimes.add(previous);
+          try { await retiring.close(); this.retiredRuntimes.delete(previous); }
+          catch (error) { this.failedRuntimeClosures.add(agentId); throw error; }
+        }
+        this.runtimeCreation.signal.throwIfAborted();
+        return this.options.createRuntime(copy(p), { signal: this.runtimeCreation.signal });
       }).finally(() => { this.pendingRuntimeLoads--; });
       this.runtimeKeys.set(agentId, key);
       this.runtimes.set(agentId, runtime);
-      runtime.catch(() => { if (this.runtimes.get(agentId) === runtime) { this.runtimes.delete(agentId); this.runtimeKeys.delete(agentId); } });
+      runtime.catch(() => {
+        if (this.runtimes.get(agentId) !== runtime) return;
+        if (previous && preservePrevious) { this.runtimes.set(agentId, previous); this.runtimeKeys.set(agentId, previousKey ?? ""); }
+        else { this.runtimes.delete(agentId); this.runtimeKeys.delete(agentId); }
+      });
     }
     return runtime;
   }
@@ -328,12 +349,26 @@ export class AgentSupervisor {
       try { this.persist(); } catch { /* old durable running state becomes interrupted on restart */ }
     }
   }
-  async close(): Promise<void> {
-    if (this.closed) return; this.closed = true;
+  close(): Promise<void> {
+    if (this.closing) return this.closing;
+    this.closed = true;
+    // Capture pending owners before abort can settle and evict their creation promises.
+    const runtimeOwners = [...new Set([...this.runtimes.values(), ...this.retiredRuntimes])];
+    this.runtimeCreation.abort();
     clearTimeout(this.retryTimer); this.retryTimer = undefined;
     for (const a of this.active.values()) a.controller.abort();
-    await Promise.allSettled([...this.active.values()].map(a => a.done));
-    await Promise.allSettled([...this.runtimes.values()].map(async p => (await p).close()));
-    this.releaseLock();
+    this.closing = Promise.resolve().then(async () => {
+      const jobs = await Promise.allSettled([...this.active.values()].map(a => a.done));
+      const runtimes = await Promise.allSettled(runtimeOwners.map(async p => {
+        let runtime: PidaRuntime;
+        try { runtime = await p; }
+        catch (error) { if (error === this.runtimeCreation.signal.reason) return; throw error; }
+        await runtime.close();
+      }));
+      this.releaseLock();
+      const failures = [...jobs, ...runtimes].flatMap(result => result.status === "rejected" ? [result.reason] : []);
+      if (failures.length) throw new AggregateError(failures, "Agent supervisor cleanup failed");
+    });
+    return this.closing;
   }
 }

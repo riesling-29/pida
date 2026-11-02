@@ -1102,6 +1102,19 @@ summary span {
   backdrop-filter:blur(3px)
 }
 
+.composition-panel { padding:16px 26px; border-bottom:1px solid var(--line); font-size:12px }
+.composition-panel>summary { cursor:pointer; font-weight:600 }
+.composition-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:14px 0 }
+.composition-toolbar span,.composition-revision { color:var(--muted); overflow-wrap:anywhere }
+.composition-runtime { border-top:1px solid var(--line); padding:14px 0 }
+.composition-runtime h3 { margin:0 0 8px; font-size:13px }
+.composition-runtime p { margin:7px 0; overflow-wrap:anywhere }
+.composition-runtime details>summary { cursor:pointer; margin:10px 0 }
+.composition-table { overflow-x:auto; margin:10px 0; max-width:100% }
+.composition-table table { width:100%; border-collapse:collapse; font-size:11px }
+.composition-table th,.composition-table td { padding:7px 6px; text-align:left; vertical-align:top; border-bottom:1px solid var(--line); overflow-wrap:anywhere; min-width:80px }
+.composition-runtime [data-status="failed"],.composition-runtime [data-status="schema-changed"] { font-weight:600 }
+
 .dialog-heading {
   display:flex;
   justify-content:space-between;

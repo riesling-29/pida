@@ -1,4 +1,6 @@
 export * from "./runtime.js";
+export type { RunContextDescriptor, RunContextSnapshot, LoadedRunContext, SessionHandoff } from "./run-context.js";
+export * from "./mcp.js";
 export * from "./providers.js";
 export type * from "./execution-contract.js";
 export type { ObservationSink } from "./observation.js";
@@ -18,3 +20,5 @@ export { unlockWorkspaceState } from "./workspace-unlock.js";
 export * from "./program-catalog.js";
 export * from "./program-proxy.js";
 export * from "./program-registry.js";
+export * from "./extensions.js";
+export * from "./composition.js";
