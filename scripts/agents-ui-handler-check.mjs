@@ -4,9 +4,10 @@ import { runInNewContext } from 'node:vm';
 import { webcrypto } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
+import { createRunDetails } from '../examples/web/run-details.js';
 const root = fileURLToPath(new URL('../', import.meta.url));
 class Node {
- constructor(tag='div'){this.tagName=tag;this.children=[];this.dataset={};this.value='';this.textContent='';this.hidden=false;this.disabled=false;this.checked=false;this.open=false;this.attrs={};}
+ constructor(tag='div'){this.tagName=tag;this.children=[];this.dataset={};this.value='';this.textContent='';this.hidden=false;this.disabled=false;this.checked=false;this.open=false;this.attrs={};this.classList={add(){}};}
  append(...nodes){for(const n of nodes)this.children.push(n);}
  replaceChildren(...nodes){this.children=[];this.append(...nodes);}
  setAttribute(k,v){this.attrs[k]=v;}
@@ -29,8 +30,9 @@ const client={
  steerAgentJob:async(...args)=>{steerInput=args},getAgentJobRecovery:async()=>({pendingEffects:[{id:'effect1',toolName:'project_write'}]}),
  reconcileAgent:async(id,input)=>{reconcileInput=clone(input);profile.needsReconciliation=false},getAgentWorkbench:async()=>({files:[]})
 };
-const context={document:doc,sessionStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},crypto:webcrypto,Date,setTimeout:()=>1,clearTimeout:()=>{},explainError:x=>x};
-let source=readFileSync(root+'/examples/web/agents.js','utf8').replace(/^import .*\n/,'').replace('export function createAgents','function createAgents');
+globalThis.document = doc;
+const context={createRunDetails,document:doc,sessionStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},crypto:webcrypto,Date,setTimeout:()=>1,clearTimeout:()=>{},explainError:x=>x};
+let source=readFileSync(root+'/examples/web/agents.js','utf8').replace(/^import .*\n/gm,'').replace('export function createAgents','function createAgents');
 runInNewContext(source+'\nthis.createAgents=createAgents;',context);
 const app=context.createAgents({client});await app.connect();const $=id=>nodes.get(id);const flush=async()=>{for(let i=0;i<12;i++)await new Promise(r=>setImmediate(r));};const submit=async id=>{$(id).onsubmit({preventDefault(){}});await flush()};
 $('agent-name').value='Inspector';$('agent-role').value='review';await submit('agent-create-form');assert.equal($('agent-title').textContent,'Inspector');

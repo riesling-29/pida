@@ -50,6 +50,38 @@ Pida는 Pi SDK의 OpenAI Chat Completions 어댑터를 사용합니다. 별도 L
 
 생략한 항목은 Pi SDK 기본값을 사용합니다. `compat`는 Chat Completions 형식에만 허용됩니다. 모델 설정을 같은 URL·API에 다시 적용해도 기존 호환 설정은 유지됩니다. 다른 URL이나 API로 변경하면 이전 설정을 자동 전달하지 않습니다.
 
+## 모델 기능과 추론 설정
+
+`provider`에 다음 항목을 선택적으로 추가할 수 있습니다. 값은 실제 회사 모델/API가 지원하는 범위로 운영자가 지정합니다. 이름에서 기능을 추측하지 않습니다.
+
+```json
+"reasoning": true,
+"input": ["text", "image"],
+"thinkingLevel": "high",
+"thinkingLevelMap": { "xhigh": null, "max": null }
+```
+
+- 기본값은 기존과 동일한 `reasoning: false`, `input: ["text"]`, 추론 수준 `off`입니다.
+- `thinkingLevel`은 Pi의 `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`를 사용합니다. Pi 모델 선언이 지원하지 않는 명시적 값은 호출 전에 거절합니다. 서버의 실제 지원까지 연결 전에 증명하는 검사는 아닙니다.
+- `thinkingLevelMap`은 Pi의 모델별 값 매핑입니다. `null`은 미지원, 문자열은 공급자가 요구하는 값, 생략은 Pi 기본 매핑을 뜻합니다. `xhigh`와 `max`는 명시적 매핑이 있어야 지원됩니다. 사내 API의 임의 필드나 DeepSeek 전용 프로토콜을 추가하는 설정은 아닙니다.
+- `input`은 모델 기능 선언입니다. `text`는 필수이며 `image`를 추가해도 HTTP 채팅에 이미지 업로드 기능이 자동 추가되는 것은 아닙니다.
+- native provider는 Pi 카탈로그의 기능을 그대로 사용하고 `thinkingLevel`만 지정합니다. 비공개 connector는 `ProviderBinding.thinkingLevel`과 자신의 Pi 모델 선언을 제공합니다. 회사 전용 인증은 여전히 connector의 책임입니다.
+- 같은 URL·API·모델에 설정을 다시 적용하면 생략한 기능 설정을 보존합니다. 모델이나 대상이 바뀌면 이전 모델의 기능 선언을 자동 복사하지 않습니다. `reasoning: false`로 끄면 이전 추론 매핑을 제거하고 수준을 `off`로 되돌립니다.
+
+## 호출별 사용량과 캐시 진단
+
+run의 Observation JSON/JSONL에서 `model_request`와 `model_response`를 `request_id`로 연결합니다. `attempt`는 해당 run 안의 모델 호출 순번입니다. 도구 사용 뒤 이어지는 호출도 별도 attempt입니다.
+
+요청에는 Pi가 선택한 API·모델·추론 수준·모델 한도, provider generation과 `effective_config_digest`, `system_digest`, `tools_digest`가 포함됩니다. 지문은 작업공간 내부 키를 사용하는 HMAC이며 `fingerprint_scope`가 같은 자료끼리 비교합니다. 주소·헤더·키·프롬프트 원문은 관측에 저장하지 않습니다. system/tools 지문은 **Pi의 논리적 요청 구성**에 대한 비교값이며, 공급자 어댑터가 만든 최종 HTTP 본문의 byte prefix가 같다는 증명은 아닙니다. `model_max_tokens`는 모델 선언 한도이며 공급자가 실제 적용한 출력 한도의 증거가 아닙니다.
+
+응답의 `input_tokens`는 캐시를 포함한 입력 토큰, `uncached_input_tokens`는 확인 가능한 비캐시 입력, `output_tokens`는 추론을 포함한 출력입니다. `cache_read_tokens`, `cache_write_tokens`, `reasoning_tokens`는 각각 해당 부분집합이므로 다시 총량에 더하지 않습니다. 누락은 `null`, 명시적으로 보고된 0은 `0`으로 보존합니다.
+
+`usage_status`는 `reported`(공급자 이벤트에서 총량 확인), `partial`, `unknown`, `invalid`(모순·잘못된 수치), `normalized`(원시 사용량을 관측하지 못했지만 Pi가 제공한 일관된 양수 총량)입니다. `normalized`의 0 버킷은 보고 여부를 구별할 수 없어 `null`입니다. 현재 Chat Completions, Responses, Anthropic Messages, Gemini의 공개 usage 형식만 해석하며 회사의 비공개 형식을 추측하지 않습니다. 원시 이벤트는 보존하지 않습니다.
+
+`first_output_ms`는 요청 준비 후 첫 text/thinking/tool-call delta까지 걸린 클라이언트 측 시간입니다. 공급자 내부 TTFT 측정값이 아닙니다. `duration_ms`는 해당 응답 종료까지의 시간입니다. 총량이 없거나 모순이면 토큰 예산을 성공으로 통과시키지 않습니다. 재시도나 후속 호출 비용은 개별 응답을 합산해야 하며, 어떤 attempt의 비용이 미확인이면 전체 비용도 정확하다고 보고할 수 없습니다.
+
+회사에서는 동일 요청 반복과 system/tool 구성을 하나씩 바꾼 요청을 비교하고, 이 지문·시간·서버 보고 캐시 값과 실제 LightLLM/LiteLLM 배포 버전을 함께 기록합니다. 이 계측 자체가 서버 KV-cache 문제를 고치는 기능은 아닙니다.
+
 ## 사내 전용 헤더
 
 gateway에 별도의 헤더가 필요하면 서버 운영자가 `headersEnv`에 **환경변수 이름만** 지정합니다.

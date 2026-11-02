@@ -2,12 +2,14 @@ import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { EffectLedger, type EffectReceipt } from "./effects.js";
 import { ObservationArchive, type ObservationSink, type ObservationContext } from "./observation.js";
+import { ModelAttemptUsage } from "./model-observation.js";
 import { resultManifest } from "./evidence.js";
 import type { ArtifactSnapshot, ToolEvidence, VerificationResult, ObservationBundle } from "./execution-contract.js";
 const runtimeVersion: string = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
 import { basename, join, resolve } from "node:path";
 import { SessionStore, type SavedSession } from "./storage.js";
 import { AgentResources, AgentResourceError } from "./agent-resources.js";
+import { projectToolDetails } from "./tool-details.js";
 import type { SessionSummary, RuntimeInfo } from "./protocol.js";
 import { InMemoryCredentialStore } from "@earendil-works/pi-ai";
 import {
@@ -20,7 +22,7 @@ import {
   type ToolDefinition,
 } from "@earendil-works/pi-coding-agent";
 import type { Static, TSchema } from "typebox";
-import type { ProviderFactory } from "./providers.js";
+import { validateThinkingLevel, type ProviderFactory } from "./providers.js";
 import type {
   RunStatus,
   RunResult,
@@ -34,6 +36,9 @@ export type {
   StreamEvent,
   SessionSummary,
   RuntimeInfo,
+  ToolDetail,
+  SessionTools,
+  TracePage,
 } from "./protocol.js";
 
 export interface Principal {
@@ -168,6 +173,8 @@ interface ActiveRun {
   verification: VerificationResult[];
   evidenceFailed?: boolean;
   requestId?: string;
+  attempts?: number;
+  attempt?: { startedAt: number; firstOutputMs?: number; usage: ModelAttemptUsage };
   inspectedAtEnd?: boolean;
   artifacts: Map<string, import("./execution-contract.js").ArtifactRef>;
   acceptingInput?: boolean;
@@ -219,6 +226,7 @@ export class PidaRuntime {
   private pendingSessions = 0;
   private readonly store?: SessionStore;
   private readonly effects: EffectLedger;
+  private providerGeneration = randomUUID();
   private readonly observations: ObservationArchive;
   private readonly loading = new Map<string, Promise<{ sessionId: string }>>();
   private readonly creating = new Set<Promise<{ sessionId: string }>>();
@@ -312,6 +320,8 @@ export class PidaRuntime {
       await models.getAvailable(binding.provider.id);
       const model = models.getModel(binding.provider.id, binding.modelId);
       if (!model) throw new Error("Configured model not found");
+      try { validateThinkingLevel(model, binding.thinkingLevel); }
+      catch { throw new PidaError("PROVIDER_THINKING_UNSUPPORTED", 400); }
       let manager: SessionManager;
       if (this.store) {
         const file = saved && join(this.store.piDirectory, saved.piFile);
@@ -416,7 +426,7 @@ export class PidaRuntime {
                 run.classifiedCalls.set(callId, code);
               } else if (outcome.recoveryKey !== undefined) run.resultFailures.delete(key);
             }
-            return { content: [{ type: "text" as const, text }], details: {}, isError: outcome?.status === "failed" };
+            return { content: [{ type: "text" as const, text }], details: { pida: { runId: run.id } }, isError: outcome?.status === "failed" };
           } catch (error) {
             if (receipt) {
               try {
@@ -437,7 +447,7 @@ export class PidaRuntime {
         cwd: this.options.workspaceDir,
         modelRuntime: models,
         model,
-        thinkingLevel: "off",
+        thinkingLevel: binding.thinkingLevel ?? "off",
         resourceLoader: this.resources,
         sessionManager: manager,
         settingsManager: SettingsManager.inMemory({
@@ -486,8 +496,33 @@ export class PidaRuntime {
         record.active?.abort.signal.throwIfAborted();
         const result = await piPrepareRequest?.(request, signal);
         record.active?.abort.signal.throwIfAborted();
-        if (record.active) { record.active.requestId = randomUUID(); this.observe(id, record.active, "model_request", { model: model.id, request_id: record.active.requestId }); }
+        if (record.active) {
+          const run = record.active, effectiveModel = result?.model ?? request.model;
+          const thinking = result?.thinkingLevel ?? request.thinkingLevel;
+          const context = result?.context ?? request.context;
+          run.requestId = randomUUID(); run.attempts = (run.attempts ?? 0) + 1;
+          run.attempt = { startedAt: performance.now(), usage: new ModelAttemptUsage() };
+          const effective = { provider: effectiveModel.provider, model: effectiveModel.id, api: effectiveModel.api,
+            baseUrl: effectiveModel.baseUrl, thinking, reasoning: effectiveModel.reasoning, input: effectiveModel.input,
+            contextWindow: effectiveModel.contextWindow, maxTokens: effectiveModel.maxTokens,
+            thinkingLevelMap: effectiveModel.thinkingLevelMap, compat: effectiveModel.compat };
+          this.observe(id, run, "model_request", {
+            model: effectiveModel.id, api: effectiveModel.api, request_id: run.requestId, attempt: run.attempts,
+            provider_generation: this.providerGeneration, thinking_level: thinking,
+            context_window: effectiveModel.contextWindow, model_max_tokens: effectiveModel.maxTokens,
+            effective_config_digest: this.observations.fingerprint(effective),
+            // Logical Pi projection, not a claim of byte-identical serialized wire payloads.
+            system_digest: this.observations.fingerprint(context.messages.filter(message => message.role === "system")),
+            tools_digest: this.observations.fingerprint((context.tools ?? []).map(tool => ({ name: tool.name, description: tool.description, parameters: tool.parameters }))),
+            fingerprint_scope: this.observations.sourceId,
+          });
+        }
         return result ?? undefined;
+      };
+      const piProviderEvent = session.agent.onProviderStreamEvent;
+      session.agent.onProviderStreamEvent = async (event, actualModel) => {
+        await piProviderEvent?.(event, actualModel);
+        record.active?.attempt?.usage.accept(actualModel.api, event);
       };
       const piFinishTurn = session.agent.finishTurn;
       session.agent.finishTurn = async (turn, signal) => {
@@ -557,6 +592,7 @@ export class PidaRuntime {
     for (const session of this.sessions.values()) session.pi.dispose();
     this.sessions.clear();
     this.options.provider = provider;
+    this.providerGeneration = randomUUID();
     this.options.providerInfo = info;
   }
   private persist(record: SessionRecord): void {
@@ -669,6 +705,19 @@ export class PidaRuntime {
   }
   getTrace(id: string, principal: Principal): TraceEvent[] {
     return structuredClone(this.owned(id, principal).traces);
+  }
+  getTracePage(id: string, principal: Principal, afterSequence = 0): import("./protocol.js").TracePage {
+    if (!Number.isSafeInteger(afterSequence) || afterSequence < 0) throw new PidaError("INVALID_CURSOR", 400);
+    const s = this.owned(id, principal), earliestSequence = s.traces[0]?.sequence ?? s.nextSequence;
+    return { events: structuredClone(s.traces.filter(e => e.sequence > afterSequence)), earliestSequence, nextSequence: s.nextSequence,
+      truncated: afterSequence < earliestSequence - 1 || afterSequence >= s.nextSequence, ...(s.active ? { activeRunId: s.active.id } : {}) };
+  }
+  /** Explicit owner-authorized private detail view. Default traces remain metadata-only. */
+  getSessionTools(id: string, principal: Principal): import("./protocol.js").SessionTools {
+    const s = this.owned(id, principal);
+    const allowed = new Set(this.options.tools!.filter(t => principal.permissions.includes(t.permission)).map(t => t.name));
+    const runs = new Map(s.traces.filter(e => e.toolCallId).map(e => [e.toolCallId!, e.runId]));
+    return { sessionId: id, ...projectToolDetails(s.pi.messages, allowed, runs, s.active?.id) };
   }
   private observe(sessionId: string, run: ActiveRun, activity: string, payload: Record<string, string | number | boolean | null> = {}, refs: { artifacts?: string[]; evidence?: string[] } = {}): void {
     try { this.observations.record({ sessionId, taskId: run.taskId, runId: run.id }, activity, payload, refs); }
@@ -841,6 +890,9 @@ export class PidaRuntime {
       this.limits.runMs,
     );
     const unsubscribe = record.pi.subscribe((event) => {
+      if (event.type === "message_update" && ["text_delta", "thinking_delta", "toolcall_delta"].includes(event.assistantMessageEvent.type) &&
+          "delta" in event.assistantMessageEvent && typeof event.assistantMessageEvent.delta === "string" && event.assistantMessageEvent.delta.length > 0 &&
+          run.attempt && run.attempt.firstOutputMs === undefined) run.attempt.firstOutputMs = Math.max(0, performance.now() - run.attempt.startedAt);
       if (
         event.type === "message_update" &&
         event.assistantMessageEvent.type === "text_delta"
@@ -855,11 +907,17 @@ export class PidaRuntime {
         lastAssistant = event.message;
         run.outputTruncated = event.message.stopReason === "length";
         const usage = event.message.usage;
-        const tokens = usage?.totalTokens, cost = usage?.cost?.total;
-        if (Number.isFinite(tokens) && tokens! >= 0) run.tokens += tokens!; else run.usageKnown = false;
-        if (this.options.pricingVerified && Number.isFinite(cost) && cost! >= 0) run.cost += cost!;
+        const measured = (run.attempt?.usage ?? new ModelAttemptUsage()).snapshot(usage);
+        const tokens = measured.tokens, cost = usage?.cost?.total;
+        if (typeof tokens === "number") run.tokens += tokens; else run.usageKnown = false;
+        if (typeof tokens === "number" && this.options.pricingVerified && Number.isFinite(cost) && cost! >= 0) run.cost += cost!;
         else if (this.options.maxCostUsd !== undefined) stop("limited", "USAGE_UNAVAILABLE");
-        this.observe(id, run, "model_response", { request_id: run.requestId ?? null, stop_reason: event.message.stopReason, tokens: Number.isFinite(tokens) && tokens! >= 0 ? tokens! : null, cost_usd: this.options.pricingVerified && Number.isFinite(cost) && cost! >= 0 ? cost! : null });
+        this.observe(id, run, "model_response", { request_id: run.requestId ?? null, attempt: run.attempts ?? null,
+          stop_reason: event.message.stopReason, ...measured,
+          first_output_ms: run.attempt?.firstOutputMs ?? null,
+          duration_ms: run.attempt ? Math.max(0, performance.now() - run.attempt.startedAt) : null,
+          cost_usd: typeof tokens === "number" && this.options.pricingVerified && Number.isFinite(cost) && cost! >= 0 ? cost! : null });
+        run.attempt = undefined;
         if (this.options.maxTotalTokens !== undefined && (!run.usageKnown || run.tokens >= this.options.maxTotalTokens)) stop("limited", run.usageKnown ? "TOKEN_BUDGET" : "USAGE_UNAVAILABLE");
         if (this.options.maxCostUsd !== undefined && run.cost >= this.options.maxCostUsd) stop("limited", "COST_BUDGET");
       }

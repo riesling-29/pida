@@ -1576,3 +1576,20 @@ body[data-mode=agents] #toggle-sessions,body[data-mode=agents] #toggle-inspector
 .agents-view .agent-check{display:flex;gap:8px;align-items:center}.agents-view .agent-check input{width:auto;margin:0}#agent-recovery-effects label{overflow-wrap:anywhere}#agent-recovery{border:1px solid var(--line);padding:12px}
 .agent-list-item{white-space:normal}
 .studio-programs{flex-shrink:0;padding:10px 16px;border-top:1px solid var(--line);max-height:280px;overflow:auto;font-size:11px;line-height:1.7}.studio-programs summary{cursor:pointer}.studio-programs h3{font-size:12px;margin:10px 0 5px}.studio-programs li{padding:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}.studio-programs label{font-size:11px}.studio-programs select{padding:6px;margin:4px 0;width:100%}.studio-programs button{font-size:11px;padding:5px 8px}.program-actions{display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap}#studio-programs-status,#studio-program-source{color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}#studio-program-source{margin:6px 0}#studio-program-manifest{font:11px/1.6 var(--mono);white-space:pre;overflow:auto;max-height:200px;padding:10px;background:var(--surface)}#studio-program-review{border-top:1px solid var(--line);margin-top:10px;padding-top:8px}#studio-program-review code{font-size:10px;white-space:normal;overflow-wrap:anywhere}#studio-program-download{display:inline-block;padding:6px 0;color:var(--accent)}
+
+/* Live queue admission remains distinct from task completion. */
+.live-input { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:8px 0; font-size:11px; }
+.live-input[hidden] { display:none; }
+.live-input select { max-width:180px; padding:4px 7px; }
+.live-input p { flex-basis:100%; color:var(--muted); font-size:10px; line-height:1.6; margin:0; }
+.input-receipt { margin:6px 0; color:var(--muted); font:11px/1.6 var(--mono); overflow-wrap:anywhere; }
+.input-receipt:empty { display:none; }
+
+.run-details { padding:8px 12px; border-top:1px solid var(--line); font:11px/1.6 var(--mono); min-width:0; }
+.run-details summary { cursor:pointer; overflow-wrap:anywhere; }
+.run-details button { margin:7px 0; font-size:11px; }
+.run-details p { color:var(--muted); margin:5px 0; overflow-wrap:anywhere; }
+.run-details > div { max-height:300px; overflow:auto; }
+.run-details details { padding:6px 0; border-top:1px solid var(--line); }
+.run-details pre { white-space:pre-wrap; overflow-wrap:anywhere; max-height:220px; overflow:auto; padding:8px; background:var(--surface); font:11px/1.6 var(--mono); }
+.run-details [data-status=failed] > summary { color:var(--terra); }

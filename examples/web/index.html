@@ -15,7 +15,7 @@
       <div class="brand" aria-label="Pida">pida<span class="cursor-mark" aria-hidden="true">_</span></div>
       <span class="app-divider" aria-hidden="true">/</span>
       <h1>workspace</h1>
-      <span class="version">core 0.8.0</span>
+      <span class="version">core 0.8.1</span>
       <div class="app-actions">
         <button id="toggle-sessions" class="mobile-control" aria-controls="session-navigation" aria-expanded="false" disabled>대화 목록</button>
         <button id="toggle-inspector" class="inspector-control" aria-controls="inspector" aria-expanded="false" disabled>작업 패널</button>
@@ -67,12 +67,13 @@
       <aside class="studio-chat" aria-label="제작 대화"><div class="studio-chat-heading"><h2>작업 지시</h2><p id="studio-model">연결한 모델로 작업합니다.</p></div>
         <p id="studio-demo" class="notice" hidden>데모 모델에서는 템플릿을 둘러볼 수 있습니다. 대화로 편집하려면 모델을 연결하세요.</p>
         <div id="studio-messages" aria-live="polite"><div class="studio-chat-empty"><p>작은 요청부터 시작하세요.</p><button data-suggestion="왼쪽 메뉴에 설비 현황 페이지를 추가해줘. 기존 화면은 유지해줘.">＋ 설비 현황 메뉴</button><button data-suggestion="오른쪽에 할 일 목록을 붙이고, 체크하면 완료 표시가 되게 해줘.">＋ 할 일 패널</button><button data-suggestion="최근 작업 표에 검색창과 상태 필터를 추가해줘.">＋ 검색 · 필터</button></div></div>
-        <details id="studio-activity" class="studio-activity" hidden open><summary>작업 과정 <span id="studio-activity-count"></span></summary><ol id="studio-activity-list" aria-label="실행 과정"></ol><p id="studio-activity-clock"></p><p id="studio-activity-stale" hidden>새 실행 신호를 기다리고 있습니다. 중단 여부는 아직 확인되지 않았습니다.</p></details>
+        <details id="studio-activity" class="studio-activity" hidden open><summary>작업 과정 <span id="studio-activity-count"></span></summary><ol id="studio-activity-list" aria-label="실행 과정"></ol><p id="studio-activity-clock"></p><p id="studio-activity-gap" hidden>일부 실행 기록이 없거나 순서가 누락됐습니다. 확인된 기록만 표시합니다.</p><p id="studio-activity-stale" hidden>새 실행 신호를 기다리고 있습니다. 중단 여부는 아직 확인되지 않았습니다.</p></details>
+        <details id="studio-run-details" hidden></details>
         <p id="studio-context" class="studio-run-status">대화 시작 후 컨텍스트를 표시합니다</p>
         <div class="studio-context-actions"><button id="studio-compact" type="button" disabled>대화 압축</button><button id="studio-handoff" type="button" disabled>요약해서 이어가기</button></div>
         <p id="studio-run-status" class="studio-run-status" role="status">요청을 기다리고 있습니다</p>
         <p id="studio-capability" class="studio-scope-note">현재 실행 환경: 화면 편집 · 파일 수정 · 제한된 JavaScript 검사</p>
-        <form id="studio-form" class="studio-composer"><label for="studio-prompt">추가하거나 바꿀 내용</label><textarea id="studio-prompt" rows="4" maxlength="12000" placeholder="왼쪽에 사이드바를 만들고…"></textarea><div><span class="keyboard-hint">Ctrl + Enter</span><button id="studio-new-chat" type="button" class="quiet">새 대화</button><button id="studio-cancel" type="button" disabled>중단</button><button id="studio-send" class="primary">보내기 ↑</button></div></form>
+        <form id="studio-form" class="studio-composer"><label for="studio-prompt">추가하거나 바꿀 내용</label><textarea id="studio-prompt" rows="4" maxlength="12000" placeholder="왼쪽에 사이드바를 만들고…"></textarea><section id="studio-live-input" class="live-input" hidden><label for="studio-input-mode">실행 중 입력</label><select id="studio-input-mode"><option value="steer">추가 지시</option><option value="followUp">다음 요청</option></select><p id="studio-input-note"></p></section><p id="studio-input-receipt" class="input-receipt" role="status"></p><div><span class="keyboard-hint">Ctrl + Enter</span><button id="studio-new-chat" type="button" class="quiet">새 대화</button><button id="studio-cancel" type="button" disabled>중단</button><button id="studio-send" class="primary">보내기 ↑</button></div></form>
       </aside>
     </section>
     <dialog id="template-dialog" aria-labelledby="template-title"><div class="dialog-heading"><div><p class="section-label">START WITH A STRUCTURE</p><h2 id="template-title">화면의 기본 틀을 선택하세요.</h2><p class="muted">필요한 기능은 대화하면서 붙일 수 있습니다.</p></div><button id="close-templates" class="quiet">닫기</button></div><div id="template-grid" class="template-grid"></div><p id="template-notice" class="muted">선택한 템플릿으로 서비스 화면을 시작합니다.</p><div class="template-actions"><button id="apply-template" class="primary" disabled>이 템플릿으로 시작 →</button></div></dialog>
@@ -94,7 +95,7 @@
         <div id="messages" aria-live="polite" aria-label="대화 내용"><div class="empty"><span class="empty-symbol" aria-hidden="true">p<span>_</span></span><h3>무엇을 만들어볼까요?</h3><p>새 대화를 열어 작업을 시작하세요.<br />파일과 실행 결과는 오른쪽 패널에 모입니다.</p></div></div>
         <form id="form" class="composer">
           <div class="composer-label"><label for="prompt"><span aria-hidden="true">›</span> 요청</label><span id="composer-state">새 대화를 시작하세요</span></div>
-          <textarea id="prompt" rows="3" maxlength="16000" placeholder="요청을 입력하세요…" disabled></textarea>
+          <textarea id="prompt" rows="3" maxlength="16000" placeholder="요청을 입력하세요…" disabled></textarea><section id="workspace-live-input" class="live-input" hidden><label for="workspace-input-mode">실행 중 입력</label><select id="workspace-input-mode"><option value="steer">추가 지시</option><option value="followUp">다음 요청</option></select><p id="workspace-input-note"></p></section><p id="workspace-input-receipt" class="input-receipt" role="status"></p>
           <div class="composer-actions"><span class="keyboard-hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> 보내기</span><button type="button" id="delete-session" class="quiet" disabled>대화 삭제</button><button type="button" id="cancel" class="secondary" disabled>중단</button><button id="send" class="primary" disabled>보내기</button></div>
         </form>
       </section>
@@ -117,7 +118,7 @@
           </div>
           <p id="workbench-unavailable" class="panel-empty">이 서버에는 작업 파일 기능이<br />연결되어 있지 않습니다.</p>
         </section>
-        <section id="runs-panel" class="inspector-panel" role="tabpanel" aria-labelledby="tab-runs" hidden><div class="inspector-description"><span class="section-label">EXECUTION LOG</span><p>도구 호출과 작업의 흐름을 확인하세요.</p></div><ol id="trace"></ol><p id="trace-empty" class="panel-empty">아직 실행 기록이 없습니다.</p><p class="inspector-note">실행 메타데이터입니다. 대화 저장 시 본문과 도구 결과도 서버에 별도 저장됩니다.</p></section>
+        <section id="runs-panel" class="inspector-panel" role="tabpanel" aria-labelledby="tab-runs" hidden><div class="inspector-description"><span class="section-label">EXECUTION LOG</span><p>도구 호출과 작업의 흐름을 확인하세요.</p></div><p id="workspace-trace-gap" class="field-hint" hidden>일부 실행 기록이 없거나 순서가 누락됐습니다. 확인된 기록만 표시합니다.</p><details id="workspace-run-details" hidden></details><ol id="trace"></ol><p id="trace-empty" class="panel-empty">아직 실행 기록이 없습니다.</p><p class="inspector-note">실행 메타데이터입니다. 대화 저장 시 본문과 도구 결과도 서버에 별도 저장됩니다.</p></section>
         <section id="tools-panel" class="inspector-panel" role="tabpanel" aria-labelledby="tab-tools" hidden><div class="inspector-description"><span class="section-label">AVAILABLE TOOLS</span><p>현재 연결된 도구와 실행 권한입니다.</p></div><ul id="tools"></ul></section>
       </aside>
     </div>
@@ -144,7 +145,7 @@
           <div class="agent-tabs" role="tablist" aria-label="에이전트 상세"><button id="agent-tab-jobs" role="tab" aria-selected="true" aria-controls="agent-panel-jobs">작업</button><button id="agent-tab-memory" role="tab" aria-selected="false" aria-controls="agent-panel-memory" tabindex="-1">기억</button></div>
           <section id="agent-panel-jobs" role="tabpanel" aria-labelledby="agent-tab-jobs">
             <form id="agent-job-form"><label for="agent-job-input">작업 요청</label><textarea id="agent-job-input" rows="3" maxlength="12000" required placeholder="조사할 내용, 수정할 파일, 완료 기준을 입력하세요."></textarea><div class="agent-form-actions"><span id="agent-enqueue-note" class="field-hint">요청은 저장된 대기열에 추가됩니다.</span><button class="primary">대기열에 추가</button></div></form>
-            <div class="agent-jobs-layout"><div id="agent-jobs" aria-label="작업 목록"></div><section id="agent-job-detail" aria-label="선택한 작업" hidden><div class="agent-job-heading"><strong id="agent-job-state"></strong><button id="agent-job-cancel">작업 중단</button></div><p id="agent-job-time" class="field-hint"></p><pre id="agent-job-request"></pre><ol id="agent-job-activity" aria-label="작업 과정"></ol><pre id="agent-job-result"></pre><p id="agent-job-code" role="status"></p><form id="agent-steer-form" hidden><label for="agent-steer-text">실행 중 추가 지시</label><textarea id="agent-steer-text" rows="2" maxlength="12000" required></textarea><button>현재 실행에 전달</button></form></section></div>
+            <div class="agent-jobs-layout"><div id="agent-jobs" aria-label="작업 목록"></div><section id="agent-job-detail" aria-label="선택한 작업" hidden><div class="agent-job-heading"><strong id="agent-job-state"></strong><button id="agent-job-cancel">작업 중단</button></div><p id="agent-job-time" class="field-hint"></p><pre id="agent-job-request"></pre><details id="agent-run-details" hidden></details><ol id="agent-job-activity" aria-label="작업 과정"></ol><pre id="agent-job-result"></pre><p id="agent-job-code" role="status"></p><form id="agent-steer-form" hidden><label for="agent-steer-text">실행 중 추가 지시</label><textarea id="agent-steer-text" rows="2" maxlength="12000" required></textarea><p class="field-hint">현재 실행의 대기열에 전달합니다. 서버 재시작 시 유지되지 않습니다.</p><button>현재 실행에 전달</button></form></section></div>
             <details id="agent-artifacts" class="agent-memory-section"><summary>에이전트 작업 파일</summary><p class="field-hint">이 에이전트의 별도 작업 공간입니다. 서비스 화면의 파일과 구분됩니다.</p><label for="agent-artifact-file">파일</label><select id="agent-artifact-file"><option value="">파일 선택</option></select><p id="agent-artifact-status" role="status" class="field-hint"></p><pre id="agent-artifact-source"></pre></details>
           </section>
           <section id="agent-panel-memory" role="tabpanel" aria-labelledby="agent-tab-memory" hidden>
@@ -220,6 +221,9 @@
                 list="provider-models"
                 placeholder="목록에서 선택하거나 모델 이름 입력"
               /><datalist id="provider-models"></datalist>
+              <label id="provider-reasoning-row"><input id="provider-reasoning" type="checkbox" /> 이 서버 모델의 추론 기능 사용</label>
+              <label for="provider-thinking">추론 수준</label>
+              <select id="provider-thinking" aria-label="추론 수준"></select>
               <details id="provider-advanced" class="advanced">
                 <summary>고급 설정</summary>
                 <label for="provider-api">API 형식</label

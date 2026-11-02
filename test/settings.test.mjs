@@ -275,3 +275,24 @@ test("unavailable host header credentials fail without values and do not issue a
   await assert.rejects(settings.apply(draft), /PROVIDER_HEADERS_UNAVAILABLE/);
   assert.equal(calls.length, 0);
 });
+
+test("model capability settings survive unchanged selection and reset when the model or target changes", async t => {
+  const { dir, settings, draft, calls } = await fixture(t);
+  const capabilities = { reasoning: true, input: ["text", "image"], thinkingLevel: "high", thinkingLevelMap: { high: "intensive", xhigh: null } };
+  await settings.apply({ ...draft, ...capabilities });
+  assert.equal(calls.at(-1).body.reasoning_effort, "intensive");
+  await settings.apply(draft);
+  for (const [key, value] of Object.entries(capabilities)) assert.deepEqual(readConfig(dir).provider[key], value);
+  const before = calls.length;
+  await assert.rejects(settings.test({ ...draft, thinkingLevel: "xhigh" }), /INVALID_PROVIDER/);
+  assert.equal(calls.length, before);
+  await settings.apply({ ...draft, reasoning: false });
+  assert.equal(readConfig(dir).provider.thinkingLevel, "off"); assert.equal(readConfig(dir).provider.thinkingLevelMap, undefined);
+  await settings.apply({ ...draft, ...capabilities });
+  await settings.apply({ ...draft, modelId: "other-model" });
+  for (const key of Object.keys(capabilities)) assert.equal(readConfig(dir).provider[key], undefined);
+  assert.equal(calls.at(-1).body.reasoning_effort, undefined);
+  await settings.apply({ ...draft, ...capabilities });
+  await settings.apply({ ...draft, baseUrl: draft.baseUrl.replace("/v1", "/other") });
+  for (const key of Object.keys(capabilities)) assert.equal(readConfig(dir).provider[key], undefined);
+});

@@ -35,9 +35,11 @@ import {
   endpointHeaders,
   mockProvider,
   type EndpointConfig,
+  thinkingLevels,
 } from "./providers.js";
 import { createPidaServer, staticTokenAuth } from "./http.js";
 
+const thinkingLevelSchema = Type.Union(thinkingLevels.map(level => Type.Literal(level)));
 const configSchema = Type.Object(
   {
     version: Type.Literal(1),
@@ -45,7 +47,7 @@ const configSchema = Type.Object(
     stateDir: Type.String({ minLength: 1 }),
     systemPrompt: Type.String({ minLength: 1 }),
     provider: Type.Union([
-      Type.Object({ kind: Type.Literal("native"), providerId: Type.String({ minLength: 1 }), modelId: Type.String({ minLength: 1 }), apiKeyEnv: Type.String({ pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }), authMode: Type.Optional(Type.Union([Type.Literal("api-key"), Type.Literal("chatgpt")])) }, { additionalProperties: false }),
+      Type.Object({ kind: Type.Literal("native"), providerId: Type.String({ minLength: 1 }), modelId: Type.String({ minLength: 1 }), apiKeyEnv: Type.String({ pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }), authMode: Type.Optional(Type.Union([Type.Literal("api-key"), Type.Literal("chatgpt")])), thinkingLevel: Type.Optional(thinkingLevelSchema) }, { additionalProperties: false }),
       Type.Object(
         { kind: Type.Literal("mock") },
         { additionalProperties: false },
@@ -63,6 +65,10 @@ const configSchema = Type.Object(
           apiKeyEnv: Type.String({ pattern: "^[A-Za-z_][A-Za-z0-9_]*$" }),
           contextWindow: Type.Integer({ minimum: 2 }),
           maxTokens: Type.Integer({ minimum: 1 }),
+          reasoning: Type.Optional(Type.Boolean()),
+          input: Type.Optional(Type.Array(Type.Union([Type.Literal("text"), Type.Literal("image")]), { minItems: 1, maxItems: 2, uniqueItems: true })),
+          thinkingLevelMap: Type.Optional(Type.Object(Object.fromEntries(thinkingLevels.map(level => [level, Type.Optional(Type.Union([Type.String({ minLength: 1, maxLength: 100 }), Type.Null()]))])), { additionalProperties: false })),
+          thinkingLevel: Type.Optional(thinkingLevelSchema),
           allowInsecureHttp: Type.Optional(Type.Boolean()),
           authMode: Type.Optional(
             Type.Union([Type.Literal("api-key"), Type.Literal("none")]),
@@ -361,7 +367,7 @@ export async function createWorkspace(directory: string) {
   // Keep local settings reachable even when a provider key is absent. Model calls still fail closed.
   const tools = await loadWorkspaceTools(root, config);
   const protectedPaths = [join(root, "pida.config.json"), join(root, ".env"), join(root, "connectors"), join(root, "programs"), join(root, config.tools.directory), inside(root, config.stateDir), ...(config.programs ?? []).map(p => resolve(root, p.manifest))];
-  const programs = await createProgramRegistry(root, config.programs, { projectRoot: config.project?.enabled ? resolve(root, config.project.root) : undefined, protectedPaths });
+  const programs = await createProgramRegistry(root, config.programs, { projectRoot: config.project?.enabled ? resolve(root, config.project.root) : undefined, protectedPaths, outputDirectory: join(inside(root, config.stateDir), "program-output") });
   const sharedWorkspaceKey = config.project?.enabled ? resolve(root, config.project.root) : programs.tools.some(t => t.effect !== "read") ? "host-programs" : undefined;
   const workbench = config.workbench?.enabled ? new PidaWorkbench(join(inside(root, config.stateDir), "workbench"), config.browserChecks ?? false) : undefined;
   const packs = codingPacks(workbench ? config.codingPacks : []);

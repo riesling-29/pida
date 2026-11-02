@@ -1,4 +1,7 @@
 import { createStudio } from "/studio.js";
+import { RunState } from "/run-state.js";
+import { createRunInput } from "/run-input.js";
+import { createRunDetails } from "/run-details.js";
 import { createAgents } from "/agents.js";
 import { PidaClient, explainError } from "/pida-client.js";
 const $ = (id) => document.getElementById(id);
@@ -10,6 +13,10 @@ let token = "",
   remoteRunning = false,
   sessionPoll;
 const client = new PidaClient({ baseUrl: location.origin, token: () => token });
+const run = new RunState();
+let capabilities = {}, selectionRequest = 0;
+const runInput = createRunInput({ client, run, textarea: $("prompt"), selector: $("workspace-input-mode"), section: $("workspace-live-input"), note: $("workspace-input-note"), receipt: $("workspace-input-receipt"), changed: () => controls(), explain: explainError });
+const runDetails = createRunDetails({ container: $("workspace-run-details"), load: () => client.getSessionTools(sessionId), explain: explainError });
 const agents = createAgents({ client });
 const studio = createStudio({
   client,
@@ -48,15 +55,18 @@ function problem(error) {
 }
 function controls() {
   const busy = pending || running || studio.busy || configuring;
-  $("send").disabled = !sessionId || busy || remoteRunning;
-  $("cancel").disabled = pending || !(running || remoteRunning);
+  runInput.sync(capabilities); $("workspace-trace-gap").hidden = !run.gap;
+  const composerBlocked = !sessionId || pending || studio.busy || configuring;
+  $("send").disabled = composerBlocked || (run.running ? !runInput.canSubmit : running || remoteRunning);
+  $("send").textContent = run.running ? runInput.label + " 보내기" : "보내기";
+  $("cancel").disabled = pending || run.cancelling || !(running || remoteRunning);
   $("connect").disabled = busy;
   for (const id of ["workspace-compact", "workspace-handoff"]) $(id).disabled = !sessionId || busy || remoteRunning;
   $("new-session").disabled = !connected || busy || remoteRunning;
   $("delete-session").disabled = !sessionId || busy || remoteRunning;
   $("refresh").disabled = !connected || busy;
   $("disconnect").disabled = !connected || busy || remoteRunning;
-  $("prompt").disabled = !sessionId || busy || remoteRunning;
+  $("prompt").disabled = composerBlocked;
   for (const button of $("sessions").querySelectorAll("button"))
     button.disabled = busy || remoteRunning;
   $("connection").hidden = connected;
@@ -103,6 +113,11 @@ function message(role, text) {
 }
 const traceLabels = { run_started: "작업 시작", turn_started: "모델 응답", tool_started: "도구 실행", tool_completed: "도구 실행 완료", tool_failed: "도구 실행 실패", run_finished: "작업 종료" };
 function trace(event) {
+  if (!run.acceptTrace(event)) return false;
+  renderTrace(event); runDetails.select(sessionId, run.runId); controls();
+  return true;
+}
+function renderTrace(event) {
   const li = document.createElement("li"), sequence = document.createElement("span"), body = document.createElement("div"), kind = document.createElement("span"), detail = document.createElement("span");
   li.title = event.type;
   li.classList.toggle("trace-failed", event.status === "failed" || event.type === "tool_failed");
@@ -111,7 +126,7 @@ function trace(event) {
   kind.className = "trace-kind";
   kind.textContent = traceLabels[event.type] ?? event.type;
   detail.className = "trace-detail";
-  detail.textContent = [event.toolName, labels[event.status] ?? event.status].filter(Boolean).join(" / ");
+  detail.textContent = [event.toolName, labels[event.status] ?? event.status, event.code].filter(Boolean).join(" / ");
   body.append(kind, detail); li.append(sequence, body); $("trace").append(li);
   while ($("trace").children.length > 1000) $("trace").firstChild.remove();
   $("trace-count").textContent = $("trace").children.length;
@@ -125,7 +140,9 @@ function emptyConversation() {
   empty.append(symbol, title, hint); $("messages").replaceChildren(empty);
 }
 async function list() {
+  const ticket = run.ticket(), credential = token;
   const { sessions } = await client.listSessions();
+  if (!run.current(ticket) || credential !== token) return [];
   $("sessions").replaceChildren();
   $("session-count").textContent = String(sessions.length).padStart(2, "0");
   for (const s of sessions) {
@@ -150,11 +167,16 @@ async function list() {
   return sessions;
 }
 async function select(id) {
-  const data = await client.getSession(id);
+  const request = ++selectionRequest;
+  if (run.sessionId !== id) { run.reset(id); runInput.reset(); runDetails.select(id); }
+  const ticket = run.ticket();
+  const [data, activity] = await Promise.all([client.getSession(id), client.getTrace(id)]);
+  if (request !== selectionRequest || !run.current(ticket, { revision: true })) return;
+  run.snapshot({ ...data, ...(activity.activeRunId ? { activeRunId: activity.activeRunId, running: true } : {}) }, activity.events);
   const c = data.context;
   $("workspace-context").textContent = c ? `컨텍스트 ${c.percent == null ? "측정 대기" : c.percent.toFixed(0) + "%"} / ${c.contextWindow.toLocaleString()} · 자동 압축 ${data.autoCompaction ? "켜짐" : "꺼짐"}` : "";
-  sessionId = id;
-  remoteRunning = data.running;
+  sessionId = id; remoteRunning = run.running;
+  runDetails.select(id, run.runId);
   sessionStorage.setItem("pida-session", id);
   $("session-title").textContent = data.title ?? "대화";
   $("session-title").title = data.title ?? "대화";
@@ -163,34 +185,35 @@ async function select(id) {
   for (const m of data.messages) message(m.role, m.text);
   if (!data.messages.length) emptyConversation();
   $("trace").replaceChildren();
-  for (const event of (await client.getTrace(id)).events) trace(event);
-  $("status").textContent = data.running
-    ? "실행 중 · 서버 상태 확인 중"
-    : (labels[data.lastStatus] ?? "대기");
+  for (const event of activity.events.filter(event => event.runId === run.runId)) renderTrace(event);
+  $("status").textContent = run.running ? "실행 중 · 서버 상태 확인 중" : labels[data.lastStatus] ?? "대기";
   await list();
-  controls();
-  $("messages").scrollTop = $("messages").scrollHeight;
-  scheduleSessionPoll();
+  if (request !== selectionRequest || !run.current(ticket)) return;
+  controls(); $("messages").scrollTop = $("messages").scrollHeight; scheduleSessionPoll();
 }
 function scheduleSessionPoll() {
   clearTimeout(sessionPoll);
-  if (!connected || !remoteRunning || running || !sessionId) return;
-  const id = sessionId, credential = token;
+  if (!connected || !(remoteRunning || running) || !sessionId) return;
+  const id = sessionId, credential = token, ticket = run.ticket();
   sessionPoll = setTimeout(async () => {
     try {
       const [data, activity] = await Promise.all([client.getSession(id), client.getTrace(id)]);
-      if (!connected || sessionId !== id || credential !== token) return;
-      remoteRunning = data.running;
-      $("trace").replaceChildren(); for (const event of activity.events) trace(event);
-      $("status").textContent = data.running ? "실행 중 · 서버 상태 연결됨" : labels[data.lastStatus] ?? "대기";
-      if (!remoteRunning) { await select(id); await refreshWorkbench(); }
-    } catch (error) { if (connected && sessionId === id && credential === token) { problem(error); $("status").textContent = "서버 실행 상태 확인 중"; } }
-    finally { if (connected && sessionId === id && credential === token) { controls(); scheduleSessionPoll(); } }
+      if (!connected || sessionId !== id || credential !== token || !run.current(ticket, { revision: true })) return;
+      const repair = run.gap, previousRun = run.runId;
+      const events = run.snapshot({ ...data, ...(activity.activeRunId ? { activeRunId: activity.activeRunId, running: true } : {}) }, activity.events);
+      if (repair || previousRun !== run.runId) { $("trace").replaceChildren(); for (const event of activity.events.filter(row => row.runId === run.runId)) renderTrace(event); }
+      else for (const event of events) renderTrace(event);
+      remoteRunning = run.running; runDetails.select(id, run.runId);
+      if (!running) $("status").textContent = run.running ? "실행 중 · 서버 상태 연결됨" : labels[data.lastStatus] ?? "대기";
+      if (!remoteRunning && !running) { await select(id); await refreshWorkbench(); }
+    } catch (error) { if (connected && sessionId === id && credential === token && run.current(ticket)) { problem(error); $("status").textContent = "서버 실행 상태 확인 중"; } }
+    finally { if (connected && sessionId === id && credential === token && run.current(ticket)) { controls(); scheduleSessionPoll(); } }
   }, 1800);
 }
 async function connect() {
   token = $("token").value;
   const info = await client.getInfo();
+  capabilities = info.capabilities ?? {};
   $("model").textContent = info.provider
     ? `${info.provider.mode === "mock" ? "데모 모델" : info.provider.mode === "endpoint" ? "사용자 지정" : info.provider.mode} · ${info.provider.model}`
     : "호스트 설정 모델";
@@ -257,7 +280,7 @@ $("delete-session").onclick = () => {
   if (!confirm("이 대화와 저장된 실행 기록을 삭제할까요?")) return;
   action(async () => {
     await client.deleteSession(sessionId);
-    sessionId = undefined;
+    sessionId = undefined; run.reset(); runInput.reset(); runDetails.select();
     sessionStorage.removeItem("pida-session");
     $("messages").replaceChildren();
     $("trace").replaceChildren();
@@ -269,7 +292,7 @@ $("delete-session").onclick = () => {
   });
 };
 $("disconnect").onclick = () => {
-  connected = false;
+  connected = false; selectionRequest++; run.reset(); runInput.reset(); runDetails.select();
   clearTimeout(sessionPoll);
   clearTimeout(chatgptPoll); chatgptLogin = undefined; chatgptState = { connected: false }; chatgptModels = []; clearChatGPTLogin();
   $("settings-dialog").close();
@@ -288,64 +311,58 @@ $("disconnect").onclick = () => {
   controls();
 };
 $("cancel").onclick = async () => {
-  $("cancel").disabled = true;
+  const id = sessionId, ticket = run.ticket();
+  run.cancel(); controls();
   try {
-    await client.cancel(sessionId);
-    if (!running) await select(sessionId);
-  } catch (e) {
-    problem(e);
-  } finally {
-    controls();
-  }
+    await client.cancel(id);
+    if (!run.current(ticket, { run: true })) return;
+    $("status").textContent = "중단 요청을 전달했습니다. 최종 상태를 기다리고 있습니다.";
+    if (!running) await select(id);
+  } catch (e) { if (run.current(ticket, { run: true })) { run.cancelling = false; problem(e); } }
+  finally { if (run.current(ticket)) controls(); }
 };
 $("form").onsubmit = async (e) => {
   e.preventDefault();
-  if (pending || running || studio.busy || remoteRunning || !sessionId) return;
-  const prompt = $("prompt").value.trim();
+  if (pending || studio.busy || configuring || !sessionId) return;
+  if (run.running) { await runInput.submit(); scheduleSessionPoll(); return; }
+  if (running || remoteRunning) return;
+  const raw = $("prompt").value, prompt = raw.trim();
   if (!prompt) return;
-  running = true;
-  controls();
-  $("error").textContent = "";
-  $("status").textContent = "실행 중";
+  const id = sessionId;
+  run.begin(); runInput.reset(); runDetails.select(id);
+  const ticket = run.ticket();
+  running = true; controls();
+  $("error").textContent = ""; $("status").textContent = "실행 중";
   $("messages").querySelector(".empty")?.remove();
   message("user", prompt);
   const answer = message("assistant", "응답을 기다리고 있습니다…");
-  let text = "";
+  let text = "", admitted = false;
   try {
-    for await (const event of client.stream(sessionId, prompt, { disconnectPolicy: "continue" })) {
-      if (event.type === "text_delta") {
-        text += event.delta;
-        answer.textContent = text;
+    for await (const event of client.stream(id, prompt, { disconnectPolicy: "continue" })) {
+      if (!run.current(ticket)) continue;
+      if (event.type === "trace" && trace(event.trace) && event.trace.type === "run_started") {
+        admitted = true;
+        if ($("prompt").value === raw) $("prompt").value = "";
+        scheduleSessionPoll();
       }
-      if (event.type === "trace") trace(event.trace);
-      if (event.type === "result") {
-        $("status").textContent =
-          labels[event.result.status] ?? event.result.status;
-        answer.textContent =
-          event.result.text ||
-          errors[event.result.code] ||
-          (event.result.code ? explainError(event.result.code) : "") ||
-          "응답 없음";
-        if (event.result.code)
-          problem({ code: event.result.code, message: event.result.code });
-        if (event.result.persistenceError && event.result.persistenceError !== event.result.code)
-          answer.textContent += "\n\n" + explainError(event.result.persistenceError);
-        if (event.result.status === "completed") $("prompt").value = "";
+      if (event.type === "text_delta" && run.running) { text += event.delta; answer.textContent = text; }
+      if (event.type === "result" && run.acceptResult(event.result)) {
+        $("status").textContent = labels[event.result.status] ?? event.result.status;
+        answer.textContent = event.result.text || errors[event.result.code] || (event.result.code ? explainError(event.result.code) : "") || "응답 없음";
+        if (event.result.code) problem({ code: event.result.code, message: event.result.code });
+        if (event.result.persistenceError && event.result.persistenceError !== event.result.code) answer.textContent += "\n\n" + explainError(event.result.persistenceError);
+        runDetails.select(id, run.runId); controls();
       }
       $("messages").scrollTop = $("messages").scrollHeight;
     }
-    await list();
-    await refreshWorkbench();
-    await studio.refresh();
+    if (!run.current(ticket)) return;
+    await list(); await refreshWorkbench(); await studio.refresh();
   } catch (error) {
-    problem(error);
-    $("status").textContent = "연결 확인 필요";
-    remoteRunning = true;
+    if (!run.current(ticket)) return;
+    problem(error); $("status").textContent = "연결 확인 필요"; remoteRunning = true;
+    if (!admitted && !$("prompt").value) $("prompt").value = raw;
   } finally {
-    running = false;
-    controls();
-    scheduleSessionPoll();
-    $("prompt").focus();
+    if (run.current(ticket)) { running = false; controls(); scheduleSessionPoll(); $("prompt").focus(); }
   }
 };
 // Optional authenticated launch from the local CLI. Never persist the token in storage.
@@ -454,6 +471,26 @@ $("openai-auth").onchange = async () => {
   controls();
 };
 const selectedNative = () => providerCatalog.find(p => p.id === $("provider-preset").value);
+let endpointThinkingMap;
+function thinkingControls(selected = $("provider-thinking").value || "off") {
+  const native = selectedNative();
+  const model = native?.models.find(m => m.id === $("native-model-select").value);
+  const levels = native ? (model?.thinkingLevels?.length ? model.thinkingLevels : ["off"]) :
+    $("provider-reasoning").checked ? ["off", "minimal", "low", "medium", "high", ...["xhigh", "max"].filter(level => typeof endpointThinkingMap?.[level] === "string")].filter(level => endpointThinkingMap?.[level] !== null) : ["off"];
+  $("provider-thinking").replaceChildren();
+  for (const value of levels) {
+    const option = document.createElement("option"); option.value = value;
+    option.textContent = value === "off" ? "사용 안 함" : value;
+    $("provider-thinking").append(option);
+  }
+  $("provider-thinking").value = levels.includes(selected) ? selected : levels[0];
+  $("provider-reasoning-row").hidden = !!native;
+}
+function resetEndpointCapabilities() {
+  endpointThinkingMap = undefined;
+  $("provider-reasoning").checked = false;
+  thinkingControls("off");
+}
 function showNativeModels(selectedId = "") {
   const p = selectedNative();
   $("native-model-select").replaceChildren();
@@ -469,6 +506,7 @@ function showNativeModels(selectedId = "") {
     $("native-model-select").append(option);
   }
   $("native-model-select").value = selectedId;
+  thinkingControls();
   $("provider-key").placeholder = `API 키 입력 또는 서버의 ${p.apiKeyEnv} 사용`;
   $("provider-key-state").textContent = p.keyConfigured ? "이 프로바이더의 저장된 키 사용 가능" : "";
   $("native-provider-note").textContent = chatgptSelected() ? "ChatGPT 구독 인증 · 계정의 모델 목록과 Pi SDK 지원 모델을 확인합니다. Pida 로그인 계정과는 별도입니다." : `${p.name} · API 키 인증. 서버 주소와 API 형식은 자동 설정됩니다. 기본 제공 모델 목록이며 계정별 이용 가능 여부는 연결 확인이 필요합니다.`;
@@ -505,7 +543,8 @@ function providerDraft() {
   if ($("provider-preset").value === "mock") return { kind: "mock" };
   const native = selectedNative();
   if (native) return { kind: "native", providerId: native.id,
-    modelId: $("native-model-select").value, ...(chatgptSelected() ? { authMode: "chatgpt" } : { apiKey: $("provider-key").value }) };
+    modelId: $("native-model-select").value, thinkingLevel: $("provider-thinking").value || "off",
+    ...(chatgptSelected() ? { authMode: "chatgpt" } : { apiKey: $("provider-key").value }) };
   return {
     kind: "endpoint",
     baseUrl: $("provider-url").value.trim(),
@@ -516,6 +555,8 @@ function providerDraft() {
     contextWindow: Number($("provider-context").value),
     maxTokens: Number($("provider-output").value),
     allowInsecureHttp: $("provider-http").checked,
+    reasoning: $("provider-reasoning").checked,
+    thinkingLevel: $("provider-thinking").value || "off",
   };
 }
 async function loadProviderSettings() {
@@ -550,6 +591,9 @@ async function loadProviderSettings() {
     $("provider-key-state").textContent = keyConfigured
       ? "저장된 키 사용 가능 · 비우면 같은 서버의 키 유지" : "";
     showNativeModels(p.modelId);
+    endpointThinkingMap = p.thinkingLevelMap;
+    $("provider-reasoning").checked = p.reasoning ?? false;
+    thinkingControls(p.thinkingLevel ?? "off");
     const loginId = sessionStorage.getItem("pida-chatgpt-login");
     if (loginId) {
       try { const login = await client.getChatGPTLogin(loginId); if (login.status === "pending") { $("provider-preset").value = "openai"; $("openai-auth").value = "chatgpt"; configuring = true; displayChatGPTLogin(login); pollChatGPT(); } else sessionStorage.removeItem("pida-chatgpt-login"); }
@@ -580,12 +624,17 @@ $("provider-preset").onchange = () => {
   $("provider-models").replaceChildren();
   $("provider-feedback").textContent = "";
   showNativeModels();
+  resetEndpointCapabilities();
   providerControls();
 };
 $("provider-no-key").onchange = providerControls;
-$("native-model-select").onchange = providerControls;
+$("native-model-select").onchange = () => { thinkingControls("off"); providerControls(); };
+$("provider-reasoning").onchange = () => thinkingControls();
+$("provider-model").oninput = resetEndpointCapabilities;
+$("provider-api").onchange = resetEndpointCapabilities;
 $("provider-url").oninput = () => {
   $("provider-http").checked = false;
+  resetEndpointCapabilities();
   providerControls();
 };
 $("load-models").onclick = async () => {
@@ -602,7 +651,9 @@ $("load-models").onclick = async () => {
       option.value = id;
       $("provider-models").append(option);
     }
-    if (models.length === 1) $("provider-model").value = models[0];
+    if (models.length === 1 && $("provider-model").value !== models[0]) {
+      $("provider-model").value = models[0]; resetEndpointCapabilities();
+    }
     $("provider-feedback").textContent = models.length
       ? `${models.length}개 모델을 찾았습니다. 모델 입력란에서 선택하세요.`
       : "목록이 비어 있습니다. 모델을 로드하거나 이름을 직접 입력하세요.";

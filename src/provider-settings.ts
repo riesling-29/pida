@@ -139,6 +139,7 @@ export class ProviderSettings {
       "contextWindow",
       "maxTokens",
       "compat",
+      "reasoning", "input", "thinkingLevelMap", "thinkingLevel",
     ];
     if (Object.keys(input).some((k) => !allowed.includes(k)))
       throw new PidaError("UNKNOWN_FIELD", 400);
@@ -159,7 +160,7 @@ export class ProviderSettings {
         apiKey: "",
       };
     if (input.kind === "native") {
-      if (Object.keys(input).some(k => !["kind", "providerId", "modelId", "apiKey", "authMode"].includes(k)))
+      if (Object.keys(input).some(k => !["kind", "providerId", "modelId", "apiKey", "authMode", "thinkingLevel"].includes(k)))
         throw new PidaError("UNKNOWN_FIELD", 400);
       try {
         if (typeof input.providerId !== "string") throw new Error();
@@ -169,6 +170,8 @@ export class ProviderSettings {
         const provider = { kind: "native" as const, providerId: input.providerId,
           ...(input.authMode === "chatgpt" ? { authMode: "chatgpt" as const } : {}),
           modelId: input.modelId || (requireModel ? "" : defaults.provider.getModels()[0]?.id),
+          ...(input.thinkingLevel !== undefined ? { thinkingLevel: input.thinkingLevel }
+            : current.kind === "native" && current.providerId === input.providerId && current.modelId === input.modelId && current.thinkingLevel !== undefined ? { thinkingLevel: current.thinkingLevel } : {}),
           apiKeyEnv: current.kind === "native" && current.providerId === input.providerId
             ? current.apiKeyEnv : defaults.apiKeyEnv };
         const next = validateConfig({ ...config, provider }, this.directory);
@@ -199,6 +202,13 @@ export class ProviderSettings {
       throw new PidaError("INVALID_PROVIDER_URL", 400);
     }
     const sameEndpoint = current.kind === "endpoint" && current.baseUrl === baseUrl && current.api === (input.api ?? "openai-completions");
+    const sameModel = sameEndpoint && current.kind === "endpoint" && current.modelId === input.modelId;
+    const capabilities = Object.fromEntries(["reasoning", "input", "thinkingLevelMap", "thinkingLevel"].flatMap(key => {
+      if (input[key] === undefined && input.reasoning === false && key === "thinkingLevelMap") return [];
+      if (input[key] === undefined && input.reasoning === false && key === "thinkingLevel") return [[key, "off"]];
+      const value = input[key] !== undefined ? input[key] : (sameModel ? (current as unknown as Record<string, unknown>)[key] : undefined);
+      return value === undefined ? [] : [[key, value]];
+    }));
     const provider = {
       kind: "endpoint",
       baseUrl,
@@ -209,6 +219,7 @@ export class ProviderSettings {
       authMode: input.authMode ?? "api-key",
       contextWindow: input.contextWindow ?? 8192,
       maxTokens: input.maxTokens ?? 1024,
+      ...capabilities,
       allowInsecureHttp: input.allowInsecureHttp ?? false,
       ...(sameEndpoint && current.headersEnv ? { headersEnv: current.headersEnv } : {}),
       ...(input.compat !== undefined ? { compat: input.compat }

@@ -1,3 +1,6 @@
+import { RunState } from "/run-state.js";
+import { createRunInput } from "/run-input.js";
+import { createRunDetails } from "/run-details.js";
 import { explainError } from "/pida-client.js";
 const $ = id => document.getElementById(id);
 const outcomes = { completed: "실행 완료", failed: "실행 실패", cancelled: "중단됨", limited: "실행 한도 도달", interrupted: "서버 종료로 중단됨" };
@@ -13,6 +16,10 @@ export function createStudio({ client, request, changed, disconnected }) {
   let activity, activityTimer, projectTools = false, previewRefreshing = false;
   let project = { files: [] }, projectPath = ".", projectChanges, projectSequence = 0;
   let programs, programsLoading = false, programDrafting = false, programSequence = 0, programDownloadUrl;
+  const run = new RunState();
+  let capabilities = {};
+  const runInput = createRunInput({ client, run, textarea: $("studio-prompt"), selector: $("studio-input-mode"), section: $("studio-live-input"), note: $("studio-input-note"), receipt: $("studio-input-receipt"), changed: () => controls(), explain: explainError });
+  const runDetails = createRunDetails({ container: $("studio-run-details"), load: () => client.getSessionTools(session), explain: explainError });
   const payloads = new Map(), rendered = new Map(), renderErrors = new Set();
   const frames = [$("studio-frame"), $("service-frame")];
   const status = text => { if ($("studio-run-status").textContent !== text) $("studio-run-status").textContent = text; };
@@ -47,10 +54,11 @@ export function createStudio({ client, request, changed, disconnected }) {
     if (!activity?.running) return;
     status(activity.cancelling ? "중단 요청 중 · 최종 상태를 기다리고 있습니다." : activity.tools.size ? `실행 중 · ${[...activity.tools.values()].join(", ")}` : text);
   }
-  function receiveTrace(event) {
+  function receiveTrace(event, accepted = false) {
+    if (!accepted && !run.acceptTrace(event)) return false;
     if (!activity || activity.runId !== event.runId) beginActivity(event.runId, event.timestamp, event.type === "run_started");
     const key = event.sequence;
-    if (activity.seen.has(key)) return;
+    if (activity.seen.has(key)) return false;
     activity.seen.add(key);
     // Only the bounded server trace is replayed; cap deduplication as well as DOM rows.
     if (activity.seen.size > 2000) activity.seen.delete(activity.seen.values().next().value);
@@ -74,12 +82,12 @@ export function createStudio({ client, request, changed, disconnected }) {
     else if (event.type === "compaction_started") activityStatus("긴 대화를 요약하고 있습니다…");
     else if (event.type === "output_retry") activityStatus("출력 한도 이후 더 작은 수정으로 이어갑니다…");
     else activityStatus(event.type === "tool_failed" ? "도구 실패 · 후속 응답을 기다리고 있습니다." : "모델 응답을 기다리고 있습니다.");
-    activityClock();
+    activityClock(); runDetails.select(session, run.runId); controls(); return true;
   }
   function restoreActivity(events, running, lastStatus) {
     const latest = events.at(-1);
-    if (!latest) return;
-    for (const event of events.filter(e => e.runId === latest.runId)) receiveTrace(event);
+    if (!latest) { if (!running && activity?.running) stopActivity(); return; }
+    for (const event of events.filter(e => e.runId === run.runId)) receiveTrace(event, true);
     if (!running) {
       if (activity?.running) stopActivity(latest.timestamp);
       status(`${outcomes[lastStatus] ?? "실행 상태 미확인"} · 아래 변경·검증 결과를 확인하세요.`);
@@ -98,10 +106,14 @@ export function createStudio({ client, request, changed, disconnected }) {
     for (const id of ["choose-template", "first-template"]) $(id).disabled = locked || !available || target === "project";
     $("studio-target-mode").disabled = locked || (!available && !projectTools);
     $("apply-template").disabled = locked || !selectedTemplate;
-    for (const id of ["studio-send", "studio-prompt"]) $(id).disabled = locked || mock || (!available && !(target === "project" && projectTools)) || (target === "ui" && !state.html);
+    runInput.sync(capabilities); $("studio-activity-gap").hidden = !run.gap;
+    const composerBlocked = hostBusy || !connected || mock || (!available && !(target === "project" && projectTools)) || (target === "ui" && !state.html);
+    $("studio-prompt").disabled = composerBlocked;
+    $("studio-send").disabled = composerBlocked || (run.running ? !runInput.canSubmit : busy || remoteRunning);
+    $("studio-send").textContent = run.running ? runInput.label + " 보내기" : "보내기 ↑";
     $("studio-new-chat").disabled = locked;
     for (const id of ["studio-compact", "studio-handoff"]) $(id).disabled = locked || !session;
-    $("studio-cancel").disabled = !(busy || remoteRunning) || !session;
+    $("studio-cancel").disabled = !(busy || remoteRunning) || !session || run.cancelling;
     $("studio-restore").disabled = locked || target === "project" || !workspace.canCheckpoint || !review?.base || !review?.revision || !changes?.files.length || workspace.revision !== review.revision || !!bundle?.manifest?.known_limits?.includes("EFFECT_STATE_REQUIRES_RECONCILIATION");
     $("mode-disconnect").disabled = locked;
     for (const button of $("template-grid").querySelectorAll("button")) button.disabled = locked;
@@ -344,27 +356,37 @@ export function createStudio({ client, request, changed, disconnected }) {
   }
   function schedulePoll() {
     clearTimeout(poll);
-    if (!remoteRunning || !connected) return;
-    const active = generation;
+    if (!(remoteRunning || busy) || !connected || !session) return;
+    const active = generation, id = session, ticket = run.ticket();
     poll = setTimeout(async () => {
       try {
-        const data = await client.getSession(session);
-        if (active !== generation) return;
-        remoteRunning = data.running; contextLabel(data);
-        const traces = await client.getTrace(session);
-        if (active !== generation) return;
-        restoreActivity(traces.events, data.running, data.lastStatus); await refresh();
-        if (!remoteRunning) { await restoreChat(); await finishReview(); status("이전 실행이 종료됐습니다. 실제 변경과 결과를 확인하세요."); }
-      } catch (error) { if (active === generation) issue(error); }
-      if (active === generation) { changed(); controls(); schedulePoll(); }
+        const [data, traces] = await Promise.all([client.getSession(id), client.getTrace(id)]);
+        if (active !== generation || id !== session || !run.current(ticket, { revision: true })) return;
+        const repair = run.gap, previousRun = run.runId;
+        const accepted = run.snapshot({ ...data, ...(traces.activeRunId ? { activeRunId: traces.activeRunId, running: true } : {}) }, traces.events);
+        remoteRunning = run.running; contextLabel(data);
+        if (repair || previousRun !== run.runId) { resetActivity(); restoreActivity(traces.events, run.running, data.lastStatus); }
+        else restoreActivity(accepted, run.running, data.lastStatus);
+        if (activity) activity.tools = new Map(run.tools);
+        runDetails.select(id, run.runId); await refresh();
+        if (active !== generation || id !== session) return;
+        if (!remoteRunning && !busy) { await restoreChat(); await finishReview(); status("이전 실행이 종료됐습니다. 실제 변경과 결과를 확인하세요."); }
+      } catch (error) { if (active === generation && id === session) issue(error); }
+      finally { if (active === generation && id === session && run.current(ticket)) { changed(); controls(); schedulePoll(); } }
     }, 1500);
   }
   async function restoreChat() {
     if (!session) return;
+    const id = session, active = generation;
+    if (run.sessionId !== id) { run.reset(id); runInput.reset(); }
+    const ticket = run.ticket();
     try {
-      const data = await client.getSession(session); contextLabel(data); remoteRunning = data.running;
-      const traces = (await client.getTrace(session)).events, latest = traces.at(-1);
-      restoreActivity(traces, data.running, data.lastStatus);
+      const [data, response] = await Promise.all([client.getSession(id), client.getTrace(id)]);
+      if (active !== generation || id !== session || !run.current(ticket, { revision: true })) return;
+      const traces = response.events, latest = traces.at(-1);
+      run.snapshot({ ...data, ...(response.activeRunId ? { activeRunId: response.activeRunId, running: true } : {}) }, traces);
+      contextLabel(data); remoteRunning = run.running; runDetails.select(id, run.runId);
+      restoreActivity(traces, run.running, data.lastStatus);
       if (latest && latest.runId !== review?.runId) {
         review = { runId: latest.runId, target, file: selectedFile }; changes = bundle = undefined;
         reviewNote = "이 실행의 요청 전 변경 기준이 없어 파일 비교·복원은 사용할 수 없습니다.";
@@ -374,11 +396,12 @@ export function createStudio({ client, request, changed, disconnected }) {
       for (const item of data.messages) message(item.role, item.role === "user" ? cleanPrompt(item.text) : item.text);
       const last = data.messages.filter(m => m.role === "user").at(-1);
       if (last) $("studio-goal").textContent = cleanPrompt(last.text).slice(0, 180);
-      if (data.running && !activity) status("이전 요청이 실행 중입니다. 상태를 확인하고 있습니다.");
+      if (run.running && !activity) status("이전 요청이 실행 중입니다. 상태를 확인하고 있습니다.");
       schedulePoll(); changed(); controls();
     } catch (error) {
+      if (active !== generation || id !== session) return;
       if (error.status !== 404) throw error;
-      session = undefined; remoteRunning = false; sessionStorage.removeItem("pida-studio-session"); clearReview();
+      session = undefined; run.reset(); runInput.reset(); runDetails.select(); remoteRunning = false; sessionStorage.removeItem("pida-studio-session"); clearReview();
     }
   }
   async function compact(handoff) {
@@ -394,16 +417,22 @@ export function createStudio({ client, request, changed, disconnected }) {
   }
   async function send(event) {
     event.preventDefault();
-    if (busy || remoteRunning || hostBusy || !connected || mock || (!available && !(target === "project" && projectTools)) || (target === "ui" && !state.html)) return;
-    const text = $("studio-prompt").value.trim(); if (!text) return;
+    if (hostBusy || !connected || mock || (!available && !(target === "project" && projectTools)) || (target === "ui" && !state.html)) return;
+    if (run.running) { await runInput.submit(); schedulePoll(); return; }
+    if (busy || remoteRunning) return;
+    const raw = $("studio-prompt").value, text = raw.trim(); if (!text) return;
+    const active = generation; let ticket;
     const before = state.revision;
     busy = true; clearReview(); review = {}; changed(); controls();
     beginActivity(undefined, new Date().toISOString()); status("요청을 보내고 있습니다…");
     $("studio-goal").textContent = text.slice(0, 180);
     message("user", text); const output = message("assistant", "작업을 시작하고 있습니다…");
-    let answer = "", result;
+    let answer = "", result, admitted = false;
     try {
       if (!session) { session = (await client.createSession()).sessionId; sessionStorage.setItem("pida-studio-session", session); }
+      if (active !== generation) return;
+      if (run.sessionId !== session) run.reset(session);
+      run.begin(); runInput.reset(); runDetails.select(session); ticket = run.ticket(); controls();
       if (target === "project") reviewNote = "프로젝트 저장소 변경은 서비스 작업 공간의 파일 비교·복원 범위에 포함되지 않습니다.";
       else if (workspace.canCheckpoint) {
         try { review.base = (await client.captureCheckpoint()).checkpoint; }
@@ -415,24 +444,35 @@ export function createStudio({ client, request, changed, disconnected }) {
         : target === "project" ? `You are working in the operator-configured host project, not the isolated service workbench. Use registered project_* tools to inspect the project and its applicable AGENTS.md instructions, read relevant files, make requested changes, and execute relevant tests when project_shell is available. Check actual registered tool capabilities and permissions. Preserve unrelated and user changes. Do not put project changes into the service workbench unless explicitly requested. The service workbench's checkpoints, diff and restore do not cover this project or external side effects. Report changed paths and actual verification outputs honestly.`
         : `You are working on files in the isolated service workbench. Selected file (context, not a scope authorization): ${JSON.stringify(selectedFile || null)}. Read relevant files before editing; use registered workbench tools. JavaScript tests run in QuickJS using workspace_test; this workbench has no Node.js, Python, npm or network. The separately configured host project, if any, is a different target. Preserve unrelated files and the service UI unless the user requests changes.`;
       const prompt = `[PIDA ${target === "ui" ? "UI" : "CODE"} STUDIO]\n${instructions} Apply requested changes with tools, not just a code block in chat. Run relevant available checks and report their scope honestly. Rendering is not verification.\nUSER REQUEST:\n${text}`;
+      if (!run.current(ticket) || active !== generation) return;
       for await (const event of client.stream(session, prompt, { disconnectPolicy: "continue" })) {
-        if (event.type === "text_delta") {
+        if (!run.current(ticket) || active !== generation) continue;
+        if (event.type === "text_delta" && run.running) {
           answer += event.delta; output.textContent = answer;
           if (activity?.running) { activity.lastAt = Date.now(); activityStatus("모델 응답을 받고 있습니다."); activityClock(); }
         }
-        if (event.type === "trace") {
-          receiveTrace(event.trace);
-          if (event.trace.type === "run_started") { review.runId = event.trace.runId; saveReview(); }
+        if (event.type === "trace" && receiveTrace(event.trace)) {
+          if (event.trace.type === "run_started") { admitted = true; if ($("studio-prompt").value === raw) $("studio-prompt").value = ""; review.runId = event.trace.runId; saveReview(); schedulePoll(); }
           if (["tool_completed", "tool_failed"].includes(event.trace.type)) refreshDuringRun();
         }
-        if (event.type === "result") { result = event.result; if (activity?.running) stopActivity(); review.runId = result.runId; saveReview(); output.textContent = [result.text, ...[...new Set([result.code, result.persistenceError])].filter(Boolean).map(explainError)].filter(Boolean).join("\n\n") || "응답이 없습니다."; }
+        if (event.type === "result" && run.acceptResult(event.result)) { result = event.result; if (activity?.running) stopActivity(); review.runId = result.runId; saveReview(); output.textContent = [result.text, ...[...new Set([result.code, result.persistenceError])].filter(Boolean).map(explainError)].filter(Boolean).join("\n\n") || "응답이 없습니다."; }
         $("studio-messages").scrollTop = $("studio-messages").scrollHeight;
       }
-      if (result?.status === "completed") $("studio-prompt").value = "";
+      if (!run.current(ticket) || active !== generation) return;
       status(`${outcomes[result?.status] ?? "실행 상태 미확인"} · 아래 변경·검증 결과를 확인하세요.`);
-    } catch (error) { issue(error); }
+    } catch (error) {
+      if (active === generation && (!ticket || run.current(ticket))) { issue(error); if (!admitted && !$("studio-prompt").value) $("studio-prompt").value = raw; }
+    }
     finally {
-      try { const data = session && await client.getSession(session); if (data) { contextLabel(data); remoteRunning = data.running; } }
+      if (active !== generation || (ticket && !run.current(ticket))) return;
+      try {
+        const read = run.ticket(), id = session;
+        const [data, trace] = id ? await Promise.all([client.getSession(id), client.getTrace(id)]) : [];
+        if (data && id === session && run.current(read, { revision: true })) {
+          const accepted = run.snapshot({ ...data, ...(trace.activeRunId ? { activeRunId: trace.activeRunId, running: true } : {}) }, trace.events);
+          restoreActivity(accepted, run.running, data.lastStatus); contextLabel(data); remoteRunning = run.running;
+        }
+      }
       catch {
         reviewNote = "서버 실행 상태를 다시 확인하지 못했습니다. 새로고침 후 확인하세요.";
         if (session && activity?.runId) { remoteRunning = true; status("서버 실행 상태 미확인 · 연결을 다시 확인하고 있습니다."); }
@@ -480,12 +520,12 @@ export function createStudio({ client, request, changed, disconnected }) {
   };
   $("studio-compact").onclick = () => compact(false); $("studio-handoff").onclick = () => compact(true); $("studio-form").onsubmit = send;
   $("studio-prompt").onkeydown = event => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !event.isComposing) { event.preventDefault(); $("studio-form").requestSubmit(); } };
-  $("studio-new-chat").onclick = () => { if (busy || remoteRunning || hostBusy) return; session = undefined; sessionStorage.removeItem("pida-studio-session"); clearReview(); $("studio-messages").replaceChildren(); status("새 대화 · 현재 파일은 유지됩니다."); controls(); };
+  $("studio-new-chat").onclick = () => { if (busy || remoteRunning || hostBusy) return; session = undefined; run.reset(); runInput.reset(); runDetails.select(); sessionStorage.removeItem("pida-studio-session"); clearReview(); $("studio-messages").replaceChildren(); status("새 대화 · 현재 파일은 유지됩니다."); controls(); };
   $("studio-cancel").onclick = async () => {
-    $("studio-cancel").disabled = true;
+    const id = session, ticket = run.ticket(); run.cancel(); controls();
     if (activity?.running) { activity.cancelling = true; activityStatus(""); }
-    try { await client.cancel(session); if (activity?.running) status("중단 요청을 전달했습니다. 최종 상태를 기다리고 있습니다."); }
-    catch (error) { if (activity) activity.cancelling = false; issue(error); controls(); }
+    try { await client.cancel(id); if (run.current(ticket, { run: true }) && activity?.running) status("중단 요청을 전달했습니다. 최종 상태를 기다리고 있습니다."); }
+    catch (error) { if (run.current(ticket, { run: true })) { run.cancelling = false; if (activity) activity.cancelling = false; issue(error); controls(); } }
   };
   $("studio-refresh").onclick = async () => { try { await refresh(true); await restoreChat(); if (!remoteRunning) await finishReview(); } catch (error) { issue(error); } };
   for (const button of document.querySelectorAll("[data-suggestion]")) button.onclick = () => { $("studio-prompt").value = button.dataset.suggestion; $("studio-prompt").focus(); };
@@ -494,7 +534,7 @@ export function createStudio({ client, request, changed, disconnected }) {
     get busy() { return busy || remoteRunning; },
     update({ connected: value, busy: parentBusy }) { connected = value; hostBusy = parentBusy; controls(); },
     async connect(info) {
-      generation++; clearTimeout(poll); connected = true; mock = info.provider?.mode === "mock";
+      generation++; run.reset(); runInput.reset(); runDetails.select(); capabilities = info.capabilities ?? {}; clearTimeout(poll); connected = true; mock = info.provider?.mode === "mock";
       programSequence++; programs = undefined; programsLoading = programDrafting = false; clearProgramDraft();
       projectTools = info.tools?.some(tool => tool.permitted && tool.name.startsWith("project_")) ?? false;
       $("studio-project-option").hidden = !projectTools; $("studio-project-option").disabled = !projectTools;
@@ -510,7 +550,7 @@ export function createStudio({ client, request, changed, disconnected }) {
     },
     reset() {
       programSequence++; programs = undefined; programsLoading = programDrafting = false; clearProgramDraft(); $("studio-programs-enabled").replaceChildren(); $("studio-program-candidate").replaceChildren(); $("studio-program-source").textContent = ""; $("studio-programs-status").textContent = ""; $("studio-programs").open = false;
-      generation++; fileSequence++; projectSequence++; clearTimeout(poll); connected = busy = remoteRunning = available = false; state = { html: "", revision: "", templates: [] }; workspace = { files: [] }; project = { files: [] }; projectPath = "."; projectChanges = undefined; session = undefined; selectedFile = ""; target = "ui";
+      generation++; run.reset(); runInput.reset(); runDetails.select(); fileSequence++; projectSequence++; clearTimeout(poll); connected = busy = remoteRunning = available = false; state = { html: "", revision: "", templates: [] }; workspace = { files: [] }; project = { files: [] }; projectPath = "."; projectChanges = undefined; session = undefined; selectedFile = ""; target = "ui";
       payloads.clear(); rendered.clear(); renderErrors.clear(); for (const frame of frames) frame.removeAttribute("src");
       $("studio-messages").replaceChildren(); $("studio-source").textContent = ""; $("studio-file-meta").textContent = ""; $("template-dialog").close(); clearReview(); showView("preview"); renderFiles(); controls();
     },

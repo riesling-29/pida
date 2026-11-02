@@ -4,7 +4,9 @@ import { closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readS
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { Value } from "typebox/value";
 import type { TSchema } from "typebox";
+import { Type } from "typebox";
 import { PidaError, type BusinessTool, type ToolContext } from "./runtime.js";
+import { ProgramOutputStore } from "./program-output.js";
 
 export interface ProgramManifest {
   version: 1;
@@ -33,6 +35,8 @@ export interface ProgramProxyOptions {
   approval: ProgramApproval;
   /** Explicit host-selected environment values; never pass process.env wholesale. */
   env?: Record<string, string>;
+  /** Shared host-owned workspace output store. Never derived from model input. */
+  outputStore?: ProgramOutputStore;
 }
 export class ProgramProxyError extends Error {
   constructor(readonly code: string) { super(code); }
@@ -193,19 +197,39 @@ function environment(explicit: Record<string, string> = {}): NodeJS.ProcessEnv {
 }
 function bounded(result: Record<string, any>): Record<string, any> {
   for (const key of ["output", "stderr"]) if (typeof result[key] === "string") {
-    while (JSON.stringify(result).length > 26_000 && result[key].length) { result[key] = result[key].slice(0, Math.floor(result[key].length * .75)); result.truncated = true; }
+    while (JSON.stringify(result).length > 26_000 && result[key].length) {
+      const chars = Array.from(result[key]), keep = Math.floor(chars.length * .3);
+      result[key] = keep > 10 ? chars.slice(0, keep).join("") + "\n[… preview shortened …]\n" + chars.slice(-keep).join("") : "";
+      result.truncated = true;
+      const detail = result.outputDetails?.[key === "output" ? "stdout" : "stderr"];
+      if (detail) {
+        detail.truncated = true;
+        if (!detail.artifact) { detail.lossy = true; detail.storageError ??= "PROGRAM_OUTPUT_PREVIEW_LIMIT"; result.lossy = true; }
+      } else result.lossy = true;
+    }
   }
   return result;
 }
-function executeProgram(program: InspectedProgram, env: NodeJS.ProcessEnv, input: string, context: ToolContext): Promise<Record<string, any>> {
+function executeProgram(program: InspectedProgram, env: NodeJS.ProcessEnv, input: string, context: ToolContext, outputStore: ProgramOutputStore): Promise<Record<string, any>> {
   return new Promise(resolveResult => {
     let child: ReturnType<typeof spawn>, started = false, settled = false, stopping: string | undefined, outputBytes = 0, stdout: Buffer[] = [], stderr: Buffer[] = [];
+    const capture = program.manifest.outputMode === "text" ? outputStore.begin({ principalId: context.principal.id, sessionId: context.sessionId, programId: program.manifest.id }) : undefined;
     let timer: NodeJS.Timeout | undefined, grace: NodeJS.Timeout | undefined;
     const startedAt = Date.now();
     const finish = (code?: number | null, launchError = false) => {
       if (settled) return; settled = true; clearTimeout(timer); clearTimeout(grace); context.signal.removeEventListener("abort", abort);
       const base = { exitCode: code ?? null, durationMs: Date.now() - startedAt, effectState: stopping || (launchError && started) ? "unknown" : started ? "applied" : "not_applied" };
       const error = stopping ?? (launchError ? "PROGRAM_START_FAILED" : code !== 0 ? "PROGRAM_EXIT_FAILED" : undefined);
+      if (capture) {
+        const previews = capture.finish();
+        const outputDetails = Object.fromEntries(Object.entries(previews).map(([stream, { text: _text, ...detail }]) => [stream, detail]));
+        const artifacts = Object.values(previews).flatMap(p => p.artifact ? [{ ...p.artifact, readTool: `program_${program.manifest.id}_output` }] : []);
+        resolveResult(bounded({ ...base, ok: !error, ...(error ? { error } : {}), output: previews.stdout.text, ...(previews.stderr.totalBytes ? { stderr: previews.stderr.text } : {}),
+          truncated: Object.values(previews).some(p => p.truncated), lossy: Object.values(previews).some(p => p.lossy), outputDetails,
+          ...(artifacts.length ? { artifact_refs: artifacts } : {}),
+          ...(stopping ? { hint: "Inspect program state before retrying. Child termination does not undo changes or guarantee descendant cleanup." } : {}) }));
+        return;
+      }
       const errorOutput = Buffer.concat(stderr).toString("utf8"), text = Buffer.concat(stdout).toString("utf8");
       if (error) { resolveResult(bounded({ ...base, ok: false, error, output: text, stderr: errorOutput, ...(stopping ? { hint: "Inspect program state before retrying. Child termination does not undo changes or guarantee descendant cleanup." } : {}) })); return; }
       if (program.manifest.outputMode === "json") {
@@ -233,7 +257,8 @@ function executeProgram(program: InspectedProgram, env: NodeJS.ProcessEnv, input
         if (remaining > 0) chunks.push(chunk.subarray(0, remaining));
         if (outputBytes > MAX_OUTPUT) stop("PROGRAM_OUTPUT_LIMIT");
       };
-      child.stdout!.on("data", chunk => collect(stdout, chunk)); child.stderr!.on("data", chunk => collect(stderr, chunk));
+      child.stdout!.on("data", chunk => capture ? capture.push("stdout", chunk) : collect(stdout, chunk));
+      child.stderr!.on("data", chunk => capture ? capture.push("stderr", chunk) : collect(stderr, chunk));
       child.stdin!.on("error", () => { /* Program may finish without reading stdin. Exit status remains authoritative. */ });
       context.signal.addEventListener("abort", abort, { once: true });
       timer = setTimeout(() => stop("PROGRAM_TIMEOUT"), program.manifest.timeoutMs ?? 30_000);
@@ -243,11 +268,18 @@ function executeProgram(program: InspectedProgram, env: NodeJS.ProcessEnv, input
 }
 
 /** Host-trusted program bridge; no model-selected executable, argument interpolation or sandbox claim. */
-export function loadProgramProxy(root: string, manifestPath: string, options: ProgramProxyOptions): { manifest: ProgramManifest; approval: ProgramApproval; tool: BusinessTool<any> } {
+export function loadProgramProxy(root: string, manifestPath: string, options: ProgramProxyOptions): { manifest: ProgramManifest; approval: ProgramApproval; tool: BusinessTool<any>; outputTool: BusinessTool<any> } {
   if (options?.trustedHost !== true) fail("PROGRAM_HOST_TRUST_REQUIRED");
   const program = inspect(root, manifestPath), approved = structuredClone(options.approval);
   if (!equalApproval(program.approval, approved)) fail("PROGRAM_APPROVAL_MISMATCH");
   const env = environment(options.env), manifest = program.manifest, permission = `program:${manifest.id}`;
+  const outputStore = options.outputStore ?? new ProgramOutputStore(join(dirname(program.manifestPath), "output", manifest.id));
+  const approvedNow = () => {
+    try {
+      const current = inspect(program.root, program.manifestPath);
+      return equalApproval(current.approval, approved) && current.command === program.command && current.entrypoint === program.entrypoint && current.runner === program.runner;
+    } catch { return false; }
+  };
   const tool: BusinessTool<any> = {
     name: `program_${manifest.id}`, description: `${manifest.description} Runs an explicitly approved host program with fixed arguments. Input is ${manifest.inputMode}; output is ${manifest.outputMode}. Host execution is not sandboxed.`,
     parameters: structuredClone(manifest.inputSchema) as TSchema, permission, effect: manifest.effect,
@@ -261,13 +293,23 @@ export function loadProgramProxy(root: string, manifestPath: string, options: Pr
         input = JSON.stringify(args);
         if (input === undefined || Buffer.byteLength(input) > MAX_INPUT || !Value.Check(manifest.inputSchema as TSchema, args)) return { ok: false, error: "PROGRAM_INPUT_INVALID", effectState: "not_applied" };
       } catch { return { ok: false, error: "PROGRAM_INPUT_INVALID", effectState: "not_applied" }; }
-      try {
-        const current = inspect(program.root, program.manifestPath);
-        if (!equalApproval(current.approval, approved) || current.command !== program.command || current.entrypoint !== program.entrypoint || current.runner !== program.runner) return { ok: false, error: "PROGRAM_APPROVAL_MISMATCH", effectState: "not_applied" };
-      } catch { return { ok: false, error: "PROGRAM_APPROVAL_MISMATCH", effectState: "not_applied" }; }
+      if (!approvedNow()) return { ok: false, error: "PROGRAM_APPROVAL_MISMATCH", effectState: "not_applied" };
       if (context.signal.aborted) return { ok: false, error: "PROGRAM_CANCELLED", effectState: "not_applied" };
-      return executeProgram(program, env, manifest.inputMode === "json-stdin" ? input + "\n" : "", context);
+      return executeProgram(program, env, manifest.inputMode === "json-stdin" ? input + "\n" : "", context, outputStore);
     },
   };
-  return { manifest: structuredClone(manifest), approval: structuredClone(approved), tool };
+  const outputTool: BusinessTool<any> = {
+    name: `program_${manifest.id}_output`, permission, effect: "read",
+    description: `Read a retained text-output artifact from ${manifest.name} using its artifact id. Only this user's current session output is accessible. Reads bounded UTF-8 pages; use nextOffset to continue. Artifacts may expire or be evicted.`,
+    parameters: Type.Object({ artifactId: Type.String({ pattern: "^output_[a-f0-9]{32}$" }), offset: Type.Optional(Type.Integer({ minimum: 0 })), maxBytes: Type.Optional(Type.Integer({ minimum: 4, maximum: 16384 })) }, { additionalProperties: false }),
+    classifyResult: (value: any) => ({ status: value.ok ? "completed" : "failed", ...(value.error ? { code: value.error } : {}) }),
+    async execute(args: any, context) {
+      if (!context.principal.permissions.includes(permission)) throw new PidaError("FORBIDDEN", 403);
+      if (context.signal.aborted) return { ok: false, error: "PROGRAM_CANCELLED" };
+      if (!approvedNow()) return { ok: false, error: "PROGRAM_APPROVAL_MISMATCH" };
+      if (!isObject(args) || typeof args.artifactId !== "string" || Object.keys(args).some(key => !["artifactId", "offset", "maxBytes"].includes(key))) return { ok: false, error: "PROGRAM_OUTPUT_ARGUMENT_INVALID" };
+      return outputStore.read({ principalId: context.principal.id, sessionId: context.sessionId, programId: manifest.id }, args.artifactId, args.offset, args.maxBytes);
+    },
+  };
+  return { manifest: structuredClone(manifest), approval: structuredClone(approved), tool, outputTool };
 }

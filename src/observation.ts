@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { randomUUID } from "node:crypto";
+import { createHmac, randomBytes, randomUUID } from "node:crypto";
 import { canonical, sha256, savePrivate, isId } from "./private-state.js";
 import { observationSchema, type Observation, type ObservationBundle, type ResultManifest } from "./execution-contract.js";
 
@@ -15,6 +15,7 @@ export class ObservationArchive {
   private unavailable = false;
   private sinkFailures = 0;
   private sinkPending = 0;
+  private fingerprintKey = randomBytes(32).toString("hex");
   constructor(private readonly directory?: string, agentId?: string, private readonly sink?: ObservationSink, private readonly limit = 4000) {
     let identity = { sourceId: randomUUID() as string, agentId: randomUUID() as string };
     try {
@@ -23,12 +24,16 @@ export class ObservationArchive {
         if (existsSync(path)) {
           const saved = JSON.parse(readFileSync(path, "utf8"));
           if (!isId(saved.sourceId) || !isId(saved.agentId)) throw new Error("invalid identity");
-          identity = saved;
-        } else savePrivate(path, identity);
+          identity = { sourceId: saved.sourceId, agentId: saved.agentId };
+          if (typeof saved.fingerprintKey === "string" && /^[a-f0-9]{64}$/.test(saved.fingerprintKey)) this.fingerprintKey = saved.fingerprintKey;
+          else savePrivate(path, { ...identity, fingerprintKey: this.fingerprintKey });
+        } else savePrivate(path, { ...identity, fingerprintKey: this.fingerprintKey });
       }
     } catch { this.unavailable = true; }
     this.sourceId = identity.sourceId; this.agentId = agentId ?? identity.agentId;
   }
+  /** Source-scoped keyed comparison: never export the input or the local key. */
+  fingerprint(value: unknown): string { return createHmac("sha256", this.fingerprintKey).update(canonical(value)).digest("hex"); }
   private root(sessionId: string) {
     if (!isId(sessionId)) throw new Error("INVALID_ID");
     return this.directory && join(this.directory, "observations", sessionId);

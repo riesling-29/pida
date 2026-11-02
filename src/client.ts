@@ -11,6 +11,8 @@ import type {
   TraceEvent,
   SessionSummary,
   RuntimeInfo,
+  SessionTools,
+  TracePage,
 } from "./protocol.js";
 export type {
   RunResult,
@@ -19,6 +21,9 @@ export type {
   RunStatus,
   SessionSummary,
   RuntimeInfo,
+  ToolDetail,
+  SessionTools,
+  TracePage,
 } from "./protocol.js";
 
 export class PidaClientError extends Error {
@@ -171,9 +176,11 @@ export class PidaClient {
   }> {
     return (await this.request(this.path(id))).json();
   }
-  async getTrace(id: string): Promise<{ events: TraceEvent[] }> {
-    return (await this.request(this.path(id) + "/trace")).json();
+  async getTrace(id: string, afterSequence?: number): Promise<TracePage> {
+    return (await this.request(this.path(id) + "/trace" + (afterSequence === undefined ? "" : "?afterSequence=" + encodeURIComponent(afterSequence)))).json();
   }
+  async getSessionTools(id: string): Promise<SessionTools> { return (await this.request(this.path(id) + "/tools")).json(); }
+  async getAgentJobTools(id: string, jobId: string): Promise<SessionTools> { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/tools")).json(); }
   async listRuns(id: string): Promise<{ runs: string[] }> { return (await this.request(this.path(id) + "/runs")).json(); }
   async exportRun(id: string, runId: string): Promise<ObservationBundle> { return (await this.request(this.path(id) + "/runs/" + encodeURIComponent(runId) + "/export")).json(); }
   async getManifest(id: string, runId: string): Promise<ResultManifest> { return (await this.request(this.path(id) + "/runs/" + encodeURIComponent(runId) + "/manifest")).json(); }

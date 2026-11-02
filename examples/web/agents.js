@@ -1,3 +1,4 @@
+import { createRunDetails } from "/run-details.js";
 import { explainError } from "/pida-client.js";
 const $ = id => document.getElementById(id);
 const statuses = { queued: "대기", running: "실행 중", completed: "실행 완료", failed: "실패", cancelled: "중단됨", interrupted: "서버 종료로 중단됨", limited: "실행 한도 도달" };
@@ -7,6 +8,7 @@ const textNode = (tag, text, className) => { const node = document.createElement
 
 export function createAgents({ client }) {
   let connected = false, serviceAvailable = false, generation = 0, timer, refreshing = false, mutating = false, artifactSequence = 0;
+  const runDetails = createRunDetails({ container: $("agent-run-details"), load: () => client.getAgentJobTools(agent.id, selectedJobId), explain: explainError });
   let agents = [], agent, jobs = [], selectedId, selectedJobId, memory, view = "jobs", personaDirty = false, personaBaseRevision, stateBaseHead, stateBaseRelationships, pendingRequest, recoveryEffects;
   function errorMessage(error) {
     if (error.code?.includes("CONFLICT")) return "다른 변경이 먼저 저장됐습니다. 현재 개정과 입력 내용을 비교한 뒤 다시 편집하세요.";
@@ -57,6 +59,7 @@ export function createAgents({ client }) {
     }
     if (!jobs.length) $("agent-jobs").append(textNode("p", "저장된 작업이 없습니다.", "field-hint"));
     const job = jobs.find(item => item.id === selectedJobId); $("agent-job-detail").hidden = !job;
+    runDetails.select(job && agent ? `${agent.id}:${job.id}` : undefined, job?.runId);
     if (!job) return;
     $("agent-job-state").textContent = `${statuses[job.status] ?? job.status}${job.status === "running" ? job.currentTool ? " · " + job.currentTool : " · 모델 응답 대기" : ""}`;
     $("agent-job-time").textContent = `요청 ${stamp(job.createdAt)}${job.lastSignalAt ? " · 마지막 신호 " + stamp(job.lastSignalAt) : ""}`;
@@ -180,7 +183,7 @@ export function createAgents({ client }) {
   };
   $("agent-toggle-pause").onclick = () => { if (agent) void mutate(() => agent.paused ? client.resumeAgent(agent.id) : client.pauseAgent(agent.id)); };
   $("agent-job-cancel").onclick = () => { if (agent && selectedJobId) void mutate(() => client.cancelAgentJob(agent.id, selectedJobId)); };
-  $("agent-steer-form").onsubmit = event => { event.preventDefault(); const job = jobs.find(j => j.id === selectedJobId); if (!agent || job?.status !== "running" || !job.runId) return; const text = $("agent-steer-text").value.trim(); if (!text) return; void mutate(async () => { await client.steerAgentJob(agent.id, job.id, text, job.runId); $("agent-steer-form").reset(); }); };
+  $("agent-steer-form").onsubmit = event => { event.preventDefault(); const job = jobs.find(j => j.id === selectedJobId); if (!agent || job?.status !== "running" || !job.runId) return; const raw = $("agent-steer-text").value, text = raw.trim(), id = agent.id, active = generation; if (!text) return; void mutate(async () => { await client.steerAgentJob(id, job.id, text, job.runId); if (generation === active && agent?.id === id && selectedJobId === job.id && $("agent-steer-text").value === raw) $("agent-steer-text").value = ""; }); };
   $("agent-recovery-load").onclick = () => void mutate(async () => {
     if (!agent) return;
     const job = [...jobs].reverse().find(j => j.status === "interrupted" || j.result?.recovery);

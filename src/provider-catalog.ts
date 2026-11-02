@@ -1,4 +1,4 @@
-import type { Provider, CredentialStore } from '@earendil-works/pi-ai';
+import { getSupportedThinkingLevels, type Provider, type CredentialStore, type ModelThinkingLevel } from '@earendil-works/pi-ai';
 import { openaiProvider } from '@earendil-works/pi-ai/providers/openai';
 import { anthropicProvider } from '@earendil-works/pi-ai/providers/anthropic';
 import { googleProvider } from '@earendil-works/pi-ai/providers/google';
@@ -7,7 +7,7 @@ import { deepseekProvider } from '@earendil-works/pi-ai/providers/deepseek';
 import { groqProvider } from '@earendil-works/pi-ai/providers/groq';
 import { xaiProvider } from '@earendil-works/pi-ai/providers/xai';
 import { mistralProvider } from '@earendil-works/pi-ai/providers/mistral';
-import type { ProviderFactory } from './providers.js';
+import { validateThinkingLevel, type ProviderFactory } from './providers.js';
 
 // Factories and model metadata remain upstream-owned. No copied model catalog.
 const registry: Record<string, { create: () => Provider; apiKeyEnv: string }> = {
@@ -26,6 +26,7 @@ export interface NativeProviderConfig {
   modelId: string;
   apiKeyEnv: string;
   authMode?: 'api-key' | 'chatgpt';
+  thinkingLevel?: ModelThinkingLevel;
 }
 function entry(id: string) {
   if (!Object.hasOwn(registry, id)) throw new Error('Unknown native provider');
@@ -58,6 +59,7 @@ export function nativeProviderCatalog() {
       models: p.getModels().map(m => ({
         id: m.id, name: m.name, api: m.api,
         contextWindow: m.contextWindow, maxTokens: m.maxTokens,
+        reasoning: m.reasoning, input: m.input, thinkingLevels: getSupportedThinkingLevels(m),
       })),
     };
   });
@@ -72,6 +74,7 @@ export function validateNativeProvider(config: NativeProviderConfig) {
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(config.apiKeyEnv) ||
       !p.getModels().some(m => m.id === config.modelId))
     throw new Error('Invalid native provider model or credential variable');
+  validateThinkingLevel(p.getModels().find(m => m.id === config.modelId)!, config.thinkingLevel);
 }
 /** Use Pi's native request handling and metadata; scope auth to this workspace. */
 export function nativeProvider(
@@ -95,7 +98,7 @@ export function nativeProvider(
         streamSimple: (model, context, options) => p.streamSimple(model, context, { ...options, onPayload: async (payload, m) => chatgptPayload(await options?.onPayload?.(payload, m) ?? payload) }),
         stream: (model, context, options) => p.stream(model, context, { ...options, onPayload: async (payload: unknown, m: typeof model) => chatgptPayload(await options?.onPayload?.(payload, m) ?? payload) } as typeof options),
       };
-      return { provider, modelId: c.modelId, credentials };
+      return { provider, modelId: c.modelId, credentials, ...(c.thinkingLevel !== undefined ? { thinkingLevel: c.thinkingLevel } : {}) };
     }
     if (!env[c.apiKeyEnv]) throw new Error(`Missing provider credential environment variable: ${c.apiKeyEnv}`);
     const p = entry(c.providerId).create();
@@ -113,6 +116,6 @@ export function nativeProvider(
         streamSimple: (model, context, options) => p.streamSimple(model, context, { ...options, maxTokens: outputLimit }),
       } : {}),
     };
-    return { provider, modelId: c.modelId };
+    return { provider, modelId: c.modelId, ...(c.thinkingLevel !== undefined ? { thinkingLevel: c.thinkingLevel } : {}) };
   };
 }

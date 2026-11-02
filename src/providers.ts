@@ -1,4 +1,4 @@
-import { createProvider, type Provider, type CredentialStore } from "@earendil-works/pi-ai";
+import { createProvider, getSupportedThinkingLevels, type Model, type Api, type ModelInputModality, type ModelThinkingLevel, type ThinkingLevelMap, type Provider, type CredentialStore } from "@earendil-works/pi-ai";
 import { openAICompletionsApi } from "@earendil-works/pi-ai/api/openai-completions.lazy";
 import { openAIResponsesApi } from "@earendil-works/pi-ai/api/openai-responses.lazy";
 import { anthropicMessagesApi } from "@earendil-works/pi-ai/api/anthropic-messages.lazy";
@@ -14,6 +14,8 @@ export interface ProviderBinding {
   modelId: string;
   /** Host-owned, workspace-scoped credentials. Pi serializes OAuth refresh through this store. */
   credentials?: CredentialStore;
+  /** Host-selected Pi level. Omitted preserves Pida's previous off preference. */
+  thinkingLevel?: ModelThinkingLevel;
 }
 /** Host-owned factory, called once per session. Never accepted from HTTP input. */
 export type ProviderFactory = () => ProviderBinding | Promise<ProviderBinding>;
@@ -37,12 +39,29 @@ export interface EndpointConfig {
   headersEnv?: Record<string, string>;
   /** Explicit overrides for deployed OpenAI-compatible servers, implemented by Pi. */
   compat?: EndpointCompat;
+  reasoning?: boolean;
+  input?: readonly ModelInputModality[];
+  thinkingLevelMap?: ThinkingLevelMap;
+  thinkingLevel?: ModelThinkingLevel;
+}
+
+export const thinkingLevels = ["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
+export function validateThinkingLevel(model: Model<Api>, level: ModelThinkingLevel | undefined): void {
+  if (level !== undefined && (!thinkingLevels.includes(level) || !getSupportedThinkingLevels(model).includes(level)))
+    throw new Error("PROVIDER_THINKING_UNSUPPORTED");
 }
 
 const headerName = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
 const envName = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const reservedHeaders = new Set(["host", "content-length", "content-type", "connection", "transfer-encoding", "upgrade", "trailer", "te", "proxy-authorization", "proxy-connection", "cookie", "set-cookie", "__proto__", "constructor", "prototype"]);
 function validateEndpointExtras(config: EndpointConfig) {
+  if ((config.reasoning !== undefined && typeof config.reasoning !== "boolean") ||
+      (config.input !== undefined && (!Array.isArray(config.input) || !config.input.includes("text") || config.input.length > 2 || new Set(config.input).size !== config.input.length || config.input.some(value => !["text", "image"].includes(value)))) ||
+      (config.thinkingLevel !== undefined && !thinkingLevels.includes(config.thinkingLevel))) throw new Error("Invalid provider capability configuration");
+  if (config.thinkingLevelMap !== undefined && (!config.reasoning || !config.thinkingLevelMap || typeof config.thinkingLevelMap !== "object" || Array.isArray(config.thinkingLevelMap) ||
+      Object.entries(config.thinkingLevelMap).some(([key, value]) => !thinkingLevels.includes(key as ModelThinkingLevel) || value !== null && (typeof value !== "string" || value.length < 1 || value.length > 100 || /[\x00-\x1f\x7f]/.test(value)))))
+    throw new Error("Invalid provider capability configuration");
+  validateThinkingLevel({ reasoning: config.reasoning ?? false, thinkingLevelMap: config.thinkingLevelMap } as Model<Api>, config.thinkingLevel);
   if (config.headersEnv !== undefined) {
     if (!config.headersEnv || typeof config.headersEnv !== "object" || Array.isArray(config.headersEnv) || Object.keys(config.headersEnv).length > 16)
       throw new Error("Invalid provider header configuration");
@@ -92,6 +111,8 @@ export function endpointProvider(
 ): ProviderFactory {
   validateEndpointExtras(config);
   const c = Object.freeze({ ...config,
+    input: Object.freeze([...(config.input ?? ["text"])]),
+    ...(config.thinkingLevelMap ? { thinkingLevelMap: Object.freeze({ ...config.thinkingLevelMap }) } : {}),
     ...(config.headersEnv ? { headersEnv: Object.freeze({ ...config.headersEnv }) } : {}),
     ...(config.compat ? { compat: Object.freeze({ ...config.compat }) } : {}),
   });
@@ -161,8 +182,9 @@ export function endpointProvider(
             name: c.modelId,
             api: c.api,
             baseUrl: c.baseUrl,
-            reasoning: false,
-            input: ["text"],
+            reasoning: c.reasoning ?? false,
+            input: [...c.input],
+            ...(c.thinkingLevelMap ? { thinkingLevelMap: c.thinkingLevelMap } : {}),
             contextWindow: c.contextWindow,
             maxTokens: c.maxTokens,
             ...(c.compat ? { compat: c.compat } : {}),
@@ -177,6 +199,7 @@ export function endpointProvider(
         streamSimple: (model, context, options) => provider.streamSimple(model, context, { ...options, fetch: endpointFetch }),
       },
       modelId: c.modelId,
+      ...(c.thinkingLevel !== undefined ? { thinkingLevel: c.thinkingLevel } : {}),
     };
   };
 }

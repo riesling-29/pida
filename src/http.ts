@@ -126,7 +126,7 @@ export function createPidaServer(options: HttpOptions) {
       if (
         options.serveDemo &&
         req.method === "GET" &&
-        ["/", "/app.js", "/studio.js", "/agents.js", "/style.css", "/pida-client.js"].includes(path)
+        ["/", "/app.js", "/studio.js", "/agents.js", "/run-state.js", "/run-input.js", "/run-details.js", "/style.css", "/pida-client.js"].includes(path)
       ) {
         const file = path === "/" ? "index.html" : path.slice(1);
         const contents = await readFile(
@@ -198,11 +198,18 @@ export function createPidaServer(options: HttpOptions) {
           if (action === "pause") await agents.pause(agentId, principal); else await agents.resume(agentId, principal);
           json(res, 200, agents.get(agentId, principal)); return;
         }
-        const jobRoute = /^jobs\/([a-f0-9-]{36})(?:\/(cancel|steer|follow-up|export|recovery))?$/.exec(action ?? "");
+        const jobRoute = /^jobs\/([a-f0-9-]{36})(?:\/(cancel|steer|follow-up|export|recovery|tools))?$/.exec(action ?? "");
         if (jobRoute) {
           const job = agents.getJob(jobRoute[1]!, principal);
           if (job.agentId !== agentId) throw new PidaError("NOT_FOUND", 404);
           if (!jobRoute[2] && req.method === "GET") { json(res, 200, job); return; }
+          if (jobRoute[2] === "tools" && req.method === "GET") {
+            if (!job.sessionId) throw new PidaError("RUN_NOT_FOUND", 404);
+            const target = await agents.getRuntime(agentId, principal);
+            await target.resumeSession(job.sessionId, principal);
+            const detail = target.getSessionTools(job.sessionId, principal);
+            json(res, 200, { ...detail, items: detail.items.filter(item => item.runId === job.runId) }); return;
+          }
           if (jobRoute[2] === "cancel" && req.method === "POST") { keys(await body(req), []); await agents.cancel(job.id, principal); json(res, 200, agents.getJob(job.id, principal)); return; }
           if ((jobRoute[2] === "steer" || jobRoute[2] === "follow-up") && req.method === "POST") {
             const input = await body(req); keys(input, ["text", "expectedRunId"]);
@@ -357,7 +364,7 @@ export function createPidaServer(options: HttpOptions) {
         return;
       }
       const match = path.match(
-        /^\/v1\/sessions\/([a-f0-9-]{36})(?:\/(runs|cancel|trace|compact|handoff|recovery|steer|follow-up))?$/,
+        /^\/v1\/sessions\/([a-f0-9-]{36})(?:\/(runs|cancel|trace|tools|compact|handoff|recovery|steer|follow-up))?$/,
       );
       if (!match) throw new PidaError("NOT_FOUND", 404);
       const id = match[1]!,
@@ -390,8 +397,14 @@ export function createPidaServer(options: HttpOptions) {
       }
       if (action === "trace" && req.method === "GET") {
         await runtime.resumeSession(id, principal);
-        json(res, 200, { events: runtime.getTrace(id, principal) });
+        const cursor = new URL(req.url!, "http://pida.invalid").searchParams.get("afterSequence");
+        if (cursor !== null && !/^\d+$/.test(cursor)) throw new PidaError("INVALID_CURSOR", 400);
+        json(res, 200, runtime.getTracePage(id, principal, cursor === null ? 0 : Number(cursor)));
         return;
+      }
+      if (action === "tools" && req.method === "GET") {
+        await runtime.resumeSession(id, principal);
+        json(res, 200, runtime.getSessionTools(id, principal)); return;
       }
       if ((action === "compact" || action === "handoff") && req.method === "POST") {
         keys(await body(req), []);

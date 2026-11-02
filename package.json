@@ -1,6 +1,6 @@
 {
   "name": "pida-core",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Embedded Pi runtime with authorized business tools and a session HTTP API",
   "scripts": {
     "build": "node scripts/task.mjs build",

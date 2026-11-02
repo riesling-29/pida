@@ -31,6 +31,33 @@ export interface TraceEvent {
   code?: string;
   persistenceError?: "PERSISTENCE_FAILED";
 }
+export interface ToolDetail {
+  runId?: string;
+  toolCallId: string;
+  toolName: string;
+  status: "running" | "completed" | "failed" | "unknown";
+  command?: string;
+  cwd?: string;
+  exitCode?: number;
+  output?: string;
+  stderr?: string;
+  truncated?: boolean;
+  artifactRefs?: string[];
+  evidenceRefs?: string[];
+}
+export interface SessionTools {
+  sessionId: string;
+  items: ToolDetail[];
+  truncated: boolean;
+  historyScope: "retained-pi-context";
+}
+export interface TracePage {
+  events: TraceEvent[];
+  earliestSequence: number;
+  nextSequence: number;
+  truncated: boolean;
+  activeRunId?: string;
+}
 export interface RunResult {
   runId: string;
   sessionId: string;

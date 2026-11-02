@@ -1,0 +1,17 @@
+# Program output preservation
+
+Approved text-mode program proxies retain a bounded head and tail of stdout and stderr. Producing more than 128 KiB no longer terminates a text program. The configured execution timeout and cancellation still apply. JSON-mode programs keep their explicit output limits; a truncated JSON document is never reported as successful structured output.
+
+When a text stream exceeds the preview window, its complete observed bytes can be retained in a private spill file. Defaults are 4 MiB per stream, 64 MiB across the workspace output store including active reservations, 128 artifacts, and a 24-hour readable lifetime. Old artifacts are evicted to make room. Expired files are cleaned on the next capture; interrupted-process remnants also count against the quota. A full or unavailable store preserves the preview and lets the program continue, with `lossy: true` and an explicit storage error. It never advertises an incomplete spill as a complete artifact.
+
+The program result contains `output`, optional `stderr`, `truncated`, `lossy`, per-stream `outputDetails`, and, when available, `artifact_refs`. Each reference has an opaque ID, observed byte count, SHA-256, stream, and reader tool name. `truncated` describes the preview; `lossy` means some observed bytes cannot be recovered from a valid retained artifact. These are command-output artifacts, not proof that a code change was verified or that every descendant process stopped.
+
+Use `program_<id>_output` with `{ "artifactId": "output_…", "offset": 0, "maxBytes": 8192 }`. The reader returns `text`, `nextOffset`, and `eof`; continue with `nextOffset`. UTF-8 boundaries are preserved across pages. The same `program:<id>` permission is required, and artifacts are restricted to the creating principal and session. Each read checks the program's approved manifest/executable pins and the artifact hash. References survive a normal server restart while retained, but expiration, eviction, source approval changes, or file tampering can make them unavailable. The tool accepts no filesystem path.
+
+The registry shares one host-selected store under the workspace state directory. Direct SDK users can pass a `ProgramOutputStore` through `loadProgramProxy(..., { outputStore, ... })`; otherwise a private output directory beside the host manifest is used. Register both returned `tool` and `outputTool` when building a custom runtime. Tool-name collisions between registered program IDs and output-reader names are rejected.
+
+Output files may contain secrets printed by the approved program. They remain private artifacts behind the existing program permission and are not added to default observation metadata. This does not sandbox host programs: host-trusted commands still have their existing filesystem access. POSIX directory/file modes are 0700/0600; Windows uses the enclosing host account's access controls rather than a new ACL sandbox.
+
+Pida vendors the small DeepSeek Harness output collector at commit `ce7073d51254c26cd63b22a60835b8f948deb447`; provenance and the MIT license are in `THIRD_PARTY_NOTICES.md`. The wrapper supplies ownership, retention, hashes, head previews, and UTF-8 paging. No second agent loop or native executor is introduced.
+
+Follow-up execution work is separate: subprocess handles, foreground/background command ownership, descendant containment, PTY interaction, and filesystem/network sandbox providers. The current direct-child timeout/cancellation limitation remains visible; an output artifact does not remove it.
