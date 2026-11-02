@@ -2,6 +2,7 @@ import { createStudio } from "/studio.js";
 import { RunState } from "/run-state.js";
 import { createRunInput } from "/run-input.js";
 import { createRunDetails } from "/run-details.js";
+import { createCommands } from "/commands.js";
 import { createAgents } from "/agents.js";
 import { createComposition } from "/composition.js";
 import { PidaClient, explainError } from "/pida-client.js";
@@ -15,9 +16,10 @@ let token = "",
   sessionPoll;
 const client = new PidaClient({ baseUrl: location.origin, token: () => token });
 const run = new RunState();
-let capabilities = {}, selectionRequest = 0;
+let capabilities = {}, selectionRequest = 0, commandsEnabled = false, sessionUnavailable = false;
 const runInput = createRunInput({ client, run, textarea: $("prompt"), selector: $("workspace-input-mode"), section: $("workspace-live-input"), note: $("workspace-input-note"), receipt: $("workspace-input-receipt"), changed: () => controls(), explain: explainError });
 const runDetails = createRunDetails({ container: $("workspace-run-details"), load: () => client.getSessionTools(sessionId), explain: explainError });
+const commands = createCommands({ container: $("workspace-commands"), list: id => client.listCommands(id), read: (id, commandId, options) => client.readCommand(id, commandId, options), cancel: (id, commandId) => client.cancelCommand(id, commandId), recover: (id, commandId, input) => client.acknowledgeCommandRecovery(id, commandId, input), explain: explainError });
 const composition = createComposition({ client });
 const agents = createAgents({ client });
 const studio = createStudio({
@@ -56,14 +58,15 @@ function problem(error) {
     errors[error.code] ?? (error.code ? explainError(error.code) : error.message) ?? "요청을 처리하지 못했습니다.";
 }
 function controls() {
+  commands.select(connected ? sessionId : undefined, { enabled: commandsEnabled });
   const busy = pending || running || studio.busy || configuring;
   runInput.sync(capabilities); $("workspace-trace-gap").hidden = !run.gap;
-  const composerBlocked = !sessionId || pending || studio.busy || configuring;
+  const composerBlocked = !sessionId || sessionUnavailable || pending || studio.busy || configuring;
   $("send").disabled = composerBlocked || (run.running ? !runInput.canSubmit : running || remoteRunning);
   $("send").textContent = run.running ? runInput.label + " 보내기" : "보내기";
   $("cancel").disabled = pending || run.cancelling || !(running || remoteRunning);
   $("connect").disabled = busy;
-  for (const id of ["workspace-compact", "workspace-handoff"]) $(id).disabled = !sessionId || busy || remoteRunning;
+  for (const id of ["workspace-compact", "workspace-handoff"]) $(id).disabled = !sessionId || sessionUnavailable || busy || remoteRunning;
   $("new-session").disabled = !connected || busy || remoteRunning;
   $("delete-session").disabled = !sessionId || busy || remoteRunning;
   $("refresh").disabled = !connected || busy;
@@ -75,8 +78,8 @@ function controls() {
   $("workspace").hidden = !connected;
   document.body.dataset.connected = String(connected);
   $("connection-state").textContent = connected ? "connected" : "offline";
-  $("footer-state").textContent = !connected ? "연결 대기" : running || remoteRunning ? "실행 중" : "작업 공간 연결됨";
-  $("composer-state").textContent = !sessionId ? "새 대화를 시작하세요" : running || remoteRunning ? "작업을 수행하고 있습니다" : "준비됨";
+  $("footer-state").textContent = !connected ? "연결 대기" : sessionUnavailable ? "세션 미확인 · 명령 관리 가능" : running || remoteRunning ? "실행 중" : "작업 공간 연결됨";
+  $("composer-state").textContent = !sessionId ? "새 대화를 시작하세요" : sessionUnavailable ? "세션 미확인 · 새로고침 후 대화를 재개하세요" : running || remoteRunning ? "작업을 수행하고 있습니다" : "준비됨";
   $("open-settings").disabled = !connected || ($("provider-settings").hidden && !composition.available);
   $("toggle-sessions").disabled = !connected;
   $("toggle-inspector").disabled = !connected;
@@ -172,8 +175,28 @@ async function select(id) {
   const request = ++selectionRequest;
   if (run.sessionId !== id) { run.reset(id); runInput.reset(); runDetails.select(id); }
   const ticket = run.ticket();
-  const [data, activity] = await Promise.all([client.getSession(id), client.getTrace(id)]);
+  let data, activity;
+  try { [data, activity] = await Promise.all([client.getSession(id), client.getTrace(id)]); }
+  catch (failure) {
+    if (request !== selectionRequest || !run.current(ticket, { revision: true })) return;
+    let error = failure;
+    // The command endpoint independently checks saved session ownership without a provider.
+    if (commandsEnabled && ![401, 403, 404].includes(error.status)) {
+      try {
+        await client.listCommands(id);
+        if (request !== selectionRequest || !run.current(ticket, { revision: true })) return;
+        sessionId = id; sessionUnavailable = true; remoteRunning = false; run.reset(id); runInput.reset(); runDetails.select(); clearTimeout(sessionPoll);
+        sessionStorage.setItem("pida-session", id); $("messages").replaceChildren(); $("trace").replaceChildren(); $("workspace-context").textContent = "";
+        $("status").textContent = "세션 미확인 · 대화 복원에 실패했습니다. 실행 명령은 별도로 조회·중단할 수 있습니다.";
+        problem(error); controls(); return;
+      } catch (commandError) { error = commandError; }
+    }
+    if (request !== selectionRequest || !run.current(ticket, { revision: true })) return;
+    sessionId = undefined; sessionUnavailable = false; remoteRunning = false; run.reset(); runInput.reset(); runDetails.select(); commands.select(); clearTimeout(sessionPoll);
+    sessionStorage.removeItem("pida-session"); $("messages").replaceChildren(); $("trace").replaceChildren(); controls(); throw error;
+  }
   if (request !== selectionRequest || !run.current(ticket, { revision: true })) return;
+  sessionUnavailable = false;
   run.snapshot({ ...data, ...(activity.activeRunId ? { activeRunId: activity.activeRunId, running: true } : {}) }, activity.events);
   const c = data.context;
   $("workspace-context").textContent = c ? `컨텍스트 ${c.percent == null ? "측정 대기" : c.percent.toFixed(0) + "%"} / ${c.contextWindow.toLocaleString()} · 자동 압축 ${data.autoCompaction ? "켜짐" : "꺼짐"}` : "";
@@ -223,6 +246,7 @@ async function connect() {
     ? "대화 자동 저장"
     : "임시 대화 · 서버 종료 시 삭제";
   $("mock-note").hidden = info.provider?.mode !== "mock";
+  commandsEnabled = info.tools?.some(tool => tool.permitted && tool.name === "project_command_read") ?? false;
   $("tools").replaceChildren();
   for (const tool of info.tools) {
     const item = document.createElement("li"), name = document.createElement("strong"), description = document.createElement("p");
@@ -242,16 +266,16 @@ async function connect() {
   )
     openSettings();
   connected = true;
-  sessionId = undefined;
+  sessionId = undefined; sessionUnavailable = false;
   remoteRunning = false;
   $("token").value = "";
   const sessions = await list();
   const saved = sessionStorage.getItem("pida-session");
   const recent = sessions.find((s) => s.sessionId === saved) ?? sessions[0];
-  if (recent) await select(recent.sessionId);
+  if (recent) { try { await select(recent.sessionId); } catch (error) { problem(error); if (error.status === 401) throw error; } }
   else emptyConversation();
-  await studio.connect(info);
-  await agents.connect();
+  // A failed model/session restore in one surface does not disable independent agent management.
+  for (const result of await Promise.allSettled([studio.connect(info), agents.connect(info)])) if (result.status === "rejected") problem(result.reason);
   pollChatGPT();
 }
 $("connection-form").onsubmit = (e) => {
@@ -260,6 +284,7 @@ $("connection-form").onsubmit = (e) => {
 };
 for (const [id, handoff] of [["workspace-compact", false], ["workspace-handoff", true]]) {
   $(id).onclick = () => action(async () => {
+    if (sessionUnavailable) return;
     $("status").textContent = handoff ? "요약해서 이어가는 중…" : "대화 압축 중…";
     const result = await client.compactSession(sessionId, handoff);
     await select(result.sessionId); await list();
@@ -283,7 +308,7 @@ $("delete-session").onclick = () => {
   if (!confirm("이 대화와 저장된 실행 기록을 삭제할까요?")) return;
   action(async () => {
     await client.deleteSession(sessionId);
-    sessionId = undefined; run.reset(); runInput.reset(); runDetails.select();
+    sessionId = undefined; sessionUnavailable = false; run.reset(); runInput.reset(); runDetails.select();
     sessionStorage.removeItem("pida-session");
     $("messages").replaceChildren();
     $("trace").replaceChildren();
@@ -295,7 +320,7 @@ $("delete-session").onclick = () => {
   });
 };
 $("disconnect").onclick = () => {
-  connected = false; selectionRequest++; run.reset(); runInput.reset(); runDetails.select();
+  connected = false; sessionUnavailable = false; selectionRequest++; run.reset(); runInput.reset(); runDetails.select();
   clearTimeout(sessionPoll);
   clearTimeout(chatgptPoll); chatgptLogin = undefined; chatgptState = { connected: false }; chatgptModels = []; clearChatGPTLogin();
   $("settings-dialog").close();
@@ -327,7 +352,7 @@ $("cancel").onclick = async () => {
 };
 $("form").onsubmit = async (e) => {
   e.preventDefault();
-  if (pending || studio.busy || configuring || !sessionId) return;
+  if (pending || sessionUnavailable || studio.busy || configuring || !sessionId) return;
   if (run.running) { await runInput.submit(); scheduleSessionPoll(); return; }
   if (running || remoteRunning) return;
   const raw = $("prompt").value, prompt = raw.trim();

@@ -1,4 +1,5 @@
 import { createRunDetails } from "/run-details.js";
+import { createCommands } from "/commands.js";
 import { explainError } from "/pida-client.js";
 const $ = id => document.getElementById(id);
 const statuses = { queued: "대기", running: "실행 중", completed: "실행 완료", failed: "실패", cancelled: "중단됨", interrupted: "서버 종료로 중단됨", limited: "실행 한도 도달" };
@@ -7,8 +8,13 @@ const stamp = value => value ? new Date(value).toLocaleString("ko-KR") : "시간
 const textNode = (tag, text, className) => { const node = document.createElement(tag); node.textContent = text; if (className) node.className = className; return node; };
 
 export function createAgents({ client }) {
-  let connected = false, serviceAvailable = false, generation = 0, timer, refreshing = false, mutating = false, artifactSequence = 0;
+  let connected = false, serviceAvailable = false, generation = 0, timer, refreshing = false, mutating = false, artifactSequence = 0, commandsEnabled = false;
   const runDetails = createRunDetails({ container: $("agent-run-details"), load: () => client.getAgentJobTools(agent.id, selectedJobId), explain: explainError });
+  const commands = createCommands({ container: $("agent-commands"),
+    list: identity => client.listAgentJobCommands(...identity.split(":")),
+    read: (identity, commandId, options) => client.readAgentJobCommand(...identity.split(":"), commandId, options),
+    cancel: (identity, commandId) => client.cancelAgentJobCommand(...identity.split(":"), commandId),
+    recover: (identity, commandId, input) => client.acknowledgeAgentJobCommandRecovery(...identity.split(":"), commandId, input), explain: explainError });
   let agents = [], agent, jobs = [], selectedId, selectedJobId, memory, view = "jobs", personaDirty = false, personaBaseRevision, stateBaseHead, stateBaseRelationships, pendingRequest, recoveryEffects;
   function errorMessage(error) {
     if (error.code?.includes("CONFLICT")) return "다른 변경이 먼저 저장됐습니다. 현재 개정과 입력 내용을 비교한 뒤 다시 편집하세요.";
@@ -60,6 +66,7 @@ export function createAgents({ client }) {
     if (!jobs.length) $("agent-jobs").append(textNode("p", "저장된 작업이 없습니다.", "field-hint"));
     const job = jobs.find(item => item.id === selectedJobId); $("agent-job-detail").hidden = !job;
     runDetails.select(job && agent ? `${agent.id}:${job.id}` : undefined, job?.runId);
+    commands.select(connected && job?.sessionId && job?.runId && agent ? `${agent.id}:${job.id}` : undefined, { enabled: commandsEnabled });
     if (!job) return;
     $("agent-job-state").textContent = `${statuses[job.status] ?? job.status}${job.status === "running" ? job.currentTool ? " · " + job.currentTool : " · 모델 응답 대기" : ""}`;
     $("agent-job-time").textContent = `요청 ${stamp(job.createdAt)}${job.lastSignalAt ? " · 마지막 신호 " + stamp(job.lastSignalAt) : ""}`;
@@ -227,7 +234,7 @@ export function createAgents({ client }) {
     await client.rememberAgentExperience(agent.id, { kind, text: $("agent-experience-text").value.trim(), sourceRefs: ["user:" + new Date().toISOString()], ...(kind === "correction" ? { supersedes: [correctionTarget] } : {}) }); $("agent-experience-form").reset();
   }); };
   return {
-    async connect() { connected = true; ++generation; selectedId = sessionStorage.getItem("pida-agent") ?? undefined; await refresh(); },
+    async connect(info = {}) { connected = true; commandsEnabled = info.tools?.some(tool => tool.permitted && tool.name === "project_command_read") ?? false; ++generation; selectedId = sessionStorage.getItem("pida-agent") ?? undefined; await refresh(); },
     reset() { connected = serviceAvailable = false; ++generation; ++artifactSequence; clearTimeout(timer); agents = []; agent = memory = undefined; jobs = []; personaDirty = false; personaBaseRevision = stateBaseHead = stateBaseRelationships = undefined; pendingRequest = recoveryEffects = undefined; for (const form of ["agent-create-form", "agent-job-form", "agent-persona-form", "agent-state-form", "agent-experience-form", "agent-recovery-form", "agent-steer-form"]) $(form).reset(); for (const id of ["agent-experiences", "agent-current-state", "agent-state-history", "agent-persona-history", "agent-job-activity", "agent-recovery-effects", "agent-artifact-file"]) $(id).replaceChildren(); for (const id of ["agent-job-request", "agent-job-result", "agent-job-code", "agent-error", "agent-artifact-source", "agent-artifact-status", "agent-recovery-status", "agent-memory-state"]) $(id).textContent = ""; $("agent-recovery-form").hidden = true; renderAgents(); renderJobs(); controls(); },
   };
 }

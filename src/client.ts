@@ -1,4 +1,6 @@
 import type { AgentProfile, AgentJob } from "./agent-supervisor.js";
+import type { CommandManager, CommandView } from "./commands.js";
+export type { CommandView, CommandStatus } from "./commands.js";
 import type { CompositionReport } from "./composition.js";
 export type { CompositionReport } from "./composition.js";
 import type { AgentMemoryView, AgentPersona, AgentExperience, InformationTransition, AgentInformationState } from "./agent-memory.js";
@@ -46,6 +48,14 @@ export interface ChatGPTLoginStatus {
   id: string; status: "pending" | "connected" | "failed" | "cancelled"; expiresAt: number;
   authUrl?: string; manualInput?: boolean; code?: string;
 }
+export interface CommandList {
+  commands: CommandView[];
+  capabilities: ReturnType<CommandManager["capabilities"]>;
+  permissions: { cancel: boolean; recover: boolean };
+}
+export type CommandRead = ReturnType<CommandManager["read"]>;
+export interface CommandReadOptions { offset?: number; maxBytes?: number }
+export interface CommandWaitOptions { waitTimeoutMs?: number; signal?: AbortSignal }
 /** Browser/Node fetch SDK. Native apps may use the same documented HTTP/SSE contract. */
 export class PidaClient {
   private readonly options: ClientOptions;
@@ -82,6 +92,28 @@ export class PidaClient {
     return `/v1/sessions/${encodeURIComponent(id)}`;
   }
   private agentPath(id: string) { return `/v1/agents/${encodeURIComponent(id)}`; }
+  private commandPath(id: string, commandId?: string) { return this.path(id) + "/commands" + (commandId ? "/" + encodeURIComponent(commandId) : ""); }
+  private agentCommandPath(id: string, jobId: string, commandId?: string) { return this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/commands" + (commandId ? "/" + encodeURIComponent(commandId) : ""); }
+  private async commandRead(path: string, options: CommandReadOptions): Promise<CommandRead> {
+    const query = new URLSearchParams();
+    if (options.offset !== undefined) query.set("offset", String(options.offset));
+    if (options.maxBytes !== undefined) query.set("maxBytes", String(options.maxBytes));
+    return (await this.request(path + (query.size ? "?" + query : ""))).json();
+  }
+  private async commandWait(path: string, options: CommandWaitOptions): Promise<Awaited<ReturnType<CommandManager["wait"]>>> {
+    return (await this.request(path + "/wait" + (options.waitTimeoutMs === undefined ? "" : "?waitTimeoutMs=" + encodeURIComponent(options.waitTimeoutMs)), "GET", undefined, options.signal)).json();
+  }
+  /** Start is deliberately model-tool-only; these methods observe or control existing owned handles. */
+  async listCommands(id: string): Promise<CommandList> { return (await this.request(this.commandPath(id))).json(); }
+  async readCommand(id: string, commandId: string, options: CommandReadOptions = {}): Promise<CommandRead> { return this.commandRead(this.commandPath(id, commandId), options); }
+  async waitCommand(id: string, commandId: string, options: CommandWaitOptions = {}): Promise<Awaited<ReturnType<CommandManager["wait"]>>> { return this.commandWait(this.commandPath(id, commandId), options); }
+  async cancelCommand(id: string, commandId: string): Promise<ReturnType<CommandManager["cancel"]>> { return (await this.request(this.commandPath(id, commandId) + "/cancel", "POST", {})).json(); }
+  async acknowledgeCommandRecovery(id: string, commandId: string, input: { inspected: true }): Promise<{command: CommandView}> { return (await this.request(this.commandPath(id, commandId) + "/recovery", "POST", input)).json(); }
+  async listAgentJobCommands(id: string, jobId: string): Promise<CommandList> { return (await this.request(this.agentCommandPath(id, jobId))).json(); }
+  async readAgentJobCommand(id: string, jobId: string, commandId: string, options: CommandReadOptions = {}): Promise<CommandRead> { return this.commandRead(this.agentCommandPath(id, jobId, commandId), options); }
+  async waitAgentJobCommand(id: string, jobId: string, commandId: string, options: CommandWaitOptions = {}): Promise<Awaited<ReturnType<CommandManager["wait"]>>> { return this.commandWait(this.agentCommandPath(id, jobId, commandId), options); }
+  async cancelAgentJobCommand(id: string, jobId: string, commandId: string): Promise<ReturnType<CommandManager["cancel"]>> { return (await this.request(this.agentCommandPath(id, jobId, commandId) + "/cancel", "POST", {})).json(); }
+  async acknowledgeAgentJobCommandRecovery(id: string, jobId: string, commandId: string, input: { inspected: true }): Promise<{command: CommandView}> { return (await this.request(this.agentCommandPath(id, jobId, commandId) + "/recovery", "POST", input)).json(); }
   async listAgents(): Promise<{ agents: AgentProfile[] }> { return (await this.request("/v1/agents")).json(); }
   async createAgent(input: {name: string; role?: string; persona?: string}): Promise<AgentProfile> { return (await this.request("/v1/agents", "POST", input)).json(); }
   async getAgent(id: string): Promise<AgentProfile> { return (await this.request(this.agentPath(id))).json(); }
@@ -274,6 +306,16 @@ export class PidaClient {
 /** Stable, credential-free explanations shared by both bundled chat surfaces. */
 export function explainError(code?: string): string {
   const messages: Record<string, string> = {
+    COMMANDS_DISABLED: "이 서버에는 실행 명령 관리가 연결되지 않았습니다.",
+    COMMAND_NOT_FOUND: "이 대화나 작업에서 접근할 수 있는 명령을 찾지 못했습니다.",
+    COMMAND_ARGUMENT_INVALID: "명령 출력 범위나 대기 시간을 확인하세요.",
+    COMMAND_INSPECTION_REQUIRED: "실제 파일과 프로세스 상태를 확인한 뒤 확인란을 선택하세요.",
+    COMMAND_STILL_RUNNING: "명령이 아직 실행 또는 중단 처리 중입니다. 실제 종료 상태를 먼저 확인하세요.",
+    COMMAND_RECOVERY_REQUIRED: "이전 명령의 실제 파일·프로세스 상태를 확인하고 ‘실행 명령’에서 상태 확인을 기록하세요.",
+    PROJECT_COMMAND_ACTIVE: "프로젝트 명령이 실행 중입니다. ‘실행 명령’에서 출력과 종료 상태를 확인하세요.",
+    COMMAND_PROCESS_LOST: "서버가 이전 프로세스의 실행 소유권을 잃었습니다. 자동으로 재실행하지 않았습니다.",
+    COMMAND_RESPONSE_MISMATCH: "현재 선택한 명령과 출력 응답이 일치하지 않습니다. 상태를 다시 조회하세요.",
+    COMMAND_WAIT_CANCELLED: "명령 상태 대기만 취소했습니다. 명령 실행은 별도로 확인하세요.",
     AGENTS_DISABLED: "이 워크스페이스에서 상주 에이전트가 꺼져 있습니다.",
     AGENT_RECOVERY_REQUIRED: "중단된 에이전트의 실제 변경 상태를 확인하고 복구 기록을 제출한 뒤 재개하세요.",
     PROGRAM_APPROVAL_MISMATCH: "프로그램 또는 실행 계약이 변경됐습니다. 호스트에서 내용을 확인하고 programs enable로 다시 등록하세요.",

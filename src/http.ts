@@ -1,4 +1,5 @@
 import type { ProgramRegistry } from "./program-registry.js";
+import type { CommandManager } from "./commands.js";
 import { compositionReport, type CompositionSnapshot } from "./composition.js";
 import type { AgentSupervisor } from "./agent-supervisor.js";
 import type { AgentMemoryStore } from "./agent-memory.js";
@@ -24,6 +25,8 @@ export interface HttpOptions {
   agentWorkbench?: (agentId: string) => PidaWorkbench;
   projectView?: ProjectView;
   programs?: ProgramRegistry;
+  /** Host-owned command handles. Starting a command is only available through guarded model tools. */
+  commands?: CommandManager;
   connector?: ProviderConnectorManifest;
   /** Host settings inventory, filtered/redacted at the HTTP boundary. */
   getComposition?: () => CompositionSnapshot | Promise<CompositionSnapshot>;
@@ -83,6 +86,46 @@ function keys(value: Record<string, unknown>, allowed: string[]) {
     throw new PidaError("UNKNOWN_FIELD", 400);
 }
 
+/** Every caller first establishes runtime/session ownership. The manager then checks command permissions and ownership. */
+async function commandResponse(req: IncomingMessage, res: ServerResponse, manager: CommandManager | undefined, principal: Principal,
+  sessionId: string, commandId?: string, action?: string, runId?: string) {
+  if (!manager) throw new PidaError("COMMANDS_DISABLED", 404);
+  const query = new URL(req.url!, "http://pida.invalid").searchParams;
+  const allowed = !commandId ? [] : action === "wait" ? ["waitTimeoutMs"] : !action ? ["offset", "maxBytes"] : [];
+  for (const key of query.keys()) if (!allowed.includes(key)) throw new PidaError("COMMAND_ARGUMENT_INVALID", 400);
+  const integer = (key: string) => {
+    if (!query.has(key)) return undefined;
+    const value = query.get(key)!;
+    if (query.getAll(key).length !== 1 || !/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) throw new PidaError("COMMAND_ARGUMENT_INVALID", 400);
+    return Number(value);
+  };
+  // Agent jobs can reuse a session. Never read or mutate another job's command in that session.
+  if (runId !== undefined && commandId && !manager.list(principal, sessionId).some(command => command.id === commandId && command.runId === runId)) throw new PidaError("COMMAND_NOT_FOUND", 404);
+  if (!commandId && req.method === "GET") {
+    const commands = manager.list(principal, sessionId).filter(command => runId === undefined || command.runId === runId);
+    json(res, 200, { commands, capabilities: manager.capabilities(), permissions: { cancel: principal.permissions.includes("project:execute"), recover: principal.permissions.includes("project:execute") && principal.permissions.includes("pida:recover") } }); return;
+  }
+  if (commandId && !action && req.method === "GET") {
+    json(res, 200, manager.read(principal, sessionId, commandId, { offset: integer("offset"), maxBytes: integer("maxBytes") })); return;
+  }
+  if (commandId && action === "wait" && req.method === "GET") {
+    const controller = new AbortController(), disconnected = () => controller.abort();
+    res.once("close", disconnected);
+    try { const result = await manager.wait(principal, sessionId, commandId, integer("waitTimeoutMs"), controller.signal); if (!res.destroyed) json(res, 200, result); }
+    finally { res.off("close", disconnected); }
+    return;
+  }
+  if (commandId && action === "cancel" && req.method === "POST") {
+    keys(await body(req), []); json(res, 200, manager.cancel(principal, sessionId, commandId)); return;
+  }
+  if (commandId && action === "recovery" && req.method === "POST") {
+    const input = await body(req); keys(input, ["inspected"]);
+    if (input.inspected !== true) throw new PidaError("COMMAND_INSPECTION_REQUIRED", 400);
+    json(res, 200, { command: manager.acknowledgeRecovery(principal, sessionId, commandId) }); return;
+  }
+  throw new PidaError("METHOD_NOT_ALLOWED", 405);
+}
+
 export function createPidaServer(options: HttpOptions) {
   const { runtime } = options;
   const server = createServer(async (req, res) => {
@@ -129,7 +172,7 @@ export function createPidaServer(options: HttpOptions) {
       if (
         options.serveDemo &&
         req.method === "GET" &&
-        ["/", "/app.js", "/studio.js", "/agents.js", "/run-state.js", "/run-input.js", "/run-details.js", "/composition.js", "/style.css", "/pida-client.js"].includes(path)
+        ["/", "/app.js", "/studio.js", "/agents.js", "/run-state.js", "/run-input.js", "/run-details.js", "/commands.js", "/composition.js", "/style.css", "/pida-client.js"].includes(path)
       ) {
         const file = path === "/" ? "index.html" : path.slice(1);
         const contents = await readFile(
@@ -206,6 +249,15 @@ export function createPidaServer(options: HttpOptions) {
           keys(await body(req), []);
           if (action === "pause") await agents.pause(agentId, principal); else await agents.resume(agentId, principal);
           json(res, 200, agents.get(agentId, principal)); return;
+        }
+        const jobCommands = /^jobs\/([a-f0-9-]{36})\/commands(?:\/(cmd_[a-f0-9]{32})(?:\/(wait|cancel|recovery))?)?$/.exec(action ?? "");
+        if (jobCommands) {
+          const job = agents.getJob(jobCommands[1]!, principal);
+          if (job.agentId !== agentId) throw new PidaError("NOT_FOUND", 404);
+          if (!job.sessionId || !job.runId) throw new PidaError("RUN_NOT_FOUND", 404);
+          // The supervisor already checked agent/job ownership. Command access must remain
+          // available even when rebuilding that agent's model runtime would fail.
+          await commandResponse(req, res, options.commands, principal, job.sessionId, jobCommands[2], jobCommands[3], job.runId); return;
         }
         const jobRoute = /^jobs\/([a-f0-9-]{36})(?:\/(cancel|steer|follow-up|export|recovery|tools))?$/.exec(action ?? "");
         if (jobRoute) {
@@ -371,6 +423,11 @@ export function createPidaServer(options: HttpOptions) {
           res.end(bundle.events.map(e => JSON.stringify(e)).join("\n") + (bundle.events.length ? "\n" : ""));
         } else json(res, 200, bundle);
         return;
+      }
+      const sessionCommands = /^\/v1\/sessions\/([a-f0-9-]{36})\/commands(?:\/(cmd_[a-f0-9]{32})(?:\/(wait|cancel|recovery))?)?$/.exec(path);
+      if (sessionCommands) {
+        runtime.assertSessionOwner(sessionCommands[1]!, principal);
+        await commandResponse(req, res, options.commands, principal, sessionCommands[1]!, sessionCommands[2], sessionCommands[3]); return;
       }
       const match = path.match(
         /^\/v1\/sessions\/([a-f0-9-]{36})(?:\/(runs|cancel|trace|tools|compact|handoff|recovery|steer|follow-up))?$/,

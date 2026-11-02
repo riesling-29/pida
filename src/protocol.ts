@@ -29,6 +29,8 @@ export interface TraceEvent {
   type: string;
   toolName?: string;
   toolCallId?: string;
+  /** Pi-assigned parent for a guarded nested tool call. */
+  parentToolCallId?: string;
   status?: RunStatus;
   code?: string;
   persistenceError?: "PERSISTENCE_FAILED";

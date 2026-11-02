@@ -9,6 +9,8 @@ import { loadProviderConnector, type ProviderConnectorConfig } from "./provider-
 import { ProjectView } from "./project-view.js";
 import { codingPacks } from "./coding-packs.js";
 import { createProjectTools, type ProjectConfig } from "./project-tools.js";
+import { normalizeCodemodeConfig, type CodemodeConfig } from "./codemode.js";
+import type { ProcessExecutor } from "./process-executor.js";
 import { PidaWorkbench, workbenchPermissions, workbenchPrompt } from "./workbench.js";
 import { nativeProvider, validateNativeProvider, type NativeProviderConfig } from "./provider-catalog.js";
 import { ChatGPTCredentialStore } from "./chatgpt-auth.js";
@@ -98,6 +100,7 @@ const configSchema = Type.Object(
     programs: Type.Optional(Type.Array(Type.Object({ id: Type.String({ pattern: "^[a-z][a-z0-9_]{0,39}$" }), enabled: Type.Boolean(), root: Type.String({ minLength: 1 }), manifest: Type.String({ minLength: 1 }), approval: Type.Object({ manifestDigest: Type.String({ pattern: "^[a-f0-9]{64}$" }), commandDigest: Type.String({ pattern: "^[a-f0-9]{64}$" }), entrypointDigest: Type.Optional(Type.String({ pattern: "^[a-f0-9]{64}$" })), runnerDigest: Type.Optional(Type.String({ pattern: "^[a-f0-9]{64}$" })) }, { additionalProperties: false }) }, { additionalProperties: false }), { maxItems: 64 })),
     providerConnector: Type.Optional(Type.Object({ module: Type.String({ minLength: 1 }), options: Type.Optional(Type.Record(Type.String(), Type.Unknown())) }, { additionalProperties: false })),
     mcp: Type.Optional(managedMcpConfigSchema),
+    codemode: Type.Optional(Type.Object({ enabled: Type.Boolean(), tools: Type.Optional(Type.Array(Type.String({ pattern: "^[a-z][a-z0-9_]{0,63}$" }), { maxItems: 64, uniqueItems: true })), maxCalls: Type.Optional(Type.Integer({ minimum: 1, maximum: 64 })), timeoutMs: Type.Optional(Type.Integer({ minimum: 100, maximum: 120000 })), memoryLimitBytes: Type.Optional(Type.Integer({ minimum: 4194304, maximum: 134217728 })), maxOutputChars: Type.Optional(Type.Integer({ minimum: 256, maximum: 24000 })) }, { additionalProperties: false })),
     skills: Type.Optional(Type.Array(Type.String({ minLength: 1 }), { maxItems: 16, uniqueItems: true })),
     agents: Type.Optional(Type.Object({ enabled: Type.Boolean(), maxConcurrent: Type.Optional(Type.Integer({ minimum: 1, maximum: 8 })) }, { additionalProperties: false })),
     codingPacks: Type.Optional(Type.Array(Type.Union([Type.Literal("debugging"), Type.Literal("verification")]), { uniqueItems: true })),
@@ -130,6 +133,7 @@ export interface WorkspaceConfig {
   programs?: ProgramRegistration[];
   providerConnector?: ProviderConnectorConfig;
   mcp?: ManagedMcpConfig;
+  codemode?: CodemodeConfig;
   skills?: string[];
   agents?: { enabled: boolean; maxConcurrent?: number };
   codingPacks?: string[];
@@ -192,6 +196,7 @@ export function validateConfig(
   if (config.provider.kind === "endpoint")
     endpointProvider({ id: "workspace", ...config.provider });
   if (config.provider.kind === "native") validateNativeProvider(config.provider);
+  if (config.codemode) normalizeCodemodeConfig(config.codemode);
   if (config.project?.enabled) {
     const projectRoot = resolve(root, config.project.root);
     if (!existsSync(projectRoot) || !lstatSync(projectRoot).isDirectory() || lstatSync(projectRoot).isSymbolicLink())
@@ -375,6 +380,8 @@ export async function loadWorkspaceExtensions(directory: string, config = readCo
 export interface CreateWorkspaceOptions {
   /** Executable factories supplied by the embedding host, never by an HTTP/model request. */
   extensions?: readonly WorkspaceExtension[];
+  /** Optional host-installed process backend; never a model-selected module path. */
+  commandExecutor?: ProcessExecutor;
   onCloseError?(error: unknown): void;
 }
 
@@ -405,7 +412,8 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
     lifetime.add(() => workspaceExtensions.close());
     const protectedPaths = [join(root, "pida.config.json"), join(root, ".env"), join(root, "connectors"), join(root, "programs"), join(root, config.tools.directory), inside(root, config.stateDir), ...(config.programs ?? []).map(p => resolve(root, p.manifest))];
     const programs = await createProgramRegistry(root, config.programs, { projectRoot: config.project?.enabled ? resolve(root, config.project.root) : undefined, protectedPaths, outputDirectory: join(inside(root, config.stateDir), "program-output") });
-    const project = config.project?.enabled ? createProjectTools({ ...config.project, root: resolve(root, config.project.root) }, { protectedPaths }) : undefined;
+    const project = config.project?.enabled ? createProjectTools({ ...config.project, root: resolve(root, config.project.root) }, { protectedPaths, commandStateDirectory: join(inside(root, config.stateDir), "commands"), commandExecutor: options.commandExecutor }) : undefined;
+    if (project?.commands) lifetime.add(() => project.commands!.close());
     const sharedWorkspaceKey = config.project?.enabled ? resolve(root, config.project.root)
       : programs.tools.some(t => t.effect !== "read") ? "host-programs"
       : workspaceExtensions.tools.some(t => t.effect !== "read") || definitions.some(d => d.scope === "agent") ? "host-extensions" : undefined;
@@ -451,7 +459,8 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
       config: { ...config, provider: selected.provider, providerConnector: selected.providerConnector },
       extensions: extensionRevisions, toolSources: initialToolSources, providerGeneration,
     });
-    const acquireRunLease = sharedWorkspaceKey ? () => {
+    const acquireRunLease = sharedWorkspaceKey ? ({ sessionId }: { sessionId: string }) => {
+      project?.commands?.assertRunAllowed(principal.id, sessionId);
       if (agents?.blockedWorkspaceKeys().includes(sharedWorkspaceKey)) throw new PidaError("AGENT_RECOVERY_REQUIRED", 409);
       if (runtime.listSessions(principal).some(session => runtime.getRecovery(session.sessionId, principal).pendingEffects.length)) throw new PidaError("EFFECT_STATE_UNKNOWN", 409);
       if (projectBusy) throw new PidaError("WORKSPACE_BUSY", 409);
@@ -490,15 +499,22 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
         ];
         const evidenceLimits = [
           ...(project ? ["HOST_PROJECT_ARTIFACTS_NOT_CAPTURED", ...(config.project?.trustedHost ? ["HOST_SHELL_IS_NOT_SANDBOXED"] : [])] : []),
+          ...(project?.commands ? ["COMMAND_RANGE_EXIT_NOT_VERIFIED", "COMMAND_ADMISSION_IS_NOT_COMPLETION"] : []),
           ...(config.programs?.some(p => p.enabled) ? ["HOST_PROGRAM_NOT_SANDBOXED", "PROGRAM_DEPENDENCIES_NOT_PINNED", "PROGRAM_DESCENDANTS_NOT_GUARANTEED_STOPPED"] : []),
         ];
+        const tools = composeTools(contributions);
         const created = new PidaRuntime({
           ...(profile ? { agentId: profile.id } : {}), provider,
           providerInfo: connector ? { mode: "host-connector", model: connector.manifest.displayName } : providerLabel(selected.provider),
           workspaceDir: root, storageDir: profile ? join(agentDirectory, "agents", profile.id, "runtime") : inside(root, config.stateDir),
           instructionRoot: config.project?.enabled ? resolve(root, config.project.root) : undefined,
           skillPaths: config.skills?.map(path => inside(root, path)), skills: packs.skills,
-          tools: composeTools(contributions), acquireRunLease,
+          tools, acquireRunLease, codemode: config.codemode,
+          authorize: ({ toolName }) => {
+            const tool = tools.find(item => item.name === toolName);
+            if (tool && tool.effect !== "read" && toolName !== "project_command_cancel") project?.commands?.assertCanMutate();
+            return true;
+          },
           ...(area ? { inspectArtifacts: (p: Principal) => area.captureArtifacts(p) } : {}),
           ...(store ? { contextForRun: () => store.contextForRun(12000) } : {}),
           ...(project ? { singleWriter: true } : {}), evidenceLimits,
@@ -508,7 +524,42 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
         });
         const closeRuntime = created.close.bind(created);
         owner.add(closeRuntime);
+        const runRuntime = created.run.bind(created);
+        created.run = async (sessionId, requestPrincipal, prompt, onEvent, signal, identity) => {
+          let admitted = false, cancellation: Promise<void> | undefined;
+          const cancelCommands = () => cancellation ??= requestPrincipal.permissions.includes("project:execute")
+            ? project?.commands?.cancelSession(requestPrincipal, sessionId) ?? Promise.resolve() : Promise.resolve();
+          const aborted = () => { if (admitted) void cancelCommands().catch(() => {}); };
+          signal?.addEventListener("abort", aborted, { once: true });
+          try {
+            const result = await runRuntime(sessionId, requestPrincipal, prompt, event => {
+              if (event.type === "trace" && event.trace.type === "run_started") { admitted = true; if (signal?.aborted) aborted(); }
+              onEvent?.(event);
+            }, signal, identity);
+            if (result.status === "cancelled" || ["RUN_TIMEOUT", "PROVIDER_IDLE_TIMEOUT"].includes(result.code ?? "")) await cancelCommands();
+            return result;
+          } finally {
+            signal?.removeEventListener("abort", aborted);
+            await cancellation;
+          }
+        };
+        const cancelRuntime = created.cancel.bind(created);
+        created.cancel = async (sessionId, requestPrincipal) => {
+          await cancelRuntime(sessionId, requestPrincipal);
+          if (requestPrincipal.permissions.includes("project:execute")) await project?.commands?.cancelSession(requestPrincipal, sessionId);
+        };
+        const deleteSession = created.deleteSession.bind(created);
+        created.deleteSession = async (sessionId, requestPrincipal) => {
+          project?.commands?.assertSessionIdle(requestPrincipal.id, sessionId);
+          return deleteSession(sessionId, requestPrincipal);
+        };
+        const compactSession = created.compactSession.bind(created);
+        created.compactSession = async (sessionId, requestPrincipal, handoff) => {
+          project?.commands?.assertSessionIdle(requestPrincipal.id, sessionId);
+          return compactSession(sessionId, requestPrincipal, handoff);
+        };
         const inventory = compositionInventory(config, target, activeRevisionOf(selected), contributions, [...workspaceExtensions.inventory, ...agentExtensions.inventory], principal);
+        if (created.getInfo(principal).tools.some(tool => tool.name === "program_compose")) inventory.tools.push({ name: "program_compose", permission: "programs:compose", source: "pi-codemode", scope: "agent", permitted: principal.permissions.includes("programs:compose") });
         inventories.set(agentId, inventory);
         owner.add(() => { if (inventories.get(agentId) === inventory) inventories.delete(agentId); });
         created.close = () => owner.close();
@@ -527,7 +578,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
     }) : undefined;
     if (agents) lifetime.add(() => agents!.close());
     const assertRuntimeIdle = runtime.assertIdle.bind(runtime);
-    runtime.assertIdle = () => { assertRuntimeIdle(); agents?.assertIdle(); };
+    runtime.assertIdle = () => { assertRuntimeIdle(); agents?.assertIdle(); if (project?.commands?.hasActive()) throw new PidaError("PROVIDER_BUSY", 409); };
     const configureMainProvider = runtime.configureProvider.bind(runtime);
     runtime.configureProvider = (provider, info) => {
       configureMainProvider(provider, info); providerGeneration++;
@@ -538,7 +589,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
     lifetime.add(() => settings.close());
     const server = createPidaServer({
       providerSettings: settings, agents, agentMemory: memory,
-      ...(selectedAgent.workbench ? { agentWorkbench } : {}), projectView, programs,
+      ...(selectedAgent.workbench ? { agentWorkbench } : {}), projectView, programs, commands: project?.commands,
       connector: connectorManifest, workbench, runtime, serveDemo: selectedMain.web,
       getComposition: () => getComposition(),
       allowedOrigin: `http://127.0.0.1:${config.port}`,
@@ -564,6 +615,6 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
       };
     };
     agents?.start();
-    return { runtime, server, config, workbench, agents, close, getComposition, get closeError() { return closeError; } };
+    return { runtime, server, config, workbench, agents, commands: project?.commands, close, getComposition, get closeError() { return closeError; } };
   } catch (error) { return lifetime.fail(error); }
 }

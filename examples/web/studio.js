@@ -1,6 +1,7 @@
 import { RunState } from "/run-state.js";
 import { createRunInput } from "/run-input.js";
 import { createRunDetails } from "/run-details.js";
+import { createCommands } from "/commands.js";
 import { explainError } from "/pida-client.js";
 const $ = id => document.getElementById(id);
 const outcomes = { completed: "실행 완료", failed: "실행 실패", cancelled: "중단됨", limited: "실행 한도 도달", interrupted: "서버 종료로 중단됨" };
@@ -17,9 +18,10 @@ export function createStudio({ client, request, changed, disconnected }) {
   let project = { files: [] }, projectPath = ".", projectChanges, projectSequence = 0;
   let programs, programsLoading = false, programDrafting = false, programSequence = 0, programDownloadUrl;
   const run = new RunState();
-  let capabilities = {};
+  let capabilities = {}, commandsEnabled = false, sessionUnavailable = false;
   const runInput = createRunInput({ client, run, textarea: $("studio-prompt"), selector: $("studio-input-mode"), section: $("studio-live-input"), note: $("studio-input-note"), receipt: $("studio-input-receipt"), changed: () => controls(), explain: explainError });
   const runDetails = createRunDetails({ container: $("studio-run-details"), load: () => client.getSessionTools(session), explain: explainError });
+  const commands = createCommands({ container: $("studio-commands"), list: id => client.listCommands(id), read: (id, commandId, options) => client.readCommand(id, commandId, options), cancel: (id, commandId) => client.cancelCommand(id, commandId), recover: (id, commandId, input) => client.acknowledgeCommandRecovery(id, commandId, input), explain: explainError });
   const payloads = new Map(), rendered = new Map(), renderErrors = new Set();
   const frames = [$("studio-frame"), $("service-frame")];
   const status = text => { if ($("studio-run-status").textContent !== text) $("studio-run-status").textContent = text; };
@@ -101,18 +103,19 @@ export function createStudio({ client, request, changed, disconnected }) {
     $("studio-events").replaceChildren(); renderReview();
   }
   function controls() {
+    commands.select(connected ? session : undefined, { enabled: commandsEnabled });
     const locked = busy || remoteRunning || hostBusy || !connected;
     for (const id of ["choose-template", "first-template", "studio-refresh", "studio-target-mode", "studio-file"]) $(id).disabled = locked || (!available && !(target === "project" && projectTools));
     for (const id of ["choose-template", "first-template"]) $(id).disabled = locked || !available || target === "project";
     $("studio-target-mode").disabled = locked || (!available && !projectTools);
     $("apply-template").disabled = locked || !selectedTemplate;
     runInput.sync(capabilities); $("studio-activity-gap").hidden = !run.gap;
-    const composerBlocked = hostBusy || !connected || mock || (!available && !(target === "project" && projectTools)) || (target === "ui" && !state.html);
+    const composerBlocked = sessionUnavailable || hostBusy || !connected || mock || (!available && !(target === "project" && projectTools)) || (target === "ui" && !state.html);
     $("studio-prompt").disabled = composerBlocked;
     $("studio-send").disabled = composerBlocked || (run.running ? !runInput.canSubmit : busy || remoteRunning);
     $("studio-send").textContent = run.running ? runInput.label + " 보내기" : "보내기 ↑";
     $("studio-new-chat").disabled = locked;
-    for (const id of ["studio-compact", "studio-handoff"]) $(id).disabled = locked || !session;
+    for (const id of ["studio-compact", "studio-handoff"]) $(id).disabled = locked || sessionUnavailable || !session;
     $("studio-cancel").disabled = !(busy || remoteRunning) || !session || run.cancelling;
     $("studio-restore").disabled = locked || target === "project" || !workspace.canCheckpoint || !review?.base || !review?.revision || !changes?.files.length || workspace.revision !== review.revision || !!bundle?.manifest?.known_limits?.includes("EFFECT_STATE_REQUIRES_RECONCILIATION");
     $("mode-disconnect").disabled = locked;
@@ -383,10 +386,12 @@ export function createStudio({ client, request, changed, disconnected }) {
     try {
       const [data, response] = await Promise.all([client.getSession(id), client.getTrace(id)]);
       if (active !== generation || id !== session || !run.current(ticket, { revision: true })) return;
+      const wasUnavailable = sessionUnavailable; sessionUnavailable = false;
       const traces = response.events, latest = traces.at(-1);
       run.snapshot({ ...data, ...(response.activeRunId ? { activeRunId: response.activeRunId, running: true } : {}) }, traces);
       contextLabel(data); remoteRunning = run.running; runDetails.select(id, run.runId);
       restoreActivity(traces, run.running, data.lastStatus);
+      if (wasUnavailable && !run.running) status(`세션 연결됨 · ${outcomes[data.lastStatus] ?? "대기"}`);
       if (latest && latest.runId !== review?.runId) {
         review = { runId: latest.runId, target, file: selectedFile }; changes = bundle = undefined;
         reviewNote = "이 실행의 요청 전 변경 기준이 없어 파일 비교·복원은 사용할 수 없습니다.";
@@ -398,14 +403,24 @@ export function createStudio({ client, request, changed, disconnected }) {
       if (last) $("studio-goal").textContent = cleanPrompt(last.text).slice(0, 180);
       if (run.running && !activity) status("이전 요청이 실행 중입니다. 상태를 확인하고 있습니다.");
       schedulePoll(); changed(); controls();
-    } catch (error) {
-      if (active !== generation || id !== session) return;
+    } catch (failure) {
+      if (active !== generation || id !== session || !run.current(ticket, { revision: true })) return;
+      let error = failure;
+      if (commandsEnabled && ![401, 403, 404].includes(error.status)) {
+        try {
+          await client.listCommands(id);
+          if (active !== generation || id !== session || !run.current(ticket, { revision: true })) return;
+          sessionUnavailable = true; remoteRunning = false; run.reset(id); runInput.reset(); runDetails.select(); clearTimeout(poll); resetActivity(); $("studio-messages").replaceChildren();
+          status("세션 미확인 · 대화 복원에 실패했습니다. 실행 명령은 별도로 조회·중단할 수 있습니다."); controls(); return;
+        } catch (commandError) { error = commandError; }
+      }
+      if (active !== generation || id !== session || !run.current(ticket, { revision: true })) return;
+      session = undefined; sessionUnavailable = false; run.reset(); runInput.reset(); runDetails.select(); remoteRunning = false; clearTimeout(poll); sessionStorage.removeItem("pida-studio-session"); clearReview(); $("studio-messages").replaceChildren(); controls();
       if (error.status !== 404) throw error;
-      session = undefined; run.reset(); runInput.reset(); runDetails.select(); remoteRunning = false; sessionStorage.removeItem("pida-studio-session"); clearReview();
     }
   }
   async function compact(handoff) {
-    if (!session || busy || remoteRunning || hostBusy) return;
+    if (!session || sessionUnavailable || busy || remoteRunning || hostBusy) return;
     busy = true; changed(); controls(); status(handoff ? "작업 맥락을 새 대화로 옮기고 있습니다…" : "대화를 압축하고 있습니다…");
     try {
       const result = await client.compactSession(session, handoff);
@@ -417,7 +432,7 @@ export function createStudio({ client, request, changed, disconnected }) {
   }
   async function send(event) {
     event.preventDefault();
-    if (hostBusy || !connected || mock || (!available && !(target === "project" && projectTools)) || (target === "ui" && !state.html)) return;
+    if (sessionUnavailable || hostBusy || !connected || mock || (!available && !(target === "project" && projectTools)) || (target === "ui" && !state.html)) return;
     if (run.running) { await runInput.submit(); schedulePoll(); return; }
     if (busy || remoteRunning) return;
     const raw = $("studio-prompt").value, text = raw.trim(); if (!text) return;
@@ -520,23 +535,24 @@ export function createStudio({ client, request, changed, disconnected }) {
   };
   $("studio-compact").onclick = () => compact(false); $("studio-handoff").onclick = () => compact(true); $("studio-form").onsubmit = send;
   $("studio-prompt").onkeydown = event => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !event.isComposing) { event.preventDefault(); $("studio-form").requestSubmit(); } };
-  $("studio-new-chat").onclick = () => { if (busy || remoteRunning || hostBusy) return; session = undefined; run.reset(); runInput.reset(); runDetails.select(); sessionStorage.removeItem("pida-studio-session"); clearReview(); $("studio-messages").replaceChildren(); status("새 대화 · 현재 파일은 유지됩니다."); controls(); };
+  $("studio-new-chat").onclick = () => { if (busy || remoteRunning || hostBusy) return; session = undefined; sessionUnavailable = false; run.reset(); runInput.reset(); runDetails.select(); sessionStorage.removeItem("pida-studio-session"); clearReview(); $("studio-messages").replaceChildren(); status("새 대화 · 현재 파일은 유지됩니다."); controls(); };
   $("studio-cancel").onclick = async () => {
     const id = session, ticket = run.ticket(); run.cancel(); controls();
     if (activity?.running) { activity.cancelling = true; activityStatus(""); }
     try { await client.cancel(id); if (run.current(ticket, { run: true }) && activity?.running) status("중단 요청을 전달했습니다. 최종 상태를 기다리고 있습니다."); }
     catch (error) { if (run.current(ticket, { run: true })) { run.cancelling = false; if (activity) activity.cancelling = false; issue(error); controls(); } }
   };
-  $("studio-refresh").onclick = async () => { try { await refresh(true); await restoreChat(); if (!remoteRunning) await finishReview(); } catch (error) { issue(error); } };
+  $("studio-refresh").onclick = async () => { try { await refresh(true); await restoreChat(); if (!remoteRunning && !sessionUnavailable) await finishReview(); } catch (error) { issue(error); } };
   for (const button of document.querySelectorAll("[data-suggestion]")) button.onclick = () => { $("studio-prompt").value = button.dataset.suggestion; $("studio-prompt").focus(); };
   for (const size of ["desktop", "mobile"]) $("preview-" + size).onclick = () => { mobile = size === "mobile"; $("preview-desktop").setAttribute("aria-pressed", String(!mobile)); $("preview-mobile").setAttribute("aria-pressed", String(mobile)); resize(); };
   return {
     get busy() { return busy || remoteRunning; },
     update({ connected: value, busy: parentBusy }) { connected = value; hostBusy = parentBusy; controls(); },
     async connect(info) {
-      generation++; run.reset(); runInput.reset(); runDetails.select(); capabilities = info.capabilities ?? {}; clearTimeout(poll); connected = true; mock = info.provider?.mode === "mock";
+      generation++; sessionUnavailable = false; run.reset(); runInput.reset(); runDetails.select(); capabilities = info.capabilities ?? {}; clearTimeout(poll); connected = true; mock = info.provider?.mode === "mock";
       programSequence++; programs = undefined; programsLoading = programDrafting = false; clearProgramDraft();
       projectTools = info.tools?.some(tool => tool.permitted && tool.name.startsWith("project_")) ?? false;
+      commandsEnabled = info.tools?.some(tool => tool.permitted && tool.name === "project_command_read") ?? false;
       $("studio-project-option").hidden = !projectTools; $("studio-project-option").disabled = !projectTools;
       const browserChecks = info.tools?.some(tool => tool.permitted && tool.name === "ui_check");
       $("studio-capability").textContent = `현재 실행 환경: 화면 편집 · 파일 수정 · JavaScript 검사${browserChecks ? " · 브라우저 검사 도구" : " · 브라우저 검사 도구 없음"}${projectTools ? " · 별도 프로젝트 도구 (파일 복원 범위 밖)" : ""}`;
@@ -545,12 +561,12 @@ export function createStudio({ client, request, changed, disconnected }) {
       try { const saved = session && JSON.parse(sessionStorage.getItem(reviewKey()) || "null"); if (saved && typeof saved === "object") { review = saved; target = saved.target === "project" && projectTools ? "project" : saved.target === "files" ? "files" : "ui"; selectedFile = typeof saved.file === "string" ? saved.file : ""; } } catch { /* Optional tab-local metadata is recoverable. */ }
       if (review?.target === "project") reviewNote = "프로젝트 저장소 변경은 서비스 작업 공간의 파일 비교·복원 범위에 포함되지 않습니다.";
       await refresh(); if (!available && projectTools) target = "project";
-      await restoreChat(); if (!remoteRunning) await finishReview(); showView(target === "files" ? "files" : "preview"); renderState(); controls();
+      await restoreChat(); if (!remoteRunning && !sessionUnavailable) await finishReview(); showView(target === "files" ? "files" : "preview"); renderState(); controls();
       if ($("studio-programs").open) void refreshPrograms();
     },
     reset() {
       programSequence++; programs = undefined; programsLoading = programDrafting = false; clearProgramDraft(); $("studio-programs-enabled").replaceChildren(); $("studio-program-candidate").replaceChildren(); $("studio-program-source").textContent = ""; $("studio-programs-status").textContent = ""; $("studio-programs").open = false;
-      generation++; run.reset(); runInput.reset(); runDetails.select(); fileSequence++; projectSequence++; clearTimeout(poll); connected = busy = remoteRunning = available = false; state = { html: "", revision: "", templates: [] }; workspace = { files: [] }; project = { files: [] }; projectPath = "."; projectChanges = undefined; session = undefined; selectedFile = ""; target = "ui";
+      generation++; sessionUnavailable = false; run.reset(); runInput.reset(); runDetails.select(); fileSequence++; projectSequence++; clearTimeout(poll); connected = busy = remoteRunning = available = false; state = { html: "", revision: "", templates: [] }; workspace = { files: [] }; project = { files: [] }; projectPath = "."; projectChanges = undefined; session = undefined; selectedFile = ""; target = "ui";
       payloads.clear(); rendered.clear(); renderErrors.clear(); for (const frame of frames) frame.removeAttribute("src");
       $("studio-messages").replaceChildren(); $("studio-source").textContent = ""; $("studio-file-meta").textContent = ""; $("template-dialog").close(); clearReview(); showView("preview"); renderFiles(); controls();
     },

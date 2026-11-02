@@ -34,7 +34,7 @@ function environment() {
   const doc={getElementById:$,createElement:t=>new Node(t),createTextNode:t=>({textContent:t}),body:new Node('body'),hidden:false,addEventListener(){},querySelector:selector=>modeTabs.find(n=>selector.includes(`data-mode="${n.dataset.mode}"`))??new Node(),querySelectorAll:selector=>selector.includes('#mode-tabs')?modeTabs:[]};
   const storage=new Map(), timers=new Map();let timer=0;
   const context={document:doc,RunState,submitQueuedInput,Date,Map,Set,URL,URLSearchParams,TextEncoder,Blob,crypto:webcrypto,console,explainError:x=>x??'',ResizeObserver:class{observe(){}},requestAnimationFrame:()=>{},setInterval:()=>1,clearInterval(){},setTimeout:fn=>{timers.set(++timer,fn);return timer;},clearTimeout:id=>timers.delete(id),window:{addEventListener(){}},location:{origin:'http://fixture.invalid',hash:'',pathname:'/',search:''},history:{replaceState(){}},sessionStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)}};
-  for(const [path,name] of [['run-input.js','createRunInput'],['run-details.js','createRunDetails'],['composition.js','createComposition']]) runInNewContext(read('examples/web/'+path).replace(/^import .*\n/gm,'').replace(/export function /g,'function ')+`\nthis.${name}=${name};`,context);
+  for(const [path,name] of [['run-input.js','createRunInput'],['run-details.js','createRunDetails'],['commands.js','createCommands'],['composition.js','createComposition']]) runInNewContext(read('examples/web/'+path).replace(/^import .*\n/gm,'').replace(/export function /g,'function ')+`\nthis.${name}=${name};`,context);
   return {context,$,storage,timers,doc};
 }
 const row=(sequence,type,runId='r1')=>({sessionId:'s1',runId,sequence,type,timestamp:new Date().toISOString()});
@@ -107,4 +107,78 @@ test('provider form preserves a native model whose only supported thinking level
   assert.deepEqual(env.$('provider-thinking').options.map(x=>x.value),['high']);
   assert.equal(runInNewContext('providerDraft().thinkingLevel',env.context),'high');
   env.$('native-model-select').onchange();assert.equal(env.$('provider-thinking').value,'high');
+});
+
+test('workspace and Studio command panels use the selected session and reset private output on disconnect', async()=>{
+  for (const surface of ['workspace','studio']) {
+    const env=environment(),f=fixtureClient(),reads=[];
+    const commandInfo={...info,tools:[{name:'project_command_read',permitted:true}]};
+    const command={id:'cmd_fixture',sessionId:'s1',runId:'old-run',commandPreview:'npm test',status:'completed',exitCode:0,totalBytes:2,backend:'fixture',directExited:true,rangeExited:'unknown'};
+    f.client.getInfo=async()=>commandInfo;
+    f.client.listCommands=async id=>{reads.push(['list',id]);return {commands:[command],permissions:{cancel:true,recover:true},capabilities:{backend:'fixture',pty:false,stdin:false,restartExecution:false}};};
+    f.client.readCommand=async(id,commandId,options)=>{reads.push(['read',id,commandId,options.offset]);return {command,output:{text:'OK',offset:0,nextOffset:2,totalBytes:2,eof:true,lossy:false}};};
+    let reset;
+    if (surface==='workspace') {
+      Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
+      runInNewContext(read('examples/web/app.js').replace(/^import .*\n/gm,''),env.context);
+      env.$('token').value='fixture';env.$('connection-form').requestSubmit();await flush();reset=()=>env.$('disconnect').onclick();
+    } else {
+      env.storage.set('pida-studio-session','s1');
+      runInNewContext(read('examples/web/studio.js').replace(/^import .*\n/gm,'').replace('export function createStudio','function createStudio')+'\nthis.createStudio=createStudio;',env.context);
+      const studio=env.context.createStudio({client:f.client,request:async()=>({html:'',revision:'base',templates:[]}),changed(){},disconnected(){}});
+      await studio.connect(commandInfo);reset=()=>studio.reset();
+    }
+    const panel=env.$(surface+'-commands');assert.equal(panel.hidden,false);assert.equal(reads.length,0);
+    panel.open=true;panel.ontoggle();await flush();assert.deepEqual(reads,[['list','s1'],['read','s1','cmd_fixture',0]]);assert.match(panel.textContent,/OK/);
+    reset();assert.equal(panel.hidden,true);assert.doesNotMatch(panel.textContent,/npm test|OK/);
+  }
+});
+
+test('provider restore failure keeps owned command management available, blocks chat, and recovers on refresh', async()=>{
+  for (const surface of ['workspace','studio']) {
+    const env=environment(),f=fixtureClient(),commandInfo={...info,tools:[{name:'project_command_read',permitted:true}]};
+    const healthySession=f.client.getSession;let unavailable=true,lists=0,agentConnections=0;
+    const failure=Object.assign(new Error('provider unavailable'),{code:'INTERNAL_ERROR',status:500});
+    f.client.getInfo=async()=>commandInfo;f.client.getSession=async()=>{if(unavailable)throw failure;return healthySession();};
+    const command={id:'cmd_fixture',sessionId:'s1',runId:'old-run',commandPreview:'npm test',status:'running',totalBytes:4,backend:'fixture',directExited:false,rangeExited:'unknown'};
+    f.client.listCommands=async id=>{assert.equal(id,'s1');lists++;return {commands:[command],permissions:{cancel:true,recover:true},capabilities:{backend:'fixture',pty:false,stdin:false,restartExecution:false}};};
+    f.client.readCommand=async()=>({command,output:{text:'LIVE',offset:0,nextOffset:4,totalBytes:4,eof:true,lossy:false}});
+    let reset,refresh;
+    if(surface==='workspace') {
+      Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){throw failure;},async refresh(){},reset(){}}),createAgents:()=>({async connect(){agentConnections++;},reset(){}})});
+      runInNewContext(read('examples/web/app.js').replace(/^import .*\n/gm,''),env.context);
+      env.$('token').value='fixture';env.$('connection-form').requestSubmit();await flush();
+      assert.equal(agentConnections,1,'a failed Studio restore does not block agent connection');
+      assert.equal(env.$('send').disabled,true);assert.equal(env.$('workspace-compact').disabled,true);assert.equal(env.$('refresh').disabled,false);assert.equal(env.$('new-session').disabled,false);assert.match(env.$('composer-state').textContent,/세션 미확인/);assert.doesNotMatch(env.$('footer-state').textContent,/실행 중/);
+      refresh=async()=>{env.$('refresh').onclick();await flush();};reset=()=>env.$('disconnect').onclick();
+    }else{
+      env.storage.set('pida-studio-session','s1');
+      runInNewContext(read('examples/web/studio.js').replace(/^import .*\n/gm,'').replace('export function createStudio','function createStudio')+'\nthis.createStudio=createStudio;',env.context);
+      const studio=env.context.createStudio({client:f.client,request:async()=>({html:'',revision:'base',templates:[]}),changed(){},disconnected(){}});await studio.connect(commandInfo);
+      env.$('studio-target-mode').value='files';env.$('studio-target-mode').onchange();await flush();
+      assert.equal(env.$('studio-send').disabled,true);assert.equal(env.$('studio-compact').disabled,true);assert.equal(env.$('studio-refresh').disabled,false);assert.match(env.$('studio-run-status').textContent,/세션 미확인/);assert.equal(studio.busy,false);
+      refresh=async()=>{await env.$('studio-refresh').onclick();await flush();};reset=()=>studio.reset();
+    }
+    const panel=env.$(surface+'-commands');assert.equal(lists,1,'ownership is checked independently of provider restoration');assert.equal(panel.hidden,false);panel.open=true;panel.ontoggle();await flush();assert.match(panel.textContent,/LIVE/);
+    unavailable=false;await refresh();assert.equal(env.$(surface==='workspace'?'send':'studio-send').disabled,false,'refresh unlocks conversation after provider recovery');assert.equal(env.$(surface==='workspace'?'workspace-compact':'studio-compact').disabled,false);assert.doesNotMatch(env.$(surface==='workspace'?'status':'studio-run-status').textContent,/세션 미확인/);reset();
+  }
+});
+
+test('session authorization and missing-session errors never fall back to command management', async()=>{
+  for (const surface of ['workspace','studio']) for (const status of [401,403,404]) {
+    const env=environment(),f=fixtureClient(),commandInfo={...info,tools:[{name:'project_command_read',permitted:true}]};let lists=0;
+    const failure=Object.assign(new Error('not owned'),{code:status===404?'SESSION_NOT_FOUND':'FORBIDDEN',status});
+    f.client.getInfo=async()=>commandInfo;f.client.getSession=async()=>{throw failure;};f.client.listCommands=async()=>{lists++;return {commands:[]};};
+    if(surface==='workspace') {
+      Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
+      runInNewContext(read('examples/web/app.js').replace(/^import .*\n/gm,''),env.context);env.$('token').value='fixture';env.$('connection-form').requestSubmit();await flush();
+      assert.equal(env.$('send').disabled,true);env.$('disconnect').onclick();
+    }else{
+      env.storage.set('pida-studio-session','s1');runInNewContext(read('examples/web/studio.js').replace(/^import .*\n/gm,'').replace('export function createStudio','function createStudio')+'\nthis.createStudio=createStudio;',env.context);
+      const studio=env.context.createStudio({client:f.client,request:async()=>({html:'',revision:'base',templates:[]}),changed(){},disconnected(){}});
+      if(status===404)await studio.connect(commandInfo);else await assert.rejects(studio.connect(commandInfo),error=>error.status===status);
+      assert.equal(env.storage.has('pida-studio-session'),false);studio.reset();
+    }
+    assert.equal(lists,0);assert.equal(env.$(surface+'-commands').hidden,true);
+  }
 });

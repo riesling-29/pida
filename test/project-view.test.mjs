@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile, readFile, rm, symlink, link } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, readFile, rm, stat, symlink, link } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -66,6 +66,33 @@ test("changes includes staged and working patches, untracked names, and excludes
   assert.equal(result.truncated, false); assert.equal(result.revision, (await f.view.changes(owner)).revision);
   assert.deepEqual(await readFile(join(f.root, ".git", "index")), beforeIndex);
   await writeFile(join(f.root, "a.txt"), "next-working\n"); assert.notEqual((await f.view.changes(owner)).revision, result.revision);
+});
+
+test("Git view preserves racy-index detection when a same-size edit is copied later", async t => {
+  const f = await fixture(t, true), path = join(f.root, "a.js"), index = join(f.root, ".git", "index");
+  const original = "export const value = 1;\n", changed = "export const value = 2;\n";
+  await writeFile(path, original); f.git("add", "a.js"); f.git("commit", "-qm", "fixture");
+  let sameSecond = false;
+  // Establish the stat-cache collision even if one attempt crosses a clock second.
+  for (let attempt = 0; attempt < 5 && !sameSecond; attempt++) {
+    await writeFile(path, original); f.git("add", "a.js");
+    const before = await stat(path);
+    await writeFile(path, changed);
+    const after = await stat(path);
+    sameSecond = Math.floor(before.mtimeMs / 1000) === Math.floor(after.mtimeMs / 1000)
+      && Math.floor(before.ctimeMs / 1000) === Math.floor(after.ctimeMs / 1000);
+  }
+  assert.equal(sameSecond, true, "fixture must edit within the cached stat's second");
+  const beforeIndex = await readFile(index), beforeTime = (await stat(index)).mtimeMs;
+  // Copying the index now must retain its old timestamp rather than disarming
+  // Git's same-second content check with the temporary file's newer timestamp.
+  await new Promise(resolve => setTimeout(resolve, 1100));
+  const result = await f.view.changes(owner);
+  assert.match(result.diff, /-export const value = 1;\n\+export const value = 2;/);
+  assert.deepEqual(result.files, ["a.js"]);
+  assert.deepEqual(await readFile(index), beforeIndex);
+  assert.equal((await stat(index)).mtimeMs, beforeTime);
+  assert.equal(await readFile(path, "utf8"), changed);
 });
 
 test("Git view never executes configured filters, textconv, external diff or fsmonitor", async t => {

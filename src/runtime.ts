@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { validContextDescriptor, type RunContextSnapshot, type LoadedRunContext, type SessionHandoff } from "./run-context.js";
+import { createProgramComposeTool, normalizeCodemodeConfig, type CodemodeConfig } from "./codemode.js";
 import { EffectLedger, type EffectReceipt } from "./effects.js";
 import { ObservationArchive, type ObservationSink, type ObservationContext } from "./observation.js";
 import { ModelAttemptUsage } from "./model-observation.js";
@@ -54,6 +55,8 @@ export interface ToolContext {
   toolCallId?: string;
   /** Stable for identical calls within this run. Only idempotent host tools may replay it. */
   idempotencyKey?: string;
+  /** Provided only to the registered compose container; invokes Pi nested calls through guarded tools. */
+  executeTool?: (name: string, args: unknown, signal: AbortSignal) => Promise<unknown>;
 }
 export interface BusinessTool<T extends TSchema = TSchema> {
   name: string;
@@ -119,6 +122,8 @@ export interface RuntimeOptions {
   /** Safe display labels only: never endpoint URLs or credentials. */
   providerInfo?: { mode: string; model: string };
   tools?: readonly BusinessTool<any>[];
+  /** Explicit host allowlist; disabled unless configured and separately permissioned. */
+  codemode?: CodemodeConfig;
   /** Additional deny-capable host policy, after the permission check. */
   authorize?: (request: AuthorizationRequest) => boolean | Promise<boolean>;
   systemPrompt?: string;
@@ -162,6 +167,7 @@ export interface QueuedInputResult {
   durable: false;
 }
 interface ActiveRun {
+  pendingTools?: Set<Promise<unknown>>;
   id: string;
   principal: Principal;
   abort: AbortController;
@@ -243,6 +249,8 @@ export class PidaRuntime {
   private readonly limits;
   private readonly options: RuntimeOptions;
   private readonly resources: AgentResources;
+  private readonly composeTool?: BusinessTool;
+  private readonly pendingTools = new Map<Promise<unknown>, string>();
   constructor(options: RuntimeOptions) {
     this.options = { ...options, workspaceDir: resolve(options.workspaceDir ?? process.cwd()), tools: [...(options.tools ?? [])] };
     this.resources = new AgentResources({
@@ -251,6 +259,12 @@ export class PidaRuntime {
     });
     const skillTool = this.resources.skillTool();
     if (skillTool) this.options.tools = [...this.options.tools!, skillTool];
+    if (options.codemode) {
+      const config = normalizeCodemodeConfig(options.codemode);
+      this.options.codemode = config;
+      this.composeTool = createProgramComposeTool(config, this.options.tools!);
+      if (this.composeTool) this.options.tools = [...this.options.tools!, this.composeTool];
+    }
     const names = new Set<string>();
     for (const tool of this.options.tools!) {
       if (
@@ -285,8 +299,8 @@ export class PidaRuntime {
       outputRetries: options.maxOutputRetries ?? 1,
       idleMs: positive(options.httpIdleTimeoutMs, Math.min(30_000, options.maxRunMs ?? 60_000)),
       providerRetries: options.maxProviderRetries ?? 2,
-      retryBaseMs: positive(options.retryBaseDelayMs, 1000),
-      retryMaxMs: positive(options.retryMaxDelayMs, 10_000),
+      retryBaseMs: options.retryBaseDelayMs === 0 ? 0 : positive(options.retryBaseDelayMs, 1000),
+      retryMaxMs: options.retryMaxDelayMs === 0 ? 0 : positive(options.retryMaxDelayMs, 10_000),
     };
     if (!Number.isInteger(this.limits.providerRetries) || this.limits.providerRetries < 0 || this.limits.providerRetries > 5 || this.limits.retryMaxMs < this.limits.retryBaseMs) throw new Error("Invalid provider retry limits");
     if (![0, 1, 2].includes(this.limits.outputRetries)) throw new Error("Invalid output retry limit");
@@ -360,8 +374,9 @@ export class PidaRuntime {
         label: tool.name,
         description: tool.description,
         parameters: tool.parameters,
-        executionMode: "sequential",
-        execute: async (callId, args, signal) => {
+        executionMode: this.composeTool && tool !== this.composeTool && tool.effect === "read" ? "parallel" : "sequential",
+        ...(tool === this.composeTool ? { exposure: "model-only" as const, reachesTools: () => this.options.codemode!.tools ?? [] } : {}),
+        execute: async (callId, args, signal, _onUpdate, piContext) => {
           const run = record.active;
           if (!run) throw new Error("NO_ACTIVE_RUN");
           const combined = signal
@@ -379,13 +394,13 @@ export class PidaRuntime {
             const allowed =
               run.principal.permissions.includes(tool.permission) &&
               (!this.options.authorize ||
-                (await this.options.authorize({
+                (await abortable(Promise.resolve().then(() => this.options.authorize!({
                   principal: run.principal,
                   toolName: tool.name,
                   args,
                   sessionId: id,
                   signal: combined,
-                })));
+                })), combined)));
             combined.throwIfAborted();
             if (!allowed) {
               run.status = "failed";
@@ -400,14 +415,27 @@ export class PidaRuntime {
                 throw new PidaError(code, 409);
               }
             }
-            const value = await tool.execute(args, {
+            const task = Promise.resolve().then(() => { combined.throwIfAborted(); return tool.execute(args, {
               principal: run.principal,
               sessionId: id,
               runId: run.id,
               signal: combined,
               toolCallId: callId,
               ...(receipt ? { idempotencyKey: receipt.operationKey } : {}),
-            });
+              ...(tool === this.composeTool ? { executeTool: async (name: string, input: unknown, nestedSignal: AbortSignal) => {
+                combined.throwIfAborted(); nestedSignal.throwIfAborted();
+                if (record.active !== run || !piContext?.executeTool || name === this.composeTool!.name || !this.options.codemode!.tools?.includes(name)) throw new Error("CODEMODE_TOOL_UNAVAILABLE");
+                const outcome = await piContext.executeTool(name, input, { signal: AbortSignal.any([combined, nestedSignal]) });
+                if (outcome.isError) throw new Error("COMPOSE_NESTED_TOOL_FAILED");
+                const text = outcome.result.content.filter(part => part.type === "text").map(part => part.text).join("\n");
+                return JSON.parse(text);
+              } } : {}),
+            }); });
+            this.pendingTools.set(task, id); (run.pendingTools ??= new Set()).add(task);
+            const settled = () => { this.pendingTools.delete(task); run.pendingTools!.delete(task); };
+            void task.then(settled, settled);
+            // The compose container drains Pi nested outcomes after cancelling its worker.
+            const value = tool === this.composeTool ? await task : await abortable(task, combined);
             combined.throwIfAborted();
             const text = JSON.stringify(value ?? null);
             if (text.length > 32_768) throw new Error("TOOL_RESULT_TOO_LARGE");
@@ -450,7 +478,7 @@ export class PidaRuntime {
             }
             if (!run.status) {
               run.status = "failed";
-              run.code = error instanceof PidaError && /^(EFFECT_[A-Z_]+|TOOL_REPLAY_BLOCKED|UI_REVISION_CONFLICT|UI_[A-Z_]+|INVALID_HTML|FILE_TOO_LARGE|WORKSPACE_TOO_LARGE|TEST_FAILED)$/.test(error.code)
+              run.code = error instanceof PidaError && /^(EFFECT_[A-Z_]+|COMMAND_[A-Z_]+|PROJECT_COMMAND_ACTIVE|TOOL_REPLAY_BLOCKED|UI_REVISION_CONFLICT|UI_[A-Z_]+|INVALID_HTML|FILE_TOO_LARGE|WORKSPACE_TOO_LARGE|TEST_FAILED)$/.test(error.code)
                 ? error.code : "TOOL_FAILED";
             }
             throw new Error(run.code ?? "TOOL_FAILED");
@@ -595,7 +623,7 @@ export class PidaRuntime {
   assertIdle(): void {
     if (this.closed) throw new PidaError("RUNTIME_CLOSED", 503);
     if (
-      this.pendingSessions ||
+      this.pendingSessions || this.pendingTools.size ||
       [...this.sessions.values()].some((r) => r.active || r.deleting)
     )
       throw new PidaError("PROVIDER_BUSY", 409);
@@ -750,6 +778,8 @@ export class PidaRuntime {
     const p = principalCopy(principal), saved = this.sessions.get(id)?.saved ?? this.store?.get(id);
     if (!saved || saved.owner !== p.id) throw new PidaError("SESSION_NOT_FOUND", 404);
   }
+  /** Check durable session ownership without creating a model/provider session. */
+  assertSessionOwner(id: string, principal: Principal): void { this.ownedArchive(id, principal); }
   listRuns(id: string, principal: Principal): string[] { this.ownedArchive(id, principal); return this.observations.list(id); }
   exportRun(id: string, runId: string, principal: Principal): ObservationBundle {
     this.ownedArchive(id, principal);
@@ -764,7 +794,7 @@ export class PidaRuntime {
   reconcileEffect(id: string, principal: Principal, effectId: string, state: "applied" | "not_applied"): void {
     this.ownedArchive(id, principal);
     if (!principal.permissions.includes("pida:recover")) throw new PidaError("FORBIDDEN", 403);
-    if (this.sessions.get(id)?.active) throw new PidaError("SESSION_BUSY", 409);
+    if (this.sessions.get(id)?.active || [...this.pendingTools.values()].includes(id)) throw new PidaError("SESSION_BUSY", 409);
     if (!["applied", "not_applied"].includes(state)) throw new PidaError("INVALID_EFFECT_STATE", 400);
     try { this.effects.settle(id, effectId, state); } catch { throw new PidaError("EFFECT_PERSISTENCE_FAILED", 500); }
   }
@@ -834,8 +864,8 @@ export class PidaRuntime {
     if (typeof prompt !== "string" || !prompt.trim() || prompt.length > 16_000)
       throw new PidaError("INVALID_PROMPT", 400);
     if (record.deleting) throw new PidaError("SESSION_NOT_FOUND", 404);
-    if (record.active) throw new PidaError("SESSION_BUSY", 409);
-    if (this.options.singleWriter && [...this.sessions.values()].some(session => session.active))
+    if (record.active || [...this.pendingTools.values()].includes(id)) throw new PidaError("SESSION_BUSY", 409);
+    if (this.options.singleWriter && (this.pendingTools.size > 0 || [...this.sessions.values()].some(session => session.active)))
       throw new PidaError("WORKSPACE_BUSY", 409);
     if (record.runs >= this.limits.runs)
       throw new PidaError("SESSION_RUN_LIMIT", 429);
@@ -902,6 +932,7 @@ export class PidaRuntime {
         ...metadata,
         ...(extra.toolName ? { tool_name: extra.toolName } : {}),
         ...(extra.toolCallId ? { tool_call_id: extra.toolCallId } : {}),
+        ...(extra.parentToolCallId ? { parent_tool_call_id: extra.parentToolCallId } : {}),
         ...(extra.status ? { status: extra.status } : {}), ...(extra.code ? { code: extra.code } : {}),
       });
       if (publish) emit({ type: "trace", trace: { ...event } });
@@ -989,7 +1020,7 @@ export class PidaRuntime {
       }
       if (event.type === "tool_execution_start") {
         run.clearProviderIdle?.();
-        trace("tool_started", { toolName: event.toolName, toolCallId: event.toolCallId });
+        trace("tool_started", { toolName: event.toolName, toolCallId: event.toolCallId, ...(event.parentToolCallId ? { parentToolCallId: event.parentToolCallId } : {}) });
         if (["workspace_test", "ui_check"].includes(event.toolName)) this.observe(id, run, "verification_started", { tool_call_id: event.toolCallId });
       }
       if (event.type === "tool_execution_end") {
@@ -998,6 +1029,7 @@ export class PidaRuntime {
         trace(event.isError ? "tool_failed" : "tool_completed", {
           toolName: event.toolName,
           toolCallId: event.toolCallId,
+          ...(event.parentToolCallId ? { parentToolCallId: event.parentToolCallId } : {}),
           ...(classified ? { code: classified } : {}),
         });
         if (event.isError && !classified && !run.status && !run.outputTruncated) {
@@ -1130,14 +1162,18 @@ export class PidaRuntime {
     emit({ type: "trace", trace: { ...finalTrace } });
     emit({ type: "result", result });
     return result;
-    } finally { releaseLease?.(); }
+    } finally {
+      const pending = [...(run.pendingTools ?? [])];
+      if (pending.length) void Promise.allSettled(pending).then(() => releaseLease?.());
+      else releaseLease?.();
+    }
   }
   /** Compact/transfer only an idle, owned session. Never replay tools during handoff. */
   async compactSession(id: string, principal: Principal, handoff = false): Promise<{ sessionId: string; compacted: boolean }> {
     if (!this.sessions.has(id)) await this.resumeSession(id, principal);
     const record = this.owned(id, principal);
     if (this.closed) throw new PidaError("RUNTIME_CLOSED", 503);
-    if (record.active || record.deleting) throw new PidaError("SESSION_BUSY", 409);
+    if (record.active || record.deleting || [...this.pendingTools.values()].includes(id)) throw new PidaError("SESSION_BUSY", 409);
     if (handoff && this.effects.pending(id).length) throw new PidaError("EFFECT_STATE_UNKNOWN", 409);
     if (!record.pi.messages.length) throw new PidaError("NOTHING_TO_COMPACT", 400);
     const run: ActiveRun = { id: randomUUID(), principal: principalCopy(principal), abort: new AbortController(), toolCalls: 0, turns: 0, resultFailures: new Map(), classifiedCalls: new Map(), taskId: randomUUID(), tokens: 0, cost: 0, usageKnown: true, verification: [], artifacts: new Map() };
@@ -1217,8 +1253,9 @@ export class PidaRuntime {
     }
     if (this.loading.has(id)) await this.resumeSession(id, principal);
     const record = this.owned(id, principal);
-    record.deleting = true;
     await this.cancel(id, principal);
+    if ([...this.pendingTools.values()].includes(id)) throw new PidaError("SESSION_BUSY", 409);
+    record.deleting = true;
     record.pi.dispose();
     this.store?.remove(id);
     this.effects.remove(id); this.observations.remove(id);
@@ -1234,6 +1271,7 @@ export class PidaRuntime {
           r.pi.dispose();
         }),
       );
+      await Promise.allSettled([...this.pendingTools.keys()]);
       this.sessions.clear();
     } finally {
       this.store?.close();

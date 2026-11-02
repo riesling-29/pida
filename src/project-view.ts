@@ -1,5 +1,5 @@
 import { constants, existsSync, lstatSync, readdirSync, realpathSync, statSync } from "node:fs";
-import { mkdir, mkdtemp, open, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, open, rm, utimes, writeFile } from "node:fs/promises";
 import { basename, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
@@ -97,13 +97,17 @@ export class ProjectView {
     } finally { await file.close(); }
   }
   private async metadata(path: string, maxBytes: number) {
+    return (await this.metadataSnapshot(path, maxBytes)).data;
+  }
+  private async metadataSnapshot(path: string, maxBytes: number) {
     const info = lstatSync(path);
     if (!info.isFile() || info.isSymbolicLink() || info.nlink !== 1 || info.size > maxBytes) throw new PidaError("PROJECT_GIT_UNAVAILABLE", 409);
     const handle = await open(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
     try {
+      const timestamp = await handle.stat();
       const buffer = Buffer.alloc(maxBytes + 1), { bytesRead } = await handle.read(buffer, 0, buffer.length, 0);
       if (bytesRead > maxBytes) throw new PidaError("PROJECT_GIT_UNAVAILABLE", 409);
-      return buffer.subarray(0, bytesRead);
+      return { data: buffer.subarray(0, bytesRead), mtimeSeconds: Math.floor(timestamp.mtimeMs / 1000) };
     } finally { await handle.close(); }
   }
   private async gitDirectory() {
@@ -161,9 +165,14 @@ export class ProjectView {
       let metadataBytes = 0;
       for (const name of ["index", ...readdirSync(repo.directory).filter(name => /^sharedindex\.[a-f0-9]{40,64}$/.test(name))]) {
         const file = join(repo.directory, name); if (!existsSync(file)) continue;
-        const data = await this.metadata(file, 8 * 1024 * 1024); metadataBytes += data.length;
+        const { data, mtimeSeconds } = await this.metadataSnapshot(file, 8 * 1024 * 1024); metadataBytes += data.length;
         if (metadataBytes > 16 * 1024 * 1024) throw new PidaError("PROJECT_GIT_UNAVAILABLE", 409);
-        await writeFile(join(temporary, name), data);
+        const copy = join(temporary, name);
+        await writeFile(copy, data);
+        // Git's racy-index check depends on the index timestamp. A newer copy can
+        // hide same-size edits made in the source index's timestamp granularity.
+        // Round down so copying never weakens that check, including split indexes.
+        await utimes(copy, mtimeSeconds, mtimeSeconds);
       }
       const objects = join(repo.common, "objects");
       if (!lstatSync(objects).isDirectory() || lstatSync(objects).isSymbolicLink()) throw denied();

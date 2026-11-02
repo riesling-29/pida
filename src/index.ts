@@ -22,3 +22,7 @@ export * from "./program-proxy.js";
 export * from "./program-registry.js";
 export * from "./extensions.js";
 export * from "./composition.js";
+export * from "./commands.js";
+export * from "./process-executor.js";
+
+export { normalizeCodemodeConfig, composePermission, type CodemodeConfig, type ResolvedCodemodeConfig } from "./codemode.js";
