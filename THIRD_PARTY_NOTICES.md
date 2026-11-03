@@ -105,6 +105,10 @@ Unmodified `systematic-debugging` and `verification-before-completion` skill tex
 
 Playwright and playwright-core 1.64.1 are optional dependencies under Apache-2.0. Their packages retain LICENSE/NOTICE. Browser binaries are installed separately by the deployment administrator.
 
+## PersonaSubstrate / Vera continuity contracts
+
+`src/vera-contract.ts` reuses the owner's closed `Binding` and `VeraContext` JSON Schema definitions from the authorized cross-app development source snapshot. Source paths and exact SHA-256 pins are in that generated file; the executable consumer source lock is in `fixtures/cr-integration/consumer-lock.json`. Synthetic context provenance is in `test/fixtures/vera/source.json`. No Persona runtime, canonical database, credentials or service code is bundled in Pida. The opt-in integration probe imports verified temporary copies of a separately supplied checkout.
+
 
 ## DeepSeek Harness output collector
 

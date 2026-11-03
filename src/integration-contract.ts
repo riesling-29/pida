@@ -26,6 +26,8 @@ const payload = object(Object.fromEntries(Object.entries({
   // A loaded descriptor can contain 32 revision refs. Its JSON structure is checked below.
   descriptor: Type.String({ minLength: 2, maxLength: 8192 }),
   inclusion_scope: Type.Literal("pi-logical-context"),
+  input_digest: hash, input_digest_scheme: Type.Literal("source-hmac-sha256"),
+  authorization: Type.Union([Type.Literal("current-provider-check"), Type.Literal("snapshot-only")]),
   source: Type.Union([Type.Literal("provider"), Type.Literal("summarization")]), max_attempts: count, delay_ms: nonnegative,
   allowed: Type.Boolean(), success: Type.Boolean(),
 }).map(([key, schema]) => [key, Type.Optional(schema)])));
@@ -65,7 +67,8 @@ export function validateObservationBundle(input: unknown): { valid: boolean; iss
     requestEvents.set(event.payload.request_id, identity);
     requests.set(event.payload.request_id, event.payload.attempt);
   }
-  const first = bundle.events[0];
+  const first = bundle.events[0], precedingRequests = new Set<string>();
+  let loadedDescriptor: string | undefined;
   for (const event of bundle.events) {
     const key = event.source_id + "/" + event.source_event_id, encoded = canonical(event);
     if (seen.has(key)) { if (seen.get(key) !== encoded) issues.add("EVENT_ID_CONFLICT"); else duplicates.push(event.source_event_id); continue; }
@@ -76,17 +79,28 @@ export function validateObservationBundle(input: unknown): { valid: boolean; iss
     if (event.sequence_number !== ++sequence) issues.add("SEQUENCE_GAP");
     if (event.payload_digest !== sha256(canonical(event.payload))) issues.add("PAYLOAD_DIGEST_MISMATCH");
     if (!Number.isFinite(Date.parse(event.occurred_at))) issues.add("INVALID_TIMESTAMP");
-    if (["context_snapshot_loaded", "context_input_included", "context_input_omitted"].includes(event.activity) || event.payload.descriptor !== undefined) {
+    if (event.activity === "model_request" && typeof event.payload.request_id === "string") precedingRequests.add(event.payload.request_id);
+    if (["context_snapshot_loaded", "context_input_included", "context_input_omitted", "context_summary_authorized"].includes(event.activity) || event.payload.descriptor !== undefined) {
       let descriptor: unknown;
       try { descriptor = JSON.parse(event.payload.descriptor ?? ""); } catch { /* invalid below */ }
-      if (!["context_snapshot_loaded", "context_input_included", "context_input_omitted"].includes(event.activity) || !validContextDescriptor(descriptor, true)) issues.add("CONTEXT_DESCRIPTOR_INVALID");
+      if (!["context_snapshot_loaded", "context_input_included", "context_input_omitted", "context_summary_authorized"].includes(event.activity) || !validContextDescriptor(descriptor, true)) issues.add("CONTEXT_DESCRIPTOR_INVALID");
+      const external = (descriptor as any)?.personaBinding?.externalContext;
+      if (external && (external.runId !== event.run_id || external.taskId !== event.task_id)) issues.add("CONTEXT_BINDING_MISMATCH");
+      if (event.activity === "context_snapshot_loaded") loadedDescriptor = event.payload.descriptor;
     }
+    if (event.activity === "context_summary_authorized" && (!event.payload.request_id || !event.payload.attempt || event.payload.source !== "summarization"
+      || !event.payload.input_digest || event.payload.input_digest_scheme !== "source-hmac-sha256" || event.payload.authorization !== "current-provider-check"
+      || event.payload.fingerprint_scope !== event.source_id || event.payload.descriptor !== loadedDescriptor)) issues.add("CONTEXT_SUMMARY_BINDING_INVALID");
     if (["context_input_included", "context_input_omitted"].includes(event.activity)) {
       const requestId = event.payload.request_id;
       const key = String(requestId);
       if (typeof requestId !== "string" || !requestId || typeof event.payload.attempt !== "number" ||
-          event.payload.inclusion_scope !== "pi-logical-context" || !requests.has(requestId) ||
+          event.payload.inclusion_scope !== "pi-logical-context" || !precedingRequests.has(requestId) ||
           requests.get(requestId) !== event.payload.attempt || contextReceipts.has(key)) issues.add("CONTEXT_RECEIPT_INVALID");
+      if (event.payload.input_digest !== undefined || event.payload.input_digest_scheme !== undefined || event.payload.authorization !== undefined) {
+        if (!event.payload.input_digest || event.payload.input_digest_scheme !== "source-hmac-sha256" || !event.payload.authorization
+          || event.payload.fingerprint_scope !== event.source_id || event.payload.descriptor !== loadedDescriptor) issues.add("CONTEXT_INPUT_BINDING_INVALID");
+      }
       contextReceipts.add(key);
     }
   }

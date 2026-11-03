@@ -2,7 +2,7 @@
 export const observationSchema = "pida.observation/0.1-draft" as const;
 export const manifestSchema = "pida.result/0.1-draft" as const;
 /** Validator capability revision; existing persisted event/bundle identities are unchanged. */
-export const observationContractRevision = "pida.export-validation/0.2" as const;
+export const observationContractRevision = "pida.export-validation/0.3" as const;
 /** Closed metadata vocabulary. Descriptor is a bounded JSON-encoded LoadedRunContext,
  * validated structurally by the exporter contract, not arbitrary context text. */
 export interface ObservationPayload {
@@ -19,6 +19,8 @@ export interface ObservationPayload {
   handoff?: boolean; operation?: string; compacted?: boolean; target_session_id?: string;
   interrupted?: boolean; detected_on_restore?: boolean; descriptor?: string;
   inclusion_scope?: "pi-logical-context";
+  input_digest?: string; input_digest_scheme?: "source-hmac-sha256";
+  authorization?: "current-provider-check" | "snapshot-only";
   source?: "provider" | "summarization"; max_attempts?: number; delay_ms?: number; allowed?: boolean; success?: boolean;
 }
 export interface ArtifactRef { id: string; path: string; sha256: string; bytes: number }

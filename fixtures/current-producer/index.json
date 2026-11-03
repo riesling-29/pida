@@ -1,13 +1,13 @@
 {
-  "validator_revision": "pida.export-validation/0.2",
-  "producer_package_version": "0.8.4",
+  "validator_revision": "pida.export-validation/0.3",
+  "producer_package_version": "0.8.5",
   "profile": "protocol",
   "input_data": "synthetic",
   "model": "Pi faux scripted",
   "mcp": "actual stdio JSON-RPC fixture",
   "actual_schumpeter_integration": "NOT_RUN",
   "fixture": "context-mcp-retry.json",
-  "sha256": "ddf104ef5ee3b5e692805b281900ca7e6138ebda13c4cd426f22dd550349295f",
+  "sha256": "6f86ac7f5d366bc66a3e718ff1c3f30e3204d7c91b58ac4f256457bd96dc6805",
   "validation": {
     "valid": true,
     "issues": [],
@@ -16,18 +16,19 @@
   "negative_cases": [
     {
       "fixture": "invalid-context-descriptor.json",
-      "sha256": "a6f7cd247c3b83d2592bf808d9da7dd7fe9ac5eacfafc1d511f07083e5591efc",
+      "sha256": "f1363db6af473e116a3414cdd2af3f36ded0119eab28236acc8238ea6e73028f",
       "validation": {
         "valid": false,
         "issues": [
-          "CONTEXT_DESCRIPTOR_INVALID"
+          "CONTEXT_DESCRIPTOR_INVALID",
+          "CONTEXT_INPUT_BINDING_INVALID"
         ],
         "duplicateEventIds": []
       }
     },
     {
       "fixture": "conflicting-event-id.json",
-      "sha256": "7001bc2f3f73069519f68fe430135e0605514fe2a3f2aeee47d64f8091223452",
+      "sha256": "00351ef065f9894e8814e7fddcf424201b0d66761cd5ecd0ef5d731efe7765ec",
       "validation": {
         "valid": false,
         "issues": [

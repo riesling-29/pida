@@ -173,6 +173,7 @@ export interface QueuedInputResult {
 }
 interface ActiveRun {
   contextInput?: { content: string; descriptor: LoadedRunContext };
+  personaSnapshot?: RunContextSnapshot;
   pendingTools?: Set<Promise<unknown>>;
   id: string;
   principal: Principal;
@@ -194,6 +195,7 @@ interface ActiveRun {
   requestId?: string;
   requestPrepared?: boolean;
   summarizing?: boolean;
+  summaryAttempts?: number;
   attempts?: number;
   attempt?: { startedAt: number; firstOutputMs?: number; usage: ModelAttemptUsage };
   inspectedAtEnd?: boolean;
@@ -560,6 +562,13 @@ export class PidaRuntime {
           const run = record.active, effectiveModel = result?.model ?? request.model;
           const thinking = result?.thinkingLevel ?? request.thinkingLevel;
           let context = result?.context ?? request.context;
+          // Do not re-send superseded host projections as if still selected. Session
+          // history remains intact; only this request's managed projection changes.
+          if (run.contextInput) {
+            const messages = context.messages.filter(message => !(message.role === "custom" && "customType" in message
+              && message.customType === "pida-run-context" && message.content !== run.contextInput!.content));
+            if (messages.length !== context.messages.length) { context = { ...context, messages }; result = { ...result, context }; }
+          }
           // Pi installs its initial system/tool baseline when the first prompt starts.
           // A host custom context queued earlier must not displace that leading baseline
           // (Responses otherwise serializes initial tools as a later delta).
@@ -604,9 +613,41 @@ export class PidaRuntime {
         return result ?? undefined;
       };
       const piStream = session.agent.streamFunction;
-      session.agent.streamFunction = (model, context, options) => {
+      session.agent.streamFunction = async (model, context, options) => {
         const run = record.active;
         run?.abort.signal.throwIfAborted();
+        if (this.options.personaProvider?.authorizeInput) {
+          // Pin the exact objects fingerprinted below across asynchronous authority checks.
+          context = structuredClone(context); model = structuredClone(model);
+        }
+        if (this.options.personaProvider?.authorizeInput && (!run || !run.personaSnapshot)) {
+          if (run) { run.status = "failed"; run.code = "PERSONA_INPUT_BINDING_MISSING"; }
+          throw new PidaError("PERSONA_INPUT_BINDING_MISSING", 403);
+        }
+        if (run?.summarizing && this.options.personaProvider?.authorizeInput) {
+          // Summary generation is a model call too. Recheck authority, but never
+          // label its serialized history as inclusion of an execution reference slot.
+          const requestId = randomUUID(), attempt = run.summaryAttempts = (run.summaryAttempts ?? 0) + 1;
+          const inputDigest = this.observations.fingerprint({ model: { provider: model.provider, id: model.id, api: model.api }, context });
+          try {
+            await abortable(Promise.resolve().then(() => this.options.personaProvider!.authorizeInput!({
+              principal: run.principal, agentId: this.options.personaProvider!.agentId, sessionId: id, taskId: run.taskId,
+              runId: run.id, signal: run.abort.signal, snapshot: run.personaSnapshot!, requestId, attempt,
+              inputDigest, fingerprintScope: this.observations.sourceId, modelId: model.id, api: model.api,
+            })), run.abort.signal);
+            run.abort.signal.throwIfAborted();
+          } catch {
+            if (!run.status) { run.status = "failed"; run.code = "PERSONA_INPUT_NOT_AUTHORIZED"; }
+            throw new PidaError("PERSONA_INPUT_NOT_AUTHORIZED", 403);
+          }
+          if (!this.observe(id, run, "context_summary_authorized", { request_id: requestId, attempt, source: "summarization",
+            input_digest: inputDigest, input_digest_scheme: "source-hmac-sha256", fingerprint_scope: this.observations.sourceId,
+            authorization: "current-provider-check", descriptor: JSON.stringify({ ...run.personaSnapshot!.descriptor,
+              digest: this.observations.fingerprint(run.personaSnapshot!.text) }) })) {
+            run.status = "failed"; run.code = "PERSONA_INPUT_RECEIPT_UNAVAILABLE";
+            throw new PidaError("PERSONA_INPUT_RECEIPT_UNAVAILABLE", 500);
+          }
+        }
         // Pi reuses this public stream hook for its internal compaction summary,
         // which has no agent prepareRequest and is not an execution input receipt.
         if (run?.contextInput && !run.summarizing) {
@@ -620,11 +661,39 @@ export class PidaRuntime {
           const selected = run.contextInput;
           const included = context.messages.some(message => message.role === "user" && (typeof message.content === "string"
             ? message.content === selected.content : message.content.some(block => block.type === "text" && block.text === selected.content)));
-          this.observe(id, run, included ? "context_input_included" : "context_input_omitted", { request_id: run.requestId, attempt: run.attempts,
-            descriptor: JSON.stringify(selected.descriptor), inclusion_scope: "pi-logical-context" });
           if (!included && this.options.personaProvider) {
+            this.observe(id, run, "context_input_omitted", { request_id: run.requestId, attempt: run.attempts,
+              descriptor: JSON.stringify(selected.descriptor), inclusion_scope: "pi-logical-context" });
             run.status = "failed"; run.code = "PERSONA_CONTEXT_OMITTED";
             throw new PidaError("PERSONA_CONTEXT_OMITTED", 500);
+          }
+          // Hash only the actual converted logical input. Source-keyed fingerprints
+          // avoid publishing prompt text or an unsalted low-entropy prompt hash.
+          const inputDigest = this.observations.fingerprint({ model: { provider: model.provider, id: model.id, api: model.api }, context });
+          if (included && this.options.personaProvider?.authorizeInput) {
+            try {
+              await abortable(Promise.resolve().then(() => this.options.personaProvider!.authorizeInput!({
+                principal: run.principal, agentId: this.options.personaProvider!.agentId,
+                sessionId: id, taskId: run.taskId, runId: run.id, signal: run.abort.signal,
+                snapshot: run.personaSnapshot!, requestId: run.requestId!, attempt: run.attempts!,
+                inputDigest, fingerprintScope: this.observations.sourceId, modelId: model.id, api: model.api,
+              })), run.abort.signal);
+              run.abort.signal.throwIfAborted();
+            } catch {
+              if (!run.status) { run.status = "failed"; run.code = "PERSONA_INPUT_NOT_AUTHORIZED"; }
+              this.observe(id, run, "context_input_rejected", { request_id: run.requestId, attempt: run.attempts, code: run.code ?? "PERSONA_INPUT_NOT_AUTHORIZED" });
+              throw new PidaError("PERSONA_INPUT_NOT_AUTHORIZED", 403);
+            }
+          }
+          run.abort.signal.throwIfAborted();
+          const recorded = this.observe(id, run, included ? "context_input_included" : "context_input_omitted", {
+            request_id: run.requestId, attempt: run.attempts, descriptor: JSON.stringify(selected.descriptor), inclusion_scope: "pi-logical-context",
+            input_digest: inputDigest, input_digest_scheme: "source-hmac-sha256", fingerprint_scope: this.observations.sourceId,
+            authorization: this.options.personaProvider?.authorizeInput ? "current-provider-check" : "snapshot-only",
+          });
+          if (!recorded && this.options.personaProvider?.authorizeInput) {
+            run.status = "failed"; run.code = "PERSONA_INPUT_RECEIPT_UNAVAILABLE";
+            throw new PidaError("PERSONA_INPUT_RECEIPT_UNAVAILABLE", 500);
           }
         }
         return piStream(model, context, options);
@@ -832,9 +901,9 @@ export class PidaRuntime {
     const runs = new Map(s.traces.filter(e => e.toolCallId).map(e => [e.toolCallId!, e.runId]));
     return { sessionId: id, ...projectToolDetails(s.pi.messages, allowed, runs, s.active?.id) };
   }
-  private observe(sessionId: string, run: ActiveRun, activity: string, payload: Record<string, string | number | boolean | null> = {}, refs: { artifacts?: string[]; evidence?: string[] } = {}): void {
-    try { this.observations.record({ sessionId, taskId: run.taskId, runId: run.id }, activity, payload, refs); }
-    catch { run.evidenceFailed = true; }
+  private observe(sessionId: string, run: ActiveRun, activity: string, payload: Record<string, string | number | boolean | null> = {}, refs: { artifacts?: string[]; evidence?: string[] } = {}): boolean {
+    try { const recorded = this.observations.record({ sessionId, taskId: run.taskId, runId: run.id }, activity, payload, refs); if (!recorded) run.evidenceFailed = true; return recorded; }
+    catch { run.evidenceFailed = true; return false; }
   }
   private ownedArchive(id: string, principal: Principal): void {
     const p = principalCopy(principal), saved = this.sessions.get(id)?.saved ?? this.store?.get(id);
@@ -1122,7 +1191,7 @@ export class PidaRuntime {
               : this.options.contextForRun!(request)), run.abort.signal);
           } catch { throw new PidaError(this.options.personaProvider ? "PERSONA_CONTEXT_FAILED" : "RUN_CONTEXT_FAILED", 500); }
           run.abort.signal.throwIfAborted();
-          if (this.options.personaProvider) validatePersonaSnapshot(selected, this.options.personaProvider);
+          if (this.options.personaProvider) { validatePersonaSnapshot(selected, this.options.personaProvider); run.personaSnapshot = selected; }
           const context = typeof selected === "string" || selected === undefined ? selected : selected?.text;
           const descriptor = typeof selected === "object" && selected !== null ? selected.descriptor : undefined;
           if (selected !== undefined && typeof selected !== "string" && (!selected || typeof selected.text !== "string" || Object.keys(selected).some(k => !["text", "descriptor"].includes(k)) || !validContextDescriptor(descriptor))) throw new PidaError("RUN_CONTEXT_INVALID", 500);
@@ -1227,7 +1296,9 @@ export class PidaRuntime {
       record.saved.lastStatus = result.status;
     }
     const manifest = resultManifest({ taskId: run.taskId, runId: run.id, sessionId: id, agentId: this.observations.agentId, status: result.status, code: result.code, version: runtimeVersion, snapshot: run.snapshot, artifacts: [...run.artifacts.values()], inspectedAtEnd: run.inspectedAtEnd, verification: run.verification,
-      limits: ["PI_INTERNAL_REQUEST_USAGE_NOT_EXPORTED", ...(this.options.evidenceLimits ?? []), ...(!this.options.pricingVerified ? ["COST_UNKNOWN"] : []), ...(result.recovery ? ["EFFECT_STATE_REQUIRES_RECONCILIATION"] : []), ...(run.evidenceFailed || result.persistenceError ? ["EVIDENCE_OR_STORAGE_INCOMPLETE"] : [])] });
+      limits: ["PI_INTERNAL_REQUEST_USAGE_NOT_EXPORTED", ...(!this.options.storageDir ? ["CONTEXT_RECEIPTS_VOLATILE"] : []),
+        ...(this.options.personaProvider?.authority === "external" && !this.options.personaProvider.authorizeInput ? ["PERSONA_AUTHORIZATION_SNAPSHOT_ONLY"] : []),
+        ...(this.options.evidenceLimits ?? []), ...(!this.options.pricingVerified ? ["COST_UNKNOWN"] : []), ...(result.recovery ? ["EFFECT_STATE_REQUIRES_RECONCILIATION"] : []), ...(run.evidenceFailed || result.persistenceError ? ["EVIDENCE_OR_STORAGE_INCOMPLETE"] : [])] });
     this.observe(id, run, "run_finished", { status: result.status, code: result.code ?? null, persistence_error: result.persistenceError ?? null });
     this.observations.finish({ sessionId: id, taskId: run.taskId, runId: run.id }, manifest);
     finish();
@@ -1259,6 +1330,13 @@ export class PidaRuntime {
     let compacted = false;
     try {
       this.persist(record);
+      if (this.options.personaProvider?.authorizeInput) {
+        const selected = await abortable(Promise.resolve().then(() => this.options.personaProvider!.resolveContext({ principal: run.principal,
+          agentId: this.options.personaProvider!.agentId, sessionId: id, runId: run.id, taskId: run.taskId, signal: run.abort.signal })), run.abort.signal);
+        validatePersonaSnapshot(selected, this.options.personaProvider);
+        run.personaSnapshot = selected; run.summarizing = true;
+        this.observe(id, run, "context_snapshot_loaded", { descriptor: JSON.stringify({ ...selected.descriptor, digest: this.observations.fingerprint(selected.text) }) });
+      }
       try {
         await record.pi.compact("Preserve the user's goal, explicit requirements, constraints, decisions, completed changes, pending tasks, failed approaches, file paths and current revisions. Clearly distinguish verified outcomes from assumptions. Do not include full source files; re-read them when continuing.");
         compacted = true;

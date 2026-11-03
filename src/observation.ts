@@ -68,7 +68,7 @@ export class ObservationArchive {
     }
     return journal;
   }
-  record(context: ObservationContext, activity: string, payload: Observation["payload"] = {}, refs: { artifacts?: string[]; evidence?: string[] } = {}): void {
+  record(context: ObservationContext, activity: string, payload: Observation["payload"] = {}, refs: { artifacts?: string[]; evidence?: string[] } = {}): boolean {
     const journal = this.journal(context);
     const event: Observation = {
       schema_version: observationSchema, source_id: this.sourceId, source_event_id: randomUUID(), agent_id: this.agentId,
@@ -79,7 +79,7 @@ export class ObservationArchive {
       data_scope: "metadata-only", payload: structuredClone(payload),
     };
     const line = JSON.stringify(event) + "\n";
-    if (journal.events.length >= this.limit || journal.bytes + Buffer.byteLength(line) > 16_777_216) { journal.lost = true; return; }
+    if (journal.events.length >= this.limit || journal.bytes + Buffer.byteLength(line) > 16_777_216) { journal.lost = true; return false; }
     journal.bytes += Buffer.byteLength(line);
     journal.events.push(event);
     try {
@@ -91,10 +91,11 @@ export class ObservationArchive {
       }
     } catch { journal.lost = true; }
     if (this.sink) {
-      if (this.sinkPending >= 64) { this.sinkFailures++; return; }
+      if (this.sinkPending >= 64) { this.sinkFailures++; return !journal.lost; }
       this.sinkPending++;
       Promise.resolve().then(() => this.sink!.write(structuredClone(event))).catch(() => { this.sinkFailures++; }).finally(() => { this.sinkPending--; });
     }
+    return !journal.lost;
   }
   finish(context: ObservationContext, manifest: ResultManifest): void {
     const journal = this.journal(context); journal.manifest = structuredClone(manifest);

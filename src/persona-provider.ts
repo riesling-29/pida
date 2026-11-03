@@ -7,6 +7,11 @@ import { validContextDescriptor, type RunContextSnapshot } from "./run-context.j
 export interface PersonaRequest {
   principal: Principal; agentId: string; sessionId: string; runId: string; taskId: string; signal: AbortSignal;
 }
+/** Actual converted Pi execution input, before provider dispatch. No raw transcript is exported. */
+export interface PersonaInputRequest extends PersonaRequest {
+  snapshot: RunContextSnapshot; requestId: string; attempt: number;
+  inputDigest: string; fingerprintScope: string; modelId: string; api: string;
+}
 export interface PersonaAnalysisRecord {
   kind: "reflection" | "awareness";
   modelKind: "empirical" | "aspirational" | "mandatory";
@@ -28,6 +33,9 @@ export interface PersonaProvider {
   readonly agentId: string;
   readonly authority: "pida-local" | "external";
   resolveContext(request: PersonaRequest): RunContextSnapshot | Promise<RunContextSnapshot>;
+  /** Recheck current grants/expiry/model activation for this pinned snapshot. Must be read-only.
+   * A rejection prevents dispatch; it is not automatically retried. */
+  authorizeInput?(request: PersonaInputRequest): void | Promise<void>;
   appendAnalysis?(request: PersonaAnalysisRequest): PersonaAppendReceipt | Promise<PersonaAppendReceipt>;
 }
 const hex = (v: unknown) => typeof v === "string" && /^[a-f0-9]{64}$/.test(v);

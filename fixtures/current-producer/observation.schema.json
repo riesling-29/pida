@@ -380,6 +380,26 @@
           "type": "string",
           "const": "pi-logical-context"
         },
+        "input_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "input_digest_scheme": {
+          "type": "string",
+          "const": "source-hmac-sha256"
+        },
+        "authorization": {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "current-provider-check"
+            },
+            {
+              "type": "string",
+              "const": "snapshot-only"
+            }
+          ]
+        },
         "source": {
           "anyOf": [
             {
