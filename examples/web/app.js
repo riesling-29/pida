@@ -5,7 +5,7 @@ import { createRunDetails } from "/run-details.js";
 import { createCommands } from "/commands.js";
 import { createAgents } from "/agents.js";
 import { createComposition } from "/composition.js";
-import { PidaClient, explainError } from "/pida-client.js";
+import { PidaClient, explainError, sessionDisplayMessages } from "/pida-client.js";
 const $ = (id) => document.getElementById(id);
 let token = "",
   sessionId,
@@ -207,7 +207,7 @@ async function select(id) {
   $("session-title").title = data.title ?? "대화";
   setDrawer("sessions", false);
   $("messages").replaceChildren();
-  for (const m of data.messages) message(m.role, m.text);
+  for (const m of sessionDisplayMessages(data)) message(m.role, m.text);
   if (!data.messages.length) emptyConversation();
   $("trace").replaceChildren();
   for (const event of activity.events.filter(event => event.runId === run.runId)) renderTrace(event);
@@ -218,22 +218,35 @@ async function select(id) {
 }
 function scheduleSessionPoll() {
   clearTimeout(sessionPoll);
-  if (!connected || !(remoteRunning || running) || !sessionId) return;
+  if (!connected || !sessionId || sessionUnavailable) return;
   const id = sessionId, credential = token, ticket = run.ticket();
   sessionPoll = setTimeout(async () => {
     try {
       const [data, activity] = await Promise.all([client.getSession(id), client.getTrace(id)]);
       if (!connected || sessionId !== id || credential !== token || !run.current(ticket, { revision: true })) return;
-      const repair = run.gap, previousRun = run.runId;
+      const repair = run.gap, previousRun = run.runId, wasRunning = remoteRunning;
       const events = run.snapshot({ ...data, ...(activity.activeRunId ? { activeRunId: activity.activeRunId, running: true } : {}) }, activity.events);
       if (repair || previousRun !== run.runId) { $("trace").replaceChildren(); for (const event of activity.events.filter(row => row.runId === run.runId)) renderTrace(event); }
       else for (const event of events) renderTrace(event);
       remoteRunning = run.running; runDetails.select(id, run.runId);
       if (!running) $("status").textContent = run.running ? "실행 중 · 서버 상태 연결됨" : labels[data.lastStatus] ?? "대기";
-      if (!remoteRunning && !running) { await select(id); await refreshWorkbench(); }
+      if (!running) renderPeerMessages(data);
+      if (wasRunning && !remoteRunning && !running) { await list(); await refreshWorkbench(); }
     } catch (error) { if (connected && sessionId === id && credential === token && run.current(ticket)) { problem(error); $("status").textContent = "서버 실행 상태 확인 중"; } }
     finally { if (connected && sessionId === id && credential === token && run.current(ticket)) { controls(); scheduleSessionPoll(); } }
   }, 1800);
+}
+let peerMessageSignature = "";
+function renderPeerMessages(data) {
+  const messages = sessionDisplayMessages(data), signature = JSON.stringify([data.sessionId, messages]);
+  if (signature === peerMessageSignature) return;
+  peerMessageSignature = signature;
+  const target = $("messages"), follow = target.scrollHeight - target.scrollTop - target.clientHeight < 80;
+  const offset = target.scrollTop;
+  target.replaceChildren();
+  for (const m of messages) message(m.role, m.text);
+  if (!messages.length) emptyConversation();
+  target.scrollTop = follow ? target.scrollHeight : offset;
 }
 async function connect() {
   token = $("token").value;
@@ -270,8 +283,10 @@ async function connect() {
   remoteRunning = false;
   $("token").value = "";
   const sessions = await list();
-  const saved = sessionStorage.getItem("pida-session");
-  const recent = sessions.find((s) => s.sessionId === saved) ?? sessions[0];
+  const requested = launchSession;
+  const saved = requested ?? sessionStorage.getItem("pida-session");
+  launchSession = undefined;
+  const recent = requested ? { sessionId: requested } : sessions.find((s) => s.sessionId === saved) ?? sessions[0];
   if (recent) { try { await select(recent.sessionId); } catch (error) { problem(error); if (error.status === 401) throw error; } }
   else emptyConversation();
   // A failed model/session restore in one surface does not disable independent agent management.
@@ -343,7 +358,7 @@ $("cancel").onclick = async () => {
   const id = sessionId, ticket = run.ticket();
   run.cancel(); controls();
   try {
-    await client.cancel(id);
+    await client.cancel(id, ticket.runId);
     if (!run.current(ticket, { run: true })) return;
     $("status").textContent = "중단 요청을 전달했습니다. 최종 상태를 기다리고 있습니다.";
     if (!running) await select(id);
@@ -842,20 +857,24 @@ document.addEventListener("keydown", e => {
   if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === "KeyN" && !$("new-session").disabled) { e.preventDefault(); $("new-session").click(); }
   if (e.key === "Escape") { setDrawer("sessions", false); setDrawer("inspector", false); }
 });
-let initialSetup = false;
+let initialSetup = false, launchSession;
 function consumeLaunch() {
   const fragment = new URLSearchParams(location.hash.slice(1));
   const initial = fragment.get("token");
+  const requestedSession = fragment.get("session");
+  launchSession = requestedSession && /^[a-f0-9-]{36}$/.test(requestedSession) ? requestedSession : undefined;
   initialSetup = fragment.get("setup") === "1";
   if (location.hash)
     history.replaceState(null, "", location.pathname + location.search);
   if (initial && connected && initial === token) {
+    if (launchSession) { const id = launchSession; launchSession = undefined; action(() => select(id)); document.querySelector('#mode-tabs [data-mode="workspace"]')?.click(); }
     if (initialSetup) openSettings();
     return;
   }
   if (initial) {
     $("token").value = initial;
-    action(connect);
+    const openSession = !!launchSession;
+    action(async () => { await connect(); if (openSession) document.querySelector('#mode-tabs [data-mode="workspace"]')?.click(); });
   }
 }
 controls();

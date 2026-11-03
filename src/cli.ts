@@ -27,6 +27,7 @@ const help = `Pida — reusable local agent workspace
   pida setup [directory] [--no-open]    Initialize and open easy model setup
   pida configure [directory]            Open easy model setup (--terminal for advanced wizard)
   pida start [directory] [--open]        Serve web UI and API; save conversations
+  pida tui [directory] [--session ID | --new]  Attach terminal UI to the same running host
   pida open [directory]                 Open the UI with local authentication
   pida token [directory]                Explicitly print the local UI token
   pida programs scan ROOT              Discover declared repository programs without execution
@@ -51,13 +52,13 @@ Default directory: current working directory. Requires Node 22.19+.
 The default mock demonstrates LOT-001/LOT-002; it is not a language model.
 `;
 
-async function openBrowser(directory: string, setup = false) {
+async function openBrowser(directory: string, setup = false, sessionId?: string) {
   const config = readConfig(directory),
     token = workspaceEnvironment(directory).PIDA_API_TOKEN;
   if (!token || token.length < 32)
     throw new Error("Missing local token; run pida doctor.");
   // Fragment never reaches the HTTP server. The UI immediately removes it from browser history.
-  const url = `http://127.0.0.1:${config.port}/#token=${encodeURIComponent(token)}${setup ? "&setup=1" : ""}`;
+  const url = `http://127.0.0.1:${config.port}/#token=${encodeURIComponent(token)}${setup ? "&setup=1" : ""}${sessionId ? "&session=" + encodeURIComponent(sessionId) : ""}`;
   const command =
     process.platform === "win32"
       ? "rundll32"
@@ -248,6 +249,37 @@ async function main() {
   }
   const directory = resolve(args.find((a) => !a.startsWith("--")) ?? ".");
   switch (command) {
+    case "tui": {
+      let selected = ".", sessionId: string | undefined, newSession = false, directorySeen = false;
+      for (let i = 0; i < args.length; i++) {
+        const arg = args[i]!;
+        if (arg === "--new") newSession = true;
+        else if (arg === "--session") { sessionId = args[++i]; if (!sessionId || !/^[a-f0-9-]{36}$/.test(sessionId)) throw new Error("Use --session with a session ID."); }
+        else if (!arg.startsWith("-") && !directorySeen) { selected = arg; directorySeen = true; }
+        else throw new Error("Use pida tui [directory] [--session ID | --new].");
+      }
+      if (sessionId && newSession) throw new Error("Choose --session or --new.");
+      if (!stdin.isTTY || !stdout.isTTY) throw new Error("TUI에는 대화형 터미널이 필요합니다. pida start는 Web UI와 API를 실행합니다.");
+      selected = resolve(selected);
+      const config = readConfig(selected), env = workspaceEnvironment(selected), token = env.PIDA_API_TOKEN;
+      if (!token) throw new Error("Missing local application token. Run pida doctor.");
+      const { runTerminal } = await import("./tui.js");
+      const lifetime = new AbortController();
+      const client = new PidaClient({ baseUrl: `http://127.0.0.1:${config.port}`, token: () => token,
+        fetch: (url, init = {}) => {
+          const stream = init.method === "POST" && typeof url === "string" && url.endsWith("/runs");
+          const signal = AbortSignal.any([lifetime.signal, ...(init.signal ? [init.signal] : []),
+            ...(stream ? [] : [AbortSignal.timeout(init.method === "POST" ? 120_000 : 10_000)])]);
+          return fetch(url, { ...init, signal, redirect: "error" });
+        } });
+      try { await client.getInfo(); }
+      catch { throw new Error(`Pida 서버에 연결하지 못했습니다. 다른 터미널에서 pida start "${selected}" --open을 실행한 뒤 다시 연결하세요. 서버가 실행 중이면 pida doctor로 작업 공간과 인증을 확인하세요.`); }
+      try {
+        await runTerminal({ client, workspace: selected, target: config.project?.enabled ? resolve(selected, config.project.root) : selected,
+          sessionId, newSession, openWeb: id => openBrowser(selected, false, id) });
+      } finally { lifetime.abort(); }
+      return;
+    }
     case "browser": {
       if (args[0] !== "enable") throw new Error("Use pida browser enable [workspace-directory].");
       const selected = resolve(args[1] ?? "."), config = readConfig(selected);

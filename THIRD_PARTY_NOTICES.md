@@ -5,6 +5,8 @@ Pida consumes the official Pi packages as dependencies, without vendoring or for
 Source: https://github.com/earendil-works/pi/blob/v1.2.0/LICENSE
 Inspected: 2026-10-14. Package provenance/integrities are recorded in npm-shrinkwrap.json.
 
+The 0.8.7 terminal client directly consumes `@earendil-works/pi-tui` 1.2.0 (already pinned in the dependency graph): its renderer, editor, layout, scrolling, terminal lifecycle and selector are reused without source copying. Pida owns only its host-client adapter and screen composition.
+
 ## Pi
 
 MIT License

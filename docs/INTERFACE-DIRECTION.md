@@ -1,6 +1,10 @@
 # Pida interface direction
 
-Date: 2026-10-28 KST. Scope: Pida only. Status: initial Web work-surface implementation and evaluation plan. Preview/file/diff views, revision-bound evidence and guarded file restoration are implemented; general repository execution and TUI integration are not.
+Date: 2026-10-28 KST; implementation note updated 2026-11-03 KST. Scope: Pida only.
+The original Web assessment below is historical. General repository tools were
+subsequently connected, and 0.8.7 adds a Pi-based terminal client to the same
+Pida host. See [TUI design and use](TUI.md) and [validation](TUI-VALIDATION.md).
+The philosophical principles below remain the common Web/TUI direction.
 
 ## Product goal
 

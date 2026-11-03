@@ -539,7 +539,7 @@ export function createStudio({ client, request, changed, disconnected }) {
   $("studio-cancel").onclick = async () => {
     const id = session, ticket = run.ticket(); run.cancel(); controls();
     if (activity?.running) { activity.cancelling = true; activityStatus(""); }
-    try { await client.cancel(id); if (run.current(ticket, { run: true }) && activity?.running) status("중단 요청을 전달했습니다. 최종 상태를 기다리고 있습니다."); }
+    try { await client.cancel(id, ticket.runId); if (run.current(ticket, { run: true }) && activity?.running) status("중단 요청을 전달했습니다. 최종 상태를 기다리고 있습니다."); }
     catch (error) { if (run.current(ticket, { run: true })) { run.cancelling = false; if (activity) activity.cancelling = false; issue(error); controls(); } }
   };
   $("studio-refresh").onclick = async () => { try { await refresh(true); await restoreChat(); if (!remoteRunning && !sessionUnavailable) await finishReview(); } catch (error) { issue(error); } };

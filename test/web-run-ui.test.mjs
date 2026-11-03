@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { webcrypto } from 'node:crypto';
 import { RunState, submitQueuedInput } from '../examples/web/run-state.js';
+import { sessionDisplayMessages } from '../dist/client.js';
 const read = path => readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 const deferred = () => Promise.withResolvers();
 const flush = async () => { for (let i=0;i<12;i++) await new Promise(resolve => setImmediate(resolve)); };
@@ -34,11 +35,39 @@ function environment() {
   const doc={getElementById:$,createElement:t=>new Node(t),createTextNode:t=>({textContent:t}),body:new Node('body'),hidden:false,addEventListener(){},querySelector:selector=>modeTabs.find(n=>selector.includes(`data-mode="${n.dataset.mode}"`))??new Node(),querySelectorAll:selector=>selector.includes('#mode-tabs')?modeTabs:[]};
   const storage=new Map(), timers=new Map();let timer=0;
   const context={document:doc,RunState,submitQueuedInput,Date,Map,Set,URL,URLSearchParams,TextEncoder,Blob,crypto:webcrypto,console,explainError:x=>x??'',ResizeObserver:class{observe(){}},requestAnimationFrame:()=>{},setInterval:()=>1,clearInterval(){},setTimeout:fn=>{timers.set(++timer,fn);return timer;},clearTimeout:id=>timers.delete(id),window:{addEventListener(){}},location:{origin:'http://fixture.invalid',hash:'',pathname:'/',search:''},history:{replaceState(){}},sessionStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)}};
+  context.sessionDisplayMessages = sessionDisplayMessages;
   for(const [path,name] of [['run-input.js','createRunInput'],['run-details.js','createRunDetails'],['commands.js','createCommands'],['composition.js','createComposition']]) runInNewContext(read('examples/web/'+path).replace(/^import .*\n/gm,'').replace(/export function /g,'function ')+`\nthis.${name}=${name};`,context);
   return {context,$,storage,timers,doc};
 }
 const row=(sequence,type,runId='r1')=>({sessionId:'s1',runId,sequence,type,timestamp:new Date().toISOString()});
 const info={persistence:true,tools:[],provider:{mode:'endpoint',model:'fixture'},capabilities:{steering:true,followUp:true,queuedInputDurable:false}};
+
+test('idle Web view discovers a TUI-started run and projects partial/final text without losing a draft',async()=>{
+  const env=environment(),f=fixtureClient();let snapshot={sessionId:'s1',messages:[],running:false},trace=[];
+  f.client.getSession=async()=>structuredClone(snapshot);f.client.getTrace=async()=>({events:structuredClone(trace)});
+  Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
+  runInNewContext(read('examples/web/app.js').replace(/^import .*\n/gm,''),env.context);
+  env.$('token').value='fixture';await env.$('connection-form').requestSubmit();await flush();
+  assert.ok(env.timers.size>0,'idle session continues observing peer activity');env.$('prompt').value='내가 작성 중인 요청';
+  snapshot={...snapshot,running:true,activeRunId:'r1',activeResponse:{runId:'r1',text:'터미널에서 작업 중',truncated:false},messages:[{role:'user',text:'TUI request'}]};trace=[row(1,'run_started')];
+  await runInNewContext('new Promise(resolve => { const fn = () => { scheduleSessionPoll(); resolve(); }; fn(); })',env.context);
+  const latest=[...env.timers.values()].at(-1);await latest();await flush();
+  assert.match(env.$('messages').textContent,/터미널에서 작업 중/);assert.equal(env.$('prompt').value,'내가 작성 중인 요청');
+  snapshot={...snapshot,running:false,activeRunId:undefined,activeResponse:undefined,lastStatus:'completed',messages:[...snapshot.messages,{role:'assistant',text:'실제 완료 응답'}]};trace.push({...row(2,'run_finished'),status:'completed'});
+  await [...env.timers.values()].at(-1)();await flush();assert.match(env.$('messages').textContent,/실제 완료 응답/);assert.doesNotMatch(env.$('messages').textContent,/터미널에서 작업 중/);assert.equal(env.$('prompt').value,'내가 작성 중인 요청');
+});
+
+test('launch fragment selects its exact session and never silently falls back from a denied ID',async()=>{
+  for(const denied of [false,true]){
+    const env=environment(),f=fixtureClient(),id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',reads=[];
+    env.context.location.hash='#token=fixture&session='+id;
+    f.client.getSession=async session=>{reads.push(session);if(denied)throw {code:'SESSION_NOT_FOUND',status:404};return {sessionId:session,messages:[{role:'user',text:'selected exact session'}],running:false};};
+    f.client.getTrace=async()=>({events:[]});
+    Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
+    runInNewContext(read('examples/web/app.js').replace(/^import .*\n/gm,''),env.context);await flush();
+    assert.deepEqual(reads,[id]);assert.equal(env.storage.get('pida-session'),denied?undefined:id);
+  }
+});
 function fixtureClient() {
   const gate=deferred(); let active=false, traces=[]; const queue=[];
   const client={getInfo:async()=>info,getProviderSettings:async()=>{throw Object.assign(new Error('not configured'),{status:404});},getWorkbench:async()=>({files:[],skills:[],history:[],engine:'fixture',canCheckpoint:false}),listSessions:async()=>({sessions:[{sessionId:'s1',title:'fixture',updatedAt:new Date().toISOString(),running:active}]}),getSession:async()=>({sessionId:'s1',messages:[],running:active,activeRunId:active?'r1':undefined,lastStatus:active?undefined:'completed',pendingInput:{steering:0,followUp:0,durable:false}}),getTrace:async()=>({events:[...traces],activeRunId:active?'r1':undefined}),createSession:async()=>({sessionId:'s1'}),exportRun:async()=>({events:[],complete:true,manifest:{reported_status:'completed',verification_results:[]}}),getSessionTools:async()=>({items:[],historyScope:'retained-pi-context',truncated:false}),cancel:async()=>{},

@@ -205,6 +205,8 @@ interface ActiveRun {
   traceInput?: (type: string) => void;
   resetProviderIdle?: () => void;
   clearProviderIdle?: () => void;
+  /** Ephemeral public assistant text only; never reasoning, tool arguments or an observation payload. */
+  liveResponse?: { text: string; truncated: boolean };
 }
 interface SessionRecord {
   id: string;
@@ -862,6 +864,7 @@ export class PidaRuntime {
       handoff: s.saved.handoff && structuredClone(s.saved.handoff),
       running: !!s.active,
       activeRunId: s.active?.id,
+      ...(s.active?.liveResponse ? { activeResponse: { runId: s.active.id, ...s.active.liveResponse } } : {}),
       pendingInput: { steering: s.pi.getSteeringMessages().length, followUp: s.pi.getFollowUpMessages().length, durable: false as const },
       runs: s.runs,
       tools: s.pi.getActiveToolNames(),
@@ -1092,6 +1095,8 @@ export class PidaRuntime {
       stop("failed", "EFFECT_STATE_UNKNOWN"); return false;
     };
     const unsubscribe = record.pi.subscribe((event) => {
+      if (event.type === "message_start" && event.message.role === "assistant") run.liveResponse = { text: "", truncated: false };
+      if (event.type === "message_end" && event.message.role === "assistant") run.liveResponse = undefined;
       if (event.type === "message_update") run.resetProviderIdle?.();
       if (event.type === "message_update" && ["text_delta", "thinking_delta", "toolcall_delta"].includes(event.assistantMessageEvent.type) &&
           "delta" in event.assistantMessageEvent && typeof event.assistantMessageEvent.delta === "string" && event.assistantMessageEvent.delta.length > 0 &&
@@ -1099,8 +1104,13 @@ export class PidaRuntime {
       if (
         event.type === "message_update" &&
         event.assistantMessageEvent.type === "text_delta"
-      )
+      ) {
+        const live = run.liveResponse ??= { text: "", truncated: false };
+        const room = 32_768 - live.text.length;
+        live.text += event.assistantMessageEvent.delta.slice(0, room);
+        live.truncated ||= event.assistantMessageEvent.delta.length > room;
         emit({ type: "text_delta", delta: event.assistantMessageEvent.delta });
+      }
       if (event.type === "auto_retry_start" || event.type === "summarization_retry_scheduled") {
         const allowed = recoveryAllowed();
         trace("retry_scheduled", { code: allowed ? "PROVIDER_RETRY" : run.code }, true,
@@ -1381,9 +1391,10 @@ export class PidaRuntime {
       try { this.persist(record); } catch { throw new PidaError("PERSISTENCE_FAILED", 500); } finally { finish(); }
     }
   }
-  async cancel(id: string, principal: Principal): Promise<void> {
+  async cancel(id: string, principal: Principal, expectedRunId?: string): Promise<void> {
     if (!this.sessions.has(id)) await this.resumeSession(id, principal);
     const record = this.owned(id, principal);
+    if (expectedRunId !== undefined && record.active?.id !== expectedRunId) throw new PidaError("RUN_CHANGED", 409);
     if (record.active) {
       this.stopRun(record, record.active, "cancelled", "CANCELLED");
       await record.pi.abort();

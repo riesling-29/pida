@@ -205,6 +205,9 @@ export class PidaClient {
     contextDescriptor?: import("./run-context.js").LoadedRunContext;
     handoff?: import("./run-context.js").SessionHandoff;
     running: boolean;
+    activeRunId?: string;
+    activeResponse?: { runId: string; text: string; truncated: boolean };
+    pendingInput?: { steering: number; followUp: number; durable: false };
     runs: number;
     tools: string[];
     context?: { tokens: number | null; contextWindow: number; percent: number | null };
@@ -230,8 +233,8 @@ export class PidaClient {
   async compactSession(id: string, handoff = false): Promise<{ sessionId: string; compacted: boolean }> {
     return (await this.request(this.path(id) + (handoff ? "/handoff" : "/compact"), "POST", {})).json();
   }
-  async cancel(id: string): Promise<void> {
-    await this.request(this.path(id) + "/cancel", "POST", {});
+  async cancel(id: string, expectedRunId?: string): Promise<void> {
+    await this.request(this.path(id) + "/cancel", "POST", expectedRunId === undefined ? {} : { expectedRunId });
   }
   async deleteSession(id: string): Promise<void> {
     await this.request(this.path(id), "DELETE");
@@ -302,6 +305,12 @@ export class PidaClient {
   }
 }
 
+/** Shared rendering projection for peer clients; active text is bounded and not persisted. */
+export function sessionDisplayMessages(session: Awaited<ReturnType<PidaClient["getSession"]>>) {
+  const live = session.activeResponse;
+  return [...session.messages, ...(session.running && live && live.runId === session.activeRunId && live.text
+    ? [{ role: "assistant", text: live.text + (live.truncated ? "\n[실시간 미리보기 한도 · 완료 후 전체 응답 표시]" : "") }] : [])];
+}
 
 /** Stable, credential-free explanations shared by both bundled chat surfaces. */
 export function explainError(code?: string): string {

@@ -477,8 +477,9 @@ export function createPidaServer(options: HttpOptions) {
         json(res, 200, await runtime.compactSession(id, principal, action === "handoff")); return;
       }
       if (action === "cancel" && req.method === "POST") {
-        keys(await body(req), []);
-        await runtime.cancel(id, principal);
+        const input = await body(req); keys(input, ["expectedRunId"]);
+        if (input.expectedRunId !== undefined && (typeof input.expectedRunId !== "string" || !/^[a-f0-9-]{36}$/.test(input.expectedRunId))) throw new PidaError("INVALID_BODY", 400);
+        await runtime.cancel(id, principal, input.expectedRunId as string | undefined);
         json(res, 200, { cancelled: true });
         return;
       }
