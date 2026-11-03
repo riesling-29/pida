@@ -1,0 +1,5 @@
+# Preserve native model/checkpoint and immutable request fixture bytes on Windows.
+test/fixtures/pix-profiles/** -text
+test/fixtures/vera-site/** -text
+fixtures/pix-profiles/** -text
+docs/change-requests/incoming/** -text

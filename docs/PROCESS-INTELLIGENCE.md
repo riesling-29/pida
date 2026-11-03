@@ -1,5 +1,9 @@
 # Process Intelligence tools — Pida 0.8.4
 
+For the separately selected 0.8.6 prefix and completed-object SDK/workspace tools,
+see [PIX profiles](PIX-PROFILES.md). The batch behavior and configuration below
+remain unchanged.
+
 The first supported path is completed-run batch analysis: owned runtime snapshots → actual PIX variants and DFG discovery → a frozen model → separate evaluation runs → an explicitly authorized analysis reference in the selected Persona provider → the next model input. Schumpeter is not required. The Python engine is optional; ordinary Pi runs remain usable without it.
 
 This is the first slice of INT-PD-02/06/07/08/09. It does not implement the complete organization controller, current-cut guidance loop, TUI or enterprise federation. [The requirement ledger](PI-NATIVE-VALIDATION.md) keeps those boundaries visible.

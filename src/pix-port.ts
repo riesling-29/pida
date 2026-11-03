@@ -147,6 +147,16 @@ function workerHash(path: string): string {
 
 /** Executes only the trusted pinned consumer worker. This is not an OS filesystem/network sandbox. */
 export function createPixProcessPort(config: PixProcessConfig): PixPort {
+  return createPixJsonProcessPort(config, validPixWorkerRequest,
+    (value, request): value is PixWorkerResult => validResult(value) && matchesRequest(value, request));
+}
+
+/** Shared bounded transport. Each consumer protocol supplies its own closed validator. */
+export function createPixJsonProcessPort<Request, Result extends { engine?: PixEngineBuild }>(
+  config: PixProcessConfig,
+  validRequest: (value: unknown) => value is Request,
+  validResponse: (value: unknown, request: Request) => value is Result,
+): { compute(request: Request, signal?: AbortSignal): Promise<Result> } {
   const python = absolute(config.pythonExecutable), worker = absolute(config.workerPath), source = absolute(config.sourceDirectory);
   if (!commit(config.expectedSourceCommit) || !digest(config.expectedSourceDigest) || config.expectedWorkerDigest !== undefined && !digest(config.expectedWorkerDigest)) fail("PIX_CONFIG_INVALID");
   const pin = { commit: config.expectedSourceCommit, source: config.expectedSourceDigest, worker: config.expectedWorkerDigest ?? workerHash(worker) };
@@ -160,14 +170,16 @@ export function createPixProcessPort(config: PixProcessConfig): PixPort {
   return {
     async compute(request, signal) {
       if (signal?.aborted) fail("PIX_CANCELLED");
-      if (!validPixWorkerRequest(request)) fail("PIX_INPUT_INVALID");
+      if (!validRequest(request)) fail("PIX_INPUT_INVALID");
       const bytes = Buffer.from(JSON.stringify(request), "utf8");
+      // Validators see the same frozen input bytes as the subprocess, including across awaits.
+      const fixed = JSON.parse(bytes.toString("utf8")) as Request;
       if (bytes.length > maxInput) fail("PIX_INPUT_LIMIT");
       if (workerHash(worker) !== pin.worker) fail("PIX_WORKER_PIN_MISMATCH");
       let cwd: string;
       try { cwd = mkdtempSync(join(tmpdir(), "pida-pix-")); } catch { return fail("PIX_TEMP_UNAVAILABLE"); }
       try {
-        return await new Promise<PixWorkerResult>((resolveResult, reject) => {
+        return await new Promise<Result>((resolveResult, reject) => {
           let stdoutBytes = 0, stderrBytes = 0, stopped: string | undefined, settled = false;
           const chunks: Buffer[] = [];
           const env = Object.fromEntries(Object.entries(process.env).filter(([key, value]) => value !== undefined && ["systemroot", "windir", "temp", "tmp", "tmpdir", "lang", "lc_all"].includes(key.toLowerCase())));
@@ -192,7 +204,7 @@ export function createPixProcessPort(config: PixProcessConfig): PixPort {
             if (exitCode !== 0) { reject(new PixPortError("PIX_WORKER_FAILED", details)); return; }
             let parsed: unknown;
             try { parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks))); } catch { reject(new PixPortError("PIX_OUTPUT_INVALID", details)); return; }
-            if (!validResult(parsed) || !matchesRequest(parsed, request)) { reject(new PixPortError("PIX_OUTPUT_INVALID", details)); return; }
+            if (!validResponse(parsed, fixed)) { reject(new PixPortError("PIX_OUTPUT_INVALID", details)); return; }
             if (parsed.engine && (parsed.engine.repository !== "Chanta-Research-Group/PIX" || parsed.engine.sourceCommit !== pin.commit || parsed.engine.sourceDigest !== pin.source)) { reject(new PixPortError("PIX_SOURCE_PIN_MISMATCH", details)); return; }
             resolveResult(parsed);
           });

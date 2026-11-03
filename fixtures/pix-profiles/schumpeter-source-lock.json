@@ -1,0 +1,21 @@
+{
+  "repository": "Chanta-Research-Group/Schumpeter",
+  "commit": "fa6535763141ef686baac3d4dd91ab2be7450ae7",
+  "files": {
+    "src/schumpeter/__init__.py": "a8b10f7246b76d673c442eacd7d8727ae0255d0b1629ddea39483a30c09da4cc",
+    "src/schumpeter/__main__.py": "bbb4e153fe2e32e93df4ea90ba24821881f81c0294a2a29755a22b290e1ed5ab",
+    "src/schumpeter/audit.py": "0049de95e125e6a768794618ab396af2578d6a6db732a1977bd6123425cb76e1",
+    "src/schumpeter/cli.py": "b4e31e99d73f161eb0c259ee5a282d65a49b6f7a9f5b4ca7e46718ae8b156f93",
+    "src/schumpeter/conformance.py": "f63a9304cc941cd7939479b21630b203244891789118ac5320c4b2a54f1750a2",
+    "src/schumpeter/contracts.py": "0d8d27061baa72c338d495f9746c9d1552aa73df08d5b053422ff506f0c8a583",
+    "src/schumpeter/evidence_bundle.py": "ac3654e6c17e4709102cb20ecaa7254c8827c5ff3b45a0917bf62aee078b7f4f",
+    "src/schumpeter/hub_api.py": "46eb4782fd8db4ee59be3fdc654f6f3b273e55daa355c65d41658ce26f72eaff",
+    "src/schumpeter/pida_current.py": "4a8229eb6ebee90130fe5a0d69f78c4d212529242d2c0bf7bc546c27f9583035",
+    "src/schumpeter/pida_native.py": "574b65dab6bce270d1fb605854b11f518f67b9573047fd1194fdf978305b3f70",
+    "src/schumpeter/pix_port.py": "441647bd7897555229ec703cc1060c44447e2fe818939e96bcdc207a5b6245cb",
+    "src/schumpeter/product_runner.py": "4424e2c992b3237d56abc9234332708313c492953bfe73f85be28274bec5f64c",
+    "src/schumpeter/source_profiles.py": "82ae5237de7d9310db5048bcf9c1ac7432c507eb0a832d05af4fc56ff4e97c25",
+    "src/schumpeter/store.py": "5701ff3369de15e8683818996bcb2da4b08f606906a674e3dde8d6e865c928a5",
+    "src/schumpeter/trusted_verifier.py": "4563583c291f6e4d3b9ce51a4171bce5df45c77b549eb90bbdf149e5f67e62f2"
+  }
+}

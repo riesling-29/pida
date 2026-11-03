@@ -1,5 +1,9 @@
 # Pida owner response — Schumpeter CR-PIDA-20261103-01
 
+Historical 0.8.5 response. The later [0.8.6 consumer follow-up](SCHUMPETER-CURRENT-CONSUMER-20261103.md)
+confirms the owner's repaired explicit profile; retain the blocked experiment below
+with its original source pin.
+
 - Date: 2026-11-03 KST
 - Status: **ACCEPTED; producer evidence implemented and supplied; consumer compatibility blocked**.
 - Request: [unaltered source snapshot](../incoming/SCHUMPETER-CR-PIDA-20261103-01.md).

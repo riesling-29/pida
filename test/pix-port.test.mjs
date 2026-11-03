@@ -71,6 +71,14 @@ test("PIX rejects stale worker pins, mismatched source, unsupported input and ma
   await assert.rejects(f.port.compute(request("ordinary")), /PIX_WORKER_PIN_MISMATCH/);
 });
 
+test("PIX validates responses against dispatched bytes even if the caller mutates its request", { skip }, async t => {
+  const f = await fixture(t), original = request("ordinary");
+  const pending = f.port.compute(original);
+  original.traces[0].caseId = "changed-after-dispatch";
+  const result = await pending;
+  assert.deepEqual(result.variants[0].caseIds, ["ordinary"]);
+});
+
 test("PIX output and stderr bounds stop the worker and expose only safe failure metadata", { skip }, async t => {
   const f = await fixture(t, { maxOutputBytes: 1024, maxStderrBytes: 64, timeoutMs: 3000 });
   await assert.rejects(f.port.compute(request("overflow")), e => e.code === "PIX_OUTPUT_LIMIT" && e.details.stdoutBytes > 1024);

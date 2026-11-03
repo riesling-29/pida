@@ -10,6 +10,8 @@ export * from "./persona-provider.js";
 export * from "./vera-persona-provider.js";
 export * from "./process-intelligence.js";
 export * from "./pix-port.js";
+export * from "./pix-profiles.js";
+export * from "./process-profiles.js";
 export { lotStatusTool } from "./tools.js";
 export { nativeProvider, nativeProviderCatalog, type NativeProviderConfig } from "./provider-catalog.js";
 

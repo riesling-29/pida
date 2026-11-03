@@ -1,0 +1,7 @@
+{
+  "repository": "VeraSubstrate Site",
+  "commit": "c506e321c685573481648ecf120e8f2d1214bb83",
+  "sourcePath": "docs/behavior-evidence/pida-fixture.json",
+  "sha256": "52ec495c18a69b9cef3a5e4a5e4d7c84b83b54b1488bd5fc50b0fb34721e6076",
+  "scope": "synthetic formatter contract only; not current authorization or actual model use"
+}

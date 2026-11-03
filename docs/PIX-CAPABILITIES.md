@@ -1,5 +1,9 @@
 # Direct PIX consumer: first batch slice
 
+This document describes the unchanged batch profile introduced in 0.8.4.
+0.8.6 adds [separate selected prefix/object profiles](PIX-PROFILES.md) following
+the owner's CR response; it does not reinterpret this batch model or its pin.
+
 Pida owns `scripts/pix-worker.py`, its TypeScript process adapter and domain mapping. It calls the existing PIX public API; it neither embeds Schumpeter nor implements discovery/alignment itself. PIX is optional. A missing or mismatched engine must remain unavailable, while ordinary Pida execution remains usable.
 
 ## Verified source and API

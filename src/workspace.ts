@@ -7,6 +7,7 @@ import { AgentSupervisor, type AgentProfile } from "./agent-supervisor.js";
 import { AgentMemoryStore, memoryTools, agentMemoryPermissions } from "./agent-memory.js";
 import { createLocalPersonaProvider, type PersonaProvider } from "./persona-provider.js";
 import { ProcessIntelligence } from "./process-intelligence.js";
+import { ProcessProfileAnalysis, type PiProfileAnalysisOptions } from "./process-profiles.js";
 import { createPixProcessPort, type PixPort } from "./pix-port.js";
 import { loadProviderConnector, type ProviderConnectorConfig } from "./provider-connector.js";
 import { ProjectView } from "./project-view.js";
@@ -398,6 +399,9 @@ export interface CreateWorkspaceOptions {
   commandExecutor?: ProcessExecutor;
   /** Optional host-selected authority. Suppresses built-in memory writers, including HTTP routes. */
   personaProvider?(context: { agentId: string; role: string; principal: Principal; workspaceId: string }): PersonaProvider | Promise<PersonaProvider>;
+  /** Host-selected sources/models and a separately pinned PIX port. Never selected by a model prompt. */
+  processProfiles?(context: { agentId: string; role: string; principal: Principal; workspaceId: string; runtime(): PidaRuntime }):
+    Omit<PiProfileAnalysisOptions, "directory" | "agentId"> | undefined | Promise<Omit<PiProfileAnalysisOptions, "directory" | "agentId"> | undefined>;
   onCloseError?(error: unknown): void;
 }
 
@@ -454,6 +458,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
     const memories = new Map<string, AgentMemoryStore>(), agentWorkbenches = new Map<string, PidaWorkbench>();
     const inventories = new Map<string, CompositionInventory>();
     const intelligence = new Map<string, ProcessIntelligence>();
+    const profileIntelligence = new Map<string, ProcessProfileAnalysis>();
     const memory = (id: string, principalId = principal.id) => {
       const key = JSON.stringify([id, principalId]);
       let value = memories.get(key);
@@ -528,6 +533,9 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
           runtime: () => created, personaProvider: persona, port: pixPort, unavailableReason: pixUnavailable,
           ...(config.processIntelligence ? { enginePin: { sourceCommit: config.processIntelligence.sourceCommit, sourceDigest: config.processIntelligence.sourceDigest },
             maxRuns: config.processIntelligence.maxRuns, maxEvents: config.processIntelligence.maxEvents, maxCallsPerRun: config.processIntelligence.maxCallsPerRun } : {}) });
+        const profileOptions = await options.processProfiles?.({ agentId, role: roleId, principal, workspaceId: root, runtime: () => created });
+        const profiles = profileOptions ? new ProcessProfileAnalysis({ ...profileOptions, agentId,
+          directory: join(inside(root, config.stateDir), "process-profiles", agentId) }) : undefined;
         const contributions: ToolContribution[] = [
           ...workspaceExtensions.inventory.map(entry => ({ source: entry.id, scope: entry.scope, tools: workspaceExtensions.tools.filter(t => entry.tools.includes(t.name)) })),
           ...agentExtensions.inventory.map(entry => ({ source: entry.id, scope: entry.scope, tools: agentExtensions.tools.filter(t => entry.tools.includes(t.name)) })),
@@ -536,6 +544,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
           { source: "project", scope: "workspace", tools: project?.tools ?? [] },
           { source: "programs", scope: "workspace", tools: programs.tools },
           { source: "process-intelligence", scope: "agent", tools: pi.tools() },
+          ...(profiles ? [{ source: "process-profiles", scope: "agent" as const, tools: profiles.tools() }] : []),
           ...(store ? [{ source: "memory", scope: "agent" as const, tools: memoryTools(store).map(tool => ({ ...tool,
             execute: (args: any, context: import("./runtime.js").ToolContext) => memoryTools(memory(agentId, context.principal.id)).find(selected => selected.name === tool.name)!.execute(args, context),
           })) }] : []),
@@ -608,6 +617,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
         if (created.getInfo(principal).tools.some(tool => tool.name === "program_compose")) inventory.tools.push({ name: "program_compose", permission: "programs:compose", source: "pi-codemode", scope: "agent", permitted: principal.permissions.includes("programs:compose") });
         inventories.set(agentId, inventory);
         intelligence.set(agentId, pi);
+        if (profiles) profileIntelligence.set(agentId, profiles);
         owner.add(() => { if (intelligence.get(agentId) === pi) intelligence.delete(agentId); });
         owner.add(() => { if (inventories.get(agentId) === inventory) inventories.delete(agentId); });
         created.close = () => owner.close();
@@ -663,6 +673,6 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
       };
     };
     agents?.start();
-    return { runtime, server, config, workbench, agents, commands: project?.commands, processIntelligence: intelligence, close, getComposition, get closeError() { return closeError; } };
+    return { runtime, server, config, workbench, agents, commands: project?.commands, processIntelligence: intelligence, processProfiles: profileIntelligence, close, getComposition, get closeError() { return closeError; } };
   } catch (error) { return lifetime.fail(error); }
 }

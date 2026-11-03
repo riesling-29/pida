@@ -145,3 +145,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+# PIX profile reference fixtures (0.8.6)
+
+Synthetic native model/input fixtures under `test/fixtures/pix-profiles` originate
+from `Chanta-Research-Group/PIX` PR14, commit
+`a0831bc0b34fd7feebfba928066b90b114ae531e`. Their original byte hashes and paths
+are recorded in `source.json`. Pida calls the separately supplied unmodified PIX
+source; no PIX engine implementation is included in this package. Native result
+and checkpoint evidence retains PIX's format/version/identity and exact bytes.
+
+The synthetic Site descriptor fixture under `test/fixtures/vera-site` originates
+from the Persona Site's `c506e321c685573481648ecf120e8f2d1214bb83` owner response;
+its source pin/hash and deliberately limited contract-check scope are preserved.
