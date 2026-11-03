@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "pida.pix.worker.v1",
+  "operation": "awareness",
+  "model": {
+    "activities": [
+      "abort",
+      "deliver",
+      "edit",
+      "reproduce",
+      "request",
+      "test",
+      "tool_error"
+    ],
+    "edges": [
+      [
+        "edit",
+        "test"
+      ],
+      [
+        "reproduce",
+        "edit"
+      ],
+      [
+        "request",
+        "edit"
+      ],
+      [
+        "request",
+        "reproduce"
+      ],
+      [
+        "request",
+        "tool_error"
+      ],
+      [
+        "test",
+        "deliver"
+      ],
+      [
+        "tool_error",
+        "abort"
+      ]
+    ],
+    "starts": [
+      "request"
+    ],
+    "ends": [
+      "abort",
+      "deliver"
+    ],
+    "acceptsEmpty": false
+  },
+  "traces": [
+    {
+      "caseId": "heldout-extra-review",
+      "events": [
+        {
+          "eventId": "heldout-extra-review:0",
+          "activity": "request"
+        },
+        {
+          "eventId": "heldout-extra-review:1",
+          "activity": "reproduce"
+        },
+        {
+          "eventId": "heldout-extra-review:2",
+          "activity": "edit"
+        },
+        {
+          "eventId": "heldout-extra-review:3",
+          "activity": "test"
+        },
+        {
+          "eventId": "heldout-extra-review:4",
+          "activity": "review"
+        },
+        {
+          "eventId": "heldout-extra-review:5",
+          "activity": "deliver"
+        }
+      ]
+    }
+  ],
+  "limits": {
+    "maxStates": 1
+  }
+}

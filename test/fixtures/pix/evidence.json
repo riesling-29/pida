@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "pida.pix.acceptance.v1",
+  "inputProfile": "synthetic",
+  "computationProfile": "real-pinned-pix-source",
+  "llmProfile": "not-used",
+  "personaIntegration": "NOT_RUN",
+  "schumpeterDependency": "none",
+  "engine": {
+    "repository": "Chanta-Research-Group/PIX",
+    "sourceCommit": "3205d832d5dcdc6901f916b35496a0c60b657e7a",
+    "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+    "packageVersion": "0.5.0",
+    "pythonVersion": "3.12.14",
+    "sourceVerified": true
+  },
+  "workerSha256": "f04be8198c42965eb2eb73490e3e99e873eca963bf2abca6fef34fcbf480ea7b",
+  "checks": [
+    "actual pinned engine loads from isolated different cwd",
+    "catalog includes 20 cases and failure variants",
+    "case coverage denominator remains 20",
+    "repeated calculation has identical native result identities",
+    "native parent lineage resolves",
+    "public native result version is preserved",
+    "separate evaluation case conforms to frozen model",
+    "extra review is observable deviation without an obligation verdict",
+    "bounded search is partial and not a fabricated fitness score",
+    "incomplete discovery cannot publish a frozen model",
+    "catalog cap never silently truncates variants",
+    "empty population is unavailable",
+    "unknown input fields fail closed",
+    "duplicate case identities are rejected",
+    "cross-case shared events cannot become independent sequential cases",
+    "unsupported source pin is unavailable before import",
+    "duplicate JSON members are rejected",
+    "source order is not replaced by label sorting"
+  ],
+  "passed": 18,
+  "failed": 0,
+  "limits": [
+    "Sequential batch projection only",
+    "No live agent or long-term improvement claim",
+    "No native Windows or actual Persona integration"
+  ],
+  "artifactDigests": {
+    "reflection.request.json": "21a3afca1703e596ceab556429b25e07969329be905e420be0c4645514e82f11",
+    "reflection.result.json": "0753459fda20a98deb9b86df7d5d35ccc7ac1bf3f2b4111f6a38522432e33c99",
+    "awareness-conforming.request.json": "223a57fc5d3f9c00de03aaa768fa44a68772bc5ac15a5c5ee68886e106bbaae7",
+    "awareness-conforming.result.json": "cb98264c864547105eeadb623e26e96ecb1c09823a153581bcbd41eb45fba274",
+    "awareness-deviation.request.json": "7705a07d868797526e76481ffe5e77265fd151e7d13e28fd34719259b9a21a09",
+    "awareness-deviation.result.json": "c1358b4eae97e5212304db2ead37cf839eb459b6564ec8fdbf497dc4b9aaded5",
+    "awareness-limited.request.json": "468ac0b20c0f5e48f0b61f3e2374fffa891ab11406f3861b872139da282e37c9",
+    "awareness-limited.result.json": "554d24f04a8233952b5e13454a0438b76ca8a82aa6605be5fa19e968f0033f3d",
+    "reflection-limited.request.json": "be26cb254bef8f7f5805b8e91e0144cd0ba03e487278aba0959d268f8424ee11",
+    "reflection-limited.result.json": "726f073a46897e8b78b4d1f0469d49deb656919174240e8490365469961839a5"
+  }
+}

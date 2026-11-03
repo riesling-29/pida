@@ -1,6 +1,26 @@
 /** Pida-native draft contracts. These are not the unconfirmed Schumpeter v0.1 schema. */
 export const observationSchema = "pida.observation/0.1-draft" as const;
 export const manifestSchema = "pida.result/0.1-draft" as const;
+/** Validator capability revision; existing persisted event/bundle identities are unchanged. */
+export const observationContractRevision = "pida.export-validation/0.2" as const;
+/** Closed metadata vocabulary. Descriptor is a bounded JSON-encoded LoadedRunContext,
+ * validated structurally by the exporter contract, not arbitrary context text. */
+export interface ObservationPayload {
+  model?: string; api?: string; request_id?: string | null; stop_reason?: string;
+  attempt?: number | null; provider_generation?: string; thinking_level?: string;
+  context_window?: number; model_max_tokens?: number;
+  effective_config_digest?: string; system_digest?: string; tools_digest?: string; fingerprint_scope?: string;
+  usage_status?: "normalized" | "unknown" | "invalid" | "partial" | "reported";
+  input_tokens?: number | null; uncached_input_tokens?: number | null; output_tokens?: number | null;
+  cache_read_tokens?: number | null; cache_write_tokens?: number | null; reasoning_tokens?: number | null;
+  tokens?: number | null; cost_usd?: number | null; first_output_ms?: number | null; duration_ms?: number | null;
+  tool_call_id?: string; parent_tool_call_id?: string; tool_name?: string;
+  status?: string; code?: string | null; persistence_error?: string | null; scope?: string;
+  handoff?: boolean; operation?: string; compacted?: boolean; target_session_id?: string;
+  interrupted?: boolean; detected_on_restore?: boolean; descriptor?: string;
+  inclusion_scope?: "pi-logical-context";
+  source?: "provider" | "summarization"; max_attempts?: number; delay_ms?: number; allowed?: boolean; success?: boolean;
+}
 export interface ArtifactRef { id: string; path: string; sha256: string; bytes: number }
 export interface ArtifactSnapshot { digest: string; artifacts: ArtifactRef[] }
 export interface VerificationResult {
@@ -40,7 +60,7 @@ export interface Observation {
   artifact_refs: string[];
   evidence_refs: string[];
   data_scope: "metadata-only";
-  payload: Record<string, string | number | boolean | null>;
+  payload: ObservationPayload;
 }
 export interface ResultManifest {
   schema_version: typeof manifestSchema;

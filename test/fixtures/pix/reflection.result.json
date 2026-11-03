@@ -1,0 +1,4391 @@
+{
+  "schemaVersion": "pida.pix.worker.v1",
+  "operation": "reflect",
+  "status": "computed",
+  "issues": [
+    {
+      "code": "source_sequence",
+      "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order"
+    },
+    {
+      "code": "unknown_timestamp",
+      "message": "No timezone-aware timestamp is available; source facts remain in CaseLog"
+    }
+  ],
+  "nativeResults": [
+    {
+      "format": "pix.analysis-result",
+      "version": "1.3.0",
+      "payload_kind": "case-traces",
+      "computation": {
+        "operator_id": "pix.case_traces",
+        "operator_version": "1.0.0",
+        "source_digest": "pix.case-log.v1:sha256:03d31ca32b7069f40fd5fa8131f9ad2cbf1f81afa45edfab6748d19aacfe3e91",
+        "spec": {
+          "activity_key": "concept:name",
+          "timestamp_key": "time:timestamp",
+          "classifier": null,
+          "object_type": "case"
+        },
+        "status": "computed",
+        "value": {
+          "object_type": "case",
+          "traces": [
+            {
+              "object_id": "ordinary-0",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "ordinary-0:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-0:0",
+                      "object": "ordinary-0",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-0:1",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-0:1",
+                      "object": "ordinary-0",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-0:2",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-0:2",
+                      "object": "ordinary-0",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-0:3",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-0:3",
+                      "object": "ordinary-0",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "ordinary-1",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "ordinary-1:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-1:0",
+                      "object": "ordinary-1",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-1:1",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-1:1",
+                      "object": "ordinary-1",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-1:2",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-1:2",
+                      "object": "ordinary-1",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-1:3",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-1:3",
+                      "object": "ordinary-1",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "ordinary-2",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "ordinary-2:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-2:0",
+                      "object": "ordinary-2",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-2:1",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-2:1",
+                      "object": "ordinary-2",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-2:2",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-2:2",
+                      "object": "ordinary-2",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-2:3",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-2:3",
+                      "object": "ordinary-2",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "ordinary-3",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "ordinary-3:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-3:0",
+                      "object": "ordinary-3",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-3:1",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-3:1",
+                      "object": "ordinary-3",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-3:2",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-3:2",
+                      "object": "ordinary-3",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-3:3",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-3:3",
+                      "object": "ordinary-3",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "ordinary-4",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "ordinary-4:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-4:0",
+                      "object": "ordinary-4",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-4:1",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-4:1",
+                      "object": "ordinary-4",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-4:2",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-4:2",
+                      "object": "ordinary-4",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-4:3",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-4:3",
+                      "object": "ordinary-4",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "ordinary-5",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "ordinary-5:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-5:0",
+                      "object": "ordinary-5",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-5:1",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-5:1",
+                      "object": "ordinary-5",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-5:2",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-5:2",
+                      "object": "ordinary-5",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-5:3",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-5:3",
+                      "object": "ordinary-5",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "ordinary-6",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "ordinary-6:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-6:0",
+                      "object": "ordinary-6",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-6:1",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-6:1",
+                      "object": "ordinary-6",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-6:2",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-6:2",
+                      "object": "ordinary-6",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-6:3",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-6:3",
+                      "object": "ordinary-6",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "ordinary-7",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "ordinary-7:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-7:0",
+                      "object": "ordinary-7",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-7:1",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-7:1",
+                      "object": "ordinary-7",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-7:2",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-7:2",
+                      "object": "ordinary-7",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-7:3",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-7:3",
+                      "object": "ordinary-7",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "ordinary-8",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "ordinary-8:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-8:0",
+                      "object": "ordinary-8",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-8:1",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-8:1",
+                      "object": "ordinary-8",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-8:2",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-8:2",
+                      "object": "ordinary-8",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-8:3",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-8:3",
+                      "object": "ordinary-8",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "ordinary-9",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "ordinary-9:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-9:0",
+                      "object": "ordinary-9",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-9:1",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-9:1",
+                      "object": "ordinary-9",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-9:2",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-9:2",
+                      "object": "ordinary-9",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-9:3",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-9:3",
+                      "object": "ordinary-9",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "ordinary-10",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "ordinary-10:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-10:0",
+                      "object": "ordinary-10",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-10:1",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-10:1",
+                      "object": "ordinary-10",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-10:2",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-10:2",
+                      "object": "ordinary-10",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-10:3",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-10:3",
+                      "object": "ordinary-10",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "ordinary-11",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "ordinary-11:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-11:0",
+                      "object": "ordinary-11",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-11:1",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-11:1",
+                      "object": "ordinary-11",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-11:2",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-11:2",
+                      "object": "ordinary-11",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "ordinary-11:3",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "ordinary-11:3",
+                      "object": "ordinary-11",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "reproduced-0",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "reproduced-0:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-0:0",
+                      "object": "reproduced-0",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-0:1",
+                  "activity": "reproduce",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-0:1",
+                      "object": "reproduced-0",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-0:2",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-0:2",
+                      "object": "reproduced-0",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-0:3",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-0:3",
+                      "object": "reproduced-0",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-0:4",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-0:4",
+                      "object": "reproduced-0",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "reproduced-1",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "reproduced-1:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-1:0",
+                      "object": "reproduced-1",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-1:1",
+                  "activity": "reproduce",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-1:1",
+                      "object": "reproduced-1",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-1:2",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-1:2",
+                      "object": "reproduced-1",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-1:3",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-1:3",
+                      "object": "reproduced-1",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-1:4",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-1:4",
+                      "object": "reproduced-1",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "reproduced-2",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "reproduced-2:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-2:0",
+                      "object": "reproduced-2",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-2:1",
+                  "activity": "reproduce",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-2:1",
+                      "object": "reproduced-2",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-2:2",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-2:2",
+                      "object": "reproduced-2",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-2:3",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-2:3",
+                      "object": "reproduced-2",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-2:4",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-2:4",
+                      "object": "reproduced-2",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "reproduced-3",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "reproduced-3:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-3:0",
+                      "object": "reproduced-3",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-3:1",
+                  "activity": "reproduce",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-3:1",
+                      "object": "reproduced-3",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-3:2",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-3:2",
+                      "object": "reproduced-3",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-3:3",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-3:3",
+                      "object": "reproduced-3",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-3:4",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-3:4",
+                      "object": "reproduced-3",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "reproduced-4",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "reproduced-4:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-4:0",
+                      "object": "reproduced-4",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-4:1",
+                  "activity": "reproduce",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-4:1",
+                      "object": "reproduced-4",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-4:2",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-4:2",
+                      "object": "reproduced-4",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-4:3",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-4:3",
+                      "object": "reproduced-4",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-4:4",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-4:4",
+                      "object": "reproduced-4",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "reproduced-5",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "reproduced-5:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-5:0",
+                      "object": "reproduced-5",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-5:1",
+                  "activity": "reproduce",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-5:1",
+                      "object": "reproduced-5",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-5:2",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-5:2",
+                      "object": "reproduced-5",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-5:3",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-5:3",
+                      "object": "reproduced-5",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "reproduced-5:4",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "reproduced-5:4",
+                      "object": "reproduced-5",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "failed-0",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "failed-0:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "failed-0:0",
+                      "object": "failed-0",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "failed-0:1",
+                  "activity": "tool_error",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "failed-0:1",
+                      "object": "failed-0",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "failed-0:2",
+                  "activity": "abort",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "failed-0:2",
+                      "object": "failed-0",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            },
+            {
+              "object_id": "failed-1",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "failed-1:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "failed-1:0",
+                      "object": "failed-1",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "failed-1:1",
+                  "activity": "tool_error",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "failed-1:1",
+                      "object": "failed-1",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "failed-1:2",
+                  "activity": "abort",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "failed-1:2",
+                      "object": "failed-1",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            }
+          ]
+        },
+        "issues": [
+          {
+            "code": "source_sequence",
+            "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order",
+            "at": []
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-0",
+              "event",
+              "ordinary-0:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-0",
+              "event",
+              "ordinary-0:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-0",
+              "event",
+              "ordinary-0:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-0",
+              "event",
+              "ordinary-0:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-1",
+              "event",
+              "ordinary-1:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-1",
+              "event",
+              "ordinary-1:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-1",
+              "event",
+              "ordinary-1:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-1",
+              "event",
+              "ordinary-1:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-2",
+              "event",
+              "ordinary-2:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-2",
+              "event",
+              "ordinary-2:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-2",
+              "event",
+              "ordinary-2:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-2",
+              "event",
+              "ordinary-2:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-3",
+              "event",
+              "ordinary-3:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-3",
+              "event",
+              "ordinary-3:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-3",
+              "event",
+              "ordinary-3:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-3",
+              "event",
+              "ordinary-3:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-4",
+              "event",
+              "ordinary-4:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-4",
+              "event",
+              "ordinary-4:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-4",
+              "event",
+              "ordinary-4:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-4",
+              "event",
+              "ordinary-4:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-5",
+              "event",
+              "ordinary-5:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-5",
+              "event",
+              "ordinary-5:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-5",
+              "event",
+              "ordinary-5:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-5",
+              "event",
+              "ordinary-5:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-6",
+              "event",
+              "ordinary-6:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-6",
+              "event",
+              "ordinary-6:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-6",
+              "event",
+              "ordinary-6:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-6",
+              "event",
+              "ordinary-6:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-7",
+              "event",
+              "ordinary-7:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-7",
+              "event",
+              "ordinary-7:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-7",
+              "event",
+              "ordinary-7:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-7",
+              "event",
+              "ordinary-7:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-8",
+              "event",
+              "ordinary-8:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-8",
+              "event",
+              "ordinary-8:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-8",
+              "event",
+              "ordinary-8:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-8",
+              "event",
+              "ordinary-8:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-9",
+              "event",
+              "ordinary-9:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-9",
+              "event",
+              "ordinary-9:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-9",
+              "event",
+              "ordinary-9:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-9",
+              "event",
+              "ordinary-9:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-10",
+              "event",
+              "ordinary-10:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-10",
+              "event",
+              "ordinary-10:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-10",
+              "event",
+              "ordinary-10:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-10",
+              "event",
+              "ordinary-10:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-11",
+              "event",
+              "ordinary-11:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-11",
+              "event",
+              "ordinary-11:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-11",
+              "event",
+              "ordinary-11:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-11",
+              "event",
+              "ordinary-11:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-0",
+              "event",
+              "reproduced-0:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-0",
+              "event",
+              "reproduced-0:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-0",
+              "event",
+              "reproduced-0:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-0",
+              "event",
+              "reproduced-0:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-0",
+              "event",
+              "reproduced-0:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-1",
+              "event",
+              "reproduced-1:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-1",
+              "event",
+              "reproduced-1:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-1",
+              "event",
+              "reproduced-1:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-1",
+              "event",
+              "reproduced-1:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-1",
+              "event",
+              "reproduced-1:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-2",
+              "event",
+              "reproduced-2:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-2",
+              "event",
+              "reproduced-2:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-2",
+              "event",
+              "reproduced-2:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-2",
+              "event",
+              "reproduced-2:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-2",
+              "event",
+              "reproduced-2:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-3",
+              "event",
+              "reproduced-3:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-3",
+              "event",
+              "reproduced-3:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-3",
+              "event",
+              "reproduced-3:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-3",
+              "event",
+              "reproduced-3:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-3",
+              "event",
+              "reproduced-3:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-4",
+              "event",
+              "reproduced-4:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-4",
+              "event",
+              "reproduced-4:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-4",
+              "event",
+              "reproduced-4:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-4",
+              "event",
+              "reproduced-4:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-4",
+              "event",
+              "reproduced-4:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-5",
+              "event",
+              "reproduced-5:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-5",
+              "event",
+              "reproduced-5:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-5",
+              "event",
+              "reproduced-5:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-5",
+              "event",
+              "reproduced-5:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-5",
+              "event",
+              "reproduced-5:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-0",
+              "event",
+              "failed-0:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-0",
+              "event",
+              "failed-0:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-0",
+              "event",
+              "failed-0:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-1",
+              "event",
+              "failed-1:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-1",
+              "event",
+              "failed-1:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-1",
+              "event",
+              "failed-1:2"
+            ]
+          }
+        ],
+        "computation_id": "pix.computation.v1:sha256:ee6480ccf23de82d7e14eb9a68da18879e25600f28867af2baf3c87b89fba679",
+        "parent_computation_ids": []
+      },
+      "document_digest": "pix.analysis-result.v1:sha256:476976bfe8ee49de43d4e3db013d104a1be3df31f5bf60df9eebd4393d39ba9c"
+    },
+    {
+      "format": "pix.analysis-result",
+      "version": "1.3.0",
+      "payload_kind": "case_trace_variant_catalog",
+      "computation": {
+        "operator_id": "pix.case_centric.catalog_trace_variants",
+        "operator_version": "1.0.0",
+        "source_digest": "pix.case-log.v1:sha256:03d31ca32b7069f40fd5fa8131f9ad2cbf1f81afa45edfab6748d19aacfe3e91",
+        "spec": {
+          "groups": [
+            {
+              "name": "All cases",
+              "case_ids": [
+                "failed-0",
+                "failed-1",
+                "ordinary-0",
+                "ordinary-1",
+                "ordinary-10",
+                "ordinary-11",
+                "ordinary-2",
+                "ordinary-3",
+                "ordinary-4",
+                "ordinary-5",
+                "ordinary-6",
+                "ordinary-7",
+                "ordinary-8",
+                "ordinary-9",
+                "reproduced-0",
+                "reproduced-1",
+                "reproduced-2",
+                "reproduced-3",
+                "reproduced-4",
+                "reproduced-5"
+              ],
+              "representative_case_id": null
+            }
+          ],
+          "group_attribute": null,
+          "parameters": {
+            "top_variant_percent": 100,
+            "max_variants": 1000,
+            "max_events": 10000,
+            "trace_spec": {
+              "activity_key": "concept:name",
+              "timestamp_key": "time:timestamp",
+              "classifier": null,
+              "object_type": "case"
+            }
+          }
+        },
+        "status": "computed",
+        "value": {
+          "groups": [
+            {
+              "id": "group:0",
+              "name": "All cases",
+              "case_ids": [
+                "failed-0",
+                "failed-1",
+                "ordinary-0",
+                "ordinary-1",
+                "ordinary-10",
+                "ordinary-11",
+                "ordinary-2",
+                "ordinary-3",
+                "ordinary-4",
+                "ordinary-5",
+                "ordinary-6",
+                "ordinary-7",
+                "ordinary-8",
+                "ordinary-9",
+                "reproduced-0",
+                "reproduced-1",
+                "reproduced-2",
+                "reproduced-3",
+                "reproduced-4",
+                "reproduced-5"
+              ],
+              "variant_ids": [
+                "group:0/variant:1",
+                "group:0/variant:2",
+                "group:0/variant:3"
+              ],
+              "selected_variant_ids": [
+                "group:0/variant:1",
+                "group:0/variant:2",
+                "group:0/variant:3"
+              ]
+            }
+          ],
+          "variants": [
+            {
+              "id": "group:0/variant:1",
+              "group_id": "group:0",
+              "rank": 1,
+              "activities": [
+                "request",
+                "edit",
+                "test",
+                "deliver"
+              ],
+              "case_ids": [
+                "ordinary-0",
+                "ordinary-1",
+                "ordinary-10",
+                "ordinary-11",
+                "ordinary-2",
+                "ordinary-3",
+                "ordinary-4",
+                "ordinary-5",
+                "ordinary-6",
+                "ordinary-7",
+                "ordinary-8",
+                "ordinary-9"
+              ],
+              "example_case_id": "ordinary-0",
+              "event_ids": [
+                "ordinary-0:0",
+                "ordinary-0:1",
+                "ordinary-0:2",
+                "ordinary-0:3"
+              ],
+              "cumulative_case_count": 12
+            },
+            {
+              "id": "group:0/variant:2",
+              "group_id": "group:0",
+              "rank": 2,
+              "activities": [
+                "request",
+                "reproduce",
+                "edit",
+                "test",
+                "deliver"
+              ],
+              "case_ids": [
+                "reproduced-0",
+                "reproduced-1",
+                "reproduced-2",
+                "reproduced-3",
+                "reproduced-4",
+                "reproduced-5"
+              ],
+              "example_case_id": "reproduced-0",
+              "event_ids": [
+                "reproduced-0:0",
+                "reproduced-0:1",
+                "reproduced-0:2",
+                "reproduced-0:3",
+                "reproduced-0:4"
+              ],
+              "cumulative_case_count": 18
+            },
+            {
+              "id": "group:0/variant:3",
+              "group_id": "group:0",
+              "rank": 3,
+              "activities": [
+                "request",
+                "tool_error",
+                "abort"
+              ],
+              "case_ids": [
+                "failed-0",
+                "failed-1"
+              ],
+              "example_case_id": "failed-0",
+              "event_ids": [
+                "failed-0:0",
+                "failed-0:1",
+                "failed-0:2"
+              ],
+              "cumulative_case_count": 20
+            }
+          ],
+          "source_case_count": 20,
+          "unassigned_case_ids": [],
+          "top_variant_percent": 100
+        },
+        "issues": [
+          {
+            "code": "source_sequence",
+            "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order",
+            "at": []
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-0",
+              "event",
+              "ordinary-0:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-0",
+              "event",
+              "ordinary-0:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-0",
+              "event",
+              "ordinary-0:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-0",
+              "event",
+              "ordinary-0:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-1",
+              "event",
+              "ordinary-1:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-1",
+              "event",
+              "ordinary-1:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-1",
+              "event",
+              "ordinary-1:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-1",
+              "event",
+              "ordinary-1:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-2",
+              "event",
+              "ordinary-2:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-2",
+              "event",
+              "ordinary-2:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-2",
+              "event",
+              "ordinary-2:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-2",
+              "event",
+              "ordinary-2:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-3",
+              "event",
+              "ordinary-3:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-3",
+              "event",
+              "ordinary-3:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-3",
+              "event",
+              "ordinary-3:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-3",
+              "event",
+              "ordinary-3:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-4",
+              "event",
+              "ordinary-4:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-4",
+              "event",
+              "ordinary-4:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-4",
+              "event",
+              "ordinary-4:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-4",
+              "event",
+              "ordinary-4:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-5",
+              "event",
+              "ordinary-5:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-5",
+              "event",
+              "ordinary-5:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-5",
+              "event",
+              "ordinary-5:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-5",
+              "event",
+              "ordinary-5:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-6",
+              "event",
+              "ordinary-6:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-6",
+              "event",
+              "ordinary-6:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-6",
+              "event",
+              "ordinary-6:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-6",
+              "event",
+              "ordinary-6:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-7",
+              "event",
+              "ordinary-7:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-7",
+              "event",
+              "ordinary-7:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-7",
+              "event",
+              "ordinary-7:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-7",
+              "event",
+              "ordinary-7:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-8",
+              "event",
+              "ordinary-8:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-8",
+              "event",
+              "ordinary-8:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-8",
+              "event",
+              "ordinary-8:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-8",
+              "event",
+              "ordinary-8:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-9",
+              "event",
+              "ordinary-9:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-9",
+              "event",
+              "ordinary-9:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-9",
+              "event",
+              "ordinary-9:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-9",
+              "event",
+              "ordinary-9:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-10",
+              "event",
+              "ordinary-10:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-10",
+              "event",
+              "ordinary-10:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-10",
+              "event",
+              "ordinary-10:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-10",
+              "event",
+              "ordinary-10:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-11",
+              "event",
+              "ordinary-11:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-11",
+              "event",
+              "ordinary-11:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-11",
+              "event",
+              "ordinary-11:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-11",
+              "event",
+              "ordinary-11:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-0",
+              "event",
+              "reproduced-0:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-0",
+              "event",
+              "reproduced-0:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-0",
+              "event",
+              "reproduced-0:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-0",
+              "event",
+              "reproduced-0:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-0",
+              "event",
+              "reproduced-0:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-1",
+              "event",
+              "reproduced-1:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-1",
+              "event",
+              "reproduced-1:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-1",
+              "event",
+              "reproduced-1:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-1",
+              "event",
+              "reproduced-1:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-1",
+              "event",
+              "reproduced-1:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-2",
+              "event",
+              "reproduced-2:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-2",
+              "event",
+              "reproduced-2:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-2",
+              "event",
+              "reproduced-2:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-2",
+              "event",
+              "reproduced-2:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-2",
+              "event",
+              "reproduced-2:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-3",
+              "event",
+              "reproduced-3:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-3",
+              "event",
+              "reproduced-3:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-3",
+              "event",
+              "reproduced-3:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-3",
+              "event",
+              "reproduced-3:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-3",
+              "event",
+              "reproduced-3:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-4",
+              "event",
+              "reproduced-4:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-4",
+              "event",
+              "reproduced-4:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-4",
+              "event",
+              "reproduced-4:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-4",
+              "event",
+              "reproduced-4:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-4",
+              "event",
+              "reproduced-4:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-5",
+              "event",
+              "reproduced-5:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-5",
+              "event",
+              "reproduced-5:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-5",
+              "event",
+              "reproduced-5:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-5",
+              "event",
+              "reproduced-5:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-5",
+              "event",
+              "reproduced-5:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-0",
+              "event",
+              "failed-0:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-0",
+              "event",
+              "failed-0:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-0",
+              "event",
+              "failed-0:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-1",
+              "event",
+              "failed-1:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-1",
+              "event",
+              "failed-1:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-1",
+              "event",
+              "failed-1:2"
+            ]
+          }
+        ],
+        "computation_id": "pix.computation.v1:sha256:a1489b1dcb947ac772848ca99eb718adbba7228d9d6a55ec66c2ffff82bc2071",
+        "parent_computation_ids": [
+          "pix.computation.v1:sha256:ee6480ccf23de82d7e14eb9a68da18879e25600f28867af2baf3c87b89fba679"
+        ]
+      },
+      "document_digest": "pix.analysis-result.v1:sha256:9dff99ac47dfc06802496c896817755576cebe05b0385df820daad32c218d4ea"
+    },
+    {
+      "format": "pix.analysis-result",
+      "version": "1.3.0",
+      "payload_kind": "case-dfg",
+      "computation": {
+        "operator_id": "pix.case_centric.discover_dfg",
+        "operator_version": "1.0.0",
+        "source_digest": "pix.case-log.v1:sha256:03d31ca32b7069f40fd5fa8131f9ad2cbf1f81afa45edfab6748d19aacfe3e91",
+        "spec": {
+          "counting": "occurrences",
+          "max_event_pairs": 10000
+        },
+        "status": "computed",
+        "value": {
+          "relation": "directly_follows",
+          "activity_counts": [
+            [
+              "abort",
+              2
+            ],
+            [
+              "deliver",
+              18
+            ],
+            [
+              "edit",
+              18
+            ],
+            [
+              "reproduce",
+              6
+            ],
+            [
+              "request",
+              20
+            ],
+            [
+              "test",
+              18
+            ],
+            [
+              "tool_error",
+              2
+            ]
+          ],
+          "edges": [
+            {
+              "source": "edit",
+              "target": "test",
+              "count": 18,
+              "case_count": 18
+            },
+            {
+              "source": "reproduce",
+              "target": "edit",
+              "count": 6,
+              "case_count": 6
+            },
+            {
+              "source": "request",
+              "target": "edit",
+              "count": 12,
+              "case_count": 12
+            },
+            {
+              "source": "request",
+              "target": "reproduce",
+              "count": 6,
+              "case_count": 6
+            },
+            {
+              "source": "request",
+              "target": "tool_error",
+              "count": 2,
+              "case_count": 2
+            },
+            {
+              "source": "test",
+              "target": "deliver",
+              "count": 18,
+              "case_count": 18
+            },
+            {
+              "source": "tool_error",
+              "target": "abort",
+              "count": 2,
+              "case_count": 2
+            }
+          ],
+          "start_counts": [
+            [
+              "request",
+              20
+            ]
+          ],
+          "end_counts": [
+            [
+              "abort",
+              2
+            ],
+            [
+              "deliver",
+              18
+            ]
+          ],
+          "trace_count": 20,
+          "empty_trace_count": 0,
+          "examined_event_pairs": 64,
+          "complete": true
+        },
+        "issues": [
+          {
+            "code": "source_sequence",
+            "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order",
+            "at": []
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-0",
+              "event",
+              "ordinary-0:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-0",
+              "event",
+              "ordinary-0:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-0",
+              "event",
+              "ordinary-0:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-0",
+              "event",
+              "ordinary-0:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-1",
+              "event",
+              "ordinary-1:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-1",
+              "event",
+              "ordinary-1:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-1",
+              "event",
+              "ordinary-1:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-1",
+              "event",
+              "ordinary-1:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-2",
+              "event",
+              "ordinary-2:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-2",
+              "event",
+              "ordinary-2:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-2",
+              "event",
+              "ordinary-2:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-2",
+              "event",
+              "ordinary-2:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-3",
+              "event",
+              "ordinary-3:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-3",
+              "event",
+              "ordinary-3:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-3",
+              "event",
+              "ordinary-3:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-3",
+              "event",
+              "ordinary-3:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-4",
+              "event",
+              "ordinary-4:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-4",
+              "event",
+              "ordinary-4:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-4",
+              "event",
+              "ordinary-4:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-4",
+              "event",
+              "ordinary-4:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-5",
+              "event",
+              "ordinary-5:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-5",
+              "event",
+              "ordinary-5:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-5",
+              "event",
+              "ordinary-5:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-5",
+              "event",
+              "ordinary-5:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-6",
+              "event",
+              "ordinary-6:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-6",
+              "event",
+              "ordinary-6:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-6",
+              "event",
+              "ordinary-6:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-6",
+              "event",
+              "ordinary-6:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-7",
+              "event",
+              "ordinary-7:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-7",
+              "event",
+              "ordinary-7:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-7",
+              "event",
+              "ordinary-7:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-7",
+              "event",
+              "ordinary-7:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-8",
+              "event",
+              "ordinary-8:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-8",
+              "event",
+              "ordinary-8:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-8",
+              "event",
+              "ordinary-8:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-8",
+              "event",
+              "ordinary-8:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-9",
+              "event",
+              "ordinary-9:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-9",
+              "event",
+              "ordinary-9:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-9",
+              "event",
+              "ordinary-9:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-9",
+              "event",
+              "ordinary-9:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-10",
+              "event",
+              "ordinary-10:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-10",
+              "event",
+              "ordinary-10:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-10",
+              "event",
+              "ordinary-10:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-10",
+              "event",
+              "ordinary-10:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-11",
+              "event",
+              "ordinary-11:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-11",
+              "event",
+              "ordinary-11:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-11",
+              "event",
+              "ordinary-11:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "ordinary-11",
+              "event",
+              "ordinary-11:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-0",
+              "event",
+              "reproduced-0:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-0",
+              "event",
+              "reproduced-0:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-0",
+              "event",
+              "reproduced-0:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-0",
+              "event",
+              "reproduced-0:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-0",
+              "event",
+              "reproduced-0:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-1",
+              "event",
+              "reproduced-1:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-1",
+              "event",
+              "reproduced-1:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-1",
+              "event",
+              "reproduced-1:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-1",
+              "event",
+              "reproduced-1:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-1",
+              "event",
+              "reproduced-1:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-2",
+              "event",
+              "reproduced-2:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-2",
+              "event",
+              "reproduced-2:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-2",
+              "event",
+              "reproduced-2:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-2",
+              "event",
+              "reproduced-2:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-2",
+              "event",
+              "reproduced-2:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-3",
+              "event",
+              "reproduced-3:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-3",
+              "event",
+              "reproduced-3:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-3",
+              "event",
+              "reproduced-3:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-3",
+              "event",
+              "reproduced-3:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-3",
+              "event",
+              "reproduced-3:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-4",
+              "event",
+              "reproduced-4:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-4",
+              "event",
+              "reproduced-4:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-4",
+              "event",
+              "reproduced-4:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-4",
+              "event",
+              "reproduced-4:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-4",
+              "event",
+              "reproduced-4:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-5",
+              "event",
+              "reproduced-5:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-5",
+              "event",
+              "reproduced-5:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-5",
+              "event",
+              "reproduced-5:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-5",
+              "event",
+              "reproduced-5:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "reproduced-5",
+              "event",
+              "reproduced-5:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-0",
+              "event",
+              "failed-0:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-0",
+              "event",
+              "failed-0:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-0",
+              "event",
+              "failed-0:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-1",
+              "event",
+              "failed-1:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-1",
+              "event",
+              "failed-1:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "failed-1",
+              "event",
+              "failed-1:2"
+            ]
+          }
+        ],
+        "computation_id": "pix.computation.v1:sha256:1d5760b504e08adaf223324da35a62f2e5872bdb99a8a025f4edfff318017381",
+        "parent_computation_ids": [
+          "pix.computation.v1:sha256:ee6480ccf23de82d7e14eb9a68da18879e25600f28867af2baf3c87b89fba679"
+        ]
+      },
+      "document_digest": "pix.analysis-result.v1:sha256:c9593c26d36342a83d0b4a814b7f9ba1476202adf7825bee9ab1b91011d697bc"
+    }
+  ],
+  "limits": [
+    "Completed source-sequence runs only; no live-current-cut or concurrent semantics.",
+    "DFG accepting-language conformance reports edit cost, not normalized fitness or business acceptance.",
+    "Discovery may generalize recombinations; zero cost does not prove an exact previously observed trace.",
+    "Empirical deviation does not authorize correction, identity change or tool execution."
+  ],
+  "engine": {
+    "repository": "Chanta-Research-Group/PIX",
+    "sourceCommit": "3205d832d5dcdc6901f916b35496a0c60b657e7a",
+    "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+    "packageVersion": "0.5.0",
+    "pythonVersion": "3.12.14",
+    "sourceVerified": true
+  },
+  "sampleCount": 20,
+  "variants": [
+    {
+      "variantId": "group:0/variant:1",
+      "caseIds": [
+        "ordinary-0",
+        "ordinary-1",
+        "ordinary-10",
+        "ordinary-11",
+        "ordinary-2",
+        "ordinary-3",
+        "ordinary-4",
+        "ordinary-5",
+        "ordinary-6",
+        "ordinary-7",
+        "ordinary-8",
+        "ordinary-9"
+      ],
+      "activities": [
+        "request",
+        "edit",
+        "test",
+        "deliver"
+      ],
+      "frequency": 12,
+      "cumulativeCaseCount": 12
+    },
+    {
+      "variantId": "group:0/variant:2",
+      "caseIds": [
+        "reproduced-0",
+        "reproduced-1",
+        "reproduced-2",
+        "reproduced-3",
+        "reproduced-4",
+        "reproduced-5"
+      ],
+      "activities": [
+        "request",
+        "reproduce",
+        "edit",
+        "test",
+        "deliver"
+      ],
+      "frequency": 6,
+      "cumulativeCaseCount": 18
+    },
+    {
+      "variantId": "group:0/variant:3",
+      "caseIds": [
+        "failed-0",
+        "failed-1"
+      ],
+      "activities": [
+        "request",
+        "tool_error",
+        "abort"
+      ],
+      "frequency": 2,
+      "cumulativeCaseCount": 20
+    }
+  ],
+  "model": {
+    "activities": [
+      "abort",
+      "deliver",
+      "edit",
+      "reproduce",
+      "request",
+      "test",
+      "tool_error"
+    ],
+    "edges": [
+      [
+        "edit",
+        "test"
+      ],
+      [
+        "reproduce",
+        "edit"
+      ],
+      [
+        "request",
+        "edit"
+      ],
+      [
+        "request",
+        "reproduce"
+      ],
+      [
+        "request",
+        "tool_error"
+      ],
+      [
+        "test",
+        "deliver"
+      ],
+      [
+        "tool_error",
+        "abort"
+      ]
+    ],
+    "starts": [
+      "request"
+    ],
+    "ends": [
+      "abort",
+      "deliver"
+    ],
+    "acceptsEmpty": false
+  }
+}

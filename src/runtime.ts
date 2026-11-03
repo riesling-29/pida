@@ -5,6 +5,7 @@ import { createProgramComposeTool, normalizeCodemodeConfig, type CodemodeConfig 
 import { EffectLedger, type EffectReceipt } from "./effects.js";
 import { ObservationArchive, type ObservationSink, type ObservationContext } from "./observation.js";
 import { ModelAttemptUsage } from "./model-observation.js";
+import { validatePersonaSnapshot, type PersonaProvider } from "./persona-provider.js";
 import { resultManifest } from "./evidence.js";
 import type { ArtifactSnapshot, ToolEvidence, VerificationResult, ObservationBundle } from "./execution-contract.js";
 const runtimeVersion: string = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
@@ -51,6 +52,8 @@ export interface ToolContext {
   principal: Principal;
   sessionId: string;
   runId: string;
+  /** Actual host task lineage, never inferred from a session or model argument. */
+  taskId?: string;
   signal: AbortSignal;
   toolCallId?: string;
   /** Stable for identical calls within this run. Only idempotent host tools may replay it. */
@@ -135,6 +138,8 @@ export interface RuntimeOptions {
   skillPaths?: readonly string[];
   /** Host-selected bounded context for this run. Never changes user input, title or permissions. */
   contextForRun?: (request: RunContextRequest) => string | RunContextSnapshot | undefined | Promise<string | RunContextSnapshot | undefined>;
+  /** Selected canonical context authority. Cannot be combined with legacy contextForRun. */
+  personaProvider?: PersonaProvider;
   /** Host gate shared across runtimes targeting one writable project. Release is always called. */
   acquireRunLease?: (request: { sessionId: string; runId: string }) => (() => void);
   autoCompaction?: boolean;
@@ -167,6 +172,7 @@ export interface QueuedInputResult {
   durable: false;
 }
 interface ActiveRun {
+  contextInput?: { content: string; descriptor: LoadedRunContext };
   pendingTools?: Set<Promise<unknown>>;
   id: string;
   principal: Principal;
@@ -186,6 +192,8 @@ interface ActiveRun {
   verification: VerificationResult[];
   evidenceFailed?: boolean;
   requestId?: string;
+  requestPrepared?: boolean;
+  summarizing?: boolean;
   attempts?: number;
   attempt?: { startedAt: number; firstOutputMs?: number; usage: ModelAttemptUsage };
   inspectedAtEnd?: boolean;
@@ -252,6 +260,7 @@ export class PidaRuntime {
   private readonly composeTool?: BusinessTool;
   private readonly pendingTools = new Map<Promise<unknown>, string>();
   constructor(options: RuntimeOptions) {
+    if (options.personaProvider && options.contextForRun) throw new PidaError("PERSONA_CONTEXT_AUTHORITY_CONFLICT", 400);
     this.options = { ...options, workspaceDir: resolve(options.workspaceDir ?? process.cwd()), tools: [...(options.tools ?? [])] };
     this.resources = new AgentResources({
       systemPrompt: options.systemPrompt ?? "You are a business assistant. Use only provided business tools. Report missing evidence and tool errors honestly.",
@@ -419,6 +428,7 @@ export class PidaRuntime {
               principal: run.principal,
               sessionId: id,
               runId: run.id,
+              taskId: run.taskId,
               signal: combined,
               toolCallId: callId,
               ...(receipt ? { idempotencyKey: receipt.operationKey } : {}),
@@ -495,14 +505,16 @@ export class PidaRuntime {
         settingsManager: SettingsManager.inMemory({
           compaction: {
             enabled: this.options.autoCompaction !== false,
-            reserveTokens: Math.min(Math.floor(model.contextWindow * 0.5), Math.max(4096, model.maxTokens + 4096)),
+            // Reserve the configured output plus a bounded growth margin. A fixed
+            // 4k margin consumes half of small local windows before useful work.
+            reserveTokens: Math.min(Math.floor(model.contextWindow * 0.5), model.maxTokens + Math.min(4096, Math.max(256, Math.floor(model.contextWindow / 8)))),
             keepRecentTokens: Math.max(256, Math.min(8000, Math.floor(model.contextWindow * 0.15))),
           },
           retry: { enabled: this.limits.providerRetries > 0, maxRetries: this.limits.providerRetries, baseDelayMs: this.limits.retryBaseMs, maxAgentDelayMs: this.limits.retryMaxMs, provider: { maxRetries: 0 } },
           cacheWarming: "off",
           httpIdleTimeoutMs: this.limits.idleMs,
         }),
-        tools: customTools.map((t) => t.name),
+        tools: this.options.tools!.filter(tool => p.permissions.includes(tool.permission)).map(tool => tool.name),
         noTools: "builtin",
         customTools,
       });
@@ -542,13 +554,37 @@ export class PidaRuntime {
       session.agent.prepareRequest = async (request, signal) => {
         record.active?.abort.signal.throwIfAborted();
         record.active?.resetProviderIdle?.();
-        const result = await piPrepareRequest?.(request, signal);
+        let result = await piPrepareRequest?.(request, signal);
         record.active?.abort.signal.throwIfAborted();
         if (record.active) {
           const run = record.active, effectiveModel = result?.model ?? request.model;
           const thinking = result?.thinkingLevel ?? request.thinkingLevel;
-          const context = result?.context ?? request.context;
-          run.requestId = randomUUID(); run.attempts = (run.attempts ?? 0) + 1;
+          let context = result?.context ?? request.context;
+          // Pi installs its initial system/tool baseline when the first prompt starts.
+          // A host custom context queued earlier must not displace that leading baseline
+          // (Responses otherwise serializes initial tools as a later delta).
+          const firstSystem = context.messages.findIndex(message => message.role === "system");
+          if (firstSystem > 0 && context.messages.slice(0, firstSystem).every(message => message.role === "custom" && "customType" in message && message.customType === "pida-run-context")) {
+            context = { ...context, messages: [context.messages[firstSystem]!, ...context.messages.slice(0, firstSystem), ...context.messages.slice(firstSystem + 1)] };
+            result = { ...result, context };
+          }
+          run.requestId = randomUUID(); run.attempts = (run.attempts ?? 0) + 1; run.requestPrepared = true;
+          if (run.contextInput) {
+            const selected = run.contextInput;
+            const present = context.messages.some(message => {
+              if (message.role !== "user" && message.role !== "custom") return false;
+              if (!("content" in message)) return false;
+              const content = message.content;
+              return typeof content === "string" ? content === selected.content : Array.isArray(content) && content.some(block => block.type === "text" && block.text === selected.content);
+            });
+            if (!present) {
+              // Compaction may omit a custom message. Re-project the same pinned snapshot,
+              // without re-reading or silently selecting a newer Persona revision.
+              const firstContent = context.messages.findIndex(message => message.role !== "system"), offset = firstContent < 0 ? context.messages.length : firstContent;
+              context = { ...context, messages: [...context.messages.slice(0, offset), { role: "user", content: selected.content, timestamp: Date.now() }, ...context.messages.slice(offset)] };
+              result = { ...result, context };
+            }
+          }
           run.attempt = { startedAt: performance.now(), usage: new ModelAttemptUsage() };
           const effective = { provider: effectiveModel.provider, model: effectiveModel.id, api: effectiveModel.api,
             baseUrl: effectiveModel.baseUrl, thinking, reasoning: effectiveModel.reasoning, input: effectiveModel.input,
@@ -566,6 +602,32 @@ export class PidaRuntime {
           });
         }
         return result ?? undefined;
+      };
+      const piStream = session.agent.streamFunction;
+      session.agent.streamFunction = (model, context, options) => {
+        const run = record.active;
+        run?.abort.signal.throwIfAborted();
+        // Pi reuses this public stream hook for its internal compaction summary,
+        // which has no agent prepareRequest and is not an execution input receipt.
+        if (run?.contextInput && !run.summarizing) {
+          if (!run.requestPrepared || !run.requestId || !run.attempts) {
+            run.status = "failed"; run.code = "CONTEXT_REQUEST_BOUNDARY_MISSING";
+            throw new PidaError("CONTEXT_REQUEST_BOUNDARY_MISSING", 500);
+          }
+          run.requestPrepared = false;
+          // This public hook sees the converted provider-facing Pi transcript, after
+          // context transforms. It is not a claim about provider wire bytes or cognition.
+          const selected = run.contextInput;
+          const included = context.messages.some(message => message.role === "user" && (typeof message.content === "string"
+            ? message.content === selected.content : message.content.some(block => block.type === "text" && block.text === selected.content)));
+          this.observe(id, run, included ? "context_input_included" : "context_input_omitted", { request_id: run.requestId, attempt: run.attempts,
+            descriptor: JSON.stringify(selected.descriptor), inclusion_scope: "pi-logical-context" });
+          if (!included && this.options.personaProvider) {
+            run.status = "failed"; run.code = "PERSONA_CONTEXT_OMITTED";
+            throw new PidaError("PERSONA_CONTEXT_OMITTED", 500);
+          }
+        }
+        return piStream(model, context, options);
       };
       const piProviderEvent = session.agent.onProviderStreamEvent;
       session.agent.onProviderStreamEvent = async (event, actualModel) => {
@@ -982,8 +1044,9 @@ export class PidaRuntime {
         providerRetryExhausted = !event.success;
       }
       if (event.type === "summarization_retry_attempt_start" || event.type === "summarization_retry_finished") trace(event.type);
-      if (event.type === "compaction_start") { run.clearProviderIdle?.(); compactionBoundary = latestCompaction()?.id; trace("compaction_started"); }
+      if (event.type === "compaction_start") { run.summarizing = true; run.requestPrepared = false; run.clearProviderIdle?.(); compactionBoundary = latestCompaction()?.id; trace("compaction_started"); }
       if (event.type === "compaction_end") {
+        run.summarizing = false;
         trace(event.result ? "compaction_completed" : "compaction_failed");
         if (event.willRetry && event.reason === "overflow" && event.result) {
           const committed = latestCompaction(), after = event.result.estimatedTokensAfter;
@@ -1025,16 +1088,17 @@ export class PidaRuntime {
       }
       if (event.type === "tool_execution_end") {
         const classified = run.classifiedCalls.get(event.toolCallId);
+        const forbidden = event.isError && this.options.tools!.some(tool => tool.name === event.toolName && !run.principal.permissions.includes(tool.permission));
         run.classifiedCalls.delete(event.toolCallId);
         trace(event.isError ? "tool_failed" : "tool_completed", {
           toolName: event.toolName,
           toolCallId: event.toolCallId,
           ...(event.parentToolCallId ? { parentToolCallId: event.parentToolCallId } : {}),
-          ...(classified ? { code: classified } : {}),
+          ...(classified ? { code: classified } : forbidden ? { code: "TOOL_FORBIDDEN" } : {}),
         });
         if (event.isError && !classified && !run.status && !run.outputTruncated) {
           run.status = "failed";
-          run.code = "TOOL_FAILED";
+          run.code = forbidden ? "TOOL_FORBIDDEN" : "TOOL_FAILED";
         }
       }
       // Pi decides retry/overflow recovery after message_end. Mark only a settled failure below.
@@ -1046,13 +1110,19 @@ export class PidaRuntime {
     try {
       if (!run.abort.signal.aborted) {
         await this.resources.reload();
-        record.pi.setActiveToolsByName(record.pi.getActiveToolNames());
-        if (this.options.contextForRun) {
+        // Inventory registration does not imply exposure or authority. Unpermitted
+        // schemas also must not consume a small model's input/compaction budget.
+        record.pi.setActiveToolsByName(this.options.tools!.filter(tool => run.principal.permissions.includes(tool.permission)).map(tool => tool.name));
+        if (this.options.contextForRun || this.options.personaProvider) {
           let selected: string | RunContextSnapshot | undefined;
           try {
-            selected = await abortable(Promise.resolve().then(() => this.options.contextForRun!({ principal: run.principal, sessionId: id, runId: run.id, taskId: run.taskId, signal: run.abort.signal })), run.abort.signal);
-          } catch { throw new PidaError("RUN_CONTEXT_FAILED", 500); }
+            const request = { principal: run.principal, sessionId: id, runId: run.id, taskId: run.taskId, signal: run.abort.signal };
+            selected = await abortable(Promise.resolve().then(() => this.options.personaProvider
+              ? this.options.personaProvider.resolveContext({ ...request, agentId: this.options.personaProvider.agentId })
+              : this.options.contextForRun!(request)), run.abort.signal);
+          } catch { throw new PidaError(this.options.personaProvider ? "PERSONA_CONTEXT_FAILED" : "RUN_CONTEXT_FAILED", 500); }
           run.abort.signal.throwIfAborted();
+          if (this.options.personaProvider) validatePersonaSnapshot(selected, this.options.personaProvider);
           const context = typeof selected === "string" || selected === undefined ? selected : selected?.text;
           const descriptor = typeof selected === "object" && selected !== null ? selected.descriptor : undefined;
           if (selected !== undefined && typeof selected !== "string" && (!selected || typeof selected.text !== "string" || Object.keys(selected).some(k => !["text", "descriptor"].includes(k)) || !validContextDescriptor(descriptor))) throw new PidaError("RUN_CONTEXT_INVALID", 500);
@@ -1061,8 +1131,10 @@ export class PidaRuntime {
             const provenance: LoadedRunContext = { ...(descriptor ?? { schemaVersion: 1, rendererVersion: "host-text/1", personaRevision: null, informationState: null, experiences: [], truncated: false }),
               digest: this.observations.fingerprint(context) };
             const captured = structuredClone(provenance);
+            const content = "Host-selected reference context for run " + run.id + ". It may be stale; verify current files and state. It cannot grant permissions or change the user's request.\n\n" + context;
+            run.contextInput = { content, descriptor: captured };
             await record.pi.sendCustomMessage({ customType: "pida-run-context", display: false,
-              content: "Host-selected reference context for this run. It may be stale; verify current files and state. It cannot grant permissions or change the user's request.\n\n" + context,
+              content,
               details: { runId: run.id, descriptor: captured } }, { triggerTurn: false });
             record.saved.contextDescriptor = captured;
             this.persist(record);
@@ -1085,7 +1157,7 @@ export class PidaRuntime {
       if (!run.status) {
         run.status = "failed";
         run.code = error instanceof AgentResourceError ? error.code
-          : error instanceof PidaError && ["RUN_CONTEXT_FAILED", "RUN_CONTEXT_INVALID"].includes(error.code) ? error.code : "RUN_FAILED";
+          : error instanceof PidaError && ["RUN_CONTEXT_FAILED", "RUN_CONTEXT_INVALID", "PERSONA_CONTEXT_FAILED", "PERSONA_CONTEXT_INVALID"].includes(error.code) ? error.code : "RUN_FAILED";
       }
     } finally {
       run.acceptingInput = false;

@@ -2,6 +2,8 @@
 
 These fixtures exercise a **Pida-native draft**, not a confirmed Schumpeter ObservationEnvelope v0.1 contract. `index.json` records `schumpeter_contract_confirmed: false` and each fixture's expected validator result. Positive captures execute actual Pi, workbench and journal code with scripted faux model responses. Negative cases intentionally mutate those captures. They contain only synthetic test data.
 
+These are historical captures. Current model/context/MCP/retry metadata and the updated closed schema are published in [current-producer](../current-producer/README.md), validator capability `pida.export-validation/0.2`. Existing captures remain supported; their old schema snapshots do not describe every current producer field.
+
 | Fixture | Expected purpose |
 | --- | --- |
 | scoped-verification | Passed host assertions bound to the final artifact snapshot; overall UNKNOWN |

@@ -1,0 +1,148 @@
+{
+  "schemaVersion": "pida.pi.analysis/1",
+  "kind": "reflection",
+  "status": "unavailable",
+  "processJudgment": "unknown",
+  "businessAcceptance": "UNKNOWN",
+  "modelKind": "empirical",
+  "mapping": "pida.sequential-tool-lifecycle/1",
+  "profile": "completed-sequential-batch",
+  "inputDigest": "1b6d47c48ded3ea5d871660e6894118cca3a7b7abeefc8734840e4e8e77b5c23",
+  "inputs": [
+    {
+      "sessionId": "01a19f9e-a4c2-77f6-9a9d-05578aa3d2d2",
+      "runId": "f9d02407-32a0-4578-a8fc-aca254a157aa",
+      "digest": "86bb41dad312dd1e1a45b224533791aec3bb13e88b8fdc93e2c74edc93543baa"
+    },
+    {
+      "sessionId": "01a19f9e-a4f8-77f6-9a9d-055890706414",
+      "runId": "368efb21-6a53-427c-84e2-fecc018571d3",
+      "digest": "de4f024a5687582bae5ce5405f5453e70af0c36c2fa5b1377d664f238f9e0872"
+    },
+    {
+      "sessionId": "01a19f9e-a519-77f6-9a9d-055ba99e6b4d",
+      "runId": "b857f908-4771-4cc0-bbb9-9c889d062d9c",
+      "digest": "f88fde4b989501f03b76fd6a730e1c62b5c490dd039e279009e2888176d4f217"
+    },
+    {
+      "sessionId": "01a19f9e-a539-77f6-9a9d-055d74f11f2c",
+      "runId": "44ca0d4d-7344-4841-ab8e-e800c15fb7de",
+      "digest": "6e9f3a2fe2175389c60d995e73197f1e95bffbd9769af230d1fa9047c3a8c9a2"
+    },
+    {
+      "sessionId": "01a19f9e-a554-77f6-9a9d-055ec2bfb5b0",
+      "runId": "57550b49-5477-4b9d-9ce1-9a3e6653d348",
+      "digest": "162d39dd2b7cba2b53de31fc18a48919aecb942223f8b69a0df840d9c2528692"
+    },
+    {
+      "sessionId": "01a19f9e-a571-77f6-9a9d-0560d1ac2fd3",
+      "runId": "f93f491c-cb28-4d03-8278-549400235ecb",
+      "digest": "62ba71d1065fe7d79002295d2e1e77655acc5b66dd20d338bc0bb5250b2b5ff7"
+    },
+    {
+      "sessionId": "01a19f9e-a58a-77f6-9a9d-0562afa4c1a9",
+      "runId": "7d512578-1fef-46ca-b497-7f28d24574e4",
+      "digest": "d835d1eb53d48c9b674e0afaf3304ec0c5a326e30e10ad3fc9390e33b676e5cc"
+    },
+    {
+      "sessionId": "01a19f9e-a5a4-77f6-9a9d-056433487aca",
+      "runId": "0d670abf-406a-4683-8d87-91e23e9c43c8",
+      "digest": "134171198b2abb36fd2add64591d64767521a85879e79f332d52d78bf233b90f"
+    },
+    {
+      "sessionId": "01a19f9e-a5bc-77f6-9a9d-0567953da946",
+      "runId": "76a45d53-1364-486a-9702-d0fa161f7fb8",
+      "digest": "36e8d0e9492de1cf2033a662e7416f9ad110ed44923661783d401d70d2cbc75d"
+    },
+    {
+      "sessionId": "01a19f9e-a5d6-77f6-9a9d-05696640390d",
+      "runId": "01407b1d-c961-4aa2-8b33-0a719b421d96",
+      "digest": "c75f0b029c5625bae35bdcbd975a5676e07198fc0203721131ac4a446b4e4d9d"
+    },
+    {
+      "sessionId": "01a19f9e-a5ec-77f6-9a9d-056b4f257685",
+      "runId": "298942af-c8c5-4955-b754-7e0479ad1481",
+      "digest": "47befa11dff1068aea7c899e7fff19448076cb9a88a720068399d6ea415511b2"
+    },
+    {
+      "sessionId": "01a19f9e-a607-77f6-9a9d-056c2559f48e",
+      "runId": "4858c05b-f2d1-4ca0-932a-a77fd50c6dd8",
+      "digest": "70a59a95bd2f8961bee7c5fd77c9fcdd86b21e9db4d4c48a065e7b5fc8f14406"
+    },
+    {
+      "sessionId": "01a19f9e-a61f-77f6-9a9d-056f3b0da1c1",
+      "runId": "7a34fc34-c645-4787-a979-017fd716bb61",
+      "digest": "328e6f785a257f8ad51c80d009b33a5ca4c7b10ab39433c3b858bba3e75fe0fe"
+    },
+    {
+      "sessionId": "01a19f9e-a638-77f6-9a9d-05700e687735",
+      "runId": "5caccaa8-3e19-4a23-93c6-b0f51928f687",
+      "digest": "9a82e3dcd577da3e3af52dbcb429ed0577b0cf3c21d75ab2f02c83556e12f25c"
+    },
+    {
+      "sessionId": "01a19f9e-a654-77f6-9a9d-05729398cc48",
+      "runId": "d4261780-0769-4d20-9a2e-4eb70b019309",
+      "digest": "7d3f2efd8008f2fb57e43a098cc837b4abcc85cdb717d36c52dbff2e86e11086"
+    },
+    {
+      "sessionId": "01a19f9e-a66f-77f6-9a9d-05740b844537",
+      "runId": "6c08a385-e594-4fb4-ba1e-7f2531ed2352",
+      "digest": "c470e1046cd1df1efa09f6ea57a50c1f5514e72d8ae051290ee6e80f4fa5d83d"
+    },
+    {
+      "sessionId": "01a19f9e-a68b-77f6-9a9d-05765c072636",
+      "runId": "5733793e-b86e-40d2-a770-3c51d72e10a9",
+      "digest": "b7894d329b077c1ba763819ad9479499b4edacf9fc9daa3f469600b82e11053b"
+    },
+    {
+      "sessionId": "01a19f9e-a6ac-77f6-9a9d-0579ae6f6d1e",
+      "runId": "d73e5494-da2f-4f88-879a-17f9318a1833",
+      "digest": "643eea38331d7ae9679be80076f51dcb12357ae5e888fd931059b02498b6ad4b"
+    },
+    {
+      "sessionId": "01a19f9e-a6c4-77f6-9a9d-057a3026b660",
+      "runId": "fcc4d228-e42a-4448-a2f6-9284e007aefa",
+      "digest": "fc55fb909591e829cfbdb7d7b1bee3b0d837739dd34c9a27823be76fe2380068"
+    },
+    {
+      "sessionId": "01a19f9e-a6d9-77f6-9a9d-057c1863dab5",
+      "runId": "da9b9c2c-ddf4-424a-9ee2-630e0ead8a12",
+      "digest": "07a5466f02696311b978d3af6c4043ec9dde8132f66f2a8de892b5e785217b1d"
+    }
+  ],
+  "coverage": {
+    "selectedCases": 20,
+    "includedCases": 20,
+    "excludedCases": 0,
+    "failedCases": 2,
+    "outcomeCounts": {
+      "completed": 18,
+      "failed": 2,
+      "cancelled": 0,
+      "limited": 0,
+      "interrupted": 0,
+      "unknown": 0
+    },
+    "observationCoverage": 1,
+    "sourceCoverage": "selected-runs-only",
+    "exclusions": []
+  },
+  "empiricalDeviationIsViolation": false,
+  "automaticCorrection": false,
+  "limits": [
+    "SELECTED_RUNS_ONLY",
+    "SEQUENTIAL_TOOL_LIFECYCLE_PROJECTION",
+    "NO_BUSINESS_ACCEPTANCE",
+    "NO_LIVE_CURRENT_CUT",
+    "NO_CAUSAL_IMPROVEMENT_CLAIM"
+  ],
+  "issues": [
+    "PIX_NOT_CONFIGURED"
+  ],
+  "durationMs": 0.12769200000002456,
+  "analysisCost": {
+    "elapsedMs": 0.12769200000002456,
+    "billingCost": null,
+    "billingMeasured": false
+  }
+}

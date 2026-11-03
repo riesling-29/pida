@@ -5,6 +5,10 @@ export * from "./providers.js";
 export type * from "./execution-contract.js";
 export type { ObservationSink } from "./observation.js";
 export { validateObservationBundle } from "./integration-contract.js";
+export { observationContractRevision } from "./execution-contract.js";
+export * from "./persona-provider.js";
+export * from "./process-intelligence.js";
+export * from "./pix-port.js";
 export { lotStatusTool } from "./tools.js";
 export { nativeProvider, nativeProviderCatalog, type NativeProviderConfig } from "./provider-catalog.js";
 

@@ -2,14 +2,33 @@ import { Type } from "typebox";
 import { Value } from "typebox/value";
 import { canonical, sha256 } from "./private-state.js";
 import { observationSchema, manifestSchema, type ObservationBundle } from "./execution-contract.js";
+import { validContextDescriptor } from "./run-context.js";
 const object = (properties: Record<string, any>) => Type.Object(properties, { additionalProperties: false });
 const str = Type.String({ maxLength: 512 }), hash = Type.String({ pattern: "^[a-f0-9]{64}$" });
 const refs = Type.Array(str, { maxItems: 10000 });
-const scalar = Type.Union([str, Type.Number(), Type.Boolean(), Type.Null()]);
-const payload = object(Object.fromEntries([
-  "model", "request_id", "stop_reason", "tokens", "cost_usd", "tool_call_id", "status", "code", "persistence_error",
-  "tool_name", "scope", "handoff", "operation", "compacted", "target_session_id", "interrupted", "detected_on_restore",
-].map(key => [key, Type.Optional(scalar)])));
+const nullable = (schema: any) => Type.Union([schema, Type.Null()]);
+const count = Type.Integer({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER });
+const positive = Type.Integer({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER });
+const nonnegative = Type.Number({ minimum: 0 });
+const payload = object(Object.fromEntries(Object.entries({
+  model: str, api: str, request_id: nullable(str), stop_reason: str,
+  attempt: nullable(positive), provider_generation: str, thinking_level: str,
+  context_window: positive, model_max_tokens: positive,
+  effective_config_digest: hash, system_digest: hash, tools_digest: hash, fingerprint_scope: str,
+  usage_status: Type.Union(["normalized", "unknown", "invalid", "partial", "reported"].map(s => Type.Literal(s))),
+  input_tokens: nullable(count), uncached_input_tokens: nullable(count), output_tokens: nullable(count),
+  cache_read_tokens: nullable(count), cache_write_tokens: nullable(count), reasoning_tokens: nullable(count), tokens: nullable(count),
+  cost_usd: nullable(nonnegative), first_output_ms: nullable(nonnegative), duration_ms: nullable(nonnegative),
+  tool_call_id: str, parent_tool_call_id: str, tool_name: str,
+  status: str, code: nullable(str), persistence_error: nullable(str), scope: str,
+  handoff: Type.Boolean(), operation: str, compacted: Type.Boolean(), target_session_id: str,
+  interrupted: Type.Boolean(), detected_on_restore: Type.Boolean(),
+  // A loaded descriptor can contain 32 revision refs. Its JSON structure is checked below.
+  descriptor: Type.String({ minLength: 2, maxLength: 8192 }),
+  inclusion_scope: Type.Literal("pi-logical-context"),
+  source: Type.Union([Type.Literal("provider"), Type.Literal("summarization")]), max_attempts: count, delay_ms: nonnegative,
+  allowed: Type.Boolean(), success: Type.Boolean(),
+}).map(([key, schema]) => [key, Type.Optional(schema)])));
 export const observationJsonSchema = object({
   schema_version: Type.Literal(observationSchema), source_id: str, source_event_id: str, agent_id: str,
   session_id: str, task_id: str, run_id: str, activity: str, occurred_at: str,
@@ -38,6 +57,14 @@ export function validateObservationBundle(input: unknown): { valid: boolean; iss
   if (!Value.Check(bundleJsonSchema, input)) return { valid: false, issues: ["SCHEMA_INVALID"], duplicateEventIds: [] };
   const bundle = input as unknown as ObservationBundle, issues = new Set<string>(), duplicates: string[] = [];
   const seen = new Map<string, string>(); let sequence = 0, terminal: string | undefined;
+  const requests = new Map<string, number | null | undefined>(), contextReceipts = new Set<string>();
+  const requestEvents = new Map<string, string>();
+  for (const event of bundle.events) if (event.activity === "model_request" && typeof event.payload.request_id === "string") {
+    const identity = event.source_id + "/" + event.source_event_id;
+    if (requestEvents.has(event.payload.request_id) && requestEvents.get(event.payload.request_id) !== identity) issues.add("MODEL_REQUEST_ID_CONFLICT");
+    requestEvents.set(event.payload.request_id, identity);
+    requests.set(event.payload.request_id, event.payload.attempt);
+  }
   const first = bundle.events[0];
   for (const event of bundle.events) {
     const key = event.source_id + "/" + event.source_event_id, encoded = canonical(event);
@@ -49,6 +76,19 @@ export function validateObservationBundle(input: unknown): { valid: boolean; iss
     if (event.sequence_number !== ++sequence) issues.add("SEQUENCE_GAP");
     if (event.payload_digest !== sha256(canonical(event.payload))) issues.add("PAYLOAD_DIGEST_MISMATCH");
     if (!Number.isFinite(Date.parse(event.occurred_at))) issues.add("INVALID_TIMESTAMP");
+    if (["context_snapshot_loaded", "context_input_included", "context_input_omitted"].includes(event.activity) || event.payload.descriptor !== undefined) {
+      let descriptor: unknown;
+      try { descriptor = JSON.parse(event.payload.descriptor ?? ""); } catch { /* invalid below */ }
+      if (!["context_snapshot_loaded", "context_input_included", "context_input_omitted"].includes(event.activity) || !validContextDescriptor(descriptor, true)) issues.add("CONTEXT_DESCRIPTOR_INVALID");
+    }
+    if (["context_input_included", "context_input_omitted"].includes(event.activity)) {
+      const requestId = event.payload.request_id;
+      const key = String(requestId);
+      if (typeof requestId !== "string" || !requestId || typeof event.payload.attempt !== "number" ||
+          event.payload.inclusion_scope !== "pi-logical-context" || !requests.has(requestId) ||
+          requests.get(requestId) !== event.payload.attempt || contextReceipts.has(key)) issues.add("CONTEXT_RECEIPT_INVALID");
+      contextReceipts.add(key);
+    }
   }
   const manifest = bundle.manifest;
   if (manifest) {

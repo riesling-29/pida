@@ -1,0 +1,380 @@
+{
+  "schemaVersion": "pida.pix.worker.v1",
+  "operation": "awareness",
+  "status": "computed",
+  "issues": [
+    {
+      "code": "source_sequence",
+      "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order"
+    },
+    {
+      "code": "unknown_timestamp",
+      "message": "No timezone-aware timestamp is available; source facts remain in CaseLog"
+    }
+  ],
+  "nativeResults": [
+    {
+      "format": "pix.analysis-result",
+      "version": "1.3.0",
+      "payload_kind": "case-traces",
+      "computation": {
+        "operator_id": "pix.case_traces",
+        "operator_version": "1.0.0",
+        "source_digest": "pix.case-log.v1:sha256:646ca5297717ff71244e5fae90ba49a5316059b28647029e2f55546567d21fa8",
+        "spec": {
+          "activity_key": "concept:name",
+          "timestamp_key": "time:timestamp",
+          "classifier": null,
+          "object_type": "case"
+        },
+        "status": "computed",
+        "value": {
+          "object_type": "case",
+          "traces": [
+            {
+              "object_id": "heldout-conforming",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "heldout-conforming:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "heldout-conforming:0",
+                      "object": "heldout-conforming",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "heldout-conforming:1",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "heldout-conforming:1",
+                      "object": "heldout-conforming",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "heldout-conforming:2",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "heldout-conforming:2",
+                      "object": "heldout-conforming",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "heldout-conforming:3",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "heldout-conforming:3",
+                      "object": "heldout-conforming",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            }
+          ]
+        },
+        "issues": [
+          {
+            "code": "source_sequence",
+            "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order",
+            "at": []
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-conforming",
+              "event",
+              "heldout-conforming:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-conforming",
+              "event",
+              "heldout-conforming:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-conforming",
+              "event",
+              "heldout-conforming:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-conforming",
+              "event",
+              "heldout-conforming:3"
+            ]
+          }
+        ],
+        "computation_id": "pix.computation.v1:sha256:ba25684616e7a989686c51e7d9d13d4ab6b481b47105570abd6d7afdbbb48bd8",
+        "parent_computation_ids": []
+      },
+      "document_digest": "pix.analysis-result.v1:sha256:40be21bf4b878a36c7bab76f1e801f90e6115cdbb2af34de216be493e32b51f8"
+    },
+    {
+      "format": "pix.analysis-result",
+      "version": "1.3.0",
+      "payload_kind": "case_dfg_alignment_set",
+      "computation": {
+        "operator_id": "pix.case_centric.align_dfg",
+        "operator_version": "1.0.0",
+        "source_digest": "pix.case-log.v1:sha256:646ca5297717ff71244e5fae90ba49a5316059b28647029e2f55546567d21fa8",
+        "spec": {
+          "model": {
+            "activities": [
+              "abort",
+              "deliver",
+              "edit",
+              "reproduce",
+              "request",
+              "test",
+              "tool_error"
+            ],
+            "edges": [
+              [
+                "edit",
+                "test"
+              ],
+              [
+                "reproduce",
+                "edit"
+              ],
+              [
+                "request",
+                "edit"
+              ],
+              [
+                "request",
+                "reproduce"
+              ],
+              [
+                "request",
+                "tool_error"
+              ],
+              [
+                "test",
+                "deliver"
+              ],
+              [
+                "tool_error",
+                "abort"
+              ]
+            ],
+            "starts": [
+              "request"
+            ],
+            "ends": [
+              "abort",
+              "deliver"
+            ],
+            "accepts_empty": false
+          },
+          "parameters": {
+            "log_move_cost": 1,
+            "model_move_cost": 1,
+            "max_states": 100000
+          }
+        },
+        "status": "computed",
+        "value": {
+          "traces": [
+            {
+              "case_id": "heldout-conforming",
+              "status": "optimal",
+              "cost": 0,
+              "moves": [
+                {
+                  "kind": "synchronous",
+                  "log_event_id": "heldout-conforming:0",
+                  "log_activity": "request",
+                  "model_activity": "request",
+                  "reference_event_id": null,
+                  "cost": 0
+                },
+                {
+                  "kind": "synchronous",
+                  "log_event_id": "heldout-conforming:1",
+                  "log_activity": "edit",
+                  "model_activity": "edit",
+                  "reference_event_id": null,
+                  "cost": 0
+                },
+                {
+                  "kind": "synchronous",
+                  "log_event_id": "heldout-conforming:2",
+                  "log_activity": "test",
+                  "model_activity": "test",
+                  "reference_event_id": null,
+                  "cost": 0
+                },
+                {
+                  "kind": "synchronous",
+                  "log_event_id": "heldout-conforming:3",
+                  "log_activity": "deliver",
+                  "model_activity": "deliver",
+                  "reference_event_id": null,
+                  "cost": 0
+                }
+              ],
+              "settled_states": 5,
+              "discovered_states": 15,
+              "lower_bound_cost": 0
+            }
+          ],
+          "optimal_count": 1,
+          "unreachable_count": 0,
+          "limited_count": 0
+        },
+        "issues": [
+          {
+            "code": "source_sequence",
+            "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order",
+            "at": []
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-conforming",
+              "event",
+              "heldout-conforming:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-conforming",
+              "event",
+              "heldout-conforming:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-conforming",
+              "event",
+              "heldout-conforming:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-conforming",
+              "event",
+              "heldout-conforming:3"
+            ]
+          }
+        ],
+        "computation_id": "pix.computation.v1:sha256:2bbeb720cd41cd325ff20302e0697662fb44fa13a6e4a654ae736f37fd643b7e",
+        "parent_computation_ids": [
+          "pix.computation.v1:sha256:ba25684616e7a989686c51e7d9d13d4ab6b481b47105570abd6d7afdbbb48bd8"
+        ]
+      },
+      "document_digest": "pix.analysis-result.v1:sha256:a7e7cc21d959db759562957fda020f9f5151e4bdf9cec3f0cd301c58bb8b1da5"
+    }
+  ],
+  "limits": [
+    "Completed source-sequence runs only; no live-current-cut or concurrent semantics.",
+    "DFG accepting-language conformance reports edit cost, not normalized fitness or business acceptance.",
+    "Discovery may generalize recombinations; zero cost does not prove an exact previously observed trace.",
+    "Empirical deviation does not authorize correction, identity change or tool execution."
+  ],
+  "engine": {
+    "repository": "Chanta-Research-Group/PIX",
+    "sourceCommit": "3205d832d5dcdc6901f916b35496a0c60b657e7a",
+    "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+    "packageVersion": "0.5.0",
+    "pythonVersion": "3.12.14",
+    "sourceVerified": true
+  },
+  "sampleCount": 1,
+  "alignments": [
+    {
+      "caseId": "heldout-conforming",
+      "status": "optimal",
+      "cost": 0,
+      "moves": [
+        {
+          "kind": "synchronous",
+          "log_event_id": "heldout-conforming:0",
+          "log_activity": "request",
+          "model_activity": "request",
+          "reference_event_id": null,
+          "cost": 0
+        },
+        {
+          "kind": "synchronous",
+          "log_event_id": "heldout-conforming:1",
+          "log_activity": "edit",
+          "model_activity": "edit",
+          "reference_event_id": null,
+          "cost": 0
+        },
+        {
+          "kind": "synchronous",
+          "log_event_id": "heldout-conforming:2",
+          "log_activity": "test",
+          "model_activity": "test",
+          "reference_event_id": null,
+          "cost": 0
+        },
+        {
+          "kind": "synchronous",
+          "log_event_id": "heldout-conforming:3",
+          "log_activity": "deliver",
+          "model_activity": "deliver",
+          "reference_event_id": null,
+          "cost": 0
+        }
+      ],
+      "lowerBoundCost": 0
+    }
+  ]
+}
