@@ -3,7 +3,7 @@ import { managedMcpConfigSchema, managedMcpExtension, type ManagedMcpConfig, typ
 import { activateExtensions, assertBusinessTool, assertExtension, ResourceLifetime, type WorkspaceExtension } from "./extensions.js";
 import { composeTools, compositionInventory, compositionRevision, resolveComposition, type WorkspacePreset, type CompositionInventory, type ToolContribution } from "./composition.js";
 import { createAgentTools, agentToolPermissions } from "./agent-tools.js";
-import { AgentSupervisor, type AgentProfile } from "./agent-supervisor.js";
+import { AgentSupervisor, type AgentProfile, type AgentPersonaSourceCatalogue } from "./agent-supervisor.js";
 import { AgentMemoryStore, memoryTools, agentMemoryPermissions } from "./agent-memory.js";
 import { createLocalPersonaProvider, type PersonaProvider } from "./persona-provider.js";
 import { ProcessIntelligence } from "./process-intelligence.js";
@@ -392,13 +392,25 @@ export async function loadWorkspaceExtensions(directory: string, config = readCo
   }
   return definitions;
 }
+export interface WorkspacePersonaContext {
+  agentId: string; role: string; principal: Principal; workspaceId: string;
+}
+/** Host-installed external connection. IDs are selections, never grants or transport settings. */
+export interface WorkspacePersonaSource {
+  id: string;
+  label: string;
+  principalIds: readonly string[];
+  create(context: WorkspacePersonaContext): PersonaProvider | Promise<PersonaProvider>;
+}
 export interface CreateWorkspaceOptions {
   /** Executable factories supplied by the embedding host, never by an HTTP/model request. */
   extensions?: readonly WorkspaceExtension[];
   /** Optional host-installed process backend; never a model-selected module path. */
   commandExecutor?: ProcessExecutor;
   /** Optional host-selected authority. Suppresses built-in memory writers, including HTTP routes. */
-  personaProvider?(context: { agentId: string; role: string; principal: Principal; workspaceId: string }): PersonaProvider | Promise<PersonaProvider>;
+  personaProvider?(context: WorkspacePersonaContext): PersonaProvider | Promise<PersonaProvider>;
+  /** Mixed operation: main and unbound workers stay local; workers select an approved source. */
+  personaSources?: readonly WorkspacePersonaSource[];
   /** Host-selected sources/models and a separately pinned PIX port. Never selected by a model prompt. */
   processProfiles?(context: { agentId: string; role: string; principal: Principal; workspaceId: string; runtime(): PidaRuntime }):
     Omit<PiProfileAnalysisOptions, "directory" | "agentId"> | undefined | Promise<Omit<PiProfileAnalysisOptions, "directory" | "agentId"> | undefined>;
@@ -407,6 +419,30 @@ export interface CreateWorkspaceOptions {
 
 export async function createWorkspace(directory: string, options: CreateWorkspaceOptions = {}) {
   const root = resolve(directory), config = readConfig(root), env = providerEnvironment(root, config);
+  if (options.personaProvider && options.personaSources !== undefined) throw new PidaError("PERSONA_SOURCE_CONFIG_CONFLICT", 400);
+  const registeredPersonaSources = new Map<string, WorkspacePersonaSource>();
+  if (options.personaSources !== undefined && (!Array.isArray(options.personaSources) || options.personaSources.length > 32))
+    throw new PidaError("PERSONA_SOURCES_INVALID", 400);
+  for (const source of options.personaSources ?? []) {
+    if (!source || typeof source.id !== "string" || !/^[a-z][a-z0-9._-]{0,63}$/.test(source.id)
+      || ["local", "workspace"].includes(source.id) || registeredPersonaSources.has(source.id)
+      || typeof source.label !== "string" || !source.label.trim() || source.label.length > 100 || /[\x00-\x1f\x7f]/.test(source.label)
+      || typeof source.create !== "function" || !Array.isArray(source.principalIds) || !source.principalIds.length || source.principalIds.length > 1000
+      || source.principalIds.some((id: unknown) => typeof id !== "string" || !id.trim() || id.length > 256 || /[\x00-\x1f\x7f]/.test(id)))
+      throw new PidaError("PERSONA_SOURCES_INVALID", 400);
+    registeredPersonaSources.set(source.id, { id: source.id, label: source.label, principalIds: [...source.principalIds], create: source.create });
+  }
+  const personaSources = (requestPrincipal: Principal): AgentPersonaSourceCatalogue => options.personaProvider
+    ? { defaultSourceId: "workspace", sources: [{ id: "workspace", label: "워크스페이스 Persona 연결", authority: "host-managed" }] }
+    : { defaultSourceId: "local", sources: [{ id: "local", label: "일반 에이전트 · Pida 기억", authority: "pida-local" },
+      ...[...registeredPersonaSources.values()].filter(source => source.principalIds.includes(requestPrincipal.id))
+        .map(source => ({ id: source.id, label: source.label, authority: "external" as const }))] };
+  const personaSourceFor = (profile: AgentProfile | undefined, requestPrincipal: Principal) => {
+    const catalogue = personaSources(requestPrincipal), id = profile?.personaSourceId ?? catalogue.defaultSourceId;
+    const source = catalogue.sources.find(source => source.id === id);
+    if (!source) throw new PidaError("AGENT_PERSONA_SOURCE_UNAVAILABLE", 409);
+    return source;
+  };
   if (!env.PIDA_API_TOKEN || env.PIDA_API_TOKEN.length < 32)
     throw new Error("Set PIDA_API_TOKEN (at least 32 random characters) in .env or the environment.");
   const lifetime = new ResourceLifetime();
@@ -516,18 +552,21 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
         owner.add(() => agentExtensions.close());
         owner.controller.signal.throwIfAborted();
         const area = profile ? (selectedAgent.workbench ? agentWorkbench(profile.id) : undefined) : workbench;
-        const packs = packsFor(target), store = options.personaProvider ? undefined : memory(agentId);
-        if (store && !store.view().persona && profile?.persona)
+        const source = personaSourceFor(profile, principal);
+        const packs = packsFor(target), store = source.authority === "pida-local" ? memory(agentId) : undefined;
+        if (store && !store.view().persona && profile?.persona && (!profile.sessionId || profile.personaSourceId !== undefined))
           store.revisePersona({ expectedRevision: null, text: profile.persona, sourceRefs: ["owner:registration"] });
         // The profile role is up to 4,000 characters of private instructions. Export a stable cohort ID, not that text.
         const roleId = profile ? "role:" + compositionRevision(profile.role) : "main";
         const localProvider = (requestPrincipal: Principal) => createLocalPersonaProvider(memory(agentId, requestPrincipal.id), { principalId: requestPrincipal.id, workspaceId: root, role: roleId });
-        const persona: PersonaProvider = options.personaProvider
-          ? await options.personaProvider({ agentId, role: roleId, principal, workspaceId: root })
+        const externalFactory = options.personaProvider ?? registeredPersonaSources.get(source.id)?.create;
+        const persona: PersonaProvider = source.authority !== "pida-local"
+          ? await externalFactory!({ agentId, role: roleId, principal, workspaceId: root })
           : { id: "pida.agent-memory/1", agentId, authority: "pida-local",
             resolveContext: request => localProvider(request.principal).resolveContext(request),
             appendAnalysis: request => localProvider(request.principal).appendAnalysis!(request) };
-        if (!persona || persona.agentId !== agentId) throw new PidaError("PERSONA_PROVIDER_INVALID", 500);
+        if (!persona || persona.agentId !== agentId || (!options.personaProvider && persona.authority !== source.authority))
+          throw new PidaError("PERSONA_PROVIDER_INVALID", 500);
         let created: PidaRuntime;
         const pi = new ProcessIntelligence({ directory: join(inside(root, config.stateDir), "process-intelligence", agentId), agentId,
           runtime: () => created, personaProvider: persona, port: pixPort, unavailableReason: pixUnavailable,
@@ -629,6 +668,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
     lifetime.add(closeMain);
     agents = selectedMain.agents ? await AgentSupervisor.open({
       directory: agentDirectory, maxConcurrent: config.agents?.maxConcurrent ?? 3,
+      personaSources,
       runtimeKey: () => revisionOf(activeConfig()),
       workspaceKey: profile => sharedWorkspaceKey ?? profile.id,
       resolvePrincipal: id => id === principal.id ? structuredClone(principal) : undefined,
@@ -646,7 +686,20 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
     const settings = new ProviderSettings(root, runtime);
     lifetime.add(() => settings.close());
     const server = createPidaServer({
-      providerSettings: settings, agents, ...(options.personaProvider ? {} : { agentMemory: memory }),
+      providerSettings: settings, agents,
+      agentMemory: async (id, requestPrincipal) => {
+        let profile = agents?.get(id, requestPrincipal);
+        if (!profile) return undefined;
+        if (profile.personaSourceId === undefined && profile.sessionId) {
+          try { await agents!.getRuntime(id, requestPrincipal); }
+          catch (error) { if (error instanceof PidaError && error.code === "AGENT_PERSONA_SOURCE_MIGRATION_REQUIRED") return undefined; throw error; }
+          profile = agents!.get(id, requestPrincipal);
+        }
+        const catalogue = personaSources(requestPrincipal);
+        const source = catalogue.sources.find(source => source.id === (profile.personaSourceId ?? catalogue.defaultSourceId));
+        if (source?.authority !== "pida-local") return undefined;
+        return memory(id, requestPrincipal.id);
+      },
       ...(selectedAgent.workbench ? { agentWorkbench } : {}), projectView, programs, commands: project?.commands,
       connector: connectorManifest, workbench, runtime, serveDemo: selectedMain.web,
       getComposition: () => getComposition(),

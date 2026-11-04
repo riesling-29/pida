@@ -1,11 +1,11 @@
-import type { AgentProfile, AgentJob } from "./agent-supervisor.js";
+import type { AgentProfile, AgentJob, AgentPersonaSourceCatalogue } from "./agent-supervisor.js";
 import type { CommandManager, CommandView } from "./commands.js";
 export type { CommandView, CommandStatus } from "./commands.js";
 import type { CompositionReport } from "./composition.js";
 export type { CompositionReport } from "./composition.js";
 import type { AgentMemoryView, AgentPersona, AgentExperience, InformationTransition, AgentInformationState } from "./agent-memory.js";
 import type { ProjectChanges, ProjectEntry } from "./project-view.js";
-export type { AgentProfile, AgentJob } from "./agent-supervisor.js";
+export type { AgentProfile, AgentJob, AgentPersonaSource, AgentPersonaSourceCatalogue } from "./agent-supervisor.js";
 export type { AgentMemoryView, InformationTransition } from "./agent-memory.js";
 import type { ObservationBundle, ResultManifest } from "./execution-contract.js";
 export type { ObservationBundle, ResultManifest } from "./execution-contract.js";
@@ -114,8 +114,8 @@ export class PidaClient {
   async waitAgentJobCommand(id: string, jobId: string, commandId: string, options: CommandWaitOptions = {}): Promise<Awaited<ReturnType<CommandManager["wait"]>>> { return this.commandWait(this.agentCommandPath(id, jobId, commandId), options); }
   async cancelAgentJobCommand(id: string, jobId: string, commandId: string): Promise<ReturnType<CommandManager["cancel"]>> { return (await this.request(this.agentCommandPath(id, jobId, commandId) + "/cancel", "POST", {})).json(); }
   async acknowledgeAgentJobCommandRecovery(id: string, jobId: string, commandId: string, input: { inspected: true }): Promise<{command: CommandView}> { return (await this.request(this.agentCommandPath(id, jobId, commandId) + "/recovery", "POST", input)).json(); }
-  async listAgents(): Promise<{ agents: AgentProfile[] }> { return (await this.request("/v1/agents")).json(); }
-  async createAgent(input: {name: string; role?: string; persona?: string}): Promise<AgentProfile> { return (await this.request("/v1/agents", "POST", input)).json(); }
+  async listAgents(): Promise<{ agents: AgentProfile[]; personaSources?: AgentPersonaSourceCatalogue }> { return (await this.request("/v1/agents")).json(); }
+  async createAgent(input: {name: string; role?: string; persona?: string; personaSourceId?: string}): Promise<AgentProfile> { return (await this.request("/v1/agents", "POST", input)).json(); }
   async getAgent(id: string): Promise<AgentProfile> { return (await this.request(this.agentPath(id))).json(); }
   async pauseAgent(id: string): Promise<AgentProfile> { return (await this.request(this.agentPath(id) + "/pause", "POST", {})).json(); }
   async resumeAgent(id: string): Promise<AgentProfile> { return (await this.request(this.agentPath(id) + "/resume", "POST", {})).json(); }
@@ -326,6 +326,10 @@ export function explainError(code?: string): string {
     COMMAND_RESPONSE_MISMATCH: "현재 선택한 명령과 출력 응답이 일치하지 않습니다. 상태를 다시 조회하세요.",
     COMMAND_WAIT_CANCELLED: "명령 상태 대기만 취소했습니다. 명령 실행은 별도로 확인하세요.",
     AGENTS_DISABLED: "이 워크스페이스에서 상주 에이전트가 꺼져 있습니다.",
+    AGENT_PERSONA_SOURCE_UNAVAILABLE: "이 에이전트의 기억 연결이 없거나 접근할 수 없습니다. 호스트의 연결 설정을 확인하세요. 일반 기억으로 자동 전환하지 않습니다.",
+    AGENT_PERSONA_SOURCE_CONFLICT: "외부 Persona를 선택한 경우 이 화면에서 초기 페르소나를 덮어쓸 수 없습니다.",
+    AGENT_PERSONA_SOURCE_MIGRATION_REQUIRED: "이전 세션의 기억 관리 주체와 현재 설정이 다릅니다. 기존 연결을 복원하거나 별도 에이전트로 시작하세요.",
+    MEMORY_UNAVAILABLE: "이 에이전트의 로컬 기억 편집은 제공되지 않습니다. 작업 내역과 실행은 별도로 사용할 수 있습니다.",
     AGENT_RECOVERY_REQUIRED: "중단된 에이전트의 실제 변경 상태를 확인하고 복구 기록을 제출한 뒤 재개하세요.",
     PROGRAM_APPROVAL_MISMATCH: "프로그램 또는 실행 계약이 변경됐습니다. 호스트에서 내용을 확인하고 programs enable로 다시 등록하세요.",
     PROGRAM_ADAPTER_REQUIRED: "이 프로그램은 실행 환경과 입출력 어댑터를 먼저 지정해야 합니다.",

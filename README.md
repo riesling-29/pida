@@ -4,7 +4,7 @@ An embedded, reusable **Pi-based agent harness** for applications. Bring the pac
 
 **Product goals (2026-11-02):** a reusable core for different agent forms, plus a ready-to-use home harness for coding and personal-assistant work that can replace the user's Codex/OpenClaw workflows. Tools, channels and private provider connectors must be attachable without editing the core. These are delivery requirements, not claims of current feature parity. See [core and home-harness requirements, missing capabilities and acceptance gates](docs/CORE-AND-HOME-HARNESS.md).
 
-**Workspace 0.8.8:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+**Workspace 0.8.9:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
 
 New in 0.8: **persistent agents with independent sessions/workbenches, a durable job queue, three-tier sourced memory, bounded asynchronous delegation, real project instructions/skills, guarded steering, host private-provider connectors and project files/Git changes in the UI**. Restart recovery does not replay interrupted work. See the [patch plan](docs/PERSISTENT-CORE-PATCH-PLAN.md), [usage and boundaries](docs/PERSISTENT-AGENTS.md), [private connectors](docs/PRIVATE-CONNECTORS.md) and [validation record](docs/PERSISTENT-CORE-VALIDATION.md). Repository program discovery and callable Node/npm/native program proxies are also included; see [program proxy usage](docs/PROGRAM-PROXIES.md). These are foundations for the home harness; PTY/sandbox executors, messaging/schedules and full Codex/OpenClaw parity are not claimed.
 
@@ -21,6 +21,8 @@ New in 0.8.1: live steering/follow-up controls, private command/result details, 
 New in 0.8.2: bounded Pi-owned model recovery, stream-idle detection, compaction progress guards, sourced memory snapshots/handoff lineage, scoped extension factories, named presets and managed MCP. Model settings includes the actual composition inventory. See [extensions and presets](docs/EXTENSIONS.md), [MCP configuration](docs/MANAGED-MCP.md) and the validation record above.
 
 New in 0.8.8: **a visible terminal workspace**, with a persistent intent/structure/execution/judgment overview, clickable navigation, F1 action menu, F5 file picker and guidance/concise modes. Run evidence stays distinct from independent verification; server startup explains how to attach the TUI. See [usage](docs/TUI.md) and [validation](docs/TUI-0.8.8.md).
+
+New in 0.8.9: **local and Persona-connected agents in the same workspace**. Select a host-approved identity/memory source when registering an agent. Local workers retain their own memory tools; externally bound workers do not acquire local canonical writers. Source choices survive restart, missing connections never silently fall back, and external job history stays visible without local memory. Connections are installed through the host SDK; a deployed Persona service is not bundled. See [setup and boundaries](docs/PERSONA-PROVIDER.md#mixed-local-and-external-agents--089).
 
 New in 0.8.7: **a Pi-based TUI attached to the same host as Web**. Run `npm run tui -- ./my-agent` in another terminal after starting the host. Shared sessions, live assistant previews, explicit steering/follow-up, guarded cancellation, file/diff/tool inspection and detach/reattach reuse the existing runtime. `/web` opens the same session. See [TUI design and usage](docs/TUI.md), [patch plan](docs/TUI-PATCH-PLAN.md) and [validation](docs/TUI-VALIDATION.md).
 
@@ -72,7 +74,7 @@ The package has **not** been published to npm. Create and install a local packag
 ```sh
 npm pack
 # Run from your host application directory:
-npm install /absolute/path/to/pida-core-0.8.8.tgz
+npm install /absolute/path/to/pida-core-0.8.9.tgz
 ```
 
 Entry points separate standalone configuration, server code and browser code:

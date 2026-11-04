@@ -42,6 +42,61 @@ function environment() {
 const row=(sequence,type,runId='r1')=>({sessionId:'s1',runId,sequence,type,timestamp:new Date().toISOString()});
 const info={persistence:true,tools:[],provider:{mode:'endpoint',model:'fixture'},capabilities:{steering:true,followUp:true,queuedInputDurable:false}};
 
+function agentUiFixture() {
+  const env=environment(), created=[];
+  for(const id of ['agent-create-form','agent-persona-form','agent-state-form','agent-experience-form']) env.$(id).append(new Node('button'));
+  const profiles=[{id:'ordinary',name:'ordinary',personaSourceId:'local',paused:false},{id:'bound',name:'bound',personaSourceId:'persona-fixture',paused:false}];
+  const catalogue={defaultSourceId:'local',sources:[{id:'local',label:'Pida memory',authority:'pida-local'},{id:'persona-fixture',label:'External Persona',authority:'external'}]};
+  const client={
+    async listAgents(){return {agents:structuredClone(profiles),personaSources:structuredClone(catalogue)};},
+    async getAgent(id){return structuredClone(profiles.find(p=>p.id===id));},
+    async listAgentJobs(id){return {jobs:[{id:'job-'+id,status:'completed',input:'test request',latestText:'result for '+id,createdAt:'2026-11-04T00:00:00Z',activity:[]}]};},
+    async getAgentMemory(id){if(profiles.find(p=>p.id===id).personaSourceId!=='local')throw {code:'MEMORY_UNAVAILABLE',status:404};return {persona:{revision:1,text:'local memory'},personaHistory:[],experiences:[],states:[]};},
+    async createAgent(input){created.push(structuredClone(input));const profile={id:'created-'+created.length,paused:false,...input};profiles.push(profile);return structuredClone(profile);},
+  };
+  env.storage.set('pida-agent','bound');
+  runInNewContext(read('examples/web/agents.js').replace(/^import .*\n/gm,'').replace(/export function /g,'function ')+'\nthis.createAgents=createAgents;',env.context);
+  const ui=env.context.createAgents({client});
+  return {...env,ui,client,created,catalogue};
+}
+
+test('agent UI keeps external job history usable when local memory is unavailable and binds creation to the chosen source',async()=>{
+  const f=agentUiFixture();
+  try {
+    await f.ui.connect();
+    assert.equal(f.$('agent-title').textContent,'bound');
+    assert.equal(f.$('agent-job-result').textContent,'result for bound');
+    assert.equal(f.$('agent-local-memory').hidden,true);
+    assert.equal(f.$('agent-persona-form').querySelector('button').disabled,true);
+    assert.equal(f.$('agent-source-label').textContent,'External Persona');
+    f.$('agents-list').children[0].click(); await flush();
+    assert.equal(f.$('agent-title').textContent,'ordinary');
+    assert.equal(f.$('agent-local-memory').hidden,false);
+    assert.equal(f.$('agent-persona-form').querySelector('button').disabled,false);
+    f.$('agent-persona-source').value='persona-fixture';f.$('agent-persona-source').onchange();
+    assert.equal(f.$('agent-initial-persona').disabled,true);
+    f.$('agent-name').value='new bound';f.$('agent-initial-persona').value='must not overwrite external identity';
+    f.$('agent-create-form').requestSubmit();await flush();
+    assert.equal(f.created.length,1);assert.equal(f.created[0].personaSourceId,'persona-fixture');assert.equal(f.created[0].persona,undefined);
+    assert.equal(f.$('agent-local-memory').hidden,true);
+    assert.equal(f.$('agent-job-result').textContent,'result for created-1');
+  } finally {f.ui.reset();}
+});
+
+test('a removed source clears a pending creation choice without silently selecting local memory',async()=>{
+  const f=agentUiFixture();
+  try {
+    await f.ui.connect();f.$('agent-persona-source').value='persona-fixture';f.$('agent-persona-source').onchange();
+    f.catalogue.sources=f.catalogue.sources.filter(s=>s.id==='local');
+    await f.ui.connect();
+    assert.equal(f.$('agent-persona-source').value,'');
+    assert.equal(f.$('agent-create-form').querySelector('button').disabled,true);
+    assert.equal(f.$('agent-job-result').textContent,'result for bound');
+    f.$('agent-name').value='no silent fallback';f.$('agent-create-form').requestSubmit();await flush();
+    assert.equal(f.created.length,0);
+  } finally {f.ui.reset();}
+});
+
 test('idle Web view discovers a TUI-started run and projects partial/final text without losing a draft',async()=>{
   const env=environment(),f=fixtureClient();let snapshot={sessionId:'s1',messages:[],running:false},trace=[];
   f.client.getSession=async()=>structuredClone(snapshot);f.client.getTrace=async()=>({events:structuredClone(trace)});

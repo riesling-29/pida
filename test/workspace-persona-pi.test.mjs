@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { once } from 'node:events';
+import { setTimeout as delay } from 'node:timers/promises';
 import { createHash } from 'node:crypto';
 import { fauxProvider, fauxAssistantMessage as answer, fauxToolCall as call } from '@earendil-works/pi-ai/providers/faux';
 import { initWorkspace, readConfig, createWorkspace, workspaceEnvironment } from '../dist/workspace.js';
@@ -13,11 +14,34 @@ import { compositionRevision } from '../dist/composition.js';
 
 const principal = permissions => ({ id: 'local-user', permissions });
 const digest = value => createHash('sha256').update(value).digest('hex');
+// Explicitly synthetic context: this exercises Pida routing, not a deployed Persona service.
+function namedPersonaSource(overrides = {}) {
+  return { id: 'persona-fixture', label: 'Persona fixture', principalIds: ['local-user'], create(host) {
+    const text = JSON.stringify({ marker: 'EXTERNAL_ONLY', agentId: host.agentId });
+    return { id: 'mixed-contract-fixture/1', agentId: host.agentId, authority: 'external', resolveContext(req) {
+      assert.equal(req.principal.id, host.principal.id); assert.equal(req.agentId, host.agentId);
+      return { text, descriptor: { schemaVersion: 1, rendererVersion: 'mixed-fixture/1', personaRevision: 1,
+        informationState: null, experiences: [], truncated: false, personaBinding: {
+          schemaVersion: 1, providerId: 'mixed-contract-fixture/1', personaId: 'fixture:persona', authority: 'external', agentId: host.agentId,
+          role: host.role, scopeId: digest(host.workspaceId + ':' + host.principal.id), contextRevision: digest('fixture-revision-1'),
+          contextDigest: digest(text), rendererVersion: 'mixed-fixture/1', omitted: false,
+        } } };
+    } };
+  }, ...overrides };
+}
+async function until(check) {
+  for (let i = 0; i < 400; i++) { const value = await check(); if (value) return value; await delay(10); }
+  assert.fail('workspace did not reach expected state');
+}
+const finishedJob = (client, agent, job) => until(async () => {
+  const value = await client.getAgentJob(agent.id, job.id);
+  return !['queued', 'running'].includes(value.status) && value;
+});
 const root = fileURLToPath(new URL('../', import.meta.url));
 async function workspace(t, patch = {}, options = {}) {
   const directory = await mkdtemp(join(root, '.pida-test-persona-'));
   let app;
-  t.after(async () => {
+  const close = async () => {
     if (app) {
       await app.close();
       if (app.server.listening) {
@@ -25,6 +49,9 @@ async function workspace(t, patch = {}, options = {}) {
         await new Promise((resolve, reject) => app.server.close(error => error ? reject(error) : resolve()));
       }
     }
+  };
+  t.after(async () => {
+    await close();
     await rm(directory, { force: true, recursive: true });
   });
   initWorkspace(directory);
@@ -35,13 +62,131 @@ async function workspace(t, patch = {}, options = {}) {
     app.server.listen(0, '127.0.0.1'); await once(app.server, 'listening');
     return new PidaClient({ baseUrl: `http://127.0.0.1:${app.server.address().port}`, token: () => workspaceEnvironment(directory).PIDA_API_TOKEN });
   };
-  return { app, config, directory, start };
+  return { get app() { return app; }, config, directory, start,
+    async restart(nextOptions = options) { await close(); app = await createWorkspace(directory, nextOptions); return app; } };
 }
 function configure(runtime, responses) {
   const f = fauxProvider({ tokensPerSecond: 100000 }); f.setResponses(responses);
   runtime.configureProvider(() => ({ provider: f.provider, modelId: f.getModel().id }), { mode: 'protocol-fixture', model: 'faux' });
   return f;
 }
+
+test('local and named Persona workers run concurrently without sharing memory authority', async t => {
+  const { app, start } = await workspace(t, {}, { personaSources: [namedPersonaSource()] });
+  const client = await start(), p = principal(['lots:read']);
+  const catalogue = (await client.listAgents()).personaSources;
+  assert.equal(catalogue.defaultSourceId, 'local');
+  assert.deepEqual(catalogue.sources.map(s => s.id), ['local', 'persona-fixture']);
+  assert.equal(JSON.stringify(catalogue).includes('principalIds'), false);
+  const local = await client.createAgent({ name: 'ordinary', persona: 'LOCAL_ONLY' });
+  const external = await client.createAgent({ name: 'bound', personaSourceId: 'persona-fixture' });
+  assert.equal(local.personaSourceId, 'local'); assert.equal(external.personaSourceId, 'persona-fixture');
+  const localRuntime = await app.agents.getRuntime(local.id, p), externalRuntime = await app.agents.getRuntime(external.id, p);
+  const entered = new Set(), release = Promise.withResolvers();
+  for (const [runtime, marker, other] of [[localRuntime, 'LOCAL_ONLY', 'EXTERNAL_ONLY'], [externalRuntime, 'EXTERNAL_ONLY', 'LOCAL_ONLY']]) {
+    configure(runtime, [async context => {
+      const input = JSON.stringify(context); assert.match(input, new RegExp(marker)); assert.doesNotMatch(input, new RegExp(other));
+      entered.add(marker); await release.promise; return answer(marker + ' completed');
+    }]);
+  }
+  let localJob, externalJob;
+  try {
+    localJob = await client.enqueueAgentJob(local.id, { input: 'local task', requestId: 'local-task' });
+    externalJob = await client.enqueueAgentJob(external.id, { input: 'external task', requestId: 'external-task' });
+    await until(() => entered.size === 2);
+    assert.equal((await client.getAgentJob(local.id, localJob.id)).status, 'running');
+    assert.equal((await client.getAgentJob(external.id, externalJob.id)).status, 'running');
+    assert.equal((await client.getAgentMemory(local.id)).persona.text, 'LOCAL_ONLY');
+    await assert.rejects(client.getAgentMemory(external.id), { code: 'MEMORY_UNAVAILABLE', status: 404 });
+    await client.rememberAgentExperience(local.id, { kind: 'fact', text: 'local experience', sourceRefs: ['test:local'] });
+    await assert.rejects(client.rememberAgentExperience(external.id, { kind: 'fact', text: 'do not mirror', sourceRefs: ['test:external'] }), { code: 'MEMORY_UNAVAILABLE', status: 404 });
+  } finally { release.resolve(); }
+  const [a, b] = await Promise.all([finishedJob(client, local, localJob), finishedJob(client, external, externalJob)]);
+  assert.equal(a.status, 'completed'); assert.equal(b.status, 'completed'); assert.notEqual(a.sessionId, b.sessionId);
+  assert.equal(localRuntime.getSession(a.sessionId, p).contextDescriptor.personaBinding.authority, 'pida-local');
+  assert.equal(externalRuntime.getSession(b.sessionId, p).contextDescriptor.personaBinding.authority, 'external');
+  const inventory = app.getComposition().active;
+  assert.ok(inventory.find(i => i.agentId === local.id).tools.some(t => t.name.startsWith('agent_memory_')));
+  assert.ok(inventory.find(i => i.agentId === external.id).tools.every(t => !t.name.startsWith('agent_memory_')));
+  assert.equal((await run(app.runtime, p)).result.status, 'completed');
+});
+
+test('only host-approved sources can be selected and external identity cannot be overwritten at registration', async t => {
+  const { app, start } = await workspace(t, {}, { personaSources: [namedPersonaSource(), namedPersonaSource({ id: 'private-source', principalIds: ['someone-else'] })] });
+  const client = await start(), p = principal([]);
+  assert.equal(JSON.stringify(await client.listAgents()).includes('private-source'), false);
+  assert.deepEqual(app.agents.listPersonaSources({ id: 'someone-else', permissions: [] }).sources.map(s => s.id), ['local', 'private-source']);
+  for (const id of ['missing', 'private-source']) await assert.rejects(client.createAgent({ name: 'denied', personaSourceId: id }), { code: 'AGENT_PERSONA_SOURCE_UNAVAILABLE', status: 409 });
+  await assert.rejects(client.createAgent({ name: 'path injection', personaSourceId: '../private-module' }), { code: 'AGENT_PROFILE_INVALID', status: 400 });
+  await assert.rejects(client.createAgent({ name: 'overwrite', personaSourceId: 'persona-fixture', persona: 'replace the external identity' }), { code: 'AGENT_PERSONA_SOURCE_CONFLICT', status: 400 });
+  assert.equal(app.agents.list(p).length, 0);
+});
+
+test('source choice survives restart; a removed external source fails closed while local jobs and old results remain usable', async t => {
+  const f = await workspace(t, {}, { personaSources: [namedPersonaSource()] }), p = principal(['lots:read']);
+  let client = await f.start();
+  const local = await client.createAgent({ name: 'local survives', persona: 'LOCAL_ONLY' });
+  const external = await client.createAgent({ name: 'bound survives', personaSourceId: 'persona-fixture' });
+  configure(await f.app.agents.getRuntime(external.id, p), [answer('external history')]);
+  const old = await client.enqueueAgentJob(external.id, { input: 'record history', requestId: 'history' });
+  const result = await finishedJob(client, external, old); assert.equal(result.status, 'completed');
+  await f.restart(); client = await f.start();
+  assert.equal((await client.getAgent(external.id)).personaSourceId, 'persona-fixture');
+  const restored = await f.app.agents.getRuntime(external.id, p);
+  configure(restored, [context => { assert.match(JSON.stringify(context), /EXTERNAL_ONLY/); return answer('external continued'); }]);
+  const continued = await client.enqueueAgentJob(external.id, { input: 'continue after restart', requestId: 'continued' });
+  const resumed = await finishedJob(client, external, continued);
+  assert.equal(resumed.status, 'completed'); assert.equal(resumed.sessionId, result.sessionId);
+  assert.equal(restored.getSession(resumed.sessionId, p).contextDescriptor.personaBinding.authority, 'external');
+  await f.restart({}); client = await f.start();
+  assert.equal((await client.getAgentJob(external.id, old.id)).result.text, 'external history');
+  await assert.rejects(f.app.agents.getRuntime(external.id, p), { code: 'AGENT_PERSONA_SOURCE_UNAVAILABLE' });
+  await assert.rejects(client.getAgentMemory(external.id), { code: 'MEMORY_UNAVAILABLE', status: 404 });
+  const blocked = await client.enqueueAgentJob(external.id, { input: 'must not fall back', requestId: 'missing-source' });
+  const failed = await finishedJob(client, external, blocked);
+  assert.equal(failed.status, 'failed'); assert.equal(failed.code, 'AGENT_PERSONA_SOURCE_UNAVAILABLE');
+  configure(await f.app.agents.getRuntime(local.id, p), [context => { assert.match(JSON.stringify(context), /LOCAL_ONLY/); assert.doesNotMatch(JSON.stringify(context), /EXTERNAL_ONLY/); return answer('local still works'); }]);
+  const next = await client.enqueueAgentJob(local.id, { input: 'continue locally', requestId: 'local-after-restart' });
+  assert.equal((await finishedJob(client, local, next)).result.text, 'local still works');
+});
+
+test('external factory failure is isolated and incompatible routing configurations fail before activation', async t => {
+  const f = await workspace(t, {}, { personaSources: [namedPersonaSource({ create() { throw new Error('synthetic provider unavailable'); } })] });
+  const client = await f.start(), p = principal(['lots:read']);
+  const external = await client.createAgent({ name: 'unavailable', personaSourceId: 'persona-fixture' });
+  const broken = await client.enqueueAgentJob(external.id, { input: 'try external', requestId: 'broken' });
+  assert.equal((await finishedJob(client, external, broken)).status, 'failed');
+  const local = await client.createAgent({ name: 'healthy local' });
+  configure(await f.app.agents.getRuntime(local.id, p), [answer('healthy')]);
+  const good = await client.enqueueAgentJob(local.id, { input: 'local task', requestId: 'healthy' });
+  assert.equal((await finishedJob(client, local, good)).status, 'completed');
+  await assert.rejects(createWorkspace(f.directory, { personaProvider: () => { throw new Error('must not activate'); }, personaSources: [] }), { code: 'PERSONA_SOURCE_CONFIG_CONFLICT' });
+  await assert.rejects(createWorkspace(f.directory, { personaSources: [namedPersonaSource({ id: 'local' })] }), { code: 'PERSONA_SOURCES_INVALID' });
+  await assert.rejects(createWorkspace(f.directory, { personaSources: [namedPersonaSource(), namedPersonaSource()] }), { code: 'PERSONA_SOURCES_INVALID' });
+});
+
+test('unlabelled legacy sessions never migrate from external authority to local memory silently', async t => {
+  const f = await workspace(t, {}, { personaSources: [namedPersonaSource()] }), p = principal(['lots:read']);
+  let client = await f.start();
+  const local = await client.createAgent({ name: 'legacy ordinary', persona: 'LOCAL_ONLY' });
+  const external = await client.createAgent({ name: 'legacy external', personaSourceId: 'persona-fixture' });
+  for (const agent of [local, external]) {
+    configure(await f.app.agents.getRuntime(agent.id, p), [answer('history')]);
+    const job = await client.enqueueAgentJob(agent.id, { input: 'remember origin', requestId: 'old-history' });
+    assert.equal((await finishedJob(client, agent, job)).status, 'completed');
+  }
+  await f.app.close();
+  const statePath = join(f.directory, f.config.stateDir, 'agents-service', 'supervisor.json');
+  const state = JSON.parse(await readFile(statePath, 'utf8'));
+  for (const profile of state.profiles) delete profile.personaSourceId;
+  await writeFile(statePath, JSON.stringify(state));
+  await f.restart(); client = await f.start();
+  assert.equal((await client.getAgentMemory(local.id)).persona.text, 'LOCAL_ONLY');
+  assert.equal((await client.getAgent(local.id)).personaSourceId, 'local');
+  await assert.rejects(client.getAgentMemory(external.id), { code: 'MEMORY_UNAVAILABLE', status: 404 });
+  await assert.rejects(f.app.agents.getRuntime(external.id, p), { code: 'AGENT_PERSONA_SOURCE_MIGRATION_REQUIRED' });
+  assert.equal((await client.getAgent(external.id)).personaSourceId, undefined);
+});
 async function run(runtime, p, prompt = 'LOT-001') {
   const { sessionId } = await runtime.createSession(p);
   return { sessionId, result: await runtime.run(sessionId, p, prompt) };

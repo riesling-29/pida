@@ -80,3 +80,61 @@ Summary calls are reauthorized separately and emit `context_summary_authorized` 
 When required local receipt recording fails, dispatch stops. External observation-sink delivery remains best effort and cannot block unrelated execution. Without `storageDir`, `CONTEXT_RECEIPTS_VOLATILE` is reported; existing external providers without the optional hook remain compatible but disclose `PERSONA_AUTHORIZATION_SNAPSHOT_ONLY`. No remote receipt writeback or distributed exactly-once promise is introduced.
 
 The [actual integration runner](../fixtures/cr-integration/README.md) uses real local Persona/Pi code with synthetic data and scripted responses. The test-only shim calls pinned private read-validation methods; a supported public revalidation endpoint and remote receipt/readback contract are requested in the [owner response](change-requests/responses/PERSONA-CR-PIDA-001.md). External WorkingState writes, analysis append/model activation and organization execution phases are not automatically mapped by this context adapter.
+
+## Mixed local and external agents — 0.8.9
+
+One workspace can contain ordinary agents and agents bound to named external Persona sources.
+The existing main runtime and new agents default to local Pida memory. The host installs external
+connections through `CreateWorkspaceOptions.personaSources`; the Web registration form lists only
+connections approved for the authenticated principal. A source reference is not a credential or a grant.
+
+```ts
+import { createWorkspace, type WorkspacePersonaSource } from "pida-core/workspace";
+
+// Supply an existing, configured host factory, for example one wrapping createVeraPersonaProvider.
+// Its transport and grants are owned by the host; Pida does not invent a remote Persona endpoint.
+export async function startWithPersona(createVera: WorkspacePersonaSource["create"]) {
+  const workspace = await createWorkspace("./my-agent", {
+    personaSources: [{
+      id: "vera",
+      label: "Vera · PersonaSubstrate",
+      principalIds: ["local-user"],
+      create: createVera,
+    }],
+  });
+  workspace.server.listen(workspace.config.port, "127.0.0.1");
+  return workspace;
+}
+```
+
+`create` receives the actual `agentId`, host role ID, principal and workspace identity. It must return
+an external `PersonaProvider` bound to that agent; the existing context/input authorization still runs.
+The source allowlist does not replace Persona-side access checks. Source IDs/labels/authority are the
+only catalogue fields exported to clients; factories, principal lists and transport configuration stay on the host.
+
+- `GET /v1/agents` adds `personaSources: {defaultSourceId, sources}`. Older clients can ignore it.
+- `POST /v1/agents` accepts optional `personaSourceId`. Omit it or select `local` for ordinary agents;
+  select a configured ID such as `vera` for a bound agent. Unknown or unauthorized IDs are rejected.
+- The chosen reference is persisted on the profile. There is no in-place identity-switch API; creating
+  another agent avoids mixing a previous persona's conversation with a new identity.
+- Local agents keep local memory tools and owner-checked HTTP memory routes. External agents receive
+  no local canonical memory tools or writers. Their job history remains visible when memory returns
+  `MEMORY_UNAVAILABLE`; the Web UI hides local memory forms for them.
+- An explicit external selection cannot also submit a local initial persona. Set task instructions in
+  `role`; manage the external identity at its source.
+- Missing sources fail closed for execution, while existing job results remain readable. No fallback
+  to local identity occurs. Other agents remain usable. Shared checkout serialization still applies;
+  independent workspaces use the existing concurrency limit.
+
+The old `personaProvider` option remains supported as a workspace-wide host factory. It cannot be
+combined with `personaSources`. Its catalogue uses the reserved `workspace` source and `host-managed`
+authority, because its exact provider authority belongs to that factory. Existing unlabelled profiles
+are pinned when opened. For sessions with an observed prior external authority, opening under a local
+default is rejected with `AGENT_PERSONA_SOURCE_MIGRATION_REQUIRED`; restoring the original host connection
+or creating a separate agent is required. New named choices are immutable and remain explicit across restarts.
+
+These are host SDK connections, not arbitrary modules/endpoints accepted from HTTP, model text or
+`pida.config.json`. Without a host-installed connection the UI offers only the ordinary mode. A deployed
+Persona service, remote canonical data and live-model integration are not provided by this patch.
+
+Validation and exact scope: [0.8.9 mixed-agent validation](MIXED-PERSONA-0.8.9.md).

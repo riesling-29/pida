@@ -16,7 +16,28 @@ export function createAgents({ client }) {
     cancel: (identity, commandId) => client.cancelAgentJobCommand(...identity.split(":"), commandId),
     recover: (identity, commandId, input) => client.acknowledgeAgentJobCommandRecovery(...identity.split(":"), commandId, input), explain: explainError });
   let agents = [], agent, jobs = [], selectedId, selectedJobId, memory, view = "jobs", personaDirty = false, personaBaseRevision, stateBaseHead, stateBaseRelationships, pendingRequest, recoveryEffects;
+  let personaSources;
+  const memoryForms = new Set(["agent-persona-form", "agent-state-form", "agent-experience-form"]);
+  const sourceFor = item => personaSources?.sources.find(source => source.id === (item?.personaSourceId ?? personaSources.defaultSourceId));
+  function sourceForm() {
+    const selected = personaSources?.sources.find(source => source.id === $("agent-persona-source").value);
+    $("agent-persona-source").disabled = !connected || !serviceAvailable || mutating || !personaSources;
+    $("agent-initial-persona").disabled = !!personaSources && selected?.authority !== "pida-local";
+    $("agent-persona-source-hint").textContent = !personaSources ? "호스트 기본 기억 설정을 사용합니다." : !selected ? "사용할 정체성·기억 연결을 선택하세요."
+      : selected.authority === "pida-local" ? "이 에이전트의 역할과 기억을 Pida에 저장합니다."
+      : "선택한 연결에서 정체성과 기억을 가져옵니다. 이 화면에서는 원본 페르소나를 덮어쓰지 않습니다.";
+  }
+  function renderSources(next) {
+    if (JSON.stringify(next) === JSON.stringify(personaSources)) return;
+    const previous = $("agent-persona-source").value, first = !personaSources;
+    personaSources = next; $("agent-persona-source").replaceChildren();
+    const placeholder = textNode("option", next ? "연결 선택" : "호스트 기본 설정"); placeholder.value = ""; $("agent-persona-source").append(placeholder);
+    for (const source of next?.sources ?? []) { const option = textNode("option", source.label); option.value = source.id; $("agent-persona-source").append(option); }
+    $("agent-persona-source").value = first ? next?.defaultSourceId ?? "" : next?.sources.some(source => source.id === previous) ? previous : "";
+    sourceForm();
+  }
   function errorMessage(error) {
+    if (error.code === "AGENT_PERSONA_SOURCE_CONFLICT") return explainError(error.code);
     if (error.code?.includes("CONFLICT")) return "다른 변경이 먼저 저장됐습니다. 현재 개정과 입력 내용을 비교한 뒤 다시 편집하세요.";
     if (error.status === 403) return "상주 에이전트 접근 권한이 없습니다.";
     if (error.code === "AGENTS_DISABLED") return "이 서버에는 상주 에이전트가 연결되지 않았습니다.";
@@ -24,8 +45,10 @@ export function createAgents({ client }) {
   }
   function controls() {
     for (const form of ["agent-create-form", "agent-job-form", "agent-persona-form", "agent-state-form", "agent-experience-form", "agent-steer-form"]) {
-      for (const button of $(form)?.querySelectorAll("button") ?? []) button.disabled = !connected || !serviceAvailable || mutating || (form !== "agent-create-form" && !agent);
+      for (const button of $(form)?.querySelectorAll("button") ?? []) button.disabled = !connected || !serviceAvailable || mutating || (form !== "agent-create-form" && !agent)
+        || (memoryForms.has(form) && !memory) || (form === "agent-create-form" && !!personaSources && !$("agent-persona-source").value);
     }
+    sourceForm();
     $("agents-refresh").disabled = !connected || mutating;
     $("agent-toggle-pause").disabled = !agent || mutating || (agent.paused && agent.needsReconciliation);
     $("agent-recovery-load").disabled = !agent || mutating;
@@ -48,6 +71,7 @@ export function createAgents({ client }) {
     $("agent-empty").hidden = !!agent; $("agent-detail").hidden = !agent;
     if (!agent) return;
     $("agent-title").textContent = agent.name; $("agent-role-label").textContent = agent.role || "역할 미지정";
+    $("agent-source-label").textContent = sourceFor(agent)?.label ?? (agent.personaSourceId ? "기억 연결을 사용할 수 없음" : "호스트 기본 기억 설정");
     $("agent-state").textContent = `${agent.paused ? "대기열 정지 · 실행 중인 작업은 별도로 중단하세요" : "대기열 활성"} · ${jobs.filter(j => j.status === "running").length} 실행 / ${jobs.filter(j => j.status === "queued").length} 대기`;
     $("agent-reconciliation").hidden = !agent.needsReconciliation;
     $("agent-recovery").hidden = !agent.needsReconciliation;
@@ -89,7 +113,11 @@ export function createAgents({ client }) {
     return fragment;
   }
   function renderMemory() {
-    if (!memory) return;
+    $("agent-local-memory").hidden = !memory;
+    if (!memory) {
+      $("agent-memory-state").textContent = memory === null ? "이 에이전트의 로컬 기억 편집은 제공되지 않습니다. 기억 연결은 호스트에서 관리하며, 이전 작업 내역은 계속 조회할 수 있습니다." : "";
+      return;
+    }
     $("agent-memory-state").textContent = `페르소나 개정 ${memory.persona?.revision ?? 0} · 경험 ${memory.experiences.length}건 · 상태 ${memory.states.length}건${personaDirty ? " · 페르소나 입력 수정 중" : ""}`;
     if (!personaDirty) $("agent-persona-text").value = memory.persona?.text ?? "";
     $("agent-persona-history").replaceChildren();
@@ -113,7 +141,10 @@ export function createAgents({ client }) {
   }
   async function loadDetail(active = generation) {
     const id = selectedId; if (!id) return;
-    const [detail, result, saved] = await Promise.all([client.getAgent(id), client.listAgentJobs(id), client.getAgentMemory(id)]);
+    const [detail, result, saved] = await Promise.all([client.getAgent(id), client.listAgentJobs(id), client.getAgentMemory(id).catch(error => {
+      if (error.code === "MEMORY_UNAVAILABLE" && error.status === 404) return null;
+      throw error;
+    })]);
     if (!connected || active !== generation || id !== selectedId) return;
     agent = detail; jobs = result.jobs; memory = saved;
     if (!jobs.some(j => j.id === selectedJobId)) selectedJobId = jobs.find(j => j.status === "running")?.id ?? jobs.at(-1)?.id;
@@ -146,7 +177,7 @@ export function createAgents({ client }) {
     refreshing = true; const active = generation;
     try {
       const result = await client.listAgents(); if (!connected || active !== generation) return;
-      serviceAvailable = true; agents = result.agents;
+      serviceAvailable = true; agents = result.agents; renderSources(result.personaSources);
       if (!agents.some(a => a.id === selectedId)) { selectedId = agents[0]?.id; selectedJobId = undefined; personaDirty = false; }
       agent = agents.find(a => a.id === selectedId); renderAgents();
       await loadDetail(active);
@@ -161,7 +192,7 @@ export function createAgents({ client }) {
     $("agent-artifact-source").textContent = ""; $("agent-artifact-file").replaceChildren();
     sessionStorage.setItem("pida-agent", id); $("agent-error").textContent = "";
     for (const form of ["agent-job-form", "agent-persona-form", "agent-state-form", "agent-experience-form", "agent-steer-form"]) $(form)?.reset();
-    renderAgents(); renderJobs();
+    renderAgents(); renderJobs(); renderMemory(); controls();
     try { await loadDetail(); } catch (error) { $("agent-error").textContent = errorMessage(error); } finally { controls(); schedule(); }
   }
   async function mutate(operation) {
@@ -180,9 +211,15 @@ export function createAgents({ client }) {
   }
   $("agents-refresh").onclick = () => void refresh();
   $("agent-create-form").onsubmit = event => { event.preventDefault(); void mutate(async () => {
-    const created = await client.createAgent({ name: $("agent-name").value.trim(), role: $("agent-role").value.trim(), persona: $("agent-initial-persona").value.trim() });
+    const source = personaSources?.sources.find(source => source.id === $("agent-persona-source").value);
+    if (personaSources && !source) { $("agent-error").textContent = "정체성·기억 연결을 선택하세요."; return; }
+    const created = await client.createAgent({ name: $("agent-name").value.trim(), role: $("agent-role").value.trim(),
+      ...(!source || source.authority === "pida-local" ? { persona: $("agent-initial-persona").value.trim() } : {}),
+      ...(source ? { personaSourceId: source.id } : {}) });
     selectedId = created.id; selectedJobId = undefined; personaDirty = false; sessionStorage.setItem("pida-agent", selectedId); $("agent-create-form").reset();
+    $("agent-persona-source").value = personaSources?.defaultSourceId ?? "";
   }); };
+  $("agent-persona-source").onchange = controls;
   $("agent-job-input").oninput = () => { pendingRequest = undefined; };
   $("agent-job-form").onsubmit = event => { event.preventDefault(); if (!agent) return; const input = $("agent-job-input").value.trim(); if (!input) return;
     pendingRequest ??= { input, requestId: crypto.randomUUID() };
@@ -235,6 +272,6 @@ export function createAgents({ client }) {
   }); };
   return {
     async connect(info = {}) { connected = true; commandsEnabled = info.tools?.some(tool => tool.permitted && tool.name === "project_command_read") ?? false; ++generation; selectedId = sessionStorage.getItem("pida-agent") ?? undefined; await refresh(); },
-    reset() { connected = serviceAvailable = false; ++generation; ++artifactSequence; clearTimeout(timer); agents = []; agent = memory = undefined; jobs = []; personaDirty = false; personaBaseRevision = stateBaseHead = stateBaseRelationships = undefined; pendingRequest = recoveryEffects = undefined; for (const form of ["agent-create-form", "agent-job-form", "agent-persona-form", "agent-state-form", "agent-experience-form", "agent-recovery-form", "agent-steer-form"]) $(form).reset(); for (const id of ["agent-experiences", "agent-current-state", "agent-state-history", "agent-persona-history", "agent-job-activity", "agent-recovery-effects", "agent-artifact-file"]) $(id).replaceChildren(); for (const id of ["agent-job-request", "agent-job-result", "agent-job-code", "agent-error", "agent-artifact-source", "agent-artifact-status", "agent-recovery-status", "agent-memory-state"]) $(id).textContent = ""; $("agent-recovery-form").hidden = true; renderAgents(); renderJobs(); controls(); },
+    reset() { connected = serviceAvailable = false; renderSources(undefined); ++generation; ++artifactSequence; clearTimeout(timer); agents = []; agent = memory = undefined; jobs = []; personaDirty = false; personaBaseRevision = stateBaseHead = stateBaseRelationships = undefined; pendingRequest = recoveryEffects = undefined; for (const form of ["agent-create-form", "agent-job-form", "agent-persona-form", "agent-state-form", "agent-experience-form", "agent-recovery-form", "agent-steer-form"]) $(form).reset(); for (const id of ["agent-experiences", "agent-current-state", "agent-state-history", "agent-persona-history", "agent-job-activity", "agent-recovery-effects", "agent-artifact-file"]) $(id).replaceChildren(); for (const id of ["agent-job-request", "agent-job-result", "agent-job-code", "agent-error", "agent-artifact-source", "agent-artifact-status", "agent-recovery-status", "agent-memory-state"]) $(id).textContent = ""; $("agent-recovery-form").hidden = true; renderAgents(); renderJobs(); renderMemory(); controls(); },
   };
 }

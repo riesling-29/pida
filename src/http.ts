@@ -21,7 +21,7 @@ export interface HttpOptions {
   runtime: PidaRuntime;
   workbench?: PidaWorkbench;
   agents?: AgentSupervisor;
-  agentMemory?: (agentId: string) => AgentMemoryStore;
+  agentMemory?: (agentId: string, principal: Principal) => AgentMemoryStore | undefined | Promise<AgentMemoryStore | undefined>;
   agentWorkbench?: (agentId: string) => PidaWorkbench;
   projectView?: ProjectView;
   programs?: ProgramRegistry;
@@ -228,11 +228,11 @@ export function createPidaServer(options: HttpOptions) {
         if (!principal.permissions.includes("pida:agents")) throw new PidaError("FORBIDDEN", 403);
         const agents = options.agents;
         if (!agents) throw new PidaError("AGENTS_DISABLED", 404);
-        if (path === "/v1/agents" && req.method === "GET") { json(res, 200, { agents: agents.list(principal) }); return; }
+        if (path === "/v1/agents" && req.method === "GET") { json(res, 200, { agents: agents.list(principal), personaSources: agents.listPersonaSources(principal) }); return; }
         if (path === "/v1/agents" && req.method === "POST") {
-          const input = await body(req); keys(input, ["name", "role", "persona"]);
+          const input = await body(req); keys(input, ["name", "role", "persona", "personaSourceId"]);
           const agent = await agents.register(principal, input as any);
-          if (agent.persona && options.agentMemory) options.agentMemory(agent.id).revisePersona({ expectedRevision: null, text: agent.persona, sourceRefs: ["owner:registration"] });
+          if (agent.persona) (await options.agentMemory?.(agent.id, principal))?.revisePersona({ expectedRevision: null, text: agent.persona, sourceRefs: ["owner:registration"] });
           json(res, 201, agent); return;
         }
         const route = /^\/v1\/agents\/([a-f0-9-]{36})(?:\/(.*))?$/.exec(path);
@@ -292,14 +292,14 @@ export function createPidaServer(options: HttpOptions) {
           await agents.reconcile(agentId, principal, input as any); json(res, 200, agents.get(agentId, principal)); return;
         }
         if (action === "memory" || action?.startsWith("memory/")) {
-          const store = options.agentMemory?.(agentId);
+          const readMemory = action === "memory" && req.method === "GET";
+          if (!readMemory && req.method !== "POST") throw new PidaError("METHOD_NOT_ALLOWED", 405);
+          if (!principal.permissions.includes(readMemory ? "agent:memory:read" : "agent:memory:write")) throw new PidaError("FORBIDDEN", 403);
+          const store = await options.agentMemory?.(agentId, principal);
           if (!store) throw new PidaError("MEMORY_UNAVAILABLE", 404);
-          if (action === "memory" && req.method === "GET") {
-            if (!principal.permissions.includes("agent:memory:read")) throw new PidaError("FORBIDDEN", 403);
+          if (readMemory) {
             json(res, 200, store.view()); return;
           }
-          if (req.method !== "POST") throw new PidaError("METHOD_NOT_ALLOWED", 405);
-          if (!principal.permissions.includes("agent:memory:write")) throw new PidaError("FORBIDDEN", 403);
           const input = await body(req, 131_072);
           if (action === "memory/persona") json(res, 200, store.revisePersona(input as any));
           else if (action === "memory/experiences") { keys(input, ["kind", "text", "sourceRefs", "supersedes"]); json(res, 201, store.remember({ ...input, authority: "owner" } as any)); }

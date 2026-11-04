@@ -205,8 +205,9 @@ test('agent HTTP routes enforce identity, ownership and write/tool grants before
   const job = await client.enqueueAgentJob(agent.id, { input: 'private job input', requestId: 'private-request' });
   await f.bench(agent.id).write(owner, 'artifacts/private.txt', 'private output');
   const tokens = { owner: 'owner-token-'.repeat(4), other: 'other-token-'.repeat(4), denied: 'denied-token-'.repeat(4), read: 'readonly-token-'.repeat(4) };
+  let memoryResolutions = 0;
   const server = createPidaServer({
-    runtime: f.app.runtime, agents: f.app.agents, agentMemory: f.memory, agentWorkbench: f.bench,
+    runtime: f.app.runtime, agents: f.app.agents, agentMemory: async id => { memoryResolutions++; return f.memory(id); }, agentWorkbench: f.bench,
     authenticate: staticTokenAuth([
       { token: tokens.owner, principal: owner },
       { token: tokens.other, principal: { ...owner, id: 'different-owner' } },
@@ -226,7 +227,9 @@ test('agent HTTP routes enforce identity, ownership and write/tool grants before
     () => other.reviseAgentPersona(agent.id, { expectedRevision: 1, text: 'intrusion', sourceRefs: ['message:intrusion'] }),
   ]) await assert.rejects(operation, error('AGENT_NOT_FOUND', 404));
   await assert.rejects(read.getAgentWorkbench(agent.id), error('FORBIDDEN', 403));
+  await assert.rejects(read.getAgentMemory(agent.id), error('FORBIDDEN', 403));
   await assert.rejects(read.reviseAgentPersona(agent.id, { expectedRevision: 1, text: 'unauthorized revision', sourceRefs: ['message:unauthorized'] }), error('FORBIDDEN', 403));
+  assert.equal(memoryResolutions, 0, 'permission denial precedes asynchronous source resolution and session restore');
   assert.equal((await client.getAgentMemory(agent.id)).persona.text, 'private persona');
   assert.equal((await client.getAgentJob(agent.id, job.id)).status, 'queued');
   assert.equal(f.tool.counts().calls, 0);

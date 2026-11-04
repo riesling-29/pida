@@ -8,8 +8,16 @@ import type { RunResult, StreamEvent, TraceEvent } from "./protocol.js";
 
 export interface AgentProfile {
   id: string; owner: string; name: string; role: string; persona?: string;
+  /** Immutable host-approved source reference; never a URL, module path or credential. */
+  personaSourceId?: string;
   paused: boolean; sessionId?: string; needsReconciliation?: boolean;
   createdAt: string; updatedAt: string;
+}
+export interface AgentPersonaSource {
+  id: string; label: string; authority: "pida-local" | "external" | "host-managed";
+}
+export interface AgentPersonaSourceCatalogue {
+  defaultSourceId: string; sources: AgentPersonaSource[];
 }
 export interface AgentJob {
   id: string; agentId: string; owner: string; requestId: string; input: string;
@@ -30,6 +38,8 @@ export interface AgentSupervisorOptions {
   createRuntime(profile: AgentProfile, context: { signal: AbortSignal }): Promise<PidaRuntime> | PidaRuntime;
   /** Re-resolved when a job starts. Saved permissions are never replayed. */
   resolvePrincipal(owner: string): Promise<Principal | undefined> | Principal | undefined;
+  /** Host-filtered choices. Old profiles without a source use this host's legacy default. */
+  personaSources?(principal: Principal): AgentPersonaSourceCatalogue;
   /** Equal keys share one writer. Default serializes every agent against the same host workspace. */
   workspaceKey?(profile: AgentProfile): string;
   /** Host-selected configuration revision; changed idle runtimes reopen with preserved sessions. */
@@ -46,6 +56,7 @@ const now = () => new Date().toISOString();
 const copy = <T>(value: T): T => structuredClone(value);
 const statuses = new Set(["queued", "running", "completed", "failed", "limited", "cancelled", "interrupted"]);
 const validText = (s: unknown, max: number, empty = false): s is string => typeof s === "string" && s.length <= max && (empty || !!s.trim());
+const validSourceId = (s: unknown): s is string => typeof s === "string" && /^[a-z][a-z0-9._-]{0,63}$/.test(s);
 const errorCode = (e: unknown) => e instanceof PidaError && /^[A-Z][A-Z0-9_]+$/.test(e.code) ? e.code : "AGENT_EXECUTION_FAILED";
 const denied = (code: string, status = 400): never => { throw new PidaError(code, status); };
 
@@ -130,7 +141,8 @@ export class AgentSupervisor {
     const ids = new Set<string>(), jobs = new Set<string>(), requests = new Set<string>();
     for (const p of s.profiles) {
       if (!p || !isId(p.id) || ids.has(p.id) || !validText(p.owner, 256) || !validText(p.name, 100) || !validText(p.role, 4000, true)
-        || (p.persona !== undefined && !validText(p.persona, 8000, true)) || typeof p.paused !== "boolean" || (p.sessionId !== undefined && !isId(p.sessionId))
+        || (p.persona !== undefined && !validText(p.persona, 8000, true)) || (p.personaSourceId !== undefined && !validSourceId(p.personaSourceId))
+        || typeof p.paused !== "boolean" || (p.sessionId !== undefined && !isId(p.sessionId))
         || typeof p.createdAt !== "string" || typeof p.updatedAt !== "string") denied("AGENT_STATE_INVALID", 500);
       ids.add(p.id);
     }
@@ -163,12 +175,37 @@ export class AgentSupervisor {
     const j = this.state.jobs.find(j => j.id === jobId && j.owner === principal.id);
     if (!j) return denied("AGENT_JOB_NOT_FOUND", 404); return j;
   }
-  register(principal: Principal, input: { name: string; role?: string; persona?: string }): AgentProfile {
+  listPersonaSources(principal: Principal): AgentPersonaSourceCatalogue {
     this.usable(); this.principal(principal);
-    if (!input || Object.keys(input).some(k => !["name", "role", "persona"].includes(k)) || !validText(input.name, 100)
-      || (input.role !== undefined && !validText(input.role, 4000, true)) || (input.persona !== undefined && !validText(input.persona, 8000, true))) denied("AGENT_PROFILE_INVALID");
+    const catalogue = this.options.personaSources?.(principal) ?? { defaultSourceId: "local", sources: [{ id: "local", label: "일반 에이전트 · Pida 기억", authority: "pida-local" }] };
+    if (!catalogue || !validSourceId(catalogue.defaultSourceId) || !Array.isArray(catalogue.sources) || !catalogue.sources.length || catalogue.sources.length > 33)
+      denied("AGENT_PERSONA_SOURCES_INVALID", 500);
+    const ids = new Set<string>();
+    const sources = catalogue.sources.map(source => {
+      if (!source || !validSourceId(source.id) || ids.has(source.id) || !validText(source.label, 100)
+        || /[\x00-\x1f\x7f]/.test(source.label) || !["pida-local", "external", "host-managed"].includes(source.authority)) denied("AGENT_PERSONA_SOURCES_INVALID", 500);
+      ids.add(source.id);
+      return { id: source.id, label: source.label, authority: source.authority };
+    });
+    if (!ids.has(catalogue.defaultSourceId)) denied("AGENT_PERSONA_SOURCES_INVALID", 500);
+    return { defaultSourceId: catalogue.defaultSourceId, sources };
+  }
+  private personaSource(sourceId: string | undefined, principal: Principal): AgentPersonaSource {
+    const catalogue = this.listPersonaSources(principal);
+    const selected = catalogue.sources.find(source => source.id === (sourceId ?? catalogue.defaultSourceId));
+    if (!selected) return denied("AGENT_PERSONA_SOURCE_UNAVAILABLE", 409);
+    return selected;
+  }
+  register(principal: Principal, input: { name: string; role?: string; persona?: string; personaSourceId?: string }): AgentProfile {
+    this.usable(); this.principal(principal);
+    if (!input || Object.keys(input).some(k => !["name", "role", "persona", "personaSourceId"].includes(k)) || !validText(input.name, 100)
+      || (input.role !== undefined && !validText(input.role, 4000, true)) || (input.persona !== undefined && !validText(input.persona, 8000, true))
+      || (input.personaSourceId !== undefined && !validSourceId(input.personaSourceId))) denied("AGENT_PROFILE_INVALID");
+    const source = this.personaSource(input.personaSourceId, principal);
+    if (input.personaSourceId !== undefined && source.authority !== "pida-local" && input.persona?.trim()) denied("AGENT_PERSONA_SOURCE_CONFLICT");
     if (this.state.profiles.length >= (this.options.maxAgents ?? 32)) denied("AGENT_PROFILE_LIMIT", 429);
-    const profile: AgentProfile = { id: randomUUID(), owner: principal.id, name: input.name.trim(), role: input.role ?? "", ...(input.persona === undefined ? {} : { persona: input.persona }), paused: false, createdAt: now(), updatedAt: now() };
+    const profile: AgentProfile = { id: randomUUID(), owner: principal.id, name: input.name.trim(), role: input.role ?? "", personaSourceId: source.id,
+      ...(input.persona === undefined ? {} : { persona: input.persona }), paused: false, createdAt: now(), updatedAt: now() };
     this.state.profiles.push(profile); this.persist(); return copy(profile);
   }
   list(principal: Principal): AgentProfile[] { this.principal(principal); return this.state.profiles.filter(p => p.owner === principal.id).map(copy); }
@@ -234,6 +271,7 @@ export class AgentSupervisor {
   }
   async getRuntime(agentId: string, principal: Principal): Promise<PidaRuntime> {
     this.usable(); const p = this.owned(agentId, principal);
+    const source = this.personaSource(p.personaSourceId, principal);
     if (this.failedRuntimeClosures.has(agentId)) denied("AGENT_RUNTIME_CLOSE_FAILED", 503);
     let runtime = this.runtimes.get(agentId);
     const key = this.options.runtimeKey?.(copy(p)) ?? "";
@@ -254,7 +292,23 @@ export class AgentSupervisor {
           catch (error) { this.failedRuntimeClosures.add(agentId); throw error; }
         }
         this.runtimeCreation.signal.throwIfAborted();
-        return this.options.createRuntime(copy(p), { signal: this.runtimeCreation.signal });
+        const created = await this.options.createRuntime(copy(p), { signal: this.runtimeCreation.signal });
+        try {
+          if (p.personaSourceId === undefined) {
+            if (p.sessionId) {
+              await created.resumeSession(p.sessionId, principal);
+              const previousAuthority = created.getSession(p.sessionId, principal).contextDescriptor?.personaBinding?.authority;
+              if (previousAuthority && source.authority !== "host-managed" && previousAuthority !== source.authority)
+                denied("AGENT_PERSONA_SOURCE_MIGRATION_REQUIRED", 409);
+            }
+            p.personaSourceId = source.id; this.persist();
+          }
+          return created;
+        } catch (error) {
+          try { await created.close(); }
+          catch { this.failedRuntimeClosures.add(agentId); this.retiredRuntimes.add(Promise.resolve(created)); denied("AGENT_RUNTIME_CLOSE_FAILED", 503); }
+          throw error;
+        }
       }).finally(() => { this.pendingRuntimeLoads--; });
       this.runtimeKeys.set(agentId, key);
       this.runtimes.set(agentId, runtime);

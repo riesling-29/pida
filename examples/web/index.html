@@ -131,6 +131,8 @@
         <details class="agent-create"><summary>＋ 에이전트 만들기</summary><form id="agent-create-form">
           <label for="agent-name">이름</label><input id="agent-name" required maxlength="100" autocomplete="off" />
           <label for="agent-role">역할</label><input id="agent-role" maxlength="500" autocomplete="off" />
+          <label for="agent-persona-source">정체성·기억 연결</label><select id="agent-persona-source" aria-describedby="agent-persona-source-hint"><option value="">연결 목록 확인 중</option></select>
+          <p id="agent-persona-source-hint" class="field-hint">호스트가 제공한 연결 중에서 선택합니다.</p>
           <label for="agent-initial-persona">페르소나 · 작업 원칙</label><textarea id="agent-initial-persona" rows="4" maxlength="8000"></textarea>
           <button class="primary">만들기</button>
         </form></details>
@@ -139,7 +141,7 @@
         <p id="agent-error" role="alert"></p>
         <p id="agent-empty" class="panel-empty">에이전트를 만들거나 목록에서 선택하세요.</p>
         <section id="agent-detail" hidden>
-          <header class="agent-heading"><div><h2 id="agent-title"></h2><p id="agent-role-label"></p><p id="agent-state" role="status"></p></div><button id="agent-toggle-pause">대기열 일시 정지</button></header>
+          <header class="agent-heading"><div><h2 id="agent-title"></h2><p id="agent-role-label"></p><p id="agent-source-label" class="field-hint"></p><p id="agent-state" role="status"></p></div><button id="agent-toggle-pause">대기열 일시 정지</button></header>
           <p id="agent-reconciliation" class="notice" hidden>이전 실행의 변경 상태를 확인해야 합니다. 작업 결과와 실제 파일·외부 시스템을 확인하세요.</p>
           <section id="agent-recovery" class="agent-memory-section" hidden><button id="agent-recovery-load">미확인 변경 조회</button><p id="agent-recovery-status" role="status" class="field-hint"></p><form id="agent-recovery-form" hidden><div id="agent-recovery-effects"></div><label class="agent-check"><input id="agent-recovery-inspected" type="checkbox" required />실제 파일·외부 상태를 확인했습니다</label><label for="agent-recovery-note">확인 근거</label><textarea id="agent-recovery-note" rows="2" maxlength="1000" placeholder="확인한 파일, 실행 결과, 외부 상태를 기록하세요."></textarea><button id="agent-recovery-save" disabled>변경 상태 기록</button><p class="field-hint">기록 후 대기열 재개 버튼으로 실행을 재개합니다. 실패한 작업을 자동 재실행하지 않습니다.</p></form></section>
           <div class="agent-tabs" role="tablist" aria-label="에이전트 상세"><button id="agent-tab-jobs" role="tab" aria-selected="true" aria-controls="agent-panel-jobs">작업</button><button id="agent-tab-memory" role="tab" aria-selected="false" aria-controls="agent-panel-memory" tabindex="-1">기억</button></div>
@@ -150,12 +152,14 @@
           </section>
           <section id="agent-panel-memory" role="tabpanel" aria-labelledby="agent-tab-memory" hidden>
             <p id="agent-memory-state" class="field-hint"></p>
+            <div id="agent-local-memory" hidden>
             <form id="agent-persona-form"><h3>페르소나</h3><label for="agent-persona-text">작업 원칙</label><textarea id="agent-persona-text" rows="5" maxlength="12000" required></textarea><button>새 개정으로 저장</button><button id="agent-persona-reload" type="button" class="quiet">현재 개정 다시 불러오기</button></form>
             <details class="agent-memory-section"><summary>페르소나 개정 이력</summary><div id="agent-persona-history"></div></details>
             <section class="agent-memory-section"><h3>장기 경험</h3><div id="agent-experiences"></div></section>
             <form id="agent-experience-form"><label for="agent-experience-kind">경험 분류</label><select id="agent-experience-kind"><option value="fact">사실</option><option value="decision">결정</option><option value="correction">교정</option></select><label id="agent-correction-label" for="agent-correction-target" hidden>교정할 활성 경험<select id="agent-correction-target"><option value="">경험 선택</option></select></label><label for="agent-experience-text">기억할 내용</label><textarea id="agent-experience-text" rows="3" maxlength="8000" required></textarea><button>사용자 기록으로 저장</button></form>
             <section class="agent-memory-section"><h3>현재 작업 상태</h3><div id="agent-current-state"></div><details><summary>상태 전이 기록</summary><div id="agent-state-history"></div></details></section>
             <form id="agent-state-form"><h3>새 상태 기록</h3><label for="agent-state-goal">목표</label><input id="agent-state-goal" maxlength="2000" required /><label for="agent-state-understanding">현재 이해</label><textarea id="agent-state-understanding" rows="3" maxlength="8000" required></textarea><label for="agent-state-uncertainties">불확실한 점 · 한 줄에 하나</label><textarea id="agent-state-uncertainties" rows="2" maxlength="4000"></textarea><label for="agent-state-next">다음 행동</label><input id="agent-state-next" maxlength="2000" required /><button>현재 상태에서 이어 기록</button><button id="agent-state-reload" type="button" class="quiet">현재 상태로 입력 초기화</button></form>
+            </div>
           </section>
         </section>
       </div>
