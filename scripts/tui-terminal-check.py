@@ -86,6 +86,12 @@ def main():
             wait_for(lambda: len(get('/v1/sessions')['sessions'])==1,pump)
             session_id=get('/v1/sessions')['sessions'][0]['sessionId']
             check('CLI attaches to local host and enters alternate-screen Pi renderer',child.poll() is None)
+            wait_for(lambda: 'JUDGMENT'.encode() in capture,pump)
+            check('default workspace visibly exposes intent structure execution and judgment', all(s.encode() in capture for s in ['TUI','INTENT','STRUCTURE','EXECUTION','JUDGMENT','F1 메뉴']))
+            os.write(master,b'\x1bOP')
+            wait_for(lambda:'기능 메뉴'.encode() in capture,pump)
+            os.write(master,b'\x1b');time.sleep(.1);pump()
+            check('F1 opens a real keyboard menu without starting an agent run',get('/v1/sessions/'+session_id)['runs']==0)
             # Complete paste must stay a draft until a separate Enter.
             os.write(master,'\x1b[200~LOT-001 한글 확인\x1b[201~'.encode())
             time.sleep(.1);pump()
@@ -97,7 +103,7 @@ def main():
             fcntl.ioctl(slave,termios.TIOCSWINSZ,struct.pack('HHHH',24,64,0,0))
             child.send_signal(signal.SIGWINCH)
             os.write(master,b'/help\r');time.sleep(.25);pump()
-            check('resize and help remain interactive',child.poll() is None and '/steer'.encode() in capture)
+            check('resize and help remain interactive',child.poll() is None and '/menu'.encode() in capture)
             os.write(master,b'\x1bOQ');time.sleep(.1);os.write(master,b'\x1b');time.sleep(.1);pump()
             check('session selector opens without spawning another run',get('/v1/sessions/'+session_id)['runs']==1)
             os.write(master,b'\x04')

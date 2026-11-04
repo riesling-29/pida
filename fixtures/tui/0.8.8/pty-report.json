@@ -1,0 +1,71 @@
+{
+  "profile": "pida-tui-pty/1",
+  "version": "0.8.8",
+  "platform": "Linux PTY",
+  "node": "v24.22.1",
+  "checks": [
+    {
+      "name": "CLI attaches to local host and enters alternate-screen Pi renderer",
+      "status": "PASS"
+    },
+    {
+      "name": "default workspace visibly exposes intent structure execution and judgment",
+      "status": "PASS"
+    },
+    {
+      "name": "F1 opens a real keyboard menu without starting an agent run",
+      "status": "PASS"
+    },
+    {
+      "name": "bracketed Korean paste does not submit automatically",
+      "status": "PASS"
+    },
+    {
+      "name": "real terminal request executes actual Pi mock-model tool loop",
+      "status": "PASS"
+    },
+    {
+      "name": "resize and help remain interactive",
+      "status": "PASS"
+    },
+    {
+      "name": "session selector opens without spawning another run",
+      "status": "PASS"
+    },
+    {
+      "name": "Ctrl+D cleanly detaches and restores terminal buffer",
+      "status": "PASS"
+    },
+    {
+      "name": "terminal canonical input and echo restored",
+      "status": "PASS"
+    },
+    {
+      "name": "independent host survives TUI exit",
+      "status": "PASS"
+    },
+    {
+      "name": "application credential never printed in TUI",
+      "status": "PASS"
+    },
+    {
+      "name": "new terminal process resumes history without replay",
+      "status": "PASS"
+    }
+  ],
+  "source_sha256": {
+    "package.json": "58ec51c29584823cbcb037bb54ed9a96f8d72fdfbbfafb521f40d401ab55fd59",
+    "src/tui.ts": "9ba4a75b8fca876167a5cfa942bfe9ee4aa38b97ce3e035273fd6df0d01cc988",
+    "src/tui-controller.ts": "3e77a5b469399e7126aaad1a4127282a9cc43a37d7bae7bcc12106335ac5adfc",
+    "src/cli.ts": "06b82810f03acd27537431fc00cd0862c2403e3f0291f1a00d70c1097874b1fe",
+    "src/client.ts": "ca6b744476ad9de028a98279964c73ccb03598c52bfc69357b8e1f8f80f7b838",
+    "src/runtime.ts": "ef8c38cc5e71467a5dcfb4d08a356a69a744e89445cacad7e2f4068f055c2a41",
+    "src/http.ts": "2886713d27053cdf101baf7b401f88112230a7af0258e992e622d5cba61baddf",
+    "examples/web/app.js": "d6c950fe88311b0e312066479b6710dec8a4c9fe617e0e6a54606ae99aadd1e2",
+    "scripts/tui-terminal-check.py": "e82711be3fa3411c6dc037cb62ef00d3636d57a1517181df14fcbeed22d998ff"
+  },
+  "limits": [
+    "Actual Pi, HTTP, CLI, editor and PTY; mock model decisions.",
+    "No browser engine, live LLM, company gateway or Windows-terminal/IME validation."
+  ]
+}

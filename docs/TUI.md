@@ -1,6 +1,6 @@
 # Terminal and Web on the same Pida host
 
-Available from 0.8.7. The terminal uses the existing Pi TUI 1.2.0 components and
+Available from 0.8.7; current work surface 0.8.8. The terminal uses the existing Pi TUI 1.2.0 components and
 Pida HTTP client. One separately running host owns sessions, Pi execution,
 provider/OAuth configuration, tools, permissions, persistence and workspace
 locks. Web and TUI are views of that same host.
@@ -22,6 +22,12 @@ cd D:\pida
 npm run tui -- .\my-agent
 ```
 
+`npm start` opens the **server log**, not the terminal interface. The new startup
+message states this and prints the exact attach command. In the TUI, the header
+must say `pida 0.8.8 · TUI`, with visible function-key menus and a prompt editor.
+If the header shows an older version, update the PR branch and rebuild the same
+checkout before relaunching. No second workspace server is needed.
+
 An installed CLI also supports `pida tui ./my-agent`. It attaches to the newest
 accessible main-workspace session or creates one when none exists. `--new`
 creates a new session; `--session UUID` opens a specific existing session.
@@ -38,8 +44,12 @@ existing `pida configure` flow. The TUI does not replace a company's connector.
 
 This follows the user's supplied interpretation of the Pitano/TempleOS thread,
 the prior 2026-10-28 Pida discussion and [interface direction](INTERFACE-DIRECTION.md).
-The requested original `pitano: 따라잡기` conversation could not be independently
-retrieved in this turn; no additional original-source claims are inferred.
+The original `pitano: 따라잡기` conversation was not recovered during 0.8.7.
+For 0.8.8, the user's subsequently supplied interface-philosophy document was
+read successfully through its saved copy after attachment delivery failed.
+Its practical correction is that compression must retain the structure needed
+for judgment; command memorization and unexplained hidden state are avoidable
+friction. The original historical conversation remains unverified.
 
 The design aims to preserve the information needed for active judgment while
 removing repetitive presentation. It does not reproduce 640×480, a fixed
@@ -48,12 +58,12 @@ cognitive benefit or establish Terry Davis's motives.
 
 | Principle | Implemented behavior |
 | --- | --- |
-| Expose structure | Stable target/model header, session/title, conversation, execution/context status and input |
+| Expose structure | Target/model/version, session/title, conversation and persistent intent/structure/execution/judgment overview |
 | Remove redundant presentation | No dashboard tiles, animated progress theater or repeating success badges; details open on demand |
 | Keep meaningful decisions explicit | Normal request, steering, follow-up, cancellation and client detach are separate commands |
 | Keep evidence inspectable | `/diff` shows actual Git changes; `/tools` shows recorded output and exit codes; `/activity` shows traces and manifest verification separately |
-| Preserve direct work | Keyboard shortcuts, slash completion, multiline editor, bracketed paste and upstream Unicode/IME cursor handling |
-| Adapt density | Side-by-side conversation/details at 100+ columns; one detail surface at narrower widths; Escape or `/back` returns to conversation |
+| Preserve direct work | Clickable navigation, F1 menu, F5 file selector, keyboard shortcuts, slash completion, multiline editor and bracketed paste |
+| Adapt density | Side-by-side conversation/overview at 104+ columns; narrow screens retain goal and verification, with F7 opening the full overview; F8 toggles guidance |
 | Reduce routine effort | Session attach and observation reuse server state; no duplicate model run or per-tool confirmation loop |
 
 The accent follows the terminal palette; `NO_COLOR=1` disables Pida's decorative
@@ -65,11 +75,13 @@ display limits are explicit; they do not truncate the server's saved history.
 
 | Operation | Control |
 | --- | --- |
+| Discover actions without memorizing commands | F1, `/menu` or click the menu; arrows/Enter choose, Esc closes |
+| Work overview / guidance density | F7 or `/overview`; F8 or `/density` toggles guidance/concise text |
 | Submit / newline | Enter / Shift+Enter or Alt+Enter (terminal support varies) |
 | Sessions / new / exact resume | F2 or `/sessions`, `/new`, `/resume UUID` |
 | Execution and verification | F3 or `/activity` |
 | Recorded tool results | F4 or `/tools` |
-| Project files / file content | `/files [directory]`, `/read path` |
+| Project files / file content | F5 opens a folder/file selector; Enter navigates/reads. `/files [directory]`, `/read path` also work |
 | Git changes | F6 or `/diff` (requires the configured project view) |
 | Current model, context and pending input | `/status` |
 | Add instructions during execution | `/steer text` |
@@ -77,7 +89,7 @@ display limits are explicit; they do not truncate the server's saved history.
 | Compact / summarize and continue | `/compact`, `/handoff` |
 | Stop the observed run | `/stop` or Ctrl+C while running |
 | Clear an idle input | Ctrl+C while idle |
-| Close a detail panel | Escape or `/back` |
+| Close a detail panel | Escape or `/back`; Escape also returns from the narrow overview |
 | Scroll a detail panel | Alt+PageUp / Alt+PageDown or wheel over the panel |
 | Open the same session in Web | `/web` |
 | Refresh / help | `/refresh`, `/help` |
@@ -93,6 +105,15 @@ The workspace Web tab and TUI observe owned snapshots about once per second
 reasoning and tool arguments are not added to the public trace or snapshot.
 The completed saved message replaces the preview. A client that was already
 idle also notices a run initiated from the other surface.
+
+The default overview uses the latest actual user request, permitted-tool and
+instruction metadata, run-correlated trace facts and the ended run's manifest.
+No inferred plan, completion percentage or success criteria are fabricated.
+Manifest retrieval is asynchronous and fenced by session/run/request identity;
+failure remains unknown and does not stop session observation. Scoped checks are
+labeled as recorded at run end, never as current independent acceptance.
+Git change counts appear only after F6 reads them, with the observation time and
+whole-worktree scope. F6 refreshes that view; it is not a per-run edit count.
 
 Switching sessions, exiting TUI or losing the connection only detaches its
 observation. The separate host must stay alive. `/stop` binds the observed run
@@ -110,7 +131,7 @@ native command PTY, daemon scheduler, shell permission, OS sandbox or auto-updat
 The terminal UI's own PTY verification is distinct from agent command execution.
 
 Actual Linux PTY, Pi/HTTP cross-client and DOM-handler evidence is recorded in
-[TUI validation](TUI-VALIDATION.md). Windows Terminal/PowerShell and interactive
+[0.8.8 validation](TUI-0.8.8.md) and [historical 0.8.7 validation](TUI-VALIDATION.md). Windows Terminal/PowerShell and interactive
 Korean IME require user-environment validation; synthetic Korean paste and width
 checks are not a claim of native IME testing. Live LLM, company gateway and actual
 browser rendering were not executed for this patch.

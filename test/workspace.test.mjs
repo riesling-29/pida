@@ -64,6 +64,8 @@ test("CLI setup starts the workspace and configure reuses its running server", a
   configure.stderr.on("data", (chunk) => (result += chunk));
   assert.equal((await once(configure, "exit"))[0], 0, result);
   assert.match(result, /Pida settings:/);
+  assert.match(startup, /server log, not the TUI/);
+  assert.match(startup, /npm run tui --/);
   assert.ok(!startup.includes(workspaceEnvironment(dir).PIDA_API_TOKEN));
   assert.ok(!result.includes(workspaceEnvironment(dir).PIDA_API_TOKEN));
 });

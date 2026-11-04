@@ -1,10 +1,13 @@
 # Pida interface direction
 
-Date: 2026-10-28 KST; implementation note updated 2026-11-03 KST. Scope: Pida only.
+Date: 2026-10-28 KST; implementation note updated 2026-11-04 KST. Scope: Pida only.
 The original Web assessment below is historical. General repository tools were
 subsequently connected, and 0.8.7 adds a Pi-based terminal client to the same
 Pida host. See [TUI design and use](TUI.md) and [validation](TUI-VALIDATION.md).
 The philosophical principles below remain the common Web/TUI direction.
+In 0.8.8 the supplied learning note sharpened this into visible intent,
+structure, execution and judgment, plus discoverable actions rather than
+command memorization. See [the correction and evidence](TUI-0.8.8.md).
 
 ## Product goal
 

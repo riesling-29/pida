@@ -235,7 +235,7 @@ async function startWorkspace(
     void stop();
   });
   console.log(
-    `Pida ready: http://127.0.0.1:${app.config.port}\nWorkspace: ${directory}\nProvider: ${app.config.provider.kind} · conversations saved locally\nUse pida open "${directory}" to sign in, or pida token "${directory}" for manual sign-in. Ctrl+C stops the server.`,
+    `Pida ready: http://127.0.0.1:${app.config.port}\nWorkspace: ${directory}\nProvider: ${app.config.provider.kind} · conversations saved locally\nThis window is the server log, not the TUI. Keep it running.\nOpen another terminal: pida tui "${directory}"\nFrom this source checkout: npm run tui -- "${directory}"\nUse pida open "${directory}" to sign in, or pida token "${directory}" for manual sign-in. Ctrl+C stops the server.`,
   );
   if (open)
     await openBrowser(directory, setup).catch((e) => console.error(e.message));

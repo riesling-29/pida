@@ -1,12 +1,16 @@
-import { PidaClient, PidaClientError, explainError, type RuntimeInfo, type SessionSummary, type TraceEvent } from "./client.js";
+import { PidaClient, PidaClientError, explainError, type RuntimeInfo, type SessionSummary, type TraceEvent, type ResultManifest } from "./client.js";
 
 export type TuiSession = Awaited<ReturnType<PidaClient["getSession"]>>;
 export interface TuiState {
   info?: RuntimeInfo; session?: TuiSession; sessions: SessionSummary[]; trace: TraceEvent[];
   connected: boolean; submitting: boolean; notice: string;
   panel?: { title: string; text: string }; traceGap: boolean;
+  manifest?: ResultManifest; evidenceState?: "loading" | "available" | "missing" | "error";
+  changes?: { files: number; untracked: number; revision: string; observedAt: string; available: boolean; truncated: boolean };
 }
+export interface TuiFiles { title: string; path: string; files: { path: string; type: "file" | "directory" }[]; truncated: boolean }
 export const terminalCommands = [
+  ["menu", "기능 메뉴 · 방향키로 선택"], ["overview", "목표·구조·실행·판단 개요"], ["density", "안내 / 간결 표시 전환"],
   ["sessions", "대화 선택"], ["new", "새 대화"], ["resume", "대화 ID로 열기"],
   ["status", "대상·모델·컨텍스트"], ["activity", "실행 과정"], ["tools", "도구 실행 결과"],
   ["files", "프로젝트 파일 목록"], ["read", "파일 내용"], ["diff", "Git 변경 내역"],
@@ -21,6 +25,10 @@ export class TuiController {
   readonly state: TuiState = { sessions: [], trace: [], connected: false, submitting: false, notice: "서버 연결 중", traceGap: false };
   onChange: () => void = () => {};
   onSessions: (sessions: SessionSummary[]) => void = () => {};
+  onFiles: (files: TuiFiles) => void = () => {};
+  onMenu: () => void = () => {};
+  onOverview: () => void = () => {};
+  onDensity: () => void = () => {};
   onQuit: () => void = () => {};
   private epoch = 0;
   private selectionRequest = 0;
@@ -30,6 +38,8 @@ export class TuiController {
   private streamAbort?: AbortController;
   private streamTask?: Promise<void>;
   private commandBusy = false;
+  private evidenceKey?: string;
+  private evidenceRequest = 0;
   constructor(readonly client: PidaClient, private options: { pollMs?: number; openWeb?: (sessionId: string) => Promise<void> } = {}) {}
   private changed() { if (!this.closed) this.onChange(); }
   private problem(error: unknown) {
@@ -59,7 +69,9 @@ export class TuiController {
     this.streamAbort?.abort(); this.streamAbort = undefined;
     this.state.session = session; this.state.trace = trace.events; this.state.traceGap = trace.truncated;
     this.state.submitting = false; this.state.connected = true; this.state.panel = undefined;
-    this.state.notice = session.running ? "서버에서 진행 중인 작업에 연결했습니다." : "요청을 입력하세요. /help 명령 · /web 같은 대화 열기";
+    this.state.manifest = undefined; this.state.evidenceState = undefined; this.state.changes = undefined; this.evidenceKey = undefined;
+    this.state.notice = session.running ? "서버에서 진행 중인 작업에 연결했습니다." : "목표와 완료 조건을 입력하세요. F1 메뉴 · F2 대화 선택";
+    this.loadEvidence();
     this.changed();
   }
   async refresh(): Promise<void> {
@@ -71,11 +83,31 @@ export class TuiController {
       if (this.closed || ticket !== this.epoch || this.state.session?.sessionId !== id) return;
       const reconnected = !this.state.connected;
       this.state.session = session; this.state.trace = trace.events; this.state.traceGap = trace.truncated; this.state.connected = true;
+      this.loadEvidence();
       if (reconnected) this.state.notice = "다시 연결했습니다. 서버의 실제 상태를 표시합니다.";
       this.changed();
     })();
     this.refreshing = task;
     try { await task; } finally { if (this.refreshing === task) this.refreshing = undefined; }
+  }
+  /** Optional evidence never blocks execution polling or promotes a model's completion claim. */
+  private loadEvidence(force = false) {
+    const session = this.state.session, run = this.state.trace.at(-1)?.runId;
+    if (!session || session.running || !run) {
+      this.state.manifest = undefined; this.state.evidenceState = undefined; this.evidenceKey = undefined; return;
+    }
+    const key = `${session.sessionId}:${run}`;
+    if (!force && this.evidenceKey === key) return;
+    this.evidenceKey = key; this.state.manifest = undefined; this.state.evidenceState = "loading";
+    const epoch = this.epoch, request = ++this.evidenceRequest;
+    const current = () => !this.closed && request === this.evidenceRequest && epoch === this.epoch && key === this.evidenceKey && !this.state.session?.running && this.state.trace.at(-1)?.runId === run;
+    void this.client.getManifest(session.sessionId, run).then(manifest => {
+      if (!current()) return;
+      if (manifest.run_id !== run || manifest.session_id !== session.sessionId) { this.state.evidenceState = "error"; return; }
+      this.state.manifest = manifest; this.state.evidenceState = "available";
+    }).catch(error => {
+      if (current()) this.state.evidenceState = error instanceof PidaClientError && error.status === 404 ? "missing" : "error";
+    }).finally(() => { if (current()) this.changed(); });
   }
   private selected() {
     if (!this.state.session || !this.state.connected) throw new PidaClientError("CONNECTION_FAILED", 503);
@@ -92,7 +124,10 @@ export class TuiController {
         for await (const event of this.client.stream(id, prompt, { signal: controller.signal, disconnectPolicy: "continue" })) {
           if (ticket !== this.epoch || this.closed) break;
           if (event.type === "trace") {
-            if (event.trace.type === "run_started") this.state.notice = "접수됨 · /steer 추가 지시 · /stop 중단 · Ctrl+D 분리";
+            if (event.trace.type === "run_started") {
+              this.state.notice = "접수됨 · F1 추가 지시 / 중단 · Ctrl+D 분리";
+              this.state.manifest = undefined; this.state.evidenceState = undefined; this.evidenceKey = undefined;
+            }
             if (!this.state.trace.some(t => t.sequence === event.trace.sequence)) this.state.trace.push(event.trace);
             this.state.trace = this.state.trace.slice(-300);
           }
@@ -120,16 +155,19 @@ export class TuiController {
     }
     const split = text.indexOf(" "), command = text.slice(1, split < 0 ? undefined : split), arg = split < 0 ? "" : text.slice(split + 1).trim();
     if (command === "quit") { this.onQuit(); return true; }
+    if (command === "menu") { this.onMenu(); return true; }
+    if (command === "overview") { this.onOverview(); return true; }
+    if (command === "density") { this.onDensity(); return true; }
     if (command === "back") { this.state.panel = undefined; this.changed(); return true; }
     if (this.commandBusy && command !== "stop") { this.state.notice = "이전 명령의 응답을 기다리고 있습니다."; this.changed(); return false; }
     if (command !== "stop") this.commandBusy = true;
     try {
       switch (command) {
-        case "help": this.state.panel = { title: "명령", text: terminalCommands.map(([name, description]) => `/${name}  ${description}`).join("\n") + "\n\nEnter 보내기 · Shift+Enter/Alt+Enter 줄바꿈\nF2 대화 · F3 실행 · F4 도구 · F6 변경\nCtrl+C 현재 실행 중단(대기 중에는 입력 비우기)\nCtrl+D 분리 · /quit 분리\n패널 스크롤: Alt+PageUp / Alt+PageDown\n//로 시작하면 /문자를 모델에 보냅니다.\n\n분리해도 별도로 실행한 서버와 작업은 계속됩니다." }; break;
+        case "help": this.state.panel = { title: "명령", text: terminalCommands.map(([name, description]) => `/${name}  ${description}`).join("\n") + "\n\nEnter 보내기 · Shift+Enter/Alt+Enter 줄바꿈\nF1 메뉴 · F2 대화 · F3 실행 · F4 도구\nF5 파일 · F6 변경 · F7 개요 · F8 안내/간결\nCtrl+C 현재 실행 중단(대기 중에는 입력 비우기)\nCtrl+D 분리 · /quit 분리\n패널 스크롤: Alt+PageUp / Alt+PageDown\n//로 시작하면 /문자를 모델에 보냅니다.\n\n분리해도 별도로 실행한 서버와 작업은 계속됩니다." }; break;
         case "sessions": this.state.sessions = (await this.client.listSessions()).sessions; this.onSessions(this.state.sessions); break;
         case "new": await this.select((await this.client.createSession()).sessionId); break;
         case "resume": await this.select(arg); break;
-        case "refresh": await this.refresh(); this.state.info = await this.client.getInfo(); break;
+        case "refresh": await this.refresh(); this.state.info = await this.client.getInfo(); this.loadEvidence(true); break;
         case "web": if (!this.options.openWeb) throw new Error("WEB_UNAVAILABLE"); await this.options.openWeb(this.selected().sessionId); this.state.notice = "같은 대화를 웹에서 열었습니다."; break;
         case "stop": {
           const s = this.selected(), expected = s.activeRunId;
@@ -161,8 +199,8 @@ export class TuiController {
         }
         case "tools": { const data = await this.client.getSessionTools(this.selected().sessionId); this.state.panel = { title: "도구 실행 결과", text: data.items.map(t => `${t.toolName} · ${t.status}${t.exitCode === undefined ? "" : " · exit " + t.exitCode}${t.runId ? " · " + t.runId.slice(0, 8) : ""}\n${t.command ?? ""}\n${t.output ?? ""}\n${t.stderr ?? ""}${t.truncated ? "\n[출력 일부]" : ""}`).join("\n\n") || "아직 도구 실행이 없습니다." }; break; }
         case "files": {
-          try { const p = await this.client.getProject(arg || "."); this.state.panel = { title: "프로젝트 파일", text: p.files.map(f => `${f.type === "directory" ? "/ " : "  "}${f.path}`).join("\n") + (p.truncated ? "\n[목록 일부]" : "") }; }
-          catch (e) { if (!(e instanceof PidaClientError) || e.code !== "PROJECT_DISABLED") throw e; const p = await this.client.getWorkbench(); this.state.panel = { title: "작업 파일", text: p.files.map(f => f.path).join("\n") || "작업 파일이 없습니다." }; } break;
+          try { const p = await this.client.getProject(arg || "."); this.onFiles({ title: "프로젝트 파일", path: p.path, files: p.files, truncated: p.truncated }); }
+          catch (e) { if (!(e instanceof PidaClientError) || e.code !== "PROJECT_DISABLED") throw e; const p = await this.client.getWorkbench(); this.onFiles({ title: "작업 파일", path: ".", files: p.files.map(f => ({ path: f.path, type: "file" })), truncated: false }); } break;
         }
         case "read": {
           if (!arg) throw new PidaClientError("INVALID_PATH", 400);
@@ -170,7 +208,7 @@ export class TuiController {
           try { content = (await this.client.readProjectFile(arg)).content; } catch (e) { if (!(e instanceof PidaClientError) || e.code !== "PROJECT_DISABLED") throw e; content = (await this.client.readWorkspaceFile(arg)).content; }
           this.state.panel = { title: arg, text: content }; break;
         }
-        case "diff": { const p = await this.client.getProjectChanges(); this.state.panel = { title: "Git 변경 · 현재 작업 트리", text: (p.available ? p.diff || "추적 파일 변경 없음" : "Git 비교를 사용할 수 없습니다.") + (p.untracked.length ? "\n\n추적되지 않은 파일:\n" + p.untracked.join("\n") : "") + (p.truncated ? "\n[변경 내역 일부]" : "") }; break; }
+        case "diff": { const p = await this.client.getProjectChanges(); this.state.changes = { files: p.files.length, untracked: p.untracked.length, revision: p.revision, observedAt: new Date().toISOString(), available: p.available, truncated: p.truncated }; this.state.panel = { title: "Git 변경 · 현재 작업 트리", text: (p.available ? p.diff || "추적 파일 변경 없음" : "Git 비교를 사용할 수 없습니다.") + (p.untracked.length ? "\n\n추적되지 않은 파일:\n" + p.untracked.join("\n") : "") + (p.truncated ? "\n[변경 내역 일부]" : "") }; break; }
         default: this.state.notice = "알 수 없는 명령입니다. /help로 확인하세요."; return false;
       }
       this.changed(); return true;

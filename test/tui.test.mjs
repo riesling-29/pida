@@ -6,10 +6,10 @@ import { Type } from 'typebox';
 import { fauxProvider, fauxAssistantMessage as answer, fauxToolCall as call, fauxText, fauxThinking } from '@earendil-works/pi-ai/providers/faux';
 import { visibleWidth, stripTerminalSequences } from '@earendil-works/pi-tui';
 import { PidaRuntime } from '../dist/runtime.js';
-import { PidaClient, sessionDisplayMessages } from '../dist/client.js';
+import { PidaClient, PidaClientError, sessionDisplayMessages } from '../dist/client.js';
 import { createPidaServer, staticTokenAuth } from '../dist/http.js';
 import { TuiController } from '../dist/tui-controller.js';
-import { createTuiView, terminalText } from '../dist/tui.js';
+import { createTuiView, terminalText, workSignals } from '../dist/tui.js';
 
 const until = async predicate => { for(let i=0;i<400;i++){if(await predicate())return;await delay(10);}assert.fail('condition not reached'); };
 async function fixture(t, provider) {
@@ -38,6 +38,8 @@ test('TUI and Web client share actual Pi run, detach without cancel, reattach wi
   f.gate.resolve();await until(async()=>{await attached.refresh();return !attached.state.session.running;});
   assert.equal(attached.state.session.lastStatus,'completed');assert.match(sessionDisplayMessages(attached.state.session).at(-1).text,/shared result/);
   assert.equal(f.calls(),1);assert.equal(attached.state.session.runs,1);
+  await until(()=>attached.state.evidenceState==='available');
+  assert.equal(attached.state.manifest.verification_status,'UNKNOWN');
   await attached.submit('/activity');assert.match(attached.state.panel.text,/UNKNOWN/);
 });
 
@@ -51,6 +53,51 @@ test('guarded TUI cancellation cannot cancel a replacement run; foreign session 
   await assert.rejects(stranger.getSession(id),{code:'SESSION_NOT_FOUND'});
   await c.submit('/stop');await c.settled();assert.equal(c.state.session.lastStatus,'cancelled');
   await assert.rejects(f.peer.cancel(id,run),{code:'RUN_CHANGED'});
+});
+
+test('completion evidence is owned by the observed run and delayed results never cross sessions',async()=>{
+  const a='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',b='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',run='11111111-1111-1111-1111-111111111111',gate=Promise.withResolvers();
+  const session=id=>({sessionId:id,title:id,messages:[],running:false,runs:id===a?1:0,tools:[],autoCompaction:true,lastStatus:'completed'});
+  const trace=id=>({events:id===a?[{sequence:1,sessionId:a,runId:run,timestamp:new Date().toISOString(),type:'run_finished'}]:[],truncated:false});
+  const c=new TuiController({getInfo:async()=>({tools:[]}),listSessions:async()=>({sessions:[session(a)]}),getSession:async id=>session(id),getTrace:async id=>trace(id),getManifest:()=>gate.promise});
+  await c.start();assert.equal(c.state.evidenceState,'loading');await c.select(b);
+  gate.resolve({session_id:a,run_id:run,verification_status:'UNKNOWN',verification_results:[]});await delay(10);
+  assert.equal(c.state.manifest,undefined);assert.equal(c.state.evidenceState,undefined);assert.equal(c.state.connected,true);c.close();
+  const signals=workSignals({session:{...session(a),running:true,activeRunId:run},trace:trace(a).events,manifest:{session_id:a,run_id:run,verification_status:'UNKNOWN',verification_results:[{status:'PASSED',current_at_run_end:true}]}});
+  assert.equal(signals.manifest,undefined);assert.deepEqual(signals.checks,[]);
+});
+
+test('menu and file picker expose real host actions without losing draft or bypassing authorization',async()=>{
+  const terminal=new TerminalFixture(),reads=[];
+  const client={getProject:async path=>({path,files:[{path:'source/file with space.ts',type:'file'}],truncated:false}),readProjectFile:async path=>{reads.push(path);return {content:'actual source content'};}};
+  const c=new TuiController(client);c.state.connected=true;
+  const view=createTuiView(c,{terminal,workspace:'D:/pida/my-agent',color:false});view.start();await delay(30);
+  view.editor.setText('유지할 요청');terminal.input('\x1bOP');await delay(20);
+  assert.match(view.getScreenLines().map(stripTerminalSequences).join('\n'),/기능 메뉴/);
+  terminal.input('\x1b');await delay(20);assert.equal(view.editor.getExpandedText(),'유지할 요청');
+  terminal.input('\x1b[15~');await delay(25);assert.match(view.getScreenLines().map(stripTerminalSequences).join('\n'),/file with space.ts/);
+  terminal.input('\r');await delay(25);assert.deepEqual(reads,['source/file with space.ts']);assert.equal(c.state.panel.text,'actual source content');assert.equal(view.editor.getExpandedText(),'유지할 요청');
+  // Real SGR mouse dispatch activates the visible F1 menu button.
+  terminal.input('\x1b[<0;4;3M');terminal.input('\x1b[<0;4;3m');await delay(30);
+  assert.match(view.getScreenLines().map(stripTerminalSequences).join('\n'),/기능 메뉴/);
+  view.stop();c.close();
+  let fallback=false;const denied=new TuiController({getProject:async()=>{throw new PidaClientError('FORBIDDEN',403);},getWorkbench:async()=>{fallback=true;return {files:[]};}});
+  assert.equal(await denied.submit('/files'),false);assert.equal(fallback,false);denied.close();
+});
+
+test('default workspace retains intent, execution and unknown judgment in wide and narrow views',async()=>{
+  const terminal=new TerminalFixture(),c=new TuiController({});
+  c.state.connected=true;c.state.info={tools:[],provider:{model:'fixture-model'}};
+  c.state.session={sessionId:'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',title:'검토 작업',messages:[{role:'user',text:'검색 필터 추가 및 테스트. '+ '기존 동작 유지. '.repeat(20)}],running:false,runs:0,tools:[],autoCompaction:true};
+  const view=createTuiView(c,{terminal,workspace:'D:/pida/my-agent',color:false});view.start();await delay(30);
+  let screen=view.getScreenLines().map(stripTerminalSequences).join('\n');
+  for(const label of ['TUI','F1 메뉴','INTENT','STRUCTURE','EXECUTION','JUDGMENT','독립 검증 미확인','변경 미조회'])assert.ok(screen.includes(label),label);
+  terminal.input('\x1b[19~');await delay(20);assert.match(view.getScreenLines().map(stripTerminalSequences).join('\n'),/간결/);
+  terminal.columns=64;terminal.rows=24;terminal.resize();await delay(30);screen=view.getScreenLines().map(stripTerminalSequences).join('\n');
+  assert.match(screen,/목표 검색 필터/);assert.match(screen,/독립 검증 미확인/);assert.ok(view.getScreenLines().every(l=>visibleWidth(l)<=64));
+  terminal.input('\x1b[18~');await delay(20);assert.match(view.getScreenLines().map(stripTerminalSequences).join('\n'),/작업 개요/);
+  terminal.input('\x1b');await delay(20);assert.match(view.getScreenLines().map(stripTerminalSequences).join('\n'),/검토 작업/);
+  view.stop();c.close();
 });
 
 test('peer snapshot exposes bounded assistant text, never thinking, and final messages replace preview',async t=>{

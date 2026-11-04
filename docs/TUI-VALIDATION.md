@@ -1,5 +1,7 @@
 # Pida 0.8.7 terminal/Web validation
 
+Historical report. Current [0.8.8 layout and interaction validation](TUI-0.8.8.md).
+
 2026-11-03 KST. [Plan](TUI-PATCH-PLAN.md), [design and usage](TUI.md).
 
 Baseline: local `daf43e55f800d42e23551c7bea47fac59723bb46`, branch
