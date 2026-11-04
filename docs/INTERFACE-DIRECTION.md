@@ -8,6 +8,10 @@ The philosophical principles below remain the common Web/TUI direction.
 In 0.8.8 the supplied learning note sharpened this into visible intent,
 structure, execution and judgment, plus discoverable actions rather than
 command memorization. See [the correction and evidence](TUI-0.8.8.md).
+The next design binds a selected work object to a request and its actual change
+and verification record across both clients. See the
+[shared Web/TUI work-surface design](SHARED-WORK-SURFACE-DESIGN.md).
+That document is a proposal grounded in 0.8.8, not an implemented feature list.
 
 ## Product goal
 
