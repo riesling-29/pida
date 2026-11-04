@@ -12,6 +12,10 @@ The next design binds a selected work object to a request and its actual change
 and verification record across both clients. See the
 [shared Web/TUI work-surface design](SHARED-WORK-SURFACE-DESIGN.md).
 That document is a proposal grounded in 0.8.8, not an implemented feature list.
+The [multi-agent workspace design](MULTI-AGENT-WORKSPACE-DESIGN.md) adds tabs,
+split views and runtime management around that work surface, reusing the existing
+AgentSupervisor. Layout and execution lifecycles remain distinct; this extension
+is also a design, not a completed multi-pane implementation.
 
 ## Product goal
 
