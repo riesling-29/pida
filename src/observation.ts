@@ -3,10 +3,11 @@ import { join } from "node:path";
 import { createHmac, randomBytes, randomUUID } from "node:crypto";
 import { canonical, sha256, savePrivate, isId } from "./private-state.js";
 import { observationSchema, type Observation, type ObservationBundle, type ResultManifest } from "./execution-contract.js";
+import { exportOcel } from "./ocel.js";
 
 export interface ObservationContext { sessionId: string; taskId: string; runId: string }
 export interface ObservationSink { write(event: Observation): void | Promise<void> }
-interface Journal { sequence: number; events: Observation[]; lost: boolean; bytes: number; manifest?: ResultManifest }
+interface Journal { sequence: number; events: Observation[]; lost: boolean; bytes: number; manifest?: ResultManifest; ocelFailed?: boolean }
 /** Bounded, metadata-only producer journal. Sink failures never use the SSE cancellation path. */
 export class ObservationArchive {
   readonly sourceId: string;
@@ -75,7 +76,7 @@ export class ObservationArchive {
       session_id: context.sessionId, task_id: context.taskId, run_id: context.runId,
       activity, occurred_at: new Date().toISOString(), sequence_number: ++journal.sequence,
       capture_mode: "native-runtime", payload_digest: sha256(canonical(payload)),
-      object_refs: [context.sessionId, context.runId], artifact_refs: refs.artifacts ?? [], evidence_refs: refs.evidence ?? [],
+      object_refs: [this.agentId, context.sessionId, context.taskId, context.runId, ...(payload.turn_id ? [payload.turn_id] : [])], artifact_refs: refs.artifacts ?? [], evidence_refs: refs.evidence ?? [],
       data_scope: "metadata-only", payload: structuredClone(payload),
     };
     const line = JSON.stringify(event) + "\n";
@@ -90,6 +91,7 @@ export class ObservationArchive {
         appendFileSync(join(root, context.runId + ".jsonl"), line, { mode: 0o600 });
       }
     } catch { journal.lost = true; }
+    if (activity === "turn_finished" || activity === "operation_finished") this.checkpoint(context);
     if (this.sink) {
       if (this.sinkPending >= 64) { this.sinkFailures++; return !journal.lost; }
       this.sinkPending++;
@@ -99,14 +101,26 @@ export class ObservationArchive {
   }
   finish(context: ObservationContext, manifest: ResultManifest): void {
     const journal = this.journal(context); journal.manifest = structuredClone(manifest);
-    try { const root = this.root(context.sessionId); if (root) { savePrivate(join(root, context.runId + ".manifest.json"), manifest); if (!journal.lost) this.journals.delete(context.sessionId + "/" + context.runId); } }
+    try { const root = this.root(context.sessionId); if (root) { savePrivate(join(root, context.runId + ".manifest.json"), manifest); this.checkpoint(context); if (!journal.lost && !journal.ocelFailed) this.journals.delete(context.sessionId + "/" + context.runId); } }
     catch { journal.lost = true; }
+  }
+  /** Atomic materialized OCEL cut at each actual Pi turn end; JSONL remains the crash-recovery journal. */
+  private checkpoint(context: ObservationContext): void {
+    const root = this.root(context.sessionId); if (!root) return;
+    const journal = this.journal(context);
+    try {
+      journal.ocelFailed = false;
+      const { document, ...metadata } = exportOcel(this.bundle(context.sessionId, context.runId));
+      savePrivate(join(root, context.runId + ".ocel.json"), document);
+      savePrivate(join(root, context.runId + ".ocel.meta.json"), metadata);
+      journal.ocelFailed = false;
+    } catch { journal.ocelFailed = true; }
   }
   bundle(sessionId: string, runId: string): ObservationBundle {
     const j = this.journal({ sessionId, runId, taskId: "" });
     if (!j.events.length && !j.manifest) { this.journals.delete(sessionId + "/" + runId); throw new Error("RUN_NOT_FOUND"); }
     const terminal = (j.events.at(-1)?.activity === "run_finished" && !!j.manifest) || j.events.at(-1)?.activity === "operation_finished";
-    const limits = [...(j.lost ? ["OBSERVATION_INCOMPLETE"] : []), ...(!terminal ? ["TERMINAL_EVENT_MISSING"] : []), ...(this.sinkFailures ? ["EXTERNAL_SINK_DELIVERY_FAILED"] : []), ...(this.sinkPending ? ["EXTERNAL_SINK_DELIVERY_PENDING"] : [])];
+    const limits = [...(j.lost ? ["OBSERVATION_INCOMPLETE"] : []), ...(j.ocelFailed ? ["OCEL_CHECKPOINT_UNAVAILABLE"] : []), ...(!terminal ? ["TERMINAL_EVENT_MISSING"] : []), ...(this.sinkFailures ? ["EXTERNAL_SINK_DELIVERY_FAILED"] : []), ...(this.sinkPending ? ["EXTERNAL_SINK_DELIVERY_PENDING"] : [])];
     return { schema_version: "pida.bundle/0.1-draft", session_id: sessionId, run_id: runId, complete: !j.lost && terminal, known_limits: limits, events: structuredClone(j.events), ...(j.manifest ? { manifest: structuredClone(j.manifest) } : {}) };
   }
   list(sessionId: string): string[] {

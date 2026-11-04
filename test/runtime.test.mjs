@@ -48,13 +48,15 @@ test("actual Pi loop executes a business tool, streams, retains session history,
       "turn_started",
       "tool_started",
       "tool_completed",
+      "turn_finished",
       "turn_started",
+      "turn_finished",
       "run_finished",
     ],
   );
   assert.deepEqual(
     traces.map((t) => t.sequence),
-    [1, 2, 3, 4, 5, 6],
+    [1, 2, 3, 4, 5, 6, 7, 8],
   );
   assert.ok(!JSON.stringify(traces).includes("secret-prompt"));
   assert.ok(!JSON.stringify(traces).includes("LOT-001"));

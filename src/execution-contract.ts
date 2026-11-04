@@ -2,10 +2,11 @@
 export const observationSchema = "pida.observation/0.1-draft" as const;
 export const manifestSchema = "pida.result/0.1-draft" as const;
 /** Validator capability revision; existing persisted event/bundle identities are unchanged. */
-export const observationContractRevision = "pida.export-validation/0.3" as const;
+export const observationContractRevision = "pida.export-validation/0.4" as const;
 /** Closed metadata vocabulary. Descriptor is a bounded JSON-encoded LoadedRunContext,
  * validated structurally by the exporter contract, not arbitrary context text. */
 export interface ObservationPayload {
+  turn_id?: string; turn_index?: number;
   model?: string; api?: string; request_id?: string | null; stop_reason?: string;
   attempt?: number | null; provider_generation?: string; thinking_level?: string;
   context_window?: number; model_max_tokens?: number;

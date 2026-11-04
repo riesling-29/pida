@@ -9,6 +9,7 @@ import { createLocalPersonaProvider, type PersonaProvider } from "./persona-prov
 import { ProcessIntelligence } from "./process-intelligence.js";
 import { ProcessProfileAnalysis, type PiProfileAnalysisOptions } from "./process-profiles.js";
 import { createPixProcessPort, type PixPort } from "./pix-port.js";
+import { createPixOcelPort, type PixOcelPort } from "./pix-ocel.js";
 import { loadProviderConnector, type ProviderConnectorConfig } from "./provider-connector.js";
 import { ProjectView } from "./project-view.js";
 import { codingPacks } from "./coding-packs.js";
@@ -114,7 +115,7 @@ const configSchema = Type.Object(
     codemode: Type.Optional(Type.Object({ enabled: Type.Boolean(), tools: Type.Optional(Type.Array(Type.String({ pattern: "^[a-z][a-z0-9_]{0,63}$" }), { maxItems: 64, uniqueItems: true })), maxCalls: Type.Optional(Type.Integer({ minimum: 1, maximum: 64 })), timeoutMs: Type.Optional(Type.Integer({ minimum: 100, maximum: 120000 })), memoryLimitBytes: Type.Optional(Type.Integer({ minimum: 4194304, maximum: 134217728 })), maxOutputChars: Type.Optional(Type.Integer({ minimum: 256, maximum: 24000 })) }, { additionalProperties: false })),
     skills: Type.Optional(Type.Array(Type.String({ minLength: 1 }), { maxItems: 16, uniqueItems: true })),
     agents: Type.Optional(Type.Object({ enabled: Type.Boolean(), maxConcurrent: Type.Optional(Type.Integer({ minimum: 1, maximum: 8 })) }, { additionalProperties: false })),
-    codingPacks: Type.Optional(Type.Array(Type.Union([Type.Literal("debugging"), Type.Literal("verification")]), { uniqueItems: true })),
+    codingPacks: Type.Optional(Type.Array(Type.Union([Type.Literal("debugging"), Type.Literal("verification"), Type.Literal("pix")]), { uniqueItems: true })),
     browserChecks: Type.Optional(Type.Boolean()),
     project: Type.Optional(Type.Object({
       enabled: Type.Boolean(), root: Type.String({ minLength: 1 }), trustedHost: Type.Boolean(),
@@ -167,7 +168,7 @@ export const defaultConfig: WorkspaceConfig = {
   provider: { kind: "mock" },
   tools: { directory: "tools", enabled: ["lot-status.mjs"] },
   workbench: { enabled: true },
-  permissions: ["lots:read", ...workbenchPermissions],
+  permissions: ["lots:read", ...workbenchPermissions, "pi:read", "pi:analyze"],
 };
 
 function inside(root: string, path: string): string {
@@ -482,12 +483,13 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
       return value;
     };
     const principal: Principal = { id: "local-user", permissions: [...new Set([...config.permissions, "pida:configure", "pida:agents", "pida:recover", ...agentMemoryPermissions, ...agentToolPermissions, ...((config.skills?.length || packsFor("main").skills.length || packsFor("agent").skills.length) ? ["resources:read"] : [])])] };
-    let pixPort: PixPort | undefined, pixUnavailable: string | undefined;
+    let pixPort: PixPort | undefined, ocelPort: PixOcelPort | undefined, pixUnavailable: string | undefined;
     if (config.processIntelligence) {
       const selected = config.processIntelligence;
-      try { pixPort = createPixProcessPort({ pythonExecutable: resolve(root, selected.pythonExecutable),
+      try { const portConfig = { pythonExecutable: resolve(root, selected.pythonExecutable),
         sourceDirectory: resolve(root, selected.sourceDirectory), workerPath: fileURLToPath(new URL("../scripts/pix-worker.py", import.meta.url)),
-        expectedSourceCommit: selected.sourceCommit, expectedSourceDigest: selected.sourceDigest, timeoutMs: selected.timeoutMs }); }
+        expectedSourceCommit: selected.sourceCommit, expectedSourceDigest: selected.sourceDigest, timeoutMs: selected.timeoutMs };
+        pixPort = createPixProcessPort(portConfig); ocelPort = createPixOcelPort(portConfig); }
       catch (error) { pixUnavailable = error && typeof error === "object" && "code" in error && typeof error.code === "string" && /^[A-Z0-9_]+$/.test(error.code) ? error.code : "PIX_UNAVAILABLE"; }
     }
     const agentDirectory = join(inside(root, config.stateDir), "agents-service");
@@ -569,7 +571,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
           throw new PidaError("PERSONA_PROVIDER_INVALID", 500);
         let created: PidaRuntime;
         const pi = new ProcessIntelligence({ directory: join(inside(root, config.stateDir), "process-intelligence", agentId), agentId,
-          runtime: () => created, personaProvider: persona, port: pixPort, unavailableReason: pixUnavailable,
+          runtime: () => created, personaProvider: persona, port: pixPort, ocelPort, unavailableReason: pixUnavailable,
           ...(config.processIntelligence ? { enginePin: { sourceCommit: config.processIntelligence.sourceCommit, sourceDigest: config.processIntelligence.sourceDigest },
             maxRuns: config.processIntelligence.maxRuns, maxEvents: config.processIntelligence.maxEvents, maxCallsPerRun: config.processIntelligence.maxCallsPerRun } : {}) });
         const profileOptions = await options.processProfiles?.({ agentId, role: roleId, principal, workspaceId: root, runtime: () => created });

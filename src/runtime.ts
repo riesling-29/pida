@@ -4,6 +4,7 @@ import { validContextDescriptor, type RunContextSnapshot, type LoadedRunContext,
 import { createProgramComposeTool, normalizeCodemodeConfig, type CodemodeConfig } from "./codemode.js";
 import { EffectLedger, type EffectReceipt } from "./effects.js";
 import { ObservationArchive, type ObservationSink, type ObservationContext } from "./observation.js";
+import { exportOcel, type OcelExport } from "./ocel.js";
 import { ModelAttemptUsage } from "./model-observation.js";
 import { validatePersonaSnapshot, type PersonaProvider } from "./persona-provider.js";
 import { resultManifest } from "./evidence.js";
@@ -191,6 +192,7 @@ interface ActiveRun {
   usageKnown: boolean;
   snapshot?: ArtifactSnapshot;
   verification: VerificationResult[];
+  currentTurnId?: string;
   evidenceFailed?: boolean;
   requestId?: string;
   requestPrepared?: boolean;
@@ -905,7 +907,7 @@ export class PidaRuntime {
     return { sessionId: id, ...projectToolDetails(s.pi.messages, allowed, runs, s.active?.id) };
   }
   private observe(sessionId: string, run: ActiveRun, activity: string, payload: Record<string, string | number | boolean | null> = {}, refs: { artifacts?: string[]; evidence?: string[] } = {}): boolean {
-    try { const recorded = this.observations.record({ sessionId, taskId: run.taskId, runId: run.id }, activity, payload, refs); if (!recorded) run.evidenceFailed = true; return recorded; }
+    try { const recorded = this.observations.record({ sessionId, taskId: run.taskId, runId: run.id }, activity, { ...(run.currentTurnId ? { turn_id: run.currentTurnId, turn_index: run.turns } : {}), ...payload }, refs); if (!recorded) run.evidenceFailed = true; return recorded; }
     catch { run.evidenceFailed = true; return false; }
   }
   private ownedArchive(id: string, principal: Principal): void {
@@ -918,6 +920,10 @@ export class PidaRuntime {
   exportRun(id: string, runId: string, principal: Principal): ObservationBundle {
     this.ownedArchive(id, principal);
     try { return this.observations.bundle(id, runId); } catch { throw new PidaError("RUN_NOT_FOUND", 404); }
+  }
+  exportRunOcel(id: string, runId: string, principal: Principal): OcelExport {
+    const bundle = this.exportRun(id, runId, principal);
+    try { return exportOcel(bundle); } catch { throw new PidaError("OCEL_SOURCE_INVALID", 409); }
   }
   getRecovery(id: string, principal: Principal) {
     this.ownedArchive(id, principal);
@@ -1157,8 +1163,13 @@ export class PidaRuntime {
         if (this.options.maxCostUsd !== undefined && run.cost >= this.options.maxCostUsd) stop("limited", "COST_BUDGET");
       }
       if (event.type === "turn_start") {
+        run.currentTurnId = randomUUID();
         if (++run.turns > this.limits.turns) stop("limited", "TURN_LIMIT");
         trace("turn_started");
+      }
+      if (event.type === "turn_end") {
+        trace("turn_finished");
+        run.currentTurnId = undefined;
       }
       if (event.type === "tool_execution_start") {
         run.clearProviderIdle?.();

@@ -41,6 +41,7 @@ test('TUI and Web client share actual Pi run, detach without cancel, reattach wi
   await until(()=>attached.state.evidenceState==='available');
   assert.equal(attached.state.manifest.verification_status,'UNKNOWN');
   await attached.submit('/activity');assert.match(attached.state.panel.text,/UNKNOWN/);
+  await attached.submit('/ocel');assert.match(attached.state.panel.title,/OCEL 2.0/);assert.match(attached.state.panel.text,/ToolCall/);
 });
 
 test('guarded TUI cancellation cannot cancel a replacement run; foreign session cannot be observed',async t=>{

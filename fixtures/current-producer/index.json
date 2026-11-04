@@ -1,13 +1,13 @@
 {
-  "validator_revision": "pida.export-validation/0.3",
-  "producer_package_version": "0.8.6",
+  "validator_revision": "pida.export-validation/0.4",
+  "producer_package_version": "0.8.10",
   "profile": "protocol",
   "input_data": "synthetic",
   "model": "Pi faux scripted",
   "mcp": "actual stdio JSON-RPC fixture",
   "actual_schumpeter_integration": "NOT_RUN",
   "fixture": "context-mcp-retry.json",
-  "sha256": "72ed2008137aa7c5a8b8edf95f2d135ca2dfc22bbad89e27895c4ae4f99c8558",
+  "sha256": "8e77f2902bf1710f0637ed5624b5f8eda6edcafe7852773b6cd64fd63be8c681",
   "validation": {
     "valid": true,
     "issues": [],
@@ -16,7 +16,7 @@
   "negative_cases": [
     {
       "fixture": "invalid-context-descriptor.json",
-      "sha256": "6dd9e93956b2e7df76e47121854d5c55adeee7db0ee0dfa2112730af938711fd",
+      "sha256": "9edda5be888e210e5b3894b1e5bd5ce49105d2245b0090e580d84c1bedf29999",
       "validation": {
         "valid": false,
         "issues": [
@@ -28,7 +28,7 @@
     },
     {
       "fixture": "conflicting-event-id.json",
-      "sha256": "8945328ee4785df46fdb60fed2dfab0d85956c08517a53823fa6d7d3d35e0a00",
+      "sha256": "a4d3a01d168afd499d44913de8d5b1990bc1e904339b4af514cb248d2be4f5cb",
       "validation": {
         "valid": false,
         "issues": [

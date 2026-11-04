@@ -226,7 +226,7 @@ test('PI tool registration and PIX configuration never grant analysis permission
   } });
   const inventory = app.getComposition().active.find(entry => entry.agentId === 'main');
   const tools = inventory.tools.filter(tool => tool.name.startsWith('pi_'));
-  assert.equal(tools.length, 5); assert.ok(tools.every(tool => tool.permitted === false));
+  assert.equal(tools.length, 8); assert.ok(tools.every(tool => tool.permitted === false));
   configure(app.runtime, [answer(call('pi_history', {}), { stopReason: 'toolUse' }), answer('must not claim analysis')]);
   const outcome = await run(app.runtime, principal([]), 'list my process history');
   assert.equal(outcome.result.status, 'failed'); assert.equal(outcome.result.code, 'TOOL_FORBIDDEN');

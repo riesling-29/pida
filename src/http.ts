@@ -280,7 +280,14 @@ export function createPidaServer(options: HttpOptions) {
           }
           if (jobRoute[2] === "export" && req.method === "GET") {
             if (!job.sessionId || !job.runId) throw new PidaError("RUN_NOT_FOUND", 404);
-            json(res, 200, (await agents.getRuntime(agentId, principal)).exportRun(job.sessionId, job.runId, principal)); return;
+            const target = await agents.getRuntime(agentId, principal);
+            const format = new URL(req.url!, "http://pida.invalid").searchParams.get("format");
+            if (format === "ocel" || format === "ocel-bundle") {
+              const output = target.exportRunOcel(job.sessionId, job.runId, principal);
+              res.setHeader("X-Pida-Complete", String(output.complete)); res.setHeader("X-Pida-Ocel-Digest", output.digest);
+              json(res, 200, format === "ocel" ? output.document : output);
+            } else json(res, 200, target.exportRun(job.sessionId, job.runId, principal));
+            return;
           }
           if (jobRoute[2] === "recovery" && req.method === "GET") {
             if (!job.sessionId) { json(res, 200, { sessionId: null, autoReplay: false, pendingEffects: [] }); return; }
@@ -414,6 +421,12 @@ export function createPidaServer(options: HttpOptions) {
       }
       const artifactRoute = path.match(/^\/v1\/sessions\/([a-f0-9-]{36})\/runs\/([a-f0-9-]{36})\/(export|manifest)$/);
       if (artifactRoute && req.method === "GET") {
+        const format = new URL(req.url!, "http://pida.invalid").searchParams.get("format");
+        if (artifactRoute[3] === "export" && (format === "ocel" || format === "ocel-bundle")) {
+          const output = runtime.exportRunOcel(artifactRoute[1]!, artifactRoute[2]!, principal);
+          res.setHeader("X-Pida-Complete", String(output.complete)); res.setHeader("X-Pida-Ocel-Digest", output.digest);
+          json(res, 200, format === "ocel" ? output.document : output); return;
+        }
         const bundle = runtime.exportRun(artifactRoute[1]!, artifactRoute[2]!, principal);
         if (artifactRoute[3] === "manifest") {
           if (!bundle.manifest) throw new PidaError("MANIFEST_NOT_FOUND", 404);

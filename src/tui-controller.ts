@@ -13,6 +13,7 @@ export const terminalCommands = [
   ["menu", "기능 메뉴 · 방향키로 선택"], ["overview", "목표·구조·실행·판단 개요"], ["density", "안내 / 간결 표시 전환"],
   ["sessions", "대화 선택"], ["new", "새 대화"], ["resume", "대화 ID로 열기"],
   ["status", "대상·모델·컨텍스트"], ["activity", "실행 과정"], ["tools", "도구 실행 결과"],
+  ["ocel", "현재 실행의 OCEL 객체·관계·기록 범위"],
   ["files", "프로젝트 파일 목록"], ["read", "파일 내용"], ["diff", "Git 변경 내역"],
   ["steer", "현재 실행에 추가 지시"], ["followup", "현재 실행 뒤의 요청 예약"],
   ["stop", "현재 작업 중단"], ["compact", "대화 압축"], ["handoff", "요약하고 이어가기"],
@@ -196,6 +197,16 @@ export class TuiController {
             catch (e) { if (!(e instanceof PidaClientError) || e.status !== 404) throw e; }
           }
           this.state.panel = { title: "실행과 검증", text: this.state.trace.slice(-80).map(t => `${t.timestamp.slice(11, 19)} ${t.type} ${t.toolName ?? ""} ${t.code ?? t.status ?? ""}`).join("\n") + "\n\n" + evidence }; break;
+        }
+        case "ocel": {
+          const s = this.selected(), runId = s.activeRunId ?? this.state.trace.at(-1)?.runId;
+          if (!runId) throw new PidaClientError("RUN_NOT_FOUND", 404);
+          const cut = await this.client.exportRunOcel(s.sessionId, runId), d = cut.document;
+          if (this.closed || this.state.session?.sessionId !== s.sessionId) break;
+          this.state.panel = { title: "OCEL 2.0 · 실행 관측", text: JSON.stringify({ mapping: cut.mapping, runId, complete: cut.complete,
+            events: d.events.length, objects: d.objects.length, objectTypes: d.objectTypes.map(t => ({ type: t.name, count: d.objects.filter(o => o.type === t.name).length })),
+            e2o: d.events.reduce((n, e) => n + e.relationships.length, 0), o2o: d.objects.reduce((n, o) => n + o.relationships.length, 0),
+            digest: cut.digest, knownLimits: cut.knownLimits, verification: "기록 조회 · PIX 검사는 pi_verify_run 도구로 별도 실행" }, null, 2) }; break;
         }
         case "tools": { const data = await this.client.getSessionTools(this.selected().sessionId); this.state.panel = { title: "도구 실행 결과", text: data.items.map(t => `${t.toolName} · ${t.status}${t.exitCode === undefined ? "" : " · exit " + t.exitCode}${t.runId ? " · " + t.runId.slice(0, 8) : ""}\n${t.command ?? ""}\n${t.output ?? ""}\n${t.stderr ?? ""}${t.truncated ? "\n[출력 일부]" : ""}`).join("\n\n") || "아직 도구 실행이 없습니다." }; break; }
         case "files": {

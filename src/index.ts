@@ -10,6 +10,8 @@ export * from "./persona-provider.js";
 export * from "./vera-persona-provider.js";
 export * from "./process-intelligence.js";
 export * from "./pix-port.js";
+export * from "./ocel.js";
+export * from "./pix-ocel.js";
 export * from "./pix-profiles.js";
 export * from "./process-profiles.js";
 export { lotStatusTool } from "./tools.js";

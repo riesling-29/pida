@@ -1,6 +1,7 @@
 # Direct PIX consumer: first batch slice
 
 This document describes the unchanged batch profile introduced in 0.8.4.
+0.8.10 adds a separate [OCEL recording and native verification profile](PIX-OCEL-0.8.10.md) using this same source pin.
 0.8.6 adds [separate selected prefix/object profiles](PIX-PROFILES.md) following
 the owner's CR response; it does not reinterpret this batch model or its pin.
 

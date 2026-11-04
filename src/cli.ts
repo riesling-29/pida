@@ -39,7 +39,7 @@ const help = `Pida — reusable local agent workspace
   pida tools disable FILE [directory]   Disable a module; restart to unload
   pida doctor [directory]               Validate config, credentials and module paths
   pida runs SESSION [directory]         List captured run/operation IDs from a running server
-  pida export SESSION RUN [directory] [--jsonl]  Export an owned run bundle or JSONL
+  pida export SESSION RUN [directory] [--ocel|--jsonl]  Export OCEL 2.0, bundle or JSONL
   pida recovery SESSION [dir]          Inspect main-session unknown effects
   pida recovery resolve SESSION EFFECT applied|not_applied [dir]
                                       Record an inspected effect outcome; never replay it
@@ -320,6 +320,12 @@ async function main() {
       if (!token) throw new Error("Missing local token; run pida doctor.");
       const client = new PidaClient({ baseUrl: `http://127.0.0.1:${config.port}`, token: () => token });
       if (command === "runs") console.log(JSON.stringify(await client.listRuns(sessionId), null, 2));
+      else if (args.includes("--ocel")) {
+        if (args.includes("--jsonl")) throw new Error("Choose --ocel or --jsonl.");
+        const output = await client.exportRunOcel(sessionId, runId!);
+        console.log(JSON.stringify(output.document, null, 2));
+        if (!output.complete) { console.error("OBSERVATION_INCOMPLETE: OCEL is an open or incomplete cut."); process.exitCode = 2; }
+      }
       else if (args.includes("--jsonl")) {
         const output = await client.exportRunJsonl(sessionId, runId!);
         process.stdout.write(output.jsonl);

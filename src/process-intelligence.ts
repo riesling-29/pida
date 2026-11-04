@@ -8,10 +8,26 @@ import { PidaError, type PidaRuntime, type Principal, type BusinessTool, type To
 import { validateObservationBundle } from "./integration-contract.js";
 import { validPixWorkerRequest, type PixPort, type PixWorkerRequest, type PixWorkerResult } from "./pix-port.js";
 import type { PersonaProvider } from "./persona-provider.js";
+import { exportOcel, type OcelExport } from "./ocel.js";
+import { pixOcelSchema, pixLifecyclePolicy, pixOcelModelDigest, validPixOcelResult, type PixOcelPort, type PixOcelResult } from "./pix-ocel.js";
 
 export const piMappingVersion = "pida.sequential-tool-lifecycle/1";
 export const piPermissions = ["pi:read", "pi:analyze", "pi:remember"] as const;
 export interface PiRunRef { sessionId: string; runId: string; digest: string }
+export interface PiOcelVerification {
+  schemaVersion: "pida.pi.ocel-evidence/1";
+  input: PiRunRef;
+  ocelDigest: string;
+  mapping: OcelExport["mapping"];
+  complete: boolean;
+  artifactSnapshotDigest: string;
+  artifactVerification: "UNKNOWN";
+  knownLimits: string[];
+  native: PixOcelResult;
+  modelDigest: string;
+  resultRef?: string;
+  resultDigest?: string;
+}
 type DfgModel = NonNullable<PixWorkerRequest["model"]>;
 type WorkerTrace = NonNullable<PixWorkerRequest["traces"]>[number];
 export type PiModelKind = "empirical" | "aspirational" | "mandatory";
@@ -74,6 +90,7 @@ export interface ProcessIntelligenceOptions {
   agentId: string;
   runtime(): PidaRuntime;
   port?: PixPort;
+  ocelPort?: PixOcelPort;
   personaProvider?: PersonaProvider;
   /** Execution profile pin from host configuration, never selected by a model tool. */
   enginePin?: { sourceCommit: string; sourceDigest: string };
@@ -96,7 +113,7 @@ const readSchema = Type.Object({ resultRef: Type.String({ pattern: "^pi-result:[
 /** Optional consumer of PIX. Stores computation evidence, never a second canonical persona database. */
 export class ProcessIntelligence {
   private readonly root: string;
-  private readonly inflight = new Map<string, Promise<PiAnalysisResult>>();
+  private readonly inflight = new Map<string, Promise<unknown>>();
   private readonly calls = new Map<string, number>();
   private readonly active = new Set<string>();
   private readonly maxRuns: number;
@@ -218,6 +235,7 @@ export class ProcessIntelligence {
   read(principal: Principal, resultRef: string): PiAnalysisResult {
     this.authorize(principal, "pi:read");
     const saved = this.load<PiAnalysisResult>("result", resultRef, principal);
+    if (saved.value.schemaVersion !== "pida.pi.analysis/1") fail("PI_RESULT_KIND_MISMATCH", 400);
     // Revoked/deleted source ownership also revokes derived results; no metadata-only bypass.
     for (const ref of saved.value.inputs) this.snapshot(principal, ref);
     if (saved.value.modelRef) {
@@ -238,11 +256,11 @@ export class ProcessIntelligence {
       failedCases: outcomeCounts.failed, outcomeCounts, observationCoverage: included.length / snapshots.length,
       sourceCoverage: "selected-runs-only", exclusions: snapshots.filter(s => !s.eligible).map(s => ({ run: s.ref, reasons: s.exclusions })) };
   }
-  private async bounded(principal: Principal, context: ToolContext | undefined, requestKey: string, work: () => Promise<PiAnalysisResult>): Promise<PiAnalysisResult> {
+  private async bounded<T>(principal: Principal, context: ToolContext | undefined, requestKey: string, work: () => Promise<T>): Promise<T> {
     const scope = canonical([principal.id, this.options.agentId]), runKey = context ? canonical([scope, context.sessionId, context.runId]) : undefined;
     if (context && (context.runId === "" || context.principal.id !== principal.id)) fail("PI_CONTEXT_INVALID", 400);
     if (this.active.has(scope)) fail("PI_RECURSION_OR_CONCURRENT_CALL", 409);
-    const existing = this.inflight.get(requestKey); if (existing) return existing;
+    const existing = this.inflight.get(requestKey); if (existing) return existing as Promise<T>;
     if (runKey && (this.calls.get(runKey) ?? 0) >= this.maxCalls) fail("PI_CALL_BUDGET", 429);
     if (runKey) {
       if (this.calls.size >= 1024 && !this.calls.has(runKey)) fail("PI_BUDGET_LEDGER_CAPACITY", 429);
@@ -361,6 +379,56 @@ export class ProcessIntelligence {
   awareness(principal: Principal, runs: PiRunRef[], modelRef: string, context?: ToolContext): Promise<PiAnalysisResult> {
     return this.analyze(principal, runs, "awareness", modelRef, 1, context);
   }
+  ocel(principal: Principal, ref: PiRunRef): OcelExport {
+    this.authorize(principal, "pi:read");
+    if (!Value.Check(refSchema, ref)) fail("PI_RUN_REFERENCE_INVALID", 400);
+    const bundle = this.options.runtime().exportRun(ref.sessionId, ref.runId, principal);
+    if (sha256(canonical(bundle)) !== ref.digest) fail("PI_STALE_CUT");
+    try { return exportOcel(bundle); } catch { return fail("OCEL_SOURCE_INVALID"); }
+  }
+  /** Actual PIX OCEL import/semantic validation and fixed per-object lifecycle alignments.
+   * Never changes ResultManifest verification_status or canonical persona memory. */
+  async verifyOcel(principal: Principal, ref: PiRunRef, context?: ToolContext): Promise<PiOcelVerification> {
+    this.authorize(principal, "pi:analyze");
+    const reader = { ...principal, permissions: [...principal.permissions, "pi:read"] };
+    const selected = this.ocel(reader, ref);
+    const key = sha256(canonical(["ocel", principal.id, ref, this.options.enginePin ?? null]));
+    return this.bounded(principal, context, key, async () => {
+      context?.signal.throwIfAborted();
+      const request = { schemaVersion: pixOcelSchema, document: selected.document, complete: selected.complete };
+      let native: PixOcelResult;
+      const unavailable = (code: string): PixOcelResult => ({ schemaVersion: pixOcelSchema, requestDigest: sha256(JSON.stringify(request)), policy: pixLifecyclePolicy,
+        status: "unavailable", structure: "UNKNOWN", processJudgment: "unknown", businessAcceptance: "UNKNOWN", issues: [code], limits: [], models: {}, nativeResults: [], checkedObjects: [],
+        coverage: { events: 0, objects: 0, e2o: 0, o2o: 0, uncoveredTypes: [] } });
+      if (!this.options.ocelPort) native = unavailable(this.options.unavailableReason ?? "PIX_NOT_CONFIGURED");
+      else {
+        try {
+          native = await this.options.ocelPort.compute(request, context?.signal);
+          if (!validPixOcelResult(native, request)) native = unavailable("PIX_RESULT_INVALID");
+          if (native.engine && this.options.enginePin && (native.engine.sourceCommit !== this.options.enginePin.sourceCommit || native.engine.sourceDigest !== this.options.enginePin.sourceDigest)) native = unavailable("PIX_BUILD_MISMATCH");
+        } catch (error) {
+          context?.signal.throwIfAborted();
+          const code = error && typeof error === "object" && "code" in error && typeof error.code === "string" && /^[A-Z_]{1,100}$/.test(error.code) ? error.code : "PIX_UNAVAILABLE";
+          native = unavailable(code);
+        }
+      }
+      context?.signal.throwIfAborted();
+      this.ocel(reader, ref); // Reject a changed cut or revoked source ownership after computation.
+      const bundle = this.options.runtime().exportRun(ref.sessionId, ref.runId, principal);
+      const result: PiOcelVerification = { schemaVersion: "pida.pi.ocel-evidence/1", input: structuredClone(ref), ocelDigest: selected.digest, mapping: selected.mapping,
+        complete: selected.complete, artifactSnapshotDigest: sha256(canonical(bundle.manifest?.current_artifact_refs ?? [])), artifactVerification: "UNKNOWN",
+        knownLimits: selected.knownLimits, native, modelDigest: pixOcelModelDigest(native) };
+      const saved = this.save("result", principal, result);
+      return { ...result, resultRef: saved.ref, resultDigest: saved.digest };
+    });
+  }
+  readOcelVerification(principal: Principal, resultRef: string): PiOcelVerification {
+    this.authorize(principal, "pi:read");
+    const saved = this.load<PiOcelVerification>("result", resultRef, principal);
+    if (saved.value.schemaVersion !== "pida.pi.ocel-evidence/1") fail("PI_RESULT_KIND_MISMATCH", 400);
+    if (this.ocel(principal, saved.value.input).digest !== saved.value.ocelDigest) fail("PI_STALE_CUT");
+    return { ...saved.value, resultRef, resultDigest: saved.digest };
+  }
   /** Host-only registration. Policy ownership is separate from a model's empirical discovery. */
   registerReferenceModel(principal: Principal, input: { model: DfgModel; kind: "aspirational" | "mandatory"; cohortFrom: PiRunRef; policyRef: string; policyDigest: string; engine: NonNullable<PixWorkerResult["engine"]> }): { ref: string; digest: string } {
     this.authorize(principal, "pi:policy:register");
@@ -412,6 +480,21 @@ export class ProcessIntelligence {
       },
     });
     return [
+      read("pi_ocel", "Inspect an owned run as OCEL 2.0: typed objects, E2O/O2O relationships and exact export digest. Use pi_history for the source ref. Full standard JSON is available through the run export endpoint with format=ocel.", refSchema, "pi:read", (a, c) => {
+        const { document, ...metadata } = this.ocel(c.principal, a);
+        return { ...metadata, eventCount: document.events.length, objectCount: document.objects.length,
+          objectTypes: document.objectTypes.map(t => t.name), eventTypes: document.eventTypes.map(t => t.name) };
+      }),
+      read("pi_verify_run", "Use the pinned PIX engine to validate OCEL 2.0 and align Run/Turn/ToolCall lifecycles against a fixed host policy. Parallel calls are separate objects. Incomplete cuts remain pending; process conformance is not artifact correctness. Use pi_history exact source refs; shares the PI per-run budget.", refSchema, "pi:analyze", async (a, c) => {
+        const result = await this.verifyOcel(c.principal, a, c);
+        const { nativeResults, checkedObjects, ...native } = result.native;
+        return { ...result, native: { ...native, checkedObjectCount: checkedObjects.length, deviations: checkedObjects.filter(o => o.cost !== 0).slice(0, 16), nativeResultCount: nativeResults.length } };
+      }),
+      read("pi_verification_read", "Read stored PIX verification evidence for an owned, unchanged OCEL source cut. Returns summary and immutable references; artifact and business acceptance remain separate.", readSchema, "pi:read", (a, c) => {
+        const result = this.readOcelVerification(c.principal, a.resultRef);
+        const { nativeResults, checkedObjects, ...native } = result.native;
+        return { ...result, native: { ...native, checkedObjectCount: checkedObjects.length, nativeResultCount: nativeResults.length } };
+      }),
       read("pi_history", "List this agent's owned run snapshots, exact digests, role/model/toolset cohorts and exclusions. No prompt text. Select small complete runs from one cohort; this is not all historical activity.", emptySchema, "pi:read", (_a, c) => ({ ...this.history(c.principal) as object, currentContextRevision: this.options.runtime().getSession(c.sessionId, c.principal).contextDescriptor?.personaBinding?.contextRevision ?? null })),
       read("pi_reflect", "Use actual configured PIX to discover variants and a fixed empirical DFG from selected completed runs. Include failures; coverage denominator includes exclusions. Same-role/model/toolset cohort only. No identity or behavior modification. Incomplete, concurrent and analysis runs are excluded. At most two analysis calls per run.", reflectionSchema, "pi:analyze", async (a, c) => summary(await this.reflect(c.principal, a.runs, a.targetCoverage, c))),
       read("pi_awareness", "Use actual PIX to align separate completed runs against a fixed model. Training cases/tasks are forbidden for evaluation. Raw optimal edit cost is not normalized fitness or business success. Empirical deviation is not a mandatory violation. Batch only; no live-current-cut claim.", awarenessSchema, "pi:analyze", async (a, c) => summary(await this.awareness(c.principal, a.runs, a.modelRef, c))),

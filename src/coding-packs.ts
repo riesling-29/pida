@@ -4,7 +4,7 @@ import { Type } from "typebox";
 import { loadSkillsFromDir } from "@earendil-works/pi-coding-agent";
 import { PidaError, type BusinessTool } from "./runtime.js";
 
-export const codingPackIds = ["debugging", "verification"] as const;
+export const codingPackIds = ["debugging", "verification", "pix"] as const;
 export function codingPacks(enabled: readonly string[] = codingPackIds) {
   if (enabled.some(id => !codingPackIds.includes(id as typeof codingPackIds[number]))) throw new Error("Unknown coding pack");
   const guides = new Map<string, string>();
@@ -14,7 +14,7 @@ export function codingPacks(enabled: readonly string[] = codingPackIds) {
     return loadSkillsFromDir({ dir, source: "pida-reviewed-pack" }).skills;
   });
   const tools: BusinessTool<any>[] = enabled.length ? [{
-    name: "coding_guide", description: `Read an installed coding guide by ID: ${enabled.join(", ")}. Use debugging for failures and verification before claiming completion.`,
+    name: "coding_guide", description: `Read an installed coding guide by ID: ${enabled.join(", ")}. Use debugging for failures, verification before claiming completion, and pix for OCEL process evidence.`,
     parameters: Type.Object({ id: Type.String() }, { additionalProperties: false }), permission: "workbench:read", effect: "read",
     async execute(args: { id: string }) {
       const guidance = guides.get(args.id);

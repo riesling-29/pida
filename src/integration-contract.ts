@@ -11,6 +11,7 @@ const count = Type.Integer({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER });
 const positive = Type.Integer({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER });
 const nonnegative = Type.Number({ minimum: 0 });
 const payload = object(Object.fromEntries(Object.entries({
+  turn_id: str, turn_index: positive,
   model: str, api: str, request_id: nullable(str), stop_reason: str,
   attempt: nullable(positive), provider_generation: str, thinking_level: str,
   context_window: positive, model_max_tokens: positive,

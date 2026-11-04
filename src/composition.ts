@@ -75,7 +75,7 @@ export function resolveComposition(config: WorkspaceConfig, target: "main" | "ag
     agents: config.agents?.enabled !== false,
     project: config.project?.enabled === true,
     // Legacy agents previously reused the main workbench's guide selection.
-    codingPacks: workbench && (preset !== "legacy" || config.workbench?.enabled) ? config.codingPacks : [],
+    codingPacks: config.codingPacks ?? (workbench && (preset !== "legacy" || config.workbench?.enabled) ? undefined : ["pix"]),
   };
 }
 

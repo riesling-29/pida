@@ -20,6 +20,8 @@ SOURCE_COMMIT = "3205d832d5dcdc6901f916b35496a0c60b657e7a"
 SOURCE_DIGEST = "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510"
 PROFILE_SCHEMA = "pida.pix.profiles/1"
 PROFILE_COMMIT = "a0831bc0b34fd7feebfba928066b90b114ae531e"
+OCEL_SCHEMA = "pida.pix.ocel-verification/1"
+LIFECYCLE_POLICY = "pida.runtime-lifecycle/1"
 MAX_INPUT_BYTES = 2 * 1024 * 1024
 MAX_OUTPUT_BYTES = 4 * 1024 * 1024
 BOUNDARIES = [
@@ -415,6 +417,82 @@ def compute_profile(request, engine, request_digest):
     return reply(result.status.value, [{"code": i.code, "message": i.message} for i in result.issues], **extra)
 
 
+def ocel_response(request_digest, status, engine=None, issues=None, **values):
+    result = {
+        "schemaVersion": OCEL_SCHEMA, "requestDigest": request_digest, "policy": LIFECYCLE_POLICY,
+        "status": status, "structure": "UNKNOWN", "processJudgment": "unknown", "businessAcceptance": "UNKNOWN",
+        "issues": issues or [], "nativeResults": [], "models": {}, "checkedObjects": [],
+        "coverage": {"events": 0, "objects": 0, "e2o": 0, "o2o": 0, "uncoveredTypes": []},
+        "limits": ["RUNTIME_LIFECYCLES_ONLY", "OBJECT_PROJECTION_NOT_OC_PETRI_NET_CONFORMANCE",
+                   "SOURCE_SEQUENCE_NOT_CAUSAL_ORDER", "NO_ARTIFACT_CORRECTNESS_OR_BUSINESS_ACCEPTANCE",
+                   "MODEL_REQUEST_AND_CROSS_OBJECT_DEPENDENCIES_NOT_CHECKED"],
+    }
+    if engine is not None:
+        result["engine"] = engine
+    return {**result, **values}
+
+
+def compute_ocel(request, engine, request_digest):
+    obj(request, ("schemaVersion", "document", "complete"))
+    if request["schemaVersion"] != OCEL_SCHEMA or type(request["complete"]) is not bool:
+        raise ContractError("invalid_input", "Invalid OCEL verification request.")
+    document = request["document"]
+    obj(document, ("eventTypes", "objectTypes", "events", "objects"))
+    if any(type(document[k]) is not list or len(document[k]) > 10000 for k in document):
+        raise ContractError("input_limit", "OCEL collections exceed the bounded profile.")
+    from pix.ocel import import_ocel
+    # A worker-owned temporary input, never a model-selected filesystem path.
+    with tempfile.TemporaryDirectory(prefix="pida-ocel-", dir=".") as directory:
+        path = Path(directory) / "input.jsonocel"
+        path.write_text(json.dumps(document, ensure_ascii=False, allow_nan=False), encoding="utf-8")
+        imported = import_ocel(path, format="ocel20-json")
+    if imported.ocel is None:
+        codes = sorted({i.code for i in imported.import_issues} | {i.code for i in (imported.semantic_report.issues if imported.semantic_report else ())})
+        return ocel_response(request_digest, "computed", engine, codes[:128], structure="FAILED")
+    log = imported.ocel
+    terminal = {"Run": ("run_started", ("run_finished",)), "Turn": ("turn_started", ("turn_finished",)),
+                "ToolCall": ("tool_started", ("tool_completed", "tool_failed"))}
+    models = {kind: {"activities": [start, *ends], "edges": [[start, end] for end in ends],
+                     "starts": [start], "ends": list(ends), "acceptsEmpty": False}
+              for kind, (start, ends) in terminal.items()}
+    object_types = {o.id: o.type for o in log.objects}
+    coverage = {"events": len(log.events), "objects": len(log.objects), "e2o": len(log.e2o), "o2o": len(log.o2o),
+                "uncoveredTypes": sorted({o.type for o in log.objects} - set(models))}
+    selected = {o.id: [] for o in log.objects if o.type in models}
+    if len(selected) > 256:
+        return ocel_response(request_digest, "partial", engine, ["object_budget"], structure="PASSED", coverage=coverage, models=models)
+    events = {e.id: e for e in log.events}
+    sequence = {}
+    for event in log.events:
+        attributes = {a.name: a.value for a in event.attributes}
+        number = attributes.get("sequence_number")
+        if type(number) not in (int, float) or int(number) != number or number < 1 or number in sequence.values():
+            return ocel_response(request_digest, "partial", engine, ["source_sequence_invalid"], structure="PASSED", coverage=coverage, models=models)
+        sequence[event.id] = number
+    for relation in log.e2o:
+        if relation.object in selected and events[relation.event].type in models[object_types[relation.object]]["activities"]:
+            if relation.event not in selected[relation.object]:
+                selected[relation.object].append(relation.event)
+    native, checked, issues = [], [], []
+    for kind, model in models.items():
+        traces = [{"caseId": key, "events": [{"eventId": eid, "activity": events[eid].type} for eid in sorted(ids, key=sequence.get)]}
+                  for key, ids in selected.items() if object_types[key] == kind]
+        if not traces:
+            continue
+        # All discovery/alignment is the existing public PIX implementation.
+        result = compute({"schemaVersion": SCHEMA, "operation": "awareness", "model": model,
+                          "traces": traces, "limits": {"maxStates": 10000}}, engine)
+        native.extend(result["nativeResults"])
+        issues.extend(i["code"] for i in result["issues"])
+        checked.extend({"objectId": a["caseId"], "type": kind, "status": a["status"], "cost": a["cost"]}
+                       for a in result.get("alignments", []))
+    exhaustive = len(checked) == len(selected) and bool(checked) and all(c["status"] == "optimal" and c["cost"] is not None for c in checked)
+    judgment = ("deviates" if any(c["cost"] != 0 for c in checked) else "conforms") if exhaustive and request["complete"] else "pending" if not request["complete"] else "unknown"
+    return ocel_response(request_digest, "computed" if exhaustive else "partial", engine, sorted(set(issues))[:128],
+                         structure="PASSED", processJudgment=judgment, nativeResults=native, models=models,
+                         checkedObjects=checked, coverage=coverage)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", required=True)
@@ -422,13 +500,21 @@ def main():
     parser.add_argument("--source-digest", required=True)
     args = parser.parse_args()
     operation, engine, source_snapshot = "capabilities", None, None
-    profile, request_digest = None, ""
+    profile, request_digest, ocel = None, "", False
+    def failure(status, issues):
+        if ocel:
+            return ocel_response(request_digest, status, engine, [i["code"] for i in issues])
+        return profile_response(profile, request_digest, status, engine, issues) if profile is not None else response(operation, status, engine, issues)
     try:
         payload = sys.stdin.buffer.read(MAX_INPUT_BYTES + 1)
         if len(payload) > MAX_INPUT_BYTES:
             raise ContractError("input_limit", "Worker input exceeds 2 MiB.")
         request = json.loads(payload.decode("utf-8"), object_pairs_hook=unique_members, parse_constant=invalid_constant)
-        if type(request) is dict and request.get("schemaVersion") == PROFILE_SCHEMA:
+        if type(request) is dict and request.get("schemaVersion") == OCEL_SCHEMA:
+            ocel, request_digest = True, hashlib.sha256(payload).hexdigest()
+            engine, source_snapshot = verify_source(args)
+            result = compute_ocel(request, engine, request_digest)
+        elif type(request) is dict and request.get("schemaVersion") == PROFILE_SCHEMA:
             profile, request_digest = request.get("profile"), hashlib.sha256(payload).hexdigest()
             validate_profile(request)
             engine, source_snapshot = verify_source(args, PROFILE_COMMIT)
@@ -438,27 +524,26 @@ def main():
         operation = request.get("operation", "capabilities") if type(request) is dict else "capabilities"
         if operation not in ("reflect", "awareness", "capabilities"):
             operation = "capabilities"
-        if profile is None:
+        if profile is None and not ocel:
             validate_request(request)
             engine, source_snapshot = verify_source(args)
             result = compute(request, engine)
     except ContractError as exc:
         status = "unavailable" if exc.code in ("source_unavailable", "source_mismatch", "unsupported_build") else "invalid_input"
-        result = (profile_response(profile, request_digest, status, engine, [{"code": exc.code, "message": exc.message}]) if profile is not None
-                  else response(operation, status, engine, [{"code": exc.code, "message": exc.message}]))
+        result = failure(status, [{"code": exc.code, "message": exc.message}])
     except (UnicodeError, json.JSONDecodeError):
         result = response(operation, "invalid_input", engine, [{"code": "invalid_json", "message": "Expected a single UTF-8 JSON object."}])
     except Exception:
         # Do not leak local paths or source/request values through raw exceptions.
         issue = [{"code": "engine_error", "message": "The pinned PIX call or native result serialization failed."}]
-        result = profile_response(profile, request_digest, "error", engine, issue) if profile is not None else response(operation, "error", engine, issue)
+        result = failure("error", issue)
     finally:
         if source_snapshot is not None:
             source_snapshot.cleanup()
     encoded = json.dumps(result, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode()
     if len(encoded) > MAX_OUTPUT_BYTES:
         issue = [{"code": "output_limit", "message": "Native results exceed the 4 MiB response budget; no truncated result is accepted."}]
-        result = profile_response(profile, request_digest, "unavailable", engine, issue) if profile is not None else response(operation, "unavailable", engine, issue)
+        result = failure("unavailable", issue)
         encoded = json.dumps(result, separators=(",", ":")).encode()
     sys.stdout.buffer.write(encoded + b"\n")
 

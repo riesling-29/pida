@@ -118,6 +118,7 @@ export function createStudio({ client, request, changed, disconnected }) {
     for (const id of ["studio-compact", "studio-handoff"]) $(id).disabled = locked || sessionUnavailable || !session;
     $("studio-cancel").disabled = !(busy || remoteRunning) || !session || run.cancelling;
     $("studio-restore").disabled = locked || target === "project" || !workspace.canCheckpoint || !review?.base || !review?.revision || !changes?.files.length || workspace.revision !== review.revision || !!bundle?.manifest?.known_limits?.includes("EFFECT_STATE_REQUIRES_RECONCILIATION");
+    if ($("studio-ocel")) $("studio-ocel").disabled = !connected || !session || !review?.runId;
     $("mode-disconnect").disabled = locked;
     for (const button of $("template-grid").querySelectorAll("button")) button.disabled = locked;
     $("studio-demo").hidden = !mock; $("open-service").disabled = !state.html;
@@ -525,6 +526,18 @@ export function createStudio({ client, request, changed, disconnected }) {
     try { await request("/v1/studio/template", { method: "POST", body: { templateId: selectedTemplate, expectedRevision: state.revision } }); $("template-dialog").close(); await refresh(); status("템플릿을 적용했습니다. 대화로 기능을 추가하세요."); }
     catch (error) { issue(error); await refresh().catch(() => {}); }
     finally { busy = false; changed(); controls(); }
+  };
+  if ($("studio-ocel")) $("studio-ocel").onclick = async () => {
+    if (!session || !review?.runId) return;
+    const active = generation, id = session, runId = review.runId;
+    try {
+      const cut = await client.exportRunOcel(id, runId);
+      if (active !== generation || id !== session || runId !== review?.runId) return;
+      const url = URL.createObjectURL(new Blob([JSON.stringify(cut.document, null, 2)], { type: "application/json" }));
+      const anchor = document.createElement("a"); anchor.href = url; anchor.download = `pida-${runId}.ocel.json`; anchor.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      status(cut.complete ? "OCEL 2.0 실행 기록을 내려받았습니다." : "진행 중이거나 일부가 누락된 OCEL 기록입니다. 완료된 검증으로 사용할 수 없습니다.");
+    } catch (error) { if (active === generation) issue(error); }
   };
   $("studio-restore").onclick = async () => {
     if ($("studio-restore").disabled || !review?.base || !confirm("이 요청 전의 전체 작업 파일로 복원합니다. 현재 파일은 Git 이력에 보관됩니다. 저장된 스킬과 외부 변경은 복원되지 않습니다. 계속할까요?")) return;

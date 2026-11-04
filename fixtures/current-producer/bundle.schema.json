@@ -135,6 +135,15 @@
           "payload": {
             "type": "object",
             "properties": {
+              "turn_id": {
+                "type": "string",
+                "maxLength": 512
+              },
+              "turn_index": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
               "model": {
                 "type": "string",
                 "maxLength": 512

@@ -30,6 +30,7 @@ export type {
   TracePage,
 } from "./protocol.js";
 
+export type { OcelDocument, OcelExport } from "./ocel.js";
 export class PidaClientError extends Error {
   constructor(
     public code: string,
@@ -127,6 +128,7 @@ export class PidaClient {
   async getAgentJobRecovery(id: string, jobId: string) { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/recovery")).json(); }
   async reconcileAgent(id: string, input: {inspected: true; effects: {id: string; state: "applied" | "not_applied"}[]; note?: string}): Promise<AgentProfile> { return (await this.request(this.agentPath(id) + "/reconcile", "POST", input)).json(); }
   async exportAgentJob(id: string, jobId: string): Promise<ObservationBundle> { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/export")).json(); }
+  async exportAgentJobOcel(id: string, jobId: string): Promise<import("./ocel.js").OcelExport> { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/export?format=ocel-bundle")).json(); }
   async getAgentMemory(id: string): Promise<AgentMemoryView> { return (await this.request(this.agentPath(id) + "/memory")).json(); }
   async reviseAgentPersona(id: string, input: {expectedRevision: number | null; text: string; sourceRefs: string[]}): Promise<AgentPersona> { return (await this.request(this.agentPath(id) + "/memory/persona", "POST", input)).json(); }
   async rememberAgentExperience(id: string, input: {kind: "fact" | "decision" | "correction"; text: string; sourceRefs: string[]; supersedes?: string[]}): Promise<AgentExperience> { return (await this.request(this.agentPath(id) + "/memory/experiences", "POST", input)).json(); }
@@ -223,6 +225,7 @@ export class PidaClient {
   async getAgentJobTools(id: string, jobId: string): Promise<SessionTools> { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/tools")).json(); }
   async listRuns(id: string): Promise<{ runs: string[] }> { return (await this.request(this.path(id) + "/runs")).json(); }
   async exportRun(id: string, runId: string): Promise<ObservationBundle> { return (await this.request(this.path(id) + "/runs/" + encodeURIComponent(runId) + "/export")).json(); }
+  async exportRunOcel(id: string, runId: string): Promise<import("./ocel.js").OcelExport> { return (await this.request(this.path(id) + "/runs/" + encodeURIComponent(runId) + "/export?format=ocel-bundle")).json(); }
   async getManifest(id: string, runId: string): Promise<ResultManifest> { return (await this.request(this.path(id) + "/runs/" + encodeURIComponent(runId) + "/manifest")).json(); }
   async exportRunJsonl(id: string, runId: string): Promise<{ jsonl: string; complete: boolean }> {
     const response = await this.request(this.path(id) + "/runs/" + encodeURIComponent(runId) + "/export?format=jsonl");
