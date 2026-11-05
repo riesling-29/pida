@@ -1,5 +1,8 @@
 # Pida-core
 
+**처음 사용하시나요? → [한국어 사용 가이드](docs/USER-GUIDE.ko.md)**  
+설치·모델 연결, 평소 시작과 종료, 멀티 에이전트 Web/TUI, 프로젝트 연결, 업데이트와 잠금 오류 복구를 한곳에서 확인할 수 있습니다.
+
 An embedded, reusable **Pi-based agent harness** for applications. Bring the package into a host backend, register business tools, and connect a web or app interface through the client SDK. The host does not implement the agent loop.
 
 **Product goals (2026-11-02):** a reusable core for different agent forms, plus a ready-to-use home harness for coding and personal-assistant work that can replace the user's Codex/OpenClaw workflows. Tools, channels and private provider connectors must be attachable without editing the core. These are delivery requirements, not claims of current feature parity. See [core and home-harness requirements, missing capabilities and acceptance gates](docs/CORE-AND-HOME-HARNESS.md).
@@ -42,7 +45,9 @@ New in 0.8.3: optional official Pi Codemode with authorized nested calls, manage
 
 ## Quick start — choose npm, pnpm or bun
 
-Requires **Git and Node.js 22.19+**, including when installing with bun. This release supports all three package managers; the production runtime stays on Node.
+For the 0.8.14 walkthrough, use **npm** and the [user guide](docs/USER-GUIDE.ko.md). The current pnpm lockfile is missing the direct Pi TUI dependency, so its frozen install fails until that lockfile is synchronized. This is separate from a workspace runtime lock.
+
+Requires **Git and Node.js 22.19+**, including when installing with bun. The production runtime stays on Node.
 
 From a checkout of this feature branch, choose one row:
 
