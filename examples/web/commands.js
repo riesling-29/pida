@@ -1,4 +1,69 @@
 /** Explicit, owner-authorized command output. These reads do not consume the model's output cursor. */
+const kstDisplay = { timeZone: "Asia/Seoul", hour12: false };
+function parseDisplayTime(value) {
+  if (value == null || value === "") return undefined;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isFinite(date.getTime()) ? date : undefined;
+}
+/** Display-only clock in Asia/Seoul (0.7). KST label belongs on panel headers, not each timestamp. */
+function formatClockKstImpl(value, { empty = "시간 미기록", reference = new Date() } = {}) {
+  const date = parseDisplayTime(value);
+  if (!date) return empty;
+  const stamp = new Intl.DateTimeFormat("sv-SE", { ...kstDisplay, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const [day, time] = stamp.format(date).split(" ");
+  const today = stamp.format(reference).split(" ")[0];
+  return day === today ? time : `${day.slice(5)} ${time}`;
+}
+const executionStatusLabels = {
+  queued: "대기",
+  running: "실행 중",
+  completed: "실행 완료",
+  failed: "실행 실패",
+  cancelled: "요청으로 중단됨",
+  interrupted: "서버 종료로 끊김 · 확인 필요",
+  limited: "실행 한도 도달",
+};
+const traceEventLabels = {
+  retry_scheduled: "모델 재시도 대기",
+  retry_finished: "모델 재시도 결과",
+  summarization_retry_scheduled: "압축 재시도 대기",
+  summarization_retry_attempt_start: "압축 재시도 시작",
+  summarization_retry_finished: "압축 재시도 결과",
+  run_started: "실행 시작",
+  run_context_loaded: "실행 맥락 불러옴",
+  turn_started: "모델 응답 대기",
+  turn_finished: "모델 응답 끝",
+  model_request: "모델 요청",
+  model_response: "모델 응답 수신",
+  tool_started: "도구 실행 시작",
+  tool_completed: "도구 실행 완료",
+  tool_failed: "도구 실행 실패",
+  run_finished: "실행 종료",
+  run_interrupted: "서버 종료로 끊김",
+  compaction_started: "대화 압축 시작",
+  auto_compaction_start: "대화 압축 시작",
+  compaction_completed: "대화 압축 완료",
+  compaction_failed: "대화 압축 실패",
+  output_retry: "출력 한도 후 재시도",
+};
+const commandStatusLabels = {
+  running: "명령 실행 중",
+  stopping: "명령 중단 요청 중",
+  completed: "명령 종료",
+  failed: "명령 실패",
+  cancelled: "요청으로 중단됨",
+  timed_out: "명령 시간 초과",
+  interrupted: "서버 종료로 끊김 · 확인 필요",
+  unknown: "종료 상태 미확인",
+};
+const toolStatusLabels = {
+  running: "도구 실행 중",
+  completed: "도구 실행 완료",
+  failed: "도구 실행 실패",
+  unknown: "도구 상태 미확인",
+};
+globalThis.__pidaKstFormat = { formatClockKst: formatClockKstImpl, formatDateTimeKst: formatClockKstImpl, formatTimeKst: formatClockKstImpl };
+globalThis.__pidaDisplay = { executionStatusLabels, traceEventLabels, commandStatusLabels, toolStatusLabels, formatClockKst: formatClockKstImpl };
 export function createCommands({ container, list, read, cancel, recover, explain = code => code }) {
   const node = (tag, text = "", action) => {
     const element = document.createElement(tag); element.textContent = text;
@@ -6,7 +71,7 @@ export function createCommands({ container, list, read, cancel, recover, explain
     return element;
   };
   const button = (text, action) => { const element = node("button", text, action); element.type = "button"; return element; };
-  const labels = { running: "실행 중", stopping: "중단 요청 중", completed: "명령 종료", failed: "명령 실패", cancelled: "취소됨", timed_out: "실행 시간 초과", interrupted: "서버 실행 소유권 상실", unknown: "종료 상태 미확인" };
+  const labels = commandStatusLabels;
   const active = command => command && ["running", "stopping"].includes(command.status);
   const summary = node("summary", "실행 명령"), refresh = button("상태 새로고침", "refresh");
   const status = node("p"), capability = node("p"), selector = node("select", "", "select"), detail = node("section"), metadata = node("p"), commandText = node("pre"), output = node("pre"), outputInfo = node("p");
@@ -20,7 +85,7 @@ export function createCommands({ container, list, read, cancel, recover, explain
   container.classList.add("command-panel"); container.replaceChildren(summary, refresh, status, capability, selector, detail);
   let identity, enabled = true, halted = false, generation = 0, requestSequence = 0, timer, loading = false, mutating = false, commands = [], permissions = {}, selectedId, offset = 0, text = "", displayTrimmed = false, gap = false, hasMore = false;
   const current = () => commands.find(command => command.id === selectedId);
-  const stamp = value => value ? new Date(value).toLocaleTimeString("ko-KR", { hour12: false }) : "미기록";
+  const stamp = value => formatClockKstImpl(value, { empty: "미기록" });
   function resetOutput() { offset = 0; text = ""; gap = displayTrimmed = hasMore = false; commandText.textContent = ""; metadata.textContent = ""; output.textContent = ""; outputInfo.textContent = ""; inspected.checked = false; receipt.textContent = ""; }
   function controls() {
     const command = current(); detail.hidden = !command; selector.hidden = commands.length === 0;

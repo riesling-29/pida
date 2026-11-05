@@ -7,6 +7,9 @@ import { createAgents } from "/agents.js";
 import { createFleet } from "/fleet.js";
 import { createComposition } from "/composition.js";
 import { PidaClient, explainError, sessionDisplayMessages } from "/pida-client.js";
+const labels = globalThis.__pidaDisplay.executionStatusLabels;
+const traceLabels = globalThis.__pidaDisplay.traceEventLabels;
+const formatClockKst = (...args) => globalThis.__pidaDisplay.formatClockKst(...args);
 const $ = (id) => document.getElementById(id);
 let token = "",
   sessionId,
@@ -35,13 +38,6 @@ const studio = createStudio({
   changed: () => controls(),
   disconnected: () => $("disconnect").click(),
 });
-const labels = {
-  completed: "완료",
-  failed: "실패",
-  cancelled: "중단됨",
-  limited: "실행 한도 도달",
-  interrupted: "서버 종료로 중단됨",
-};
 const errors = {
   UNAUTHORIZED: "접속 토큰을 확인해주세요.",
   SESSION_BUSY:
@@ -112,13 +108,12 @@ function message(role, text) {
     label = document.createElement("strong"),
     content = document.createElement("p");
   article.className = role;
-  label.textContent = role === "user" ? "YOU" : "PIDA";
+  label.textContent = role === "user" ? "요청" : "응답";
   content.textContent = text;
   article.append(label, content);
   $("messages").append(article);
   return content;
 }
-const traceLabels = { retry_scheduled: "모델 재시도 대기", retry_finished: "재시도 결과", summarization_retry_attempt_start: "압축 재시도", summarization_retry_finished: "압축 재시도 결과", run_started: "작업 시작", turn_started: "모델 응답", tool_started: "도구 실행", tool_completed: "도구 실행 완료", tool_failed: "도구 실행 실패", run_finished: "작업 종료" };
 function trace(event) {
   if (!run.acceptTrace(event)) return false;
   renderTrace(event); runDetails.select(sessionId, run.runId); controls();
@@ -151,7 +146,7 @@ async function list() {
   const { sessions } = await client.listSessions();
   if (!run.current(ticket) || credential !== token) return [];
   $("sessions").replaceChildren();
-  $("session-count").textContent = String(sessions.length).padStart(2, "0");
+  $("session-count").textContent = String(sessions.length);
   for (const s of sessions) {
     const button = document.createElement("button"),
       title = document.createElement("span"),
@@ -164,7 +159,7 @@ async function list() {
       $("session-title").textContent = s.title;
       $("session-title").title = s.title;
     }
-    detail.textContent = `${new Date(s.updatedAt).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })} · ${s.running ? "실행 중" : (labels[s.lastStatus] ?? "대기")}`;
+    detail.textContent = `${formatClockKst(s.updatedAt)} · ${s.running ? "실행 중" : (labels[s.lastStatus] ?? "대기")}`;
     button.append(title, detail);
     button.onclick = () => action(() => select(s.sessionId));
     $("sessions").append(button);

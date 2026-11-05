@@ -17,7 +17,7 @@ export function createRunDetails({ container, load, explain }) {
       for (const item of items) {
         const failed = item.status === "failed" || (Number.isFinite(item.exitCode) && item.exitCode !== 0);
         const shownStatus = failed ? "failed" : item.status;
-        const row = node("details", ""), title = node("summary", `${item.toolName} · ${{ running: "실행 중", completed: "도구 완료", failed: "도구 실패", unknown: "상태 미확인" }[shownStatus] ?? "상태 미확인"}${item.exitCode != null ? " · 종료 코드 " + item.exitCode : ""}`);
+        const row = node("details", ""), title = node("summary", `${item.toolName} · ${{ running: "도구 실행 중", completed: "도구 실행 완료", failed: "도구 실행 실패", unknown: "도구 상태 미확인" }[shownStatus] ?? "도구 상태 미확인"}${item.exitCode != null ? " · 종료 코드 " + item.exitCode : ""}`);
         row.dataset.status = shownStatus; row.append(title);
         if (!item.runId) row.append(node("p", "이 기록의 실행 ID 연결은 확인되지 않았습니다."));
         if (item.command) row.append(node("pre", bounded(item.command, 8192)));
