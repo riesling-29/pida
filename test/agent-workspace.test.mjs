@@ -44,7 +44,7 @@ async function fixture(t) {
 }
 test('real HTTP: independent panel drafts/targets, exact cancellation, pause, detach/reconnect without execution replay', async t => {
   const {client,app} = await fixture(t);
-  const a = await client.createAgent({name:'A'}), b = await client.createAgent({name:'B'});
+  const a = await client.createAgent({name:'A',role:'private role',persona:'private persona'}), b = await client.createAgent({name:'B'});
   await client.pauseAgent(a.id); await client.pauseAgent(b.id);
   let saved;
   const c = new AgentWorkspaceController(client, {pollMs:0, saveLayout:(_,json)=>{saved=json;}});
@@ -60,6 +60,8 @@ test('real HTTP: independent panel drafts/targets, exact cancellation, pause, de
   assert.equal(c.entry(first).admission,'paused');
   assert.equal(c.draft(first),''); assert.equal(c.draft(second),'');
   assert.equal(JSON.stringify(c.overview).includes('LOT-001'),false);
+  assert.equal(JSON.stringify(c.overview).includes('private role'),false);
+  assert.equal(JSON.stringify(c.overview).includes('private persona'),false);
   await c.cancel(first);
   assert.equal(c.job(first).status,'cancelled'); assert.equal(c.job(second).status,'queued');
   c.setDraft(second,'private unsent text'); c.layout.zoom(); await Promise.resolve();

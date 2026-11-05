@@ -54,7 +54,7 @@ export type AdmissionReason = "ready" | "paused" | "recovery_required" | "worksp
 export interface AgentOverview {
   scopeId: string;
   maxConcurrent: number;
-  agents: { profile: AgentProfile; jobs: Pick<AgentJob, "id" | "status" | "runId" | "createdAt" | "currentTool" | "lastSignalAt" | "code">[]; admission: AdmissionReason }[];
+  agents: { profile: Omit<AgentProfile, "owner" | "role" | "persona">; jobs: Pick<AgentJob, "id" | "status" | "runId" | "createdAt" | "currentTool" | "lastSignalAt" | "code">[]; admission: AdmissionReason }[];
   personaSources: AgentPersonaSourceCatalogue;
 }
 interface State { version: 1; profiles: AgentProfile[]; jobs: AgentJob[] }
@@ -225,7 +225,8 @@ export class AgentSupervisor {
       personaSources: this.listPersonaSources(principal),
       agents: profiles.map(profile => {
         const jobs = this.state.jobs.filter(j => j.agentId === profile.id);
-        return { profile, admission: this.admission(profile, jobs.find(j => j.status === "queued")),
+        const { owner: _owner, role: _role, persona: _persona, ...metadata } = profile;
+        return { profile: metadata, admission: this.admission(profile, jobs.find(j => j.status === "queued")),
           jobs: jobs.map(j => ({ id: j.id, status: j.status, createdAt: j.createdAt, ...(j.runId ? { runId: j.runId } : {}),
             ...(j.currentTool ? { currentTool: j.currentTool } : {}), ...(j.lastSignalAt ? { lastSignalAt: j.lastSignalAt } : {}), ...(j.code ? { code: j.code } : {}) })) };
       }),

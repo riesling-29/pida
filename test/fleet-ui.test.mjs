@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
-import { AgentWorkspaceController, admissionLabels, viewLabels } from '../dist/agent-workspace-controller.js';
+import { AgentWorkspaceController, admissionLabels, viewLabels, detailText } from '../dist/agent-workspace-controller.js';
 import { paneList, fitsLayout } from '../dist/workspace-layout.js';
 
 // DOM adapter test, explicitly not a browser/visual verification.
@@ -24,7 +24,7 @@ test('actual fleet handlers keep textarea nodes and drafts stable across polling
     async getAgentJob(agent,id){return jobs.get(id);},
     async enqueueAgentJob(agentId,{input,requestId}){const j={id:crypto.randomUUID(),agentId,input,requestId,status:'queued',latestText:'',activity:[]};jobs.set(j.id,j);return j;},
   };
-  const context={document:doc,AgentWorkspaceController:class extends AgentWorkspaceController{constructor(client,options){super(client,{...options,pollMs:0});c=this;}},admissionLabels,viewLabels,paneList,fitsLayout,ResizeObserver:class{constructor(fn){resize=fn;}observe(){}},localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},window:{},Date,JSON,Map,Promise};
+  const context={document:doc,AgentWorkspaceController:class extends AgentWorkspaceController{constructor(client,options){super(client,{...options,pollMs:0});c=this;}},admissionLabels,viewLabels,detailText,paneList,fitsLayout,ResizeObserver:class{constructor(fn){resize=fn;}observe(){}},localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},window:{},Date,JSON,Map,Promise};
   runInNewContext(readFileSync(new URL('../examples/web/fleet.js',import.meta.url),'utf8').replace(/^import .*\n/gm,'').replace('export function createFleet','function createFleet')+'\nthis.createFleet=createFleet;',context);
   const ui=context.createFleet({client}); await ui.connect();
   const all=(node=root)=>[node,...node.children.flatMap(n=>all(n))];

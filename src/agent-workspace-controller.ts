@@ -6,6 +6,31 @@ export const admissionLabels: Record<AgentOverview["agents"][number]["admission"
   workspace_busy: "같은 작업공간 사용 중", agent_busy: "이 에이전트 실행 중", capacity: "실행 슬롯 대기", host_stopped: "호스트 정지",
 };
 export const viewLabels = { chat: "대화", activity: "활동", tools: "도구", files: "파일", verification: "검증" };
+/** Human-readable inspection; raw evidence remains available through the existing export API. */
+export function detailText(raw: string | undefined, view: PaneBinding["view"]): string | undefined {
+  if (!raw) return;
+  try {
+    const value = JSON.parse(raw);
+    if (view === "verification") return [
+      `실행 결과: ${value.reported_status ?? "미확인"}`,
+      `독립 검증: ${value.verification_status === "UNKNOWN" ? "미확인 (UNKNOWN)" : value.verification_status ?? "미확인"}`,
+      `작업: ${value.task_id ?? ""}`, `실행: ${value.run_id ?? ""}`, "",
+      "검사 결과 (종료 시점 기준)",
+      ...(value.verification_results?.length ? value.verification_results.map((v: any) => `${v.scope} · ${v.status} · ${v.current_at_run_end ? "해당 산출물 버전" : "현재 버전과 불일치"}`) : ["기록된 검사 없음"]), "",
+      "산출물", ...(value.artifact_refs?.length ? value.artifact_refs.map((a: any) => `${a.path}\n  SHA256 ${a.sha256}`) : ["기록된 산출물 없음"]), "",
+      "모델의 완료 선언과 독립 검증은 별개입니다.",
+    ].join("\n");
+    if (view === "files") {
+      if (typeof value.content === "string") return `${value.path}\n\n${value.content}`;
+      if (Array.isArray(value.files)) return value.files.map((f: any) => `${f.path}${f.bytes === undefined ? "" : ` · ${f.bytes} bytes`}`).join("\n") || "기록된 파일 없음";
+    }
+    if (view === "tools" && Array.isArray(value.items)) return value.items.map((t: any) => [
+      `${t.toolName} · ${t.status}`, ...(t.command ? [t.command] : []), ...(t.exitCode === undefined ? [] : [`종료 코드: ${t.exitCode}`]),
+      ...(t.output ? [t.output] : []), ...(t.stderr ? [t.stderr] : []), ...(t.truncated ? ["[출력 일부]"] : []),
+    ].join("\n")).join("\n\n") || "보존된 도구 결과 없음";
+  } catch { /* Fall back to explicit recorded text. */ }
+  return raw;
+}
 type Pending = { requestId: string; text: string; agentId: string; uncertain: boolean };
 export interface WorkspaceControllerOptions {
   loadLayout?(scope: string): unknown | Promise<unknown>;

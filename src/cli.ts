@@ -3,7 +3,7 @@ import { once } from "node:events";
 import { resolve, join } from "node:path";
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline/promises";
-import { existsSync, writeFileSync, mkdirSync, lstatSync } from "node:fs";
+import { existsSync, writeFileSync, mkdirSync, lstatSync, readFileSync } from "node:fs";
 import { stdin, stdout } from "node:process";
 import {
   createWorkspace,
@@ -27,7 +27,8 @@ const help = `Pida — reusable local agent workspace
   pida setup [directory] [--no-open]    Initialize and open easy model setup
   pida configure [directory]            Open easy model setup (--terminal for advanced wizard)
   pida start [directory] [--open]        Serve web UI and API; save conversations
-  pida tui [directory] [--session ID | --new]  Attach terminal UI to the same running host
+  pida tui [directory]                  Multi-agent tabs and split terminal UI
+  pida tui [directory] --main [--session ID | --new]  Main-workspace single-session UI
   pida open [directory]                 Open the UI with local authentication
   pida token [directory]                Explicitly print the local UI token
   pida programs scan ROOT              Discover declared repository programs without execution
@@ -250,20 +251,20 @@ async function main() {
   const directory = resolve(args.find((a) => !a.startsWith("--")) ?? ".");
   switch (command) {
     case "tui": {
-      let selected = ".", sessionId: string | undefined, newSession = false, directorySeen = false;
+      let selected = ".", sessionId: string | undefined, newSession = false, directorySeen = false, main = false;
       for (let i = 0; i < args.length; i++) {
         const arg = args[i]!;
         if (arg === "--new") newSession = true;
+        else if (arg === "--main") main = true;
         else if (arg === "--session") { sessionId = args[++i]; if (!sessionId || !/^[a-f0-9-]{36}$/.test(sessionId)) throw new Error("Use --session with a session ID."); }
         else if (!arg.startsWith("-") && !directorySeen) { selected = arg; directorySeen = true; }
-        else throw new Error("Use pida tui [directory] [--session ID | --new].");
+        else throw new Error("Use pida tui [directory] [--main] [--session ID | --new].");
       }
       if (sessionId && newSession) throw new Error("Choose --session or --new.");
       if (!stdin.isTTY || !stdout.isTTY) throw new Error("TUI에는 대화형 터미널이 필요합니다. pida start는 Web UI와 API를 실행합니다.");
       selected = resolve(selected);
       const config = readConfig(selected), env = workspaceEnvironment(selected), token = env.PIDA_API_TOKEN;
       if (!token) throw new Error("Missing local application token. Run pida doctor.");
-      const { runTerminal } = await import("./tui.js");
       const lifetime = new AbortController();
       const client = new PidaClient({ baseUrl: `http://127.0.0.1:${config.port}`, token: () => token,
         fetch: (url, init = {}) => {
@@ -275,8 +276,24 @@ async function main() {
       try { await client.getInfo(); }
       catch { throw new Error(`Pida 서버에 연결하지 못했습니다. 다른 터미널에서 pida start "${selected}" --open을 실행한 뒤 다시 연결하세요. 서버가 실행 중이면 pida doctor로 작업 공간과 인증을 확인하세요.`); }
       try {
-        await runTerminal({ client, workspace: selected, target: config.project?.enabled ? resolve(selected, config.project.root) : selected,
-          sessionId, newSession, openWeb: id => openBrowser(selected, false, id) });
+        if (main || sessionId || newSession) {
+          const { runTerminal } = await import("./tui.js");
+          await runTerminal({ client, workspace: selected, target: config.project?.enabled ? resolve(selected, config.project.root) : selected,
+            sessionId, newSession, openWeb: id => openBrowser(selected, false, id) });
+        } else {
+          const { runAgentTerminal } = await import("./agent-tui.js");
+          const layoutDirectory = join(selected, config.stateDir, "tui-layouts");
+          const layoutPath = (scope: string) => {
+            if (!/^[a-f0-9]{64}$/.test(scope)) throw Error("LAYOUT_SCOPE_INVALID");
+            if (existsSync(layoutDirectory) && lstatSync(layoutDirectory).isSymbolicLink()) throw Error("LAYOUT_STORAGE_UNSAFE");
+            const path = join(layoutDirectory, scope + ".json");
+            if (existsSync(path)) { const stat = lstatSync(path); if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1 || stat.size > 64000) throw Error("LAYOUT_STORAGE_UNSAFE"); }
+            return path;
+          };
+          await runAgentTerminal({ client, workspace: selected, openWeb: () => openBrowser(selected, false),
+            loadLayout: scope => { const path = layoutPath(scope); return existsSync(path) ? readFileSync(path, "utf8") : undefined; },
+            saveLayout: (scope, json) => savePrivate(layoutPath(scope), JSON.parse(json)) });
+        }
       } finally { lifetime.abort(); }
       return;
     }

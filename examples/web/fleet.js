@@ -1,4 +1,4 @@
-import { AgentWorkspaceController, admissionLabels, viewLabels } from "/agent-workspace-controller.js";
+import { AgentWorkspaceController, admissionLabels, viewLabels, detailText } from "/agent-workspace-controller.js";
 import { paneList, fitsLayout } from "/workspace-layout.js";
 
 const el = (tag, text, cls) => { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (cls) n.className = cls; return n; };
@@ -88,7 +88,7 @@ export function createFleet({ client }) {
     let text = "";
     if (p.binding.view === "chat") text = job ? `요청\n${job.input}\n\n응답\n${job.result?.text || job.latestText || "응답 대기 중"}` : "이 패널에서 지시한 작업과 응답을 표시합니다.";
     else if (p.binding.view === "activity") text = job?.activity.map(e => `${e.timestamp}  ${e.type}${e.toolName ? " · " + e.toolName : ""}`).join("\n") || "관측된 실행 기록 없음";
-    else text = controller.detail(p.id) ?? `${viewLabels[p.binding.view]} · 조회 버튼을 누르세요.\n검증 완료는 실제 근거를 확인한 경우에만 표시합니다.`;
+    else text = detailText(controller.detail(p.id), p.binding.view) ?? `${viewLabels[p.binding.view]} · 조회 버튼을 누르세요.\n검증 완료는 실제 근거를 확인한 경우에만 표시합니다.`;
     if (n.transcript.textContent !== text) { const bottom = n.transcript.scrollHeight - n.transcript.scrollTop - n.transcript.clientHeight < 70; n.transcript.textContent = text; if (bottom) n.transcript.scrollTop = n.transcript.scrollHeight; }
     if (p.binding.view === "files") { try { const d = JSON.parse(controller.detail(p.id) ?? "null"); if (d?.files) choices(n.files, [["", "파일 내용 보기"], ...d.files.map(f => [f.path, f.path])], ""); } catch { /* Text/error content is not a file inventory. */ } }
     n.files.hidden = p.binding.view !== "files" || !n.files.options.length;

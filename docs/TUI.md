@@ -1,6 +1,6 @@
 # Terminal and Web on the same Pida host
 
-Available from 0.8.7; current work surface/theme 0.8.11. The terminal uses the existing Pi TUI 1.2.0 components and
+Available from 0.8.7; current work surface 0.8.14. The terminal uses the existing Pi TUI 1.2.0 components and
 Pida HTTP client. One separately running host owns sessions, Pi execution,
 provider/OAuth configuration, tools, permissions, persistence and workspace
 locks. Web and TUI are views of that same host.
@@ -24,15 +24,18 @@ npm run tui -- .\my-agent
 
 `npm start` opens the **server log**, not the terminal interface. The new startup
 message states this and prints the exact attach command. In the TUI, the header
-must say `pida 0.8.11 · TUI`, with visible function-key menus and a prompt editor.
+must say `pida 0.8.14 · MULTI TUI`, with visible function-key menus and a prompt editor.
 If the header shows an older version, update the PR branch and rebuild the same
 checkout before relaunching. No second workspace server is needed.
 
-An installed CLI also supports `pida tui ./my-agent`. It attaches to the newest
-accessible main-workspace session or creates one when none exists. `--new`
-creates a new session; `--session UUID` opens a specific existing session.
-`/sessions` or F2 selects another session. Never start a second host against the
-same locked workspace just to open another interface.
+An installed CLI also supports `pida tui ./my-agent`. The default opens the
+multi-agent workspace without creating a main session. F3 connects/creates an
+agent; F6 splits; F2 manages tabs; F7 focuses panels; F8 controls actual jobs.
+See [full multi-agent controls and home test guide](MULTI-AGENT-0.8.14.md).
+
+`--main` opens the existing single-session view. `--new` creates a new main
+session; `--session UUID` selects an existing main session, so both flags also
+select the single-session UI. Never start a second host against the same lock.
 
 The CLI reads the selected workspace's existing application token and local
 port; no token needs to be copied into the terminal. Model credentials remain
@@ -77,10 +80,10 @@ is stripped of terminal control sequences before display. Message and panel
 display limits are explicit; they do not truncate the server's saved history.
 
 The earlier green Web/TUI HTML previews were interactive **design prototypes**.
-0.8.11 applies their color direction to the existing real TUI. Multi-agent tabs,
-arbitrary split panes and structured request-target binding in those previews
-remain planned, as recorded in the shared-work-surface and multi-agent design
-documents. A preview is not evidence that those runtime connections exist.
+0.8.11 applied their color direction. 0.8.14 implements their multi-agent
+tabs and bounded nested splits using real owned jobs. Structured file/line
+request-target binding remains planned. A preview alone is not implementation
+evidence; the new version has real renderer and CLI/HTTP/PTY checks.
 
 Font selection belongs to the terminal application. Pida cannot apply an HTML
 font stack to Windows Terminal. In a truecolor-capable terminal that is not
@@ -88,7 +91,7 @@ detected automatically, `$env:COLORTERM = 'truecolor'` before launching enables
 Pi's truecolor path. If `NO_COLOR` is set, the terminal remains monochrome until
 that opt-out is removed. No credential or workspace configuration needs changing.
 
-## Commands and controls
+## Single-session commands and controls (`--main`)
 
 | Operation | Control |
 | --- | --- |

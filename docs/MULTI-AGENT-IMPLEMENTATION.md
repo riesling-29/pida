@@ -59,3 +59,20 @@ polls/tabs, and checks the submission destination. It is not a browser test.
 EPERM in this executor. A separate cloud browser could not reach the local
 fixture server (connection refused). No browser pass or screenshot is claimed.
 The script is provided for a host with Chromium (`PIDA_BROWSER_EXECUTABLE`).
+
+## 0.8.14 checkpoint
+
+Actual Pi TUI and CLI default now use the shared multi-agent controller. F-key
+menus and mouse focus/tabs, retained per-pane editors, nested cell-sized layouts,
+keyboard ratios, zoom, registration/source selection, private atomic layout
+saving and detach/reconnect are connected. `--main`/`--session`/`--new` retain
+the previous single-session view. No new runtime or dependency was introduced.
+
+Integrated review was performed once. It corrected Pi integer growth weight
+handling, Pi's submit-buffer clear ordering, editor mouse focus, nonfocused
+cursors and raw private profile fields in status polling. Relevant controller,
+Web handler, supervisor and TUI checks were rerun. Full suite: 372/372, 0 skipped
+on Linux/Node 24.22.1, including actual pinned PIX tests. The standalone multi
+PTY check passed 18 assertions with actual Pi/HTTP/CLI and deterministic mock
+decisions. Browser/Windows/live-provider limitations remain explicit.
+See [delivery and home guide](MULTI-AGENT-0.8.14.md).
