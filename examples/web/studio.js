@@ -368,7 +368,7 @@ export function createStudio({ client, request, changed, disconnected }) {
   function message(role, text) {
     $("studio-messages").querySelector(".studio-chat-empty")?.remove();
     const article = document.createElement("article"), label = document.createElement("strong"), body = document.createElement("p");
-    article.className = role; label.textContent = role === "user" ? "YOU" : "PIDA"; body.textContent = text;
+    article.className = role; label.textContent = role === "user" ? "요청" : "응답"; body.textContent = text;
     article.append(label, body); $("studio-messages").append(article); return body;
   }
   function contextLabel(data) {

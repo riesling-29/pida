@@ -1537,11 +1537,11 @@ body[data-mode=studio] #toggle-sessions,body[data-mode=studio] #toggle-inspector
 #studio-source, #studio-diff { margin: 0; padding: 16px; background: var(--bg); color: var(--ink); font: 12px/1.65 var(--mono); tab-size: 2; white-space: pre; overflow: auto; min-height: 100px; flex: 1; }
 #studio-change-summary { margin: 0; padding: 12px 16px; font-size: 12px; color: var(--muted); }
 #studio-changed-files { margin: 0; padding: 0 16px 8px 32px; font: 12px/1.6 var(--mono); overflow-wrap: anywhere; max-height: 90px; overflow: auto; }
-.studio-scope-note { margin: 0; padding: 8px 16px; font-size: 11px; line-height: 1.6; color: var(--muted); }
+.studio-scope-note { margin: 0; padding: 8px 16px; font-size: 12px; line-height: 1.6; color: var(--muted); }
 .studio-evidence { border-top: 1px solid var(--line); padding: 10px 16px; max-height: 230px; overflow: auto; font-size: 12px; line-height: 1.6; }
 .studio-result-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .studio-result-heading strong { font-weight: 500; overflow-wrap: anywhere; }
-.studio-result-heading button { font-size: 11px; padding: 5px 8px; flex-shrink: 0; }
+.studio-result-heading button { font-size: 12px; padding: 5px 8px; flex-shrink: 0; }
 #studio-verification { list-style: none; padding: 0; margin: 6px 0; color: var(--muted); }
 #studio-verification [data-result=passed] { color: var(--accent); }
 #studio-verification [data-result=failed] { color: var(--terra); }
