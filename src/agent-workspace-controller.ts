@@ -1,4 +1,5 @@
 import { PidaClientError, type PidaClient, type AgentJob, type AgentOverview, type AgentProfile } from "./client.js";
+import { displayStatus, verificationCheckStatusLabel, verificationStatusLabel } from "./tui-labels.js";
 import { WorkspaceLayout, type WorkPane, type PaneBinding } from "./workspace-layout.js";
 
 export const admissionLabels: Record<AgentOverview["agents"][number]["admission"], string> = {
@@ -12,11 +13,11 @@ export function detailText(raw: string | undefined, view: PaneBinding["view"]): 
   try {
     const value = JSON.parse(raw);
     if (view === "verification") return [
-      `실행 결과: ${value.reported_status ?? "미확인"}`,
-      `독립 검증: ${value.verification_status === "UNKNOWN" ? "미확인 (UNKNOWN)" : value.verification_status ?? "미확인"}`,
+      `실행 결과: ${value.reported_status ? displayStatus(value.reported_status) : "미확인"}`,
+      `독립 검증: ${verificationStatusLabel(value.verification_status)}`,
       `작업: ${value.task_id ?? ""}`, `실행: ${value.run_id ?? ""}`, "",
       "검사 결과 (종료 시점 기준)",
-      ...(value.verification_results?.length ? value.verification_results.map((v: any) => `${v.scope} · ${v.status} · ${v.current_at_run_end ? "해당 산출물 버전" : "현재 버전과 불일치"}`) : ["기록된 검사 없음"]), "",
+      ...(value.verification_results?.length ? value.verification_results.map((v: any) => `${v.scope} · ${verificationCheckStatusLabel(v.status)} · ${v.current_at_run_end ? "해당 산출물 버전" : "현재 버전과 불일치"}`) : ["기록된 검사 없음"]), "",
       "산출물", ...(value.artifact_refs?.length ? value.artifact_refs.map((a: any) => `${a.path}\n  SHA256 ${a.sha256}`) : ["기록된 산출물 없음"]), "",
       "모델의 완료 선언과 독립 검증은 별개입니다.",
     ].join("\n");

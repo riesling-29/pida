@@ -23,7 +23,7 @@ test('actual Pi multi-pane renderer: keyboard/mouse menus, independent Korean ed
   const terminal=new TerminalFixture(),v=createAgentTui(c,{terminal,workspace:'fixture workspace',color:true,colorMode:'truecolor'});
   t.after(()=>{v.stop();c.close();});v.start();await delay(40);
   const screen=()=>v.getScreenLines().map(stripTerminalSequences).join('\n');
-  assert.match(screen(),/MULTI TUI/);assert.match(screen(),/F6 분할/);assert.match(screen(),/╭─/);assert.match(screen(),/╰─/);assert.doesNotMatch(screen(),/\[F1 메뉴\]/);
+  assert.match(screen(),/MULTI TUI|멀티/);assert.match(screen(),/F6 분할/);assert.match(screen(),/╭─/);assert.match(screen(),/╰─/);assert.doesNotMatch(screen(),/\[F1 메뉴\]/);
   terminal.input('\x1b[200~A 미전송 한글 지시\x1b[201~');await delay(20);
   assert.equal(c.draft(first),'A 미전송 한글 지시');assert.equal(sent.length,0);
   terminal.input('\x1b[17~');await delay(20);assert.match(screen(),/분할과 배치/);
@@ -38,7 +38,7 @@ test('actual Pi multi-pane renderer: keyboard/mouse menus, independent Korean ed
   terminal.input('\x1b[<0;5;49M');terminal.input('\x1b[<0;5;49m');await delay(20);
   assert.equal(c.layout.active.focus,first);
   c.layout.split(first,'vertical');c.layout.split(second,'vertical');await delay(25);
-  assert.equal(c.layout.panes.length,4);assert.match(screen(),/4\/4 panels/);
+  assert.equal(c.layout.panes.length,4);assert.match(screen(),/패널 4\/4/);
   assert.equal((screen().match(/A 코드/g)||[]).length,2);assert.equal((screen().match(/B 조사/g)||[]).length,2);
   for(const row of v.getScreenLines()){assert.equal(visibleWidth(row),terminal.columns);assert.ok(row.includes('\x1b[48;2;1;2;1m'));}
   terminal.columns=64;terminal.rows=24;terminal.resize();await delay(25);
@@ -62,9 +62,9 @@ test('fresh terminal starts with two framed views',async t=>{
   assert.equal(c.layout.panes.length,2);
   assert.deepEqual(c.layout.panes.map(p=>p.binding.view),['chat','activity']);
   const screen=()=>v.getScreenLines().map(stripTerminalSequences).join('\n');
-  assert.match(screen(),/아직 에이전트 없음/);
-  assert.match(screen(),/F3/);
-  assert.equal(v.getScreenLines().map(stripTerminalSequences).join('\n').match(/╭/g).length,2);
+  assert.match(screen(),/첫 에이전트를 만드세요/);
+  assert.match(screen(),/1개 표시/);
+  assert.equal(v.getScreenLines().map(stripTerminalSequences).join('\n').match(/╭/g).length,1);
   terminal.columns=80;terminal.rows=24;terminal.resize();await delay(25);
   assert.match(screen(),/F8/);assert.match(screen(),/F9/);
 });

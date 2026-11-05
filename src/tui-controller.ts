@@ -1,4 +1,5 @@
 import { PidaClient, PidaClientError, explainError, formatWorkReview, type WorkTarget, type RuntimeInfo, type SessionSummary, type TraceEvent, type ResultManifest } from "./client.js";
+import { formatTraceActivityLine } from "./tui-labels.js";
 import { formatTuiTimestamp } from "./tui-time.js";
 
 export type TuiSession = Awaited<ReturnType<PidaClient["getSession"]>>;
@@ -209,7 +210,7 @@ export class TuiController {
             try { const m = await this.client.getManifest(s.sessionId, runId); evidence = JSON.stringify({ runtime: m.reported_status, verification: m.verification_status, results: m.verification_results, limits: m.known_limits }, null, 2); }
             catch (e) { if (!(e instanceof PidaClientError) || e.status !== 404) throw e; }
           }
-          this.state.panel = { title: "실행과 검증", text: this.state.trace.slice(-80).map(t => `${formatTuiTimestamp(t.timestamp, "time")} ${t.type} ${t.toolName ?? ""} ${t.code ?? t.status ?? ""}`).join("\n") + "\n\n" + evidence }; break;
+          this.state.panel = { title: "실행과 검증 · KST · Esc 닫기", text: this.state.trace.slice(-80).map(t => formatTraceActivityLine(t.timestamp, t, iso => formatTuiTimestamp(iso, "time"))).join("\n") + "\n\n" + evidence }; break;
         }
         case "ocel": {
           const s = this.selected(), runId = s.activeRunId ?? this.state.trace.at(-1)?.runId;

@@ -92,7 +92,7 @@ test('default workspace retains intent, execution and unknown judgment in wide a
   c.state.session={sessionId:'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',title:'검토 작업',messages:[{role:'user',text:'검색 필터 추가 및 테스트. '+ '기존 동작 유지. '.repeat(20)}],running:false,runs:0,tools:[],autoCompaction:true};
   const view=createTuiView(c,{terminal,workspace:'D:/pida/my-agent',color:false});view.start();await delay(30);
   let screen=view.getScreenLines().map(stripTerminalSequences).join('\n');
-  for(const label of ['TUI','F1 메뉴','INTENT','STRUCTURE','EXECUTION','JUDGMENT','독립 검증 미확인','변경 미조회'])assert.ok(screen.includes(label),label);
+  for(const label of ['단일 대화','F1 메뉴','목표','구조','실행','판단','독립 검증 미확인 · UNKNOWN','변경 미조회'])assert.ok(screen.includes(label),label);
   terminal.input('\x1b[19~');await delay(20);assert.match(view.getScreenLines().map(stripTerminalSequences).join('\n'),/간결/);
   terminal.columns=64;terminal.rows=24;terminal.resize();await delay(30);screen=view.getScreenLines().map(stripTerminalSequences).join('\n');
   assert.match(screen,/목표 검색 필터/);assert.match(screen,/독립 검증 미확인/);assert.ok(view.getScreenLines().every(l=>visibleWidth(l)<=64));

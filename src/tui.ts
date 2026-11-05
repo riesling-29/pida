@@ -8,14 +8,15 @@ import { PidaClient, sessionDisplayMessages } from "./client.js";
 import { TuiController, terminalCommands, type TuiState } from "./tui-controller.js";
 import { terminalPalette } from "./tui-theme.js";
 import { formatTuiTimestamp } from "./tui-time.js";
+import { displayTraceEvent, sessionStatusDisplayNames, verificationCheckStatusLabel, verificationStatusLabel } from "./tui-labels.js";
+import { chooseNavBarStage, renderNavBar } from "./tui-nav-bar.js";
 
 /** Host/model/file content must never introduce terminal controls (OSC clipboard/title etc.). */
 export function terminalText(value: unknown, limit = 48_000): string {
   const text = stripTerminalSequences(String(value ?? "")).replace(/[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, "").replace(/\r/g, "");
   return text.length <= limit ? text : text.slice(0, limit) + "\n[표시 한도 · 원문은 Web UI에서 확인]";
 }
-const phaseNames: Record<string, string> = { run_started: "시작", turn_started: "모델 응답 대기", tool_started: "도구 실행", tool_completed: "도구 완료", tool_failed: "도구 실패", retry_scheduled: "재시도 대기", auto_compaction_start: "대화 압축", run_finished: "실행 종료" };
-const statusNames: Record<string, string> = { completed: "실행 완료 · 독립 검증 미확인", failed: "실패", cancelled: "중단됨", limited: "실행 한도 도달", interrupted: "서버 종료로 중단됨" };
+const statusNames = sessionStatusDisplayNames;
 const version: string = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
 const singleLine = (value: unknown, limit = 120) => terminalText(value, limit).replace(/\s+/g, " ").trim();
 /** Fixed-height signals must clip at the current render width, including between polls on resize. */
@@ -34,10 +35,10 @@ export function workSignals(state: TuiState, now = Date.now()) {
   const began = events.find(t => t.type === "run_started"), ended = [...events].reverse().find(t => t.type === "run_finished");
   const observedEnd = ended ? Date.parse(ended.timestamp) : s?.running ? state.connected ? now : Date.parse(last?.timestamp ?? "") : undefined;
   const elapsed = began && observedEnd !== undefined ? Math.max(0, Math.floor((observedEnd - Date.parse(began.timestamp)) / 1000)) : undefined;
-  const phase = s?.running ? `${phaseNames[last?.type ?? ""] ?? "실행 중"}${last?.toolName ? " · " + singleLine(last.toolName, 60) : ""}` : state.submitting ? "전송·응답 대기" : statusNames[s?.lastStatus ?? ""] ?? "준비됨";
+  const phase = s?.running ? `${displayTraceEvent(last?.type ?? "") || "실행 중"}${last?.toolName ? " · " + singleLine(last.toolName, 60) : ""}` : state.submitting ? "전송·응답 대기" : statusNames[s?.lastStatus ?? ""] ?? "준비됨";
   const manifest = !s?.running && !state.submitting && state.manifest && state.manifest.run_id === run && state.manifest.session_id === s?.sessionId ? state.manifest : undefined;
   const checks = manifest?.verification_results ?? [];
-  const verification = manifest ? `독립 검증 ${manifest.verification_status}` : state.evidenceState === "error" ? "검증 근거 조회 실패" : state.evidenceState === "loading" ? "검증 근거 조회 중" : "독립 검증 미확인";
+  const verification = manifest ? verificationStatusLabel(manifest.verification_status) : state.evidenceState === "error" ? "검증 근거 조회 실패" : state.evidenceState === "loading" ? "검증 근거 조회 중" : "독립 검증 미확인 · UNKNOWN";
   return {
     run, events, last, elapsed: Number.isFinite(elapsed) ? elapsed : undefined, phase, manifest, checks, verification,
     goal: s ? [...s.messages].reverse().find(m => m.role === "user")?.text : undefined,
@@ -83,28 +84,21 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
   editor.setAutocompleteProvider(autocomplete);
   let overlay: OverlayHandle | undefined, panelVisible = false, overviewSelected = false, guided = true, lastPanel = "", lastSession: string | undefined, editorSubmitting = false;
   const actions = [["F1 메뉴", "menu"], ["F2 대화", "sessions"], ["F3 실행", "activity"], ["F4 도구", "tools"], ["F5 파일", "files"], ["F6 변경", "diff"], ["F7 개요", "overview"], ["F8 표시", "density"]] as const;
-  const navLabel = (full: string, compact: boolean) => compact ? (/^(F\d+)/.exec(full)?.[1] ?? full) : full;
-  const navFits = (compact: boolean, width: number) => {
-    let used = 1;
-    for (const [label] of actions) {
-      used += visibleWidth(` ${navLabel(label, compact)} │`);
-      if (used > width) return false;
-    }
-    return true;
-  };
-  // A small view component only; Pi owns cell widths, mouse dispatch and all terminal mechanics.
+  const menuFKeys: Record<string, string> = { overview: "F7", sessions: "F2", activity: "F3", tools: "F4", files: "F5", diff: "F6", density: "F8" };
   let hitRegions: { start: number; end: number; command: string }[] = [];
   const navigation = new MouseRegion({
     invalidate() {},
     render(width: number) {
-      let text = " "; hitRegions = [];
-      const compact = !navFits(false, width);
-      for (const [label, command] of actions) {
-        const start = visibleWidth(text), shown = navLabel(label, compact), value = ` ${shown} │`;
-        if (start + visibleWidth(value) > width) break;
-        hitRegions.push({ start, end: start + visibleWidth(value) - 1, command }); text += value;
-      }
-      return [colors.band(colors.accent(truncateToWidth(text, width)), width)];
+      hitRegions = [];
+      const stage = chooseNavBarStage(actions.map(([label]) => ({ label })), width);
+      const painted = renderNavBar(
+        actions.map(([label, command]) => ({ label, action: () => { void controller.submit("/" + command); } })),
+        width,
+        stage,
+        text => colors.accent(text),
+      );
+      hitRegions = painted.regions.map((region, index) => ({ start: region.from, end: region.to, command: actions[index]![1] }));
+      return [colors.band(painted.line, width)];
     },
   }, event => {
     if (event.type === "click" && event.button === "left") {
@@ -131,15 +125,17 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
   const update = (state: TuiState) => {
     const session = state.session, model = terminalText(state.info?.provider?.model ?? "모델 확인 중", 100);
     const signals = workSignals(state);
-    header.setText(`${colors.strong(`pida ${version} · TUI`)}  ${colors.dim(model)}  ${state.connected ? "연결됨" : colors.bad("연결 끊김")} · ${guided ? "안내" : "간결"}`);
-    context.setText(`대상 ${singleLine(options.target ?? options.workspace, 200)} · 대화 ${session?.sessionId.slice(0, 8) ?? "연결 중"}`);
+    header.setText(`${colors.strong(`pida ${version} · 단일 대화`)}  ${colors.dim(model)}  ${state.connected ? "연결됨" : colors.bad("연결 끊김")} · ${guided ? "안내" : "간결"}`);
+    const stage = chooseNavBarStage(actions.map(([label]) => ({ label })), terminal.columns);
+    const navHint = stage === 3 ? " · F1에서 키 설명" : "";
+    context.setText(`대상 ${singleLine(options.target ?? options.workspace, 200)} · 대화 ${session?.sessionId.slice(0, 8) ?? "연결 중"}${navHint}`);
     conversationTitle.setText(colors.strong(`대화  /  ${singleLine(session?.title ?? "새 작업", 120)}`));
     const messages = session ? sessionDisplayMessages(session) : [];
     const parts: string[] = []; let remaining = 64_000;
     for (const m of messages.slice(-80).reverse()) {
       const text = terminalText(m.text, 16_000).trim();
       if (m.role === "assistant" && !text) continue;
-      const part = `${m.role === "user" ? colors.accent("YOU") : colors.strong("PIDA")}\n${text}`;
+      const part = `${m.role === "user" ? colors.accent("요청") : colors.strong("응답")}\n${text}`;
       if (part.length > remaining) break;
       parts.unshift(part); remaining -= part.length;
     }
@@ -148,22 +144,22 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
     conversation.setText(body || (guided ? "어떤 결과를 만들까요?\n\n목표와 완료 조건을 아래에 입력하세요.\n예: 검색 필터를 추가하고 기존 테스트를 실행해 주세요.\n\nF1 메뉴에서 기능을 고를 수 있습니다.\nF2 이전 대화 · F5 작업 파일\n오른쪽 개요에서 실제 실행과 검증 상태를 확인하세요." : "목표를 입력하세요. F1 메뉴 · F2 이전 대화"));
     panelVisible = !!state.panel;
     const checks = signals.checks;
-    const change = state.changes ? state.changes.available ? `변경 ${state.changes.files} · 미추적 ${state.changes.untracked}${state.changes.truncated ? " · 일부" : ""}\n${formatTuiTimestamp(state.changes.observedAt, "time")} 조회 · F6 갱신\n전체 작업 트리 기준` : "Git 비교 사용 불가" : "변경 미조회 · F6으로 확인";
+    const change = state.changes ? state.changes.available ? `변경 ${state.changes.files} · 미추적 ${state.changes.untracked}${state.changes.truncated ? " · 일부" : ""}\n${formatTuiTimestamp(state.changes.observedAt, "time")} KST 조회 · F6 갱신\n전체 작업 트리 기준` : "Git 비교 사용 불가" : "변경 미조회 · F6으로 확인";
     const capability = state.info?.capabilities;
     const detailWidth = Math.max(20, (terminal.columns >= 104 ? Math.floor(terminal.columns * .4) : terminal.columns) - 4);
     const short = (s: unknown) => truncateToWidth(singleLine(s, 400), detailWidth);
     const tight = terminal.rows < 30, gap = tight ? [] : [""];
     const outline = [
-      colors.accent("목표 / INTENT"), short(signals.goal || "아직 요청 없음 · 아래에 입력"), ...gap,
-      colors.accent("구조 / STRUCTURE"), state.info ? `허용 도구 ${state.info.tools.filter(t => t.permitted).length}개 · F4 결과` : "도구 권한 정보 미확인",
+      colors.accent("목표"), short(signals.goal || "아직 요청 없음 · 아래에 입력"), ...gap,
+      colors.accent("구조"), state.info ? `허용 도구 ${state.info.tools.filter(t => t.permitted).length}개 · F4 결과` : "도구 권한 정보 미확인",
       capability ? singleLine(`지침 ${capability.instructions.files} · 스킬 ${capability.skills}`) : "지침·스킬 정보 미확인",
       ...(guided && !tight ? [colors.dim("계획·가정은 대화에서 확인")] : []), ...gap,
-      colors.accent("실행 / EXECUTION"), short(signals.phase),
-      `도구 완료 ${signals.complete} · 실패 ${signals.failed}${signals.elapsed === undefined ? "" : ` · ${signals.elapsed}초`}`,
+      colors.accent("실행"), short(signals.phase),
+      `도구 실행 완료 ${signals.complete} · 도구 실행 실패 ${signals.failed}${signals.elapsed === undefined ? "" : ` · ${signals.elapsed}초`}`,
       ...(signals.last?.code ? ["사유 " + singleLine(signals.last.code)] : []),
       ...(tight ? [] : [colors.dim(signals.run ? `run ${singleLine(signals.run.slice(0, 8))}${state.traceGap ? " · 기록 일부" : ""} · F3 상세` : "아직 실행 없음")]), ...gap,
-      colors.accent("판단 / JUDGMENT"), singleLine(signals.verification),
-      ...(checks.length ? [short(`종료 때 검사: 유효 통과 ${checks.filter(v => v.status === "PASSED" && v.current_at_run_end).length} · 실패 ${checks.filter(v => v.status === "FAILED").length} · 오래됨 ${checks.filter(v => !v.current_at_run_end).length}`)] : ["기록된 검사 결과 없음"]),
+      colors.accent("판단"), singleLine(signals.verification),
+      ...(checks.length ? [short(`종료 때 검사: 검증 통과 ${checks.filter(v => v.status === "PASSED" && v.current_at_run_end).length} · 검증 실패 ${checks.filter(v => v.status === "FAILED").length} · 오래됨 ${checks.filter(v => !v.current_at_run_end).length}`)] : ["기록된 검사 결과 없음"]),
       terminalText(change),
       ...(guided && !tight ? [colors.dim("검사 통과 ≠ 작업 전체 검증")] : []),
     ].join("\n");
@@ -206,7 +202,10 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
   controller.onOverview = () => { controller.state.panel = undefined; overviewSelected = !overviewSelected; update(controller.state); };
   controller.onDensity = () => { guided = !guided; update(controller.state); };
   controller.onRestoreDraft = text => { if (!editor.getExpandedText()) editor.setText(text); tui.requestRender(); };
-  controller.onMenu = () => choose("기능 메뉴 · 명령을 외울 필요 없이 선택하세요", terminalCommands.filter(([name]) => !["menu", "resume", "read"].includes(name)).map(([name, description]) => ({ value: name, label: description, description: "/" + name })), item => {
+  controller.onMenu = () => choose("기능 메뉴 · 명령을 외울 필요 없이 선택하세요", terminalCommands.filter(([name]) => !["menu", "resume", "read"].includes(name)).map(([name, description]) => {
+    const fKey = menuFKeys[name];
+    return { value: name, label: description, description: fKey ? `${fKey} · /${name}` : `/${name}` };
+  }), item => {
     if (item.value === "steer" || item.value === "followup") {
       // Preserve any draft; choosing a destination does not submit it.
       const draft = editor.getExpandedText().replace(/^\/(?:steer|followup)\s*/, "");
