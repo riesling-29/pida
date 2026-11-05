@@ -23,6 +23,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors = []; page.on('pageerror', e => errors.push(e.message));
   await page.goto(`http://127.0.0.1:${server.address().port}/#token=${token}`);
+  await page.locator('#mode-tabs [data-mode="studio"]').click();
   await page.locator('#studio-target-mode').selectOption('files');
   await page.locator('#studio-file').selectOption('a.txt');
   await page.waitForFunction(() => !document.getElementById('studio-bind-file').disabled);
@@ -40,6 +41,7 @@ try {
   assert.equal(calls, 2); checks.push('actual Pi writes target and server review contains interval diff');
   await page.reload();
   await page.locator('#token').fill(token); await page.locator('#connection-form').evaluate(form => form.requestSubmit());
+  await page.locator('#mode-tabs [data-mode="studio"]').click();
   await page.waitForFunction(() => document.getElementById('studio-common-review').textContent.includes('+changed'));
   assert.equal(calls, 2); checks.push('reload reopens same review without replay');
   for (const width of [320, 768, 1440]) {

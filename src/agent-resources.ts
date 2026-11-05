@@ -1,11 +1,15 @@
 import { constants, closeSync, fstatSync, lstatSync, openSync, readSync, realpathSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createExtensionRuntime, loadSkills, type ResourceLoader, type Skill } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 import type { BusinessTool } from "./runtime.js";
 
 const MAX_RESOURCE_BYTES = 65_536;
 const MAX_SKILL_PATHS = 16;
+// Bun may hardlink immutable package files to its cache. Only these installed,
+// code-owned guides are exempt; workspace instructions/skills remain single-link.
+const packagedGuides = new Set(["debugging", "verification", "pix"].map(id => fileURLToPath(new URL(`../packs/${id}/SKILL.md`, import.meta.url))));
 export interface AgentResourceOptions {
   systemPrompt: string;
   instructionRoot?: string;
@@ -27,11 +31,12 @@ function checkedPath(path: string): string {
 /** Read one regular file with a fixed byte budget; never follow a final symlink. */
 function readResource(path: string): string {
   const full = checkedPath(path), before = lstatSync(full);
-  if (!before.isFile() || before.nlink !== 1 || before.size > MAX_RESOURCE_BYTES) invalid();
+  const packaged = packagedGuides.has(full);
+  if (!before.isFile() || (!packaged && before.nlink !== 1) || before.size > MAX_RESOURCE_BYTES) invalid();
   const fd = openSync(full, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
   try {
     const st = fstatSync(fd);
-    if (!st.isFile() || st.nlink !== 1 || st.dev !== before.dev || st.ino !== before.ino || st.size > MAX_RESOURCE_BYTES) invalid();
+    if (!st.isFile() || (!packaged && st.nlink !== 1) || st.dev !== before.dev || st.ino !== before.ino || st.size > MAX_RESOURCE_BYTES) invalid();
     const buffer = Buffer.alloc(MAX_RESOURCE_BYTES + 1);
     let length = 0, count: number;
     while (length < buffer.length && (count = readSync(fd, buffer, length, buffer.length - length, null)) > 0) length += count;

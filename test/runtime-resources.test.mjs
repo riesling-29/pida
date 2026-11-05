@@ -1,12 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile, rm, symlink } from "node:fs/promises";
-import { join } from "node:path";
+import { mkdtemp, mkdir, writeFile, rm, symlink, link } from "node:fs/promises";
+import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { Type } from "typebox";
 import { fauxProvider, fauxAssistantMessage as answer, fauxToolCall as call } from "@earendil-works/pi-ai/providers/faux";
 import { PidaRuntime, PidaError } from "../dist/runtime.js";
 import { AgentResources } from "../dist/agent-resources.js";
+import { codingPacks } from "../dist/coding-packs.js";
 
 const owner = { id: "owner", permissions: ["test:hold", "resources:read"] };
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
@@ -93,6 +94,19 @@ test("unsafe instruction/skill resources fail closed instead of reading parent/s
   assert.throws(() => new AgentResources({ systemPrompt: "test", instructionRoot: "relative" }), /AGENT_RESOURCE_INVALID/);
   await symlink(join(f.parent, "outside.md"), join(f.root, "SKILL.md"));
   assert.throws(() => new AgentResources({ systemPrompt: "test", skillPaths: [join(f.root, "SKILL.md")] }), /AGENT_RESOURCE_INVALID/);
+});
+
+test("packaged guides allow package-manager hardlinks while workspace instructions do not", async t => {
+  const f = await fixture(t), { skills } = codingPacks(["verification"]);
+  const cache = await mkdtemp(join(dirname(skills[0].filePath), "pida-cache-check-"));
+  t.after(() => rm(cache, { recursive: true, force: true }));
+  await link(skills[0].filePath, join(cache, "package-cache.md"));
+  const resources = new AgentResources({ systemPrompt: "test", skills });
+  assert.equal(resources.getSkills().skills.length, 1);
+  assert.equal((await resources.skillTool().execute({ name: skills[0].name }, { principal: owner, signal: new AbortController().signal })).ok, true);
+  await writeFile(join(f.parent, "outside.md"), "outside instructions");
+  await link(join(f.parent, "outside.md"), join(f.root, "AGENTS.md"));
+  assert.throws(() => new AgentResources({ systemPrompt: "test", instructionRoot: f.root }), /AGENT_RESOURCE_INVALID/);
 });
 
 test("steer and follow-up use Pi queues, enforce owner/run IDs, and deliver in the same run", async t => {
