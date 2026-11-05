@@ -227,7 +227,7 @@ test('command panel distinguishes requested cancellation from exit and requires 
   command={...command,status:'cancelled',directExited:true,requiresRecovery:true};ui.action('refresh').onclick();await flush();
   assert.equal(ui.action('recover').disabled,true);ui.action('recover').onclick();await flush();assert.equal(recovered.length,0);
   ui.action('inspected').checked=true;ui.action('inspected').onchange();assert.equal(ui.action('recover').disabled,false);
-  ui.action('recover').onclick();await flush();assert.deepEqual(recovered,[['session','command-cancel',true]]);assert.equal(ui.action('inspected').checked,false);assert.match(ui.container.textContent,/취소됨/);assert.match(ui.container.textContent,/사용자 상태 확인 기록됨/);assert.match(ui.container.textContent,/명령 결과는 변경하지/);
+  ui.action('recover').onclick();await flush();assert.deepEqual(recovered,[['session','command-cancel',true]]);assert.equal(ui.action('inspected').checked,false);assert.match(ui.container.textContent,/요청으로 중단됨/);assert.match(ui.container.textContent,/사용자 상태 확인 기록됨/);assert.match(ui.container.textContent,/명령 결과는 변경하지/);
 });
 
 test('command panel honors denied capabilities, stops forbidden polling, and rejects mismatched output',async()=>{

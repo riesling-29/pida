@@ -180,7 +180,7 @@ test('tool details are lazy, use recorded failure/exit code, and discard a late 
   const details=env.context.createRunDetails({container,load:()=>{reads++;return wait.promise;},explain:x=>x});details.select('s1','r1');assert.equal(reads,0);
   container.open=true;container.ontoggle();assert.equal(reads,1);details.select('s1','r2');wait.resolve({items:[{runId:'r1',toolName:'old',status:'completed',output:'stale private text'}]});await flush();assert.doesNotMatch(container.textContent,/stale private text/);
   const actual=env.context.createRunDetails({container,load:async()=>({items:[{runId:'r2',toolName:'project_shell',status:'completed',command:'npm test',exitCode:1,output:'<script>not markup</script>',truncated:true},{runId:'other',toolName:'other',status:'completed',output:'unrelated'}],truncated:false}),explain:x=>x});actual.select('s1','r2');container.open=true;container.ontoggle();await flush();
-  assert.match(container.textContent,/도구 실패 · 종료 코드 1/);assert.match(container.textContent,/<script>not markup<\/script>/);assert.doesNotMatch(container.textContent,/unrelated/);assert.match(container.textContent,/일부 출력/);assert.match(container.textContent,/검증 완료를 뜻하지/);
+  assert.match(container.textContent,/도구 실행 실패 · 종료 코드 1/);assert.match(container.textContent,/<script>not markup<\/script>/);assert.doesNotMatch(container.textContent,/unrelated/);assert.match(container.textContent,/일부 출력/);assert.match(container.textContent,/검증 완료를 뜻하지/);
 });
 
 test('workspace actual submit handler steers/follows the active run and preserves a draft at completion', async()=>{
