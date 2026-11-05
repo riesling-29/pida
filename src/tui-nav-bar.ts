@@ -38,6 +38,7 @@ export function renderNavBar(
   width: number,
   stage: NavBarStage,
   paint: (text: string, selected?: boolean) => string,
+  overflow?: { label: string; action: () => void },
 ): { line: string; regions: { from: number; to: number; action: () => void }[] } {
   let text = stage === 2 ? "" : stage === 1 ? " " : "";
   const regions: { from: number; to: number; action: () => void }[] = [];
@@ -52,8 +53,16 @@ export function renderNavBar(
       regions.push({ from: start, to: visibleWidth(text), action: item.action });
     }
     if (visibleWidth(text) > width) {
-      const suffix = " …F1";
-      text = truncateToWidth(text, Math.max(0, width - visibleWidth(suffix)), "", true) + suffix;
+      const suffix = truncateToWidth(overflow ? ` …${overflow.label}` : " …", Math.max(0, width), "");
+      const end = Math.max(0, width - visibleWidth(suffix));
+      text = truncateToWidth(text, end, "");
+      // Hit boxes must describe the visible cells, including wide Korean labels.
+      const visibleEnd = visibleWidth(text);
+      for (const region of regions) region.to = Math.min(region.to, visibleEnd);
+      const kept = regions.filter(region => region.from < region.to);
+      regions.splice(0, regions.length, ...kept);
+      text += " ".repeat(end - visibleEnd) + paint(suffix);
+      if (overflow && width > 0) regions.push({ from: end, to: width, action: overflow.action });
     }
   } else {
     for (const item of items) {

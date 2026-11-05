@@ -62,6 +62,18 @@ export interface CommandReadOptions { offset?: number; maxBytes?: number }
 export interface CommandWaitOptions { waitTimeoutMs?: number; signal?: AbortSignal }
 /** Browser/Node fetch SDK. Native apps may use the same documented HTTP/SSE contract. */
 export class PidaClient {
+  private readonly queuedInputAttempts = new Map<string, { text: string; expectedRunId: string; requestId: string }>();
+  /** Explicit retry of unchanged input reuses its ID after a lost response. Never auto-replay. */
+  private async queueInput(path: string, text: string, expectedRunId: string, requestId?: string): Promise<import("./runtime.js").QueuedInputResult> {
+    const old = this.queuedInputAttempts.get(path);
+    if (!old && this.queuedInputAttempts.size >= 256) throw new PidaClientError("INPUT_RETRY_LIMIT", 429);
+    const attempt = { text, expectedRunId, requestId: requestId ?? (old?.text === text && old.expectedRunId === expectedRunId ? old.requestId : globalThis.crypto.randomUUID()) };
+    this.queuedInputAttempts.set(path, attempt);
+    const receipt = await (await this.request(path, "POST", attempt)).json();
+    if (receipt.requestId !== attempt.requestId || receipt.runId !== expectedRunId || receipt.durable !== false || !["queued", "handled"].includes(receipt.disposition) || receipt.mode !== (path.endsWith("/steer") ? "steer" : "followUp")) throw new PidaClientError("INPUT_RECEIPT_INVALID", 502);
+    if (this.queuedInputAttempts.get(path) === attempt) this.queuedInputAttempts.delete(path);
+    return receipt;
+  }
   async listOrganizations(): Promise<{ organizations: import("./organization.js").OrgSession[]; criteria: import("./organization.js").LocalCriterion[] }> { return (await this.request("/v1/organizations")).json(); }
   async createOrganization(input: Parameters<import("./agent-supervisor.js").AgentSupervisor["createOrganization"]>[1]): Promise<import("./organization.js").OrgSession> { return (await this.request("/v1/organizations", "POST", input)).json(); }
   async getOrganization(id: string): Promise<Awaited<ReturnType<import("./agent-supervisor.js").AgentSupervisor["getOrganization"]>>> { return (await this.request("/v1/organizations/" + encodeURIComponent(id))).json(); }
@@ -134,7 +146,7 @@ export class PidaClient {
   async getAgentJob(id: string, jobId: string): Promise<AgentJob> { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId))).json(); }
   async enqueueAgentJob(id: string, input: {input: string; requestId: string; parentJobId?: string}): Promise<AgentJob> { return (await this.request(this.agentPath(id) + "/jobs", "POST", input)).json(); }
   async cancelAgentJob(id: string, jobId: string): Promise<AgentJob> { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/cancel", "POST", {})).json(); }
-  async steerAgentJob(id: string, jobId: string, text: string, expectedRunId: string) { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/steer", "POST", {text, expectedRunId})).json(); }
+  async steerAgentJob(id: string, jobId: string, text: string, expectedRunId: string, requestId?: string) { return this.queueInput(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/steer", text, expectedRunId, requestId); }
   async getAgentJobRecovery(id: string, jobId: string) { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/recovery")).json(); }
   async reconcileAgent(id: string, input: {inspected: true; effects: {id: string; state: "applied" | "not_applied"}[]; note?: string}): Promise<AgentProfile> { return (await this.request(this.agentPath(id) + "/reconcile", "POST", input)).json(); }
   async exportAgentJob(id: string, jobId: string): Promise<ObservationBundle> { return (await this.request(this.agentPath(id) + "/jobs/" + encodeURIComponent(jobId) + "/export")).json(); }
@@ -151,8 +163,8 @@ export class PidaClient {
   async getProject(path = "."): Promise<{enabled: true; path: string; files: ProjectEntry[]; truncated: boolean}> { return (await this.request("/v1/project?path=" + encodeURIComponent(path))).json(); }
   async readProjectFile(path: string): Promise<{path: string; content: string; bytes: number; revision: string}> { return (await this.request("/v1/project/file?path=" + encodeURIComponent(path))).json(); }
   async getProjectChanges(): Promise<ProjectChanges> { return (await this.request("/v1/project/changes")).json(); }
-  async steer(id: string, text: string, expectedRunId: string) { return (await this.request(this.path(id) + "/steer", "POST", { text, expectedRunId })).json(); }
-  async followUp(id: string, text: string, expectedRunId: string) { return (await this.request(this.path(id) + "/follow-up", "POST", { text, expectedRunId })).json(); }
+  async steer(id: string, text: string, expectedRunId: string, requestId?: string) { return this.queueInput(this.path(id) + "/steer", text, expectedRunId, requestId); }
+  async followUp(id: string, text: string, expectedRunId: string, requestId?: string) { return this.queueInput(this.path(id) + "/follow-up", text, expectedRunId, requestId); }
   async getWorkbench(): Promise<{ enabled: boolean; engine: string; revision?: string; canCheckpoint?: boolean; files: { path: string; bytes: number }[]; skills: { name: string; description: string }[]; history: { id: string; message: string }[] }> {
     return (await this.request("/v1/workbench")).json();
   }

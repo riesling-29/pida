@@ -1,9 +1,10 @@
+import * as display from "/display.js";
 import { RunState } from "/run-state.js";
 import { createRunInput } from "/run-input.js";
 import { createRunDetails } from "/run-details.js";
 import { createCommands } from "/commands.js";
 import { explainError, formatWorkReview } from "/pida-client.js";
-const { executionStatusLabels: outcomes, traceEventLabels: activityLabels } = globalThis.__pidaDisplay;
+const { executionStatusLabels: outcomes, traceEventLabels: activityLabels } = display;
 const $ = id => document.getElementById(id);
 const cleanPrompt = text => text.replace(/^\[PIDA (?:UI|CODE) STUDIO\][\s\S]*?\nUSER REQUEST:\n/, "");
 const duration = ms => { const seconds = Math.max(0, Math.floor(ms / 1000)); return seconds < 60 ? `${seconds}초` : `${Math.floor(seconds / 60)}분 ${seconds % 60}초`; };
@@ -70,7 +71,7 @@ export function createStudio({ client, request, changed, disconnected }) {
     const label = activityLabels[event.type];
     if (label) {
       const li = document.createElement("li"), stamp = document.createElement("time"), text = document.createElement("span");
-      stamp.textContent = globalThis.__pidaDisplay.formatClockKst(Number.isFinite(time) ? time : Date.now());
+      stamp.textContent = display.formatClockKst(Number.isFinite(time) ? time : Date.now());
       text.textContent = `${event.type === "run_finished" ? outcomes[event.status] ?? label : label}${event.toolName ? " · " + event.toolName.slice(0, 100) : ""}${event.code ? " · " + event.code.slice(0, 100) : ""}`;
       li.dataset.activity = event.type; li.append(stamp, text);
       const list = $("studio-activity-list"), atEnd = list.scrollHeight - list.scrollTop - list.clientHeight < 24;

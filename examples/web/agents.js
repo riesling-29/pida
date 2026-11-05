@@ -1,8 +1,9 @@
+import * as display from "/display.js";
 import { createRunDetails } from "/run-details.js";
 import { createCommands } from "/commands.js";
 import { explainError } from "/pida-client.js";
-const { executionStatusLabels: statuses, traceEventLabels: activities } = globalThis.__pidaDisplay;
-const stamp = value => globalThis.__pidaDisplay.formatClockKst(value);
+const { executionStatusLabels: statuses, traceEventLabels: activities } = display;
+const stamp = value => display.formatClockKst(value);
 const $ = id => document.getElementById(id);
 const textNode = (tag, text, className) => { const node = document.createElement(tag); node.textContent = text; if (className) node.className = className; return node; };
 
@@ -180,7 +181,7 @@ export function createAgents({ client }) {
       if (!agents.some(a => a.id === selectedId)) { selectedId = agents[0]?.id; selectedJobId = undefined; personaDirty = false; }
       agent = agents.find(a => a.id === selectedId); renderAgents();
       await loadDetail(active);
-      if (active === generation) $("agents-status").textContent = `서버 상태 확인 · ${globalThis.__pidaDisplay.formatClockKst(new Date())}`;
+      if (active === generation) $("agents-status").textContent = `서버 상태 확인 · ${display.formatClockKst(new Date())}`;
     } catch (error) { if (active === generation) { if (error.status === 403 || error.code === "AGENTS_DISABLED") serviceAvailable = false; $("agents-status").textContent = errorMessage(error); } }
     finally { refreshing = false; controls(); if (active === generation) schedule(); }
   }

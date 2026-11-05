@@ -4,7 +4,6 @@ import {
   lstatSync,
   readFileSync,
   readdirSync,
-  renameSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -13,6 +12,7 @@ import { hostname } from "node:os";
 import { randomUUID } from "node:crypto";
 import { validContextDescriptor, validHandoff, type LoadedRunContext } from "./run-context.js";
 import type { SessionSummary, TraceEvent } from "./protocol.js";
+import { savePrivate } from "./private-state.js";
 
 export interface SavedSession extends SessionSummary {
   version: 1;
@@ -112,14 +112,10 @@ export class SessionStore {
   }
   save(record: SavedSession): void {
     const path = join(this.indexDirectory, `${record.sessionId}.json`);
-    const temp = `${path}.${randomUUID()}.tmp`;
-    try {
-      writeFileSync(temp, JSON.stringify(record), { flag: "wx", mode: 0o600 });
-      renameSync(temp, path);
-      this.records.set(record.sessionId, structuredClone(record));
-    } finally {
-      rmSync(temp, { force: true });
-    }
+    // Publish in memory only after the file has been flushed and atomically replaced.
+    // Pi still owns the transcript; this is not a cross-file/power-loss transaction.
+    savePrivate(path, record, { createDirectory: false });
+    this.records.set(record.sessionId, structuredClone(record));
   }
   remove(id: string): void {
     const saved = this.records.get(id);

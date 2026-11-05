@@ -157,66 +157,6 @@ export class RunState {
 
 const inputError = code => Object.assign(new Error(code), { code });
 
-const kstDisplay = { timeZone: "Asia/Seoul", hour12: false };
-
-function parseDisplayTime(value) {
-  if (value == null || value === "") return undefined;
-  const date = value instanceof Date ? value : new Date(value);
-  return Number.isFinite(date.getTime()) ? date : undefined;
-}
-
-/** Display-only clock in Asia/Seoul (0.7). Append KST once on panel headers, not every timestamp. */
-export function formatClockKst(value, { empty = "시간 미기록", reference = new Date() } = {}) {
-  const date = parseDisplayTime(value);
-  if (!date) return empty;
-  const stamp = new Intl.DateTimeFormat("sv-SE", { ...kstDisplay, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  const [day, time] = stamp.format(date).split(" ");
-  const today = stamp.format(reference).split(" ")[0];
-  return day === today ? time : `${day.slice(5)} ${time}`;
-}
-
-export const executionStatusLabels = {
-  queued: "대기",
-  running: "실행 중",
-  completed: "실행 완료",
-  failed: "실행 실패",
-  cancelled: "요청으로 중단됨",
-  interrupted: "서버 종료로 끊김 · 확인 필요",
-  limited: "실행 한도 도달",
-};
-
-export const traceEventLabels = {
-  retry_scheduled: "모델 재시도 대기",
-  retry_finished: "모델 재시도 결과",
-  summarization_retry_scheduled: "압축 재시도 대기",
-  summarization_retry_attempt_start: "압축 재시도 시작",
-  summarization_retry_finished: "압축 재시도 결과",
-  run_started: "실행 시작",
-  run_context_loaded: "실행 맥락 불러옴",
-  turn_started: "모델 응답 대기",
-  turn_finished: "모델 응답 끝",
-  model_request: "모델 요청",
-  model_response: "모델 응답 수신",
-  tool_started: "도구 실행 시작",
-  tool_completed: "도구 실행 완료",
-  tool_failed: "도구 실행 실패",
-  run_finished: "실행 종료",
-  run_interrupted: "서버 종료로 끊김",
-  compaction_started: "대화 압축 시작",
-  auto_compaction_start: "대화 압축 시작",
-  compaction_completed: "대화 압축 완료",
-  compaction_failed: "대화 압축 실패",
-  output_retry: "출력 한도 후 재시도",
-};
-
-export function formatDateTimeKst(value, options) {
-  return formatClockKst(value, options);
-}
-
-export function formatTimeKst(value, options) {
-  return formatClockKst(value, options);
-}
-
 /** Send only to the captured live run; receipt acceptance does not claim model execution. */
 export async function submitQueuedInput({ client, state, mode, text }) {
   if (mode !== "steer" && mode !== "followUp") throw inputError("INPUT_COMMAND_UNSUPPORTED");

@@ -110,6 +110,22 @@ test('peer snapshot exposes bounded assistant text, never thinking, and final me
   await execution;const s=await f.peer.getSession(id);assert.equal(s.activeResponse,undefined);assert.equal(sessionDisplayMessages(s).filter(m=>m.role==='assistant').length,1);assert.equal(s.messages.at(-1).text,visible);
 });
 
+test('single TUI displays SSE deltas before polling and requests only new trace events', async t => {
+  const id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', runId='11111111-1111-1111-1111-111111111111', release=Promise.withResolvers(), cursors=[];
+  let live=false;
+  const rows=[{sequence:1,sessionId:id,runId,timestamp:new Date().toISOString(),type:'run_started'}];
+  const client={getInfo:async()=>({tools:[]}),listSessions:async()=>({sessions:[{sessionId:id}]}),
+    getSession:async()=>({sessionId:id,title:'test',messages:[],running:live,activeRunId:live?runId:undefined,runs:0,tools:[],autoCompaction:true}),
+    getTrace:async(_id,after)=>{cursors.push(after);return {events:live?rows.filter(r=>r.sequence>(after??0)):[],nextSequence:live?2:1,truncated:false};},
+    async *stream(){live=true;yield {type:'trace',trace:rows[0]};yield {type:'text_delta',delta:'즉시 표시'};await release.promise;live=false;},getManifest:async()=>{throw new PidaClientError('RUN_NOT_FOUND',404);}};
+  const controller=new TuiController(client,{pollMs:60000});t.after(()=>controller.close());
+  await controller.start();await controller.submit('test');await until(()=>controller.state.session.activeResponse?.text==='즉시 표시');
+  assert.equal(cursors.length,1,'streaming text must not wait for an HTTP snapshot');
+  await controller.refresh();assert.equal(controller.state.session.activeResponse.text,'즉시 표시');
+  await controller.refresh();assert.deepEqual(cursors,[undefined,0,1]);assert.equal(controller.state.trace.length,1);
+  release.resolve();await controller.settled();
+});
+
 test('failed selection preserves current session and delayed old reads cannot overwrite new selection',async()=>{
   const a='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',b='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',gate=Promise.withResolvers();let block=false;
   const session=id=>({sessionId:id,title:id,messages:[],running:false,runs:0,tools:[],autoCompaction:true});

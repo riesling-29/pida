@@ -1,3 +1,4 @@
+import { executionBoundaryNote } from "./display.js";
 import { PidaClient, PidaClientError, explainError, formatWorkReview, type WorkTarget, type RuntimeInfo, type SessionSummary, type TraceEvent, type ResultManifest } from "./client.js";
 import { formatTraceActivityLine } from "./tui-labels.js";
 import { formatTuiTimestamp } from "./tui-time.js";
@@ -49,6 +50,8 @@ export class TuiController {
   private commandBusy = false;
   private evidenceKey?: string;
   private evidenceRequest = 0;
+  private traceCursor = 0;
+  private streamed?: { runId: string; text: string; truncated: boolean };
   constructor(readonly client: PidaClient, private options: { pollMs?: number; openWeb?: (sessionId: string) => Promise<void> } = {}) {}
   private changed() { if (!this.closed) this.onChange(); }
   private problem(error: unknown) {
@@ -76,7 +79,9 @@ export class TuiController {
     if (this.closed || ticket !== this.selectionRequest) return;
     ++this.epoch;
     this.streamAbort?.abort(); this.streamAbort = undefined;
-    this.state.session = session; this.state.trace = trace.events; this.state.traceGap = trace.truncated;
+    this.streamed = undefined;
+    this.traceCursor = trace.nextSequence ? trace.nextSequence - 1 : trace.events.at(-1)?.sequence ?? 0;
+    this.state.session = session; this.state.trace = trace.events.slice(-300); this.state.traceGap = trace.truncated || trace.events.length > 300;
     this.state.submitting = false; this.state.connected = true; this.state.panel = undefined;
     this.state.viewedFile = undefined; this.state.draftBinding = undefined; this.pendingRequest = undefined;
     this.state.manifest = undefined; this.state.evidenceState = undefined; this.state.changes = undefined; this.evidenceKey = undefined;
@@ -89,10 +94,13 @@ export class TuiController {
     const id = this.state.session?.sessionId, ticket = this.epoch;
     if (!id || this.closed) return;
     const task = (async () => {
-      const [session, trace] = await Promise.all([this.client.getSession(id), this.client.getTrace(id)]);
+      const [session, trace] = await Promise.all([this.client.getSession(id), this.client.getTrace(id, this.traceCursor)]);
       if (this.closed || ticket !== this.epoch || this.state.session?.sessionId !== id) return;
       const reconnected = !this.state.connected;
-      this.state.session = session; this.state.trace = trace.events; this.state.traceGap = trace.truncated; this.state.connected = true;
+      this.traceCursor = trace.nextSequence ? trace.nextSequence - 1 : Math.max(this.traceCursor, trace.events.at(-1)?.sequence ?? 0);
+      const merged = [...new Map([...this.state.trace, ...trace.events].map(event => [event.sequence, event])).values()].sort((a, b) => a.sequence - b.sequence);
+      if (session.running && session.activeRunId === this.streamed?.runId) session.activeResponse = { ...this.streamed! };
+      this.state.session = session; this.state.trace = merged.slice(-300); this.state.traceGap ||= trace.truncated || merged.length > 300; this.state.connected = true;
       this.loadEvidence();
       if (reconnected) this.state.notice = "다시 연결했습니다. 서버의 실제 상태를 표시합니다.";
       this.changed();
@@ -139,13 +147,24 @@ export class TuiController {
           if (ticket !== this.epoch || this.closed) break;
           if (event.type === "trace") {
             if (event.trace.type === "run_started") {
+              if (this.state.session) { this.state.session.running = true; this.state.session.activeRunId = event.trace.runId; }
               this.state.notice = "접수됨 · F1 추가 지시 / 중단 · Ctrl+D 분리";
               this.state.manifest = undefined; this.state.evidenceState = undefined; this.evidenceKey = undefined;
+            }
+            if (event.trace.type === "run_started" || event.trace.type === "turn_started") {
+              this.streamed = { runId: event.trace.runId, text: "", truncated: false };
+              if (this.state.session) this.state.session.activeResponse = { ...this.streamed };
             }
             if (!this.state.trace.some(t => t.sequence === event.trace.sequence)) this.state.trace.push(event.trace);
             this.state.trace = this.state.trace.slice(-300);
           }
-          if (event.type === "result") { this.pendingRequest = undefined; this.state.notice = `${event.result.code ? event.result.code + " · " : ""}실행 근거 /activity · 접수 대상·변경 /review`; }
+          if (event.type === "text_delta" && this.streamed && this.state.session) {
+            const text = this.streamed.text + event.delta;
+            this.streamed = { ...this.streamed, text: text.slice(0, 32768), truncated: this.streamed.truncated || text.length > 32768 };
+            this.state.session.running = true; this.state.session.activeRunId = this.streamed.runId;
+            this.state.session.activeResponse = { ...this.streamed };
+          }
+          if (event.type === "result") { this.streamed = undefined; this.pendingRequest = undefined; this.state.notice = `${event.result.code ? event.result.code + " · " : ""}실행 근거 /activity · 접수 대상·변경 /review`; }
           this.changed();
         }
       } catch (error) {
@@ -156,6 +175,7 @@ export class TuiController {
         }
       } finally {
         if (ticket === this.epoch && !this.closed) {
+          this.streamed = undefined;
           this.state.submitting = false;
           await this.refresh().catch(error => { this.state.connected = false; this.problem(error); }); this.changed();
         }
@@ -222,7 +242,7 @@ export class TuiController {
             e2o: d.events.reduce((n, e) => n + e.relationships.length, 0), o2o: d.objects.reduce((n, o) => n + o.relationships.length, 0),
             digest: cut.digest, knownLimits: cut.knownLimits, verification: "기록 조회 · PIX 검사는 pi_verify_run 도구로 별도 실행" }, null, 2) }; break;
         }
-        case "tools": { const data = await this.client.getSessionTools(this.selected().sessionId); this.state.panel = { title: "도구 실행 결과", text: data.items.map(t => `${t.toolName} · ${t.status}${t.exitCode === undefined ? "" : " · exit " + t.exitCode}${t.runId ? " · " + t.runId.slice(0, 8) : ""}\n${t.command ?? ""}\n${t.output ?? ""}\n${t.stderr ?? ""}${t.truncated ? "\n[출력 일부]" : ""}`).join("\n\n") || "아직 도구 실행이 없습니다." }; break; }
+        case "tools": { const data = await this.client.getSessionTools(this.selected().sessionId); this.state.panel = { title: "도구 실행 결과", text: [executionBoundaryNote(this.state.info ?? {}), data.items.map(t => `${t.toolName} · ${t.status}${t.exitCode === undefined ? "" : " · exit " + t.exitCode}${t.runId ? " · " + t.runId.slice(0, 8) : ""}\n${t.command ?? ""}\n${t.output ?? ""}\n${t.stderr ?? ""}${t.truncated ? "\n[출력 일부]" : ""}`).join("\n\n") || "아직 도구 실행이 없습니다."].filter(Boolean).join("\n\n") }; break; }
         case "files": {
           try { const p = await this.client.getProject(arg || "."); this.onFiles({ title: "프로젝트 파일", path: p.path, files: p.files, truncated: p.truncated }); }
           catch (e) { if (!(e instanceof PidaClientError) || e.code !== "PROJECT_DISABLED") throw e; const p = await this.client.getWorkbench(); this.onFiles({ title: "작업 파일", path: ".", files: p.files.map(f => ({ path: f.path, type: "file" })), truncated: false }); } break;

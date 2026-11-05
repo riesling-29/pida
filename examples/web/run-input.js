@@ -36,7 +36,8 @@ export function createRunInput({ client, run, textarea, selector, section, note,
         if (textarea.value === raw) textarea.value = "";
         receipt.textContent = `${labels[mode]} 접수됨 · ${response.receipt.disposition === "queued" ? "전달 대기" : "호스트에 전달됨"} · 실행 완료를 뜻하지 않습니다. 서버 재시작 시 유지되지 않습니다.`;
       } catch (error) {
-        if (request === serial) receipt.textContent = `접수하지 못했습니다 · ${explain(error.code) || error.message || "요청 실패"}. 입력을 보존했습니다.`;
+        const rejected = error.code !== "INPUT_QUEUE_FAILED" && ((error.status >= 400 && error.status < 500) || ["RUN_NOT_ACCEPTING_INPUT", "RUN_ID_MISMATCH", "INVALID_PROMPT"].includes(error.code));
+        if (request === serial) receipt.textContent = `${rejected ? "접수하지 못했습니다" : "접수 여부를 확인하지 못했습니다"} · ${explain(error.code) || error.message || "요청 실패"}. 입력을 보존했습니다.${rejected ? "" : " 같은 입력을 다시 보내면 같은 요청 ID로 확인합니다."}`;
       } finally {
         if (request === serial) { sending = false; sync(); changed(); }
       }

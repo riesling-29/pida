@@ -1,26 +1,7 @@
 import { PidaClientError, type PidaClient, type AgentJob, type AgentOverview, type AgentProfile } from "./client.js";
 import { WorkspaceLayout, type WorkPane, type PaneBinding } from "./workspace-layout.js";
 
-/** Browser-served module: keep display helpers local (do not import tui-labels.js). */
-const statusDisplayNames: Record<string, string> = {
-  queued: "대기", running: "실행 중", completed: "실행 완료", failed: "실행 실패",
-  cancelled: "요청으로 중단됨", interrupted: "서버 종료로 끊김 · 확인 필요", limited: "실행 한도 도달",
-};
-function displayStatus(value: string | undefined): string {
-  if (!value) return "";
-  return statusDisplayNames[value] ?? value;
-}
-function verificationStatusLabel(status: string | undefined): string {
-  if (!status || status === "UNKNOWN") return "독립 검증 미확인 · UNKNOWN";
-  if (status === "PASS" || status === "PASSED") return "검증 통과";
-  if (status === "FAIL" || status === "FAILED") return "검증 실패";
-  return status;
-}
-function verificationCheckStatusLabel(status: string): string {
-  if (status === "PASSED") return "검증 통과";
-  if (status === "FAILED") return "검증 실패";
-  return status;
-}
+import { displayStatus, verificationStatusLabel, verificationCheckStatusLabel } from "./display.js";
 
 export const admissionLabels: Record<AgentOverview["agents"][number]["admission"], string> = {
   ready: "접수 가능", paused: "대기열 일시정지", recovery_required: "복구 확인 필요", workspace_recovery: "공유 작업공간 복구 대기",
@@ -34,7 +15,7 @@ export function detailText(raw: string | undefined, view: PaneBinding["view"]): 
     const value = JSON.parse(raw);
     if (view === "verification") return [
       `실행 결과: ${value.reported_status ? displayStatus(value.reported_status) : "미확인"}`,
-      `독립 검증: ${verificationStatusLabel(value.verification_status)}`,
+      `판정: ${verificationStatusLabel(value.verification_status)}`,
       `작업: ${value.task_id ?? ""}`, `실행: ${value.run_id ?? ""}`, "",
       "검사 결과 (종료 시점 기준)",
       ...(value.verification_results?.length ? value.verification_results.map((v: any) => `${v.scope} · ${verificationCheckStatusLabel(v.status)} · ${v.current_at_run_end ? "해당 산출물 버전" : "현재 버전과 불일치"}`) : ["기록된 검사 없음"]), "",
@@ -197,7 +178,7 @@ export class AgentWorkspaceController {
     if (!job?.runId || job.status !== "running" || !text) return;
     await this.action(paneId, async key => {
       try { await this.client.steerAgentJob(job.agentId, job.id, text, job.runId!); }
-      catch (e) { throw Error(`${e instanceof Error ? e.message : "전달 실패"} · 추가 지시의 접수 여부를 확인하고 재입력하세요.`); }
+      catch (e) { throw Error(`${e instanceof Error ? e.message : "전달 실패"} · 입력을 보존했습니다. 같은 입력을 재전송하면 같은 요청 ID로 확인합니다.`); }
       if ((this.drafts.get(key) ?? "").trim() === text) this.drafts.delete(key);
       this.messages.set(key, `추가 지시 접수 · ${job.runId!.slice(0, 8)}`);
     });

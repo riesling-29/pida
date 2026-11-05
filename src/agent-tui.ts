@@ -150,19 +150,19 @@ export function createAgentTui(controller: AgentWorkspaceController, options: {
   ] as const;
   const actions = [ ["F1 메뉴", () => choose("작업 환경", [...envMenu], v => [tabMenu, agentMenu, jobMenu, views, splitMenu, focusMenu, controlMenu, () => invoke(() => options.openWeb?.()), () => options.onQuit?.()][Number(v) - 1]!())],
     ["F2 탭", tabMenu], ["F3 에이전트", agentMenu], ["F4 작업", jobMenu], ["F5 보기", views], ["F6 분할", splitMenu], ["F7 초점", focusMenu], ["F8 제어", controlMenu], ["F9 확대", () => controller.layout.zoom()] ] as const;
-  function mouseBar(items: () => { label: string; action: () => void; selected?: boolean }[]) {
+  function mouseBar(items: () => { label: string; action: () => void; selected?: boolean }[], overflow: { label: string; action: () => void }) {
     let regions: { from: number; to: number; action: () => void }[] = [];
     return new MouseRegion({ invalidate() {}, render(width) {
       regions = [];
       const list = items();
       const stage = chooseNavBarStage(list, width);
-      const painted = renderNavBar(list, width, stage, (text, selected) => selected ? colors.selected(text) : colors.accent(text));
+      const painted = renderNavBar(list, width, stage, (text, selected) => selected ? colors.selected(text) : colors.accent(text), overflow);
       regions = painted.regions;
       return [colors.band(painted.line, width)];
     } }, event => { if (event.type === "click" && event.button === "left") { const region = regions.find(r => event.x >= r.from && event.x < r.to); if (region) { invoke(region.action); return { handled: true }; } } });
   }
-  const nav = mouseBar(() => actions.map(([label, action]) => ({ label, action })));
-  const tabs = mouseBar(() => [...controller.layout.data.tabs.map(t => ({ label: line(t.title), action: () => controller.layout.selectTab(t.id), selected: t.id === controller.layout.active.id })), { label: "+", action: () => controller.layout.addTab() }]);
+  const nav = mouseBar(() => actions.map(([label, action]) => ({ label, action })), { label: "F1", action: actions[0][1] });
+  const tabs = mouseBar(() => [...controller.layout.data.tabs.map(t => ({ label: line(t.title), action: () => controller.layout.selectTab(t.id), selected: t.id === controller.layout.active.id })), { label: "+", action: () => controller.layout.addTab() }], { label: "F2", action: tabMenu });
   function newPanel(p: WorkPane) {
     const border = (value: string) => (focusId() === p.id ? colors.accent : colors.border)(value);
     const heading = new Row((value, width) => {

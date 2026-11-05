@@ -86,3 +86,16 @@ npm start -- .\my-agent --open
 `AgentSupervisor`, `AgentMemoryStore`, `memoryTools`, `createAgentTools`, `loadProviderConnector`는 UI 없이 사용할 수 있습니다. `createPidaServer`에는 선택적으로 `agents`, `agentMemory`, `agentWorkbench`, `projectView`를 연결합니다. 에이전트 관리 API는 `pida:agents`, 기억은 `agent:memory:read/write`, 복구는 `pida:recover` 권한을 확인하고 소유자를 다시 검사합니다. 등록 요청으로 경로·도구 권한·자격증명을 지정할 수 없습니다.
 
 워크스페이스 호스트는 종료 시 `await app.close()`를 호출합니다. 기존 `await app.runtime.close()`도 전체 워크스페이스 자원 해제를 유지합니다. 브라우저의 `PidaClient`는 Node 구현을 번들링하지 않는 타입 전용 의존성과 HTTP를 사용합니다.
+
+## 실행 중 입력의 재전송 계약 (0.8.18)
+
+세션 `steer` / `follow-up` 및 에이전트 작업 `steer` HTTP 요청은 `text`, `expectedRunId`와 선택적 `requestId`를 받습니다. 식별자는 영문·숫자로 시작하는 1~128자의 영문·숫자·점·밑줄·콜론·하이픈입니다. SDK는 식별자를 생성하고, 응답 확인에 실패한 동일 입력을 사용자가 다시 전송할 때 같은 식별자를 사용합니다. SDK 메서드의 마지막 선택적 인자로 직접 지정할 수도 있습니다.
+
+- 같은 소유 세션·실행·요청 ID·본문·모드이면 최초 접수 응답을 반환합니다. Pi 큐에 다시 넣지 않습니다.
+- 같은 요청 ID에 다른 본문·모드·실행을 붙이면 `INPUT_REQUEST_CONFLICT`로 거절합니다.
+- 접수 응답은 `requestId`, `runId`, `mode`, `disposition`, `durable: false`입니다. 접수는 실행 완료나 결과 승인과 다릅니다.
+- 한 세션의 현재 실행당 최대 256개 접수 결과를 메모리에 유지합니다. 세션 경로에서는 실행 종료 직후에도 다음 실행 전까지 원래 응답을 조회할 수 있습니다. 에이전트 작업 경로는 실행 중인 작업만 받습니다.
+- 다음 실행·서버 재시작에는 이전 접수 캐시를 재생하지 않습니다. `expectedRunId`가 다르면 거절합니다. 브라우저 새로고침·SDK 재생성 시 미확인 입력을 자동 복구하지 않습니다.
+- requestId 없는 기존 API 호출도 지원하지만 중복 제거 대상이 아닙니다. SDK와 서버를 함께 업데이트합니다.
+
+`/v1/info`는 실제 패키지 `version`, `knownLimits`, `capabilities.queuedInputDeduplication = "current-run"`, `cancellation = "cooperative"`, `tokenBudgetScope = "observed-model-responses"`를 제공합니다. 조직·명령의 `deadlineAt` 숫자는 Unix epoch **밀리초**이며 표시 모듈에서 KST로 변환합니다.

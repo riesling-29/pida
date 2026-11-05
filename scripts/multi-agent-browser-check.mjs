@@ -20,7 +20,7 @@ try {
   const client=new PidaClient({baseUrl:url,token:()=>token});
   const a=await client.createAgent({name:'코드 · A'}), b=await client.createAgent({name:'조사 · B'});
   await client.pauseAgent(a.id); await client.pauseAgent(b.id);
-  browser=await chromium.launch({executablePath:process.env.PIDA_BROWSER_EXECUTABLE || '/usr/bin/chromium',headless:true,args:['--no-sandbox']});
+  browser=await chromium.launch({...(process.env.PIDA_BROWSER_EXECUTABLE ? {executablePath:process.env.PIDA_BROWSER_EXECUTABLE} : {}),headless:true,args:['--no-sandbox']});
   const page=await browser.newPage({viewport:{width:1720,height:1120}}); page.on('pageerror',e=>errors.push(e.message));
   async function signIn() { await page.locator('#token').fill(token); await page.locator('#connect').click(); await page.locator('[data-mode="fleet"]').waitFor({state:'visible'}); await page.locator('[data-mode="fleet"]').click(); await page.locator('.fleet-pane').waitFor(); }
   await page.goto(url); await signIn();
@@ -39,7 +39,7 @@ try {
   checks.push('independent agent targets, drafts and actual queued jobs');
   const aj=(await client.listAgentJobs(a.id)).jobs[0], bj=(await client.listAgentJobs(b.id)).jobs[0];
   await panes.nth(0).getByRole('button',{name:'이 작업 취소',exact:true}).click();
-  await page.waitForFunction(()=>document.querySelector('.fleet-pane .fleet-status').textContent.includes('취소됨'));
+  await page.waitForFunction(()=>document.querySelector('.fleet-pane .fleet-status').textContent.includes('요청으로 중단됨'));
   assert.equal((await client.getAgentJob(b.id,bj.id)).status,'queued'); checks.push('exact-job cancellation leaves other agent queued');
   const separator=page.getByRole('separator').first(), rect=await separator.boundingBox();
   await page.mouse.move(rect.x+3,rect.y+30); await page.mouse.down(); await page.mouse.move(rect.x+140,rect.y+30); await page.mouse.up();

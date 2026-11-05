@@ -29,6 +29,8 @@ export interface SessionSummary {
   handoff?: SessionHandoff;
 }
 export interface RuntimeInfo {
+  version?: string;
+  knownLimits?: string[];
   /** Opaque lifetime identity, available only through authenticated discovery. */
   instanceId?: string;
   workSurface?: boolean;
@@ -37,6 +39,9 @@ export interface RuntimeInfo {
   provider?: { mode: string; model: string };
   capabilities?: {
     steering: boolean; followUp: boolean; queuedInputDurable: false;
+    queuedInputDeduplication?: "current-run";
+    cancellation?: "cooperative";
+    tokenBudgetScope?: "observed-model-responses";
     instructions: { scope: "project-root" | "none"; files: number };
     skills: number; ambientExtensions: false;
   };

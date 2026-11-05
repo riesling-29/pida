@@ -1,3 +1,4 @@
+import * as display from "../dist/display.js";
 // DOM handler/projection regression checks. No browser engine or live model is used here.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -34,7 +35,7 @@ function environment() {
   const modeTabs=['studio','workspace','service','agents','fleet'].map(mode=>{const n=new Node('button');n.dataset.mode=mode;return n;});
   const doc={getElementById:$,createElement:t=>new Node(t),createTextNode:t=>({textContent:t}),body:new Node('body'),hidden:false,addEventListener(){},querySelector:selector=>modeTabs.find(n=>selector.includes(`data-mode="${n.dataset.mode}"`))??new Node(),querySelectorAll:selector=>selector.includes('#mode-tabs')?modeTabs:[]};
   const storage=new Map(), timers=new Map();let timer=0;
-  const context={document:doc,RunState,submitQueuedInput,Date,Map,Set,URL,URLSearchParams,TextEncoder,Blob,crypto:webcrypto,console,explainError:x=>x??'',ResizeObserver:class{observe(){}},requestAnimationFrame:()=>{},setInterval:()=>1,clearInterval(){},setTimeout:fn=>{timers.set(++timer,fn);return timer;},clearTimeout:id=>timers.delete(id),window:{addEventListener(){}},location:{origin:'http://fixture.invalid',hash:'',pathname:'/',search:''},history:{replaceState(){}},sessionStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)}};
+  const context={display,document:doc,RunState,submitQueuedInput,Date,Map,Set,URL,URLSearchParams,TextEncoder,Blob,crypto:webcrypto,console,explainError:x=>x??'',ResizeObserver:class{observe(){}},requestAnimationFrame:()=>{},setInterval:()=>1,clearInterval(){},setTimeout:fn=>{timers.set(++timer,fn);return timer;},clearTimeout:id=>timers.delete(id),window:{addEventListener(){}},location:{origin:'http://fixture.invalid',hash:'',pathname:'/',search:''},history:{replaceState(){}},sessionStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)}};
   context.sessionDisplayMessages = sessionDisplayMessages; context.formatWorkReview = formatWorkReview; context.structuredClone = structuredClone;
   for(const [path,name] of [['run-input.js','createRunInput'],['run-details.js','createRunDetails'],['commands.js','createCommands'],['composition.js','createComposition']]) runInNewContext(read('examples/web/'+path).replace(/^import .*\n/gm,'').replace(/export function /g,'function ')+`\nthis.${name}=${name};`,context);
   return {context,$,storage,timers,doc};

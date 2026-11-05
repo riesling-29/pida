@@ -85,7 +85,7 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
   let overlay: OverlayHandle | undefined, panelVisible = false, overviewSelected = false, guided = true, lastPanel = "", lastSession: string | undefined, editorSubmitting = false;
   const actions = [["F1 메뉴", "menu"], ["F2 대화", "sessions"], ["F3 실행", "activity"], ["F4 도구", "tools"], ["F5 파일", "files"], ["F6 변경", "diff"], ["F7 개요", "overview"], ["F8 표시", "density"]] as const;
   const menuFKeys: Record<string, string> = { overview: "F7", sessions: "F2", activity: "F3", tools: "F4", files: "F5", diff: "F6", density: "F8" };
-  let hitRegions: { start: number; end: number; command: string }[] = [];
+  let hitRegions: { from: number; to: number; action: () => void }[] = [];
   const navigation = new MouseRegion({
     invalidate() {},
     render(width: number) {
@@ -96,14 +96,15 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
         width,
         stage,
         text => colors.accent(text),
+        { label: "F1", action: () => { void controller.submit("/menu"); } },
       );
-      hitRegions = painted.regions.map((region, index) => ({ start: region.from, end: region.to, command: actions[index]![1] }));
+      hitRegions = painted.regions;
       return [colors.band(painted.line, width)];
     },
   }, event => {
     if (event.type === "click" && event.button === "left") {
-      const hit = hitRegions.find(h => event.x >= h.start && event.x < h.end);
-      if (hit) { void controller.submit("/" + hit.command); return { handled: true }; }
+      const hit = hitRegions.find(h => event.x >= h.from && event.x < h.to);
+      if (hit) { hit.action(); return { handled: true }; }
     }
   });
   const divider = { invalidate() {}, render: () => Array.from({ length: terminal.rows }, () => colors.border("│")) };

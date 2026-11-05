@@ -1,3 +1,4 @@
+import * as display from "../dist/display.js";
 // Real HTTP/SDK + CommandManager + owned Pi sessions. Process timing is deterministic; no live LLM/browser is used.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -185,9 +186,9 @@ const outputChunk=(command,{text='',offset=0,nextOffset=offset,totalBytes=nextOf
 async function uiFixture(callbacks={}) {
   const document={hidden:false,createElement:tag=>new Element(tag),addEventListener(){}};
   const timers=new Map();let timerId=0;
-  const context={document,Date,Map,Set,console,setTimeout:fn=>{timers.set(++timerId,fn);return timerId;},clearTimeout:id=>timers.delete(id)};
+  const context={display,document,Date,Map,Set,console,setTimeout:fn=>{timers.set(++timerId,fn);return timerId;},clearTimeout:id=>timers.delete(id)};
   const source=await readFile(new URL('../examples/web/commands.js',import.meta.url),'utf8');
-  runInNewContext(source.replace('export function createCommands','function createCommands')+'\nthis.createCommands=createCommands;',context);
+  runInNewContext(source.replace(/^import .*\n/gm,'').replace('export function createCommands','function createCommands')+'\nthis.createCommands=createCommands;',context);
   const container=new Element('details');
   const panel=context.createCommands({container,list:async()=>listing(commandView()),read:async(_identity,id)=>outputChunk(commandView(id)),cancel:async()=>{throw new Error('unexpected cancel');},recover:async()=>{throw new Error('unexpected recovery');},...callbacks});
   const action=name=>{const element=container.descendants().find(node=>node.dataset.commandAction===name);assert.ok(element,'missing action '+name);return element;};

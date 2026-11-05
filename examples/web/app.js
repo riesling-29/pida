@@ -1,3 +1,4 @@
+import * as display from "/display.js";
 import { createStudio } from "/studio.js";
 import { RunState } from "/run-state.js";
 import { createRunInput } from "/run-input.js";
@@ -7,9 +8,9 @@ import { createAgents } from "/agents.js";
 import { createFleet } from "/fleet.js";
 import { createComposition } from "/composition.js";
 import { PidaClient, explainError, sessionDisplayMessages } from "/pida-client.js";
-const labels = globalThis.__pidaDisplay.executionStatusLabels;
-const traceLabels = globalThis.__pidaDisplay.traceEventLabels;
-const formatClockKst = (...args) => globalThis.__pidaDisplay.formatClockKst(...args);
+const labels = display.executionStatusLabels;
+const traceLabels = display.traceEventLabels;
+const formatClockKst = (...args) => display.formatClockKst(...args);
 const $ = (id) => document.getElementById(id);
 let token = "",
   sessionId,
@@ -249,6 +250,9 @@ async function connect() {
   token = $("token").value;
   const info = await client.getInfo();
   capabilities = info.capabilities ?? {};
+  $("execution-boundary").textContent = display.executionBoundaryNote(info);
+  $("execution-boundary").hidden = !$("execution-boundary").textContent;
+  $("core-version").textContent = info.version ? `core ${info.version}` : "core · 버전 미확인";
   $("model").textContent = info.provider
     ? `${info.provider.mode === "mock" ? "데모 모델" : info.provider.mode === "endpoint" ? "사용자 지정" : info.provider.mode} · ${info.provider.model}`
     : "호스트 설정 모델";

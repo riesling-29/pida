@@ -51,6 +51,14 @@ test('real Pi delegates, joins at maxConcurrent=1, continues once in the parent 
   await s.close();
   s=await AgentSupervisor.open({directory:path,maxConcurrent:1,resolvePrincipal:()=>owner,createRuntime:()=>{throw Error('must not replay');}});s.start();
   await delay(60);const restored=await s.getOrganization(org.id,owner);assert.equal(restored.joins[0].continuationJobId,parentJobs[1].id);assert.equal(s.jobs(parent.id,owner).length,2);
+  await s.close();
+  const statePath=join(path,'supervisor.json'), original=readFileSync(statePath,'utf8');
+  for(const change of [j=>{delete j.results;},j=>{j.results=[];},j=>{j.results[0].resultDigest='0'.repeat(64);},j=>{j.results[0].attemptId=j.results[1].attemptId;}]) {
+    const state=JSON.parse(original);change(state.organization.joins[0]);const damaged=JSON.stringify(state);writeFileSync(statePath,damaged);
+    await assert.rejects(AgentSupervisor.open({directory:path,createRuntime:()=>{throw Error('must not start damaged state');}}),{code:'ORG_STATE_INVALID'});
+    assert.equal(readFileSync(statePath,'utf8'),damaged,'failed validation must preserve evidence');
+  }
+  writeFileSync(statePath,original);
 });
 
 test('children completed before registration reconcile in reverse order; ready continuation persists and cancellation uses revision CAS',async t=>{
