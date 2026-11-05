@@ -229,6 +229,7 @@ export function createPidaServer(options: HttpOptions) {
         const agents = options.agents;
         if (!agents) throw new PidaError("AGENTS_DISABLED", 404);
         if (path === "/v1/agents" && req.method === "GET") { json(res, 200, { agents: agents.list(principal), personaSources: agents.listPersonaSources(principal) }); return; }
+        if (path === "/v1/agents/overview" && req.method === "GET") { json(res, 200, agents.overview(principal)); return; }
         if (path === "/v1/agents" && req.method === "POST") {
           const input = await body(req); keys(input, ["name", "role", "persona", "personaSourceId"]);
           const agent = await agents.register(principal, input as any);

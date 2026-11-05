@@ -1,7 +1,7 @@
 import { existsSync, lstatSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { hostname } from "node:os";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { PidaError, type PidaRuntime, type Principal } from "./runtime.js";
 import { savePrivate, isId } from "./private-state.js";
 import type { RunResult, StreamEvent, TraceEvent } from "./protocol.js";
@@ -49,6 +49,13 @@ export interface AgentSupervisorOptions {
     /** Observed job outcome only; do not invent an understanding/relationship-state transition. */
     checkpoint?(profile: AgentProfile, job: AgentJob, result: RunResult): Promise<void> | void;
   };
+}
+export type AdmissionReason = "ready" | "paused" | "recovery_required" | "workspace_recovery" | "workspace_busy" | "agent_busy" | "capacity" | "host_stopped";
+export interface AgentOverview {
+  scopeId: string;
+  maxConcurrent: number;
+  agents: { profile: AgentProfile; jobs: Pick<AgentJob, "id" | "status" | "runId" | "createdAt" | "currentTool" | "lastSignalAt" | "code">[]; admission: AdmissionReason }[];
+  personaSources: AgentPersonaSourceCatalogue;
 }
 interface State { version: 1; profiles: AgentProfile[]; jobs: AgentJob[] }
 interface Active { agentId: string; workspaceKey: string; controller: AbortController; done: Promise<void> }
@@ -209,6 +216,33 @@ export class AgentSupervisor {
     this.state.profiles.push(profile); this.persist(); return copy(profile);
   }
   list(principal: Principal): AgentProfile[] { this.principal(principal); return this.state.profiles.filter(p => p.owner === principal.id).map(copy); }
+  /** Read-only inventory. No runtime/session creation, prompts, tool payloads or host paths. */
+  overview(principal: Principal): AgentOverview {
+    const profiles = this.list(principal);
+    return {
+      scopeId: createHash("sha256").update(JSON.stringify([this.directory, principal.id])).digest("hex"),
+      maxConcurrent: this.maxConcurrent,
+      personaSources: this.listPersonaSources(principal),
+      agents: profiles.map(profile => {
+        const jobs = this.state.jobs.filter(j => j.agentId === profile.id);
+        return { profile, admission: this.admission(profile, jobs.find(j => j.status === "queued")),
+          jobs: jobs.map(j => ({ id: j.id, status: j.status, createdAt: j.createdAt, ...(j.runId ? { runId: j.runId } : {}),
+            ...(j.currentTool ? { currentTool: j.currentTool } : {}), ...(j.lastSignalAt ? { lastSignalAt: j.lastSignalAt } : {}), ...(j.code ? { code: j.code } : {}) })) };
+      }),
+    };
+  }
+  private admission(profile: AgentProfile, job?: AgentJob): AdmissionReason {
+    if (this.closed || this.faulted || !this.started) return "host_stopped";
+    if (profile.needsReconciliation) return "recovery_required";
+    if (profile.paused) return "paused";
+    const key = this.options.workspaceKey?.(copy(profile)) ?? "shared-host-workspace";
+    if (!validText(key, 2000)) throw new Error("Invalid host workspace key");
+    if (this.blockedWorkspaceKeys().includes(key)) return "workspace_recovery";
+    if ([...this.active.values()].some(a => a.agentId === profile.id)) return "agent_busy";
+    if ([...this.active.values()].some(a => a.workspaceKey === key) || (job?.code === "WORKSPACE_BUSY" && this.retryTimer)) return "workspace_busy";
+    if (this.active.size >= this.maxConcurrent) return "capacity";
+    return "ready";
+  }
   get(agentId: string, principal: Principal): AgentProfile { return copy(this.owned(agentId, principal)); }
   jobs(agentId: string, principal: Principal): AgentJob[] { this.owned(agentId, principal); return this.state.jobs.filter(j => j.agentId === agentId).map(copy); }
   getJob(jobId: string, principal: Principal): AgentJob { return copy(this.ownedJob(jobId, principal)); }
@@ -335,12 +369,9 @@ export class AgentSupervisor {
     for (const job of this.state.jobs) {
       if (this.active.size >= this.maxConcurrent) break;
       const profile = this.state.profiles.find(p => p.id === job.agentId)!;
-      if (job.status !== "queued" || profile.paused || profile.needsReconciliation) continue;
-      if (job.code === "WORKSPACE_BUSY" && this.retryTimer) continue;
+      if (job.status !== "queued" || this.admission(profile, job) !== "ready") continue;
       const workspaceKey = this.options.workspaceKey?.(copy(profile)) ?? "shared-host-workspace";
       if (!validText(workspaceKey, 2000)) throw new Error("Invalid host workspace key");
-      if (this.blockedWorkspaceKeys().includes(workspaceKey)) continue;
-      if ([...this.active.values()].some(a => a.agentId === profile.id || a.workspaceKey === workspaceKey)) continue;
       job.status = "running"; job.startedAt = now(); job.lastSignalAt = job.startedAt; this.persist();
       const active: Active = { agentId: profile.id, workspaceKey, controller: new AbortController(), done: Promise.resolve() };
       this.active.set(job.id, active);

@@ -1,4 +1,5 @@
-import type { AgentProfile, AgentJob, AgentPersonaSourceCatalogue } from "./agent-supervisor.js";
+import type { AgentProfile, AgentJob, AgentPersonaSourceCatalogue, AgentOverview } from "./agent-supervisor.js";
+export type { AgentOverview, AdmissionReason } from "./agent-supervisor.js";
 import type { CommandManager, CommandView } from "./commands.js";
 export type { CommandView, CommandStatus } from "./commands.js";
 import type { CompositionReport } from "./composition.js";
@@ -116,6 +117,7 @@ export class PidaClient {
   async cancelAgentJobCommand(id: string, jobId: string, commandId: string): Promise<ReturnType<CommandManager["cancel"]>> { return (await this.request(this.agentCommandPath(id, jobId, commandId) + "/cancel", "POST", {})).json(); }
   async acknowledgeAgentJobCommandRecovery(id: string, jobId: string, commandId: string, input: { inspected: true }): Promise<{command: CommandView}> { return (await this.request(this.agentCommandPath(id, jobId, commandId) + "/recovery", "POST", input)).json(); }
   async listAgents(): Promise<{ agents: AgentProfile[]; personaSources?: AgentPersonaSourceCatalogue }> { return (await this.request("/v1/agents")).json(); }
+  async getAgentOverview(): Promise<AgentOverview> { return (await this.request("/v1/agents/overview")).json(); }
   async createAgent(input: {name: string; role?: string; persona?: string; personaSourceId?: string}): Promise<AgentProfile> { return (await this.request("/v1/agents", "POST", input)).json(); }
   async getAgent(id: string): Promise<AgentProfile> { return (await this.request(this.agentPath(id))).json(); }
   async pauseAgent(id: string): Promise<AgentProfile> { return (await this.request(this.agentPath(id) + "/pause", "POST", {})).json(); }
