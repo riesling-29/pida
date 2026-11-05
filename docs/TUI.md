@@ -24,7 +24,7 @@ npm run tui -- .\my-agent
 
 `npm start` opens the **server log**, not the terminal interface. The new startup
 message states this and prints the exact attach command. In the TUI, the header
-must say `pida 0.8.17 · MULTI TUI`, with visible function-key menus and a prompt editor.
+must say `pida 0.8.17 · 멀티 · 에이전트 N · 패널 a/4` (with `· 1개 표시` when the empty home screen shows a single panel). Visible function-key menus and a prompt editor.
 If the header shows an older version, update the PR branch and rebuild the same
 checkout before relaunching. No second workspace server is needed.
 

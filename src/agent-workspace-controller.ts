@@ -1,6 +1,26 @@
 import { PidaClientError, type PidaClient, type AgentJob, type AgentOverview, type AgentProfile } from "./client.js";
-import { displayStatus, verificationCheckStatusLabel, verificationStatusLabel } from "./tui-labels.js";
 import { WorkspaceLayout, type WorkPane, type PaneBinding } from "./workspace-layout.js";
+
+/** Browser-served module: keep display helpers local (do not import tui-labels.js). */
+const statusDisplayNames: Record<string, string> = {
+  queued: "대기", running: "실행 중", completed: "실행 완료", failed: "실행 실패",
+  cancelled: "요청으로 중단됨", interrupted: "서버 종료로 끊김 · 확인 필요", limited: "실행 한도 도달",
+};
+function displayStatus(value: string | undefined): string {
+  if (!value) return "";
+  return statusDisplayNames[value] ?? value;
+}
+function verificationStatusLabel(status: string | undefined): string {
+  if (!status || status === "UNKNOWN") return "독립 검증 미확인 · UNKNOWN";
+  if (status === "PASS" || status === "PASSED") return "검증 통과";
+  if (status === "FAIL" || status === "FAILED") return "검증 실패";
+  return status;
+}
+function verificationCheckStatusLabel(status: string): string {
+  if (status === "PASSED") return "검증 통과";
+  if (status === "FAILED") return "검증 실패";
+  return status;
+}
 
 export const admissionLabels: Record<AgentOverview["agents"][number]["admission"], string> = {
   ready: "접수 가능", paused: "대기열 일시정지", recovery_required: "복구 확인 필요", workspace_recovery: "공유 작업공간 복구 대기",

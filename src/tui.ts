@@ -163,7 +163,7 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
       terminalText(change),
       ...(guided && !tight ? [colors.dim("검사 통과 ≠ 작업 전체 검증")] : []),
     ].join("\n");
-    detailTitle.setText(colors.strong(state.panel ? `${singleLine(state.panel.title, 100)} · Esc 닫기` : "작업 개요 · F8 표시 전환"));
+    detailTitle.setText(colors.strong(state.panel ? `${singleLine(state.panel.title, 100)}${state.panel.title.includes("Esc 닫기") ? "" : " · Esc 닫기"}` : "작업 개요 · F8 표시 전환"));
     const panelKey = state.panel ? JSON.stringify(state.panel) : "overview";
     // The outline is trusted UI markup with separately sanitized host values.
     // Sanitizing it a second time stripped its own section colors.
