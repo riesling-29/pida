@@ -22,7 +22,7 @@ try {
   await client.pauseAgent(a.id); await client.pauseAgent(b.id);
   browser=await chromium.launch({...(process.env.PIDA_BROWSER_EXECUTABLE ? {executablePath:process.env.PIDA_BROWSER_EXECUTABLE} : {}),headless:true,args:['--no-sandbox']});
   const page=await browser.newPage({viewport:{width:1720,height:1120}}); page.on('pageerror',e=>errors.push(e.message));
-  async function signIn() { await page.locator('#token').fill(token); await page.locator('#connect').click(); await page.locator('[data-mode="fleet"]').waitFor({state:'visible'}); await page.locator('[data-mode="fleet"]').click(); await page.locator('.fleet-pane').waitFor(); }
+  async function signIn() { await page.locator('#token').fill(token); await page.locator('#connect').click(); await page.locator('#mode-tabs button[data-mode="fleet"]').waitFor({state:'visible'}); await page.locator('#mode-tabs button[data-mode="fleet"]').click(); await page.locator('.fleet-pane').waitFor(); }
   await page.goto(url); await signIn();
   const panes=page.locator('.fleet-pane');
   await panes.nth(0).getByLabel('에이전트 선택',{exact:true}).selectOption(a.id);
