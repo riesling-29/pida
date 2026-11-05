@@ -1,6 +1,7 @@
 import {
   existsSync,
   mkdirSync,
+  lstatSync,
   readFileSync,
   readdirSync,
   renameSync,
@@ -28,6 +29,7 @@ export interface SavedSession extends SessionSummary {
 
 /** Application metadata only. Conversation serialization belongs to Pi. Single process. */
 export class SessionStore {
+  readonly instanceId = randomUUID();
   readonly directory: string;
   readonly piDirectory: string;
   private readonly indexDirectory: string;
@@ -35,7 +37,7 @@ export class SessionStore {
   private readonly lockValue = JSON.stringify({
     pid: process.pid,
     host: hostname(),
-    nonce: randomUUID(),
+    nonce: this.instanceId,
   });
   private readonly records = new Map<string, SavedSession>();
   constructor(directory: string) {
@@ -47,10 +49,13 @@ export class SessionStore {
       mkdirSync(dir, { recursive: true, mode: 0o700 });
     try {
       writeFileSync(this.lock, this.lockValue, { flag: "wx", mode: 0o600 });
-    } catch {
-      throw new Error(
-        "Workspace is locked. Stop its other server; after a crash, use pida unlock.",
-      );
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST")
+        throw new Error(`WORKSPACE_LOCK_IO: Cannot create runtime.lock (${(error as NodeJS.ErrnoException).code ?? "IO_ERROR"}). Check storage permissions and available space.`, { cause: error });
+      const owner = inspectRuntimeLock(this.directory);
+      if (owner.state === "live") throw new Error("WORKSPACE_ALREADY_RUNNING: Workspace is locked by a running process. Use pida open or pida tui to connect; stop the original server before restarting.");
+      if (owner.state === "stale") throw new Error("WORKSPACE_STALE_LOCK: The previous local process has stopped. Run pida unlock for this workspace, then start again.");
+      throw new Error("WORKSPACE_LOCK_UNVERIFIED: Cannot verify runtime.lock ownership. Inspect the lock and original host; it was preserved.");
     }
     try {
       for (const file of readdirSync(this.indexDirectory).filter((f) =>
@@ -131,6 +136,20 @@ export class SessionStore {
     )
       rmSync(this.lock);
   }
+}
+
+/** Read-only diagnosis. Unknown, remote, linked and inaccessible owners are never called stale. */
+export function inspectRuntimeLock(directory: string): { state: "absent" | "live" | "stale" | "unverified"; nonce?: string } {
+  const path = join(resolve(directory), "runtime.lock");
+  try {
+    const stat = lstatSync(path);
+    if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1 || stat.size > 4096) return { state: "unverified" };
+    const owner = JSON.parse(readFileSync(path, "utf8"));
+    if (!owner || owner.host !== hostname() || !Number.isSafeInteger(owner.pid) || owner.pid <= 0) return { state: "unverified" };
+    try { process.kill(owner.pid, 0); }
+    catch (error) { return { state: (error as NodeJS.ErrnoException).code === "ESRCH" ? "stale" : "unverified" }; }
+    return { state: "live", ...(typeof owner.nonce === "string" ? { nonce: owner.nonce } : {}) };
+  } catch (error) { return { state: (error as NodeJS.ErrnoException).code === "ENOENT" ? "absent" : "unverified" }; }
 }
 
 /** Explicit crash recovery on the same machine, never while the recorded process is live. */

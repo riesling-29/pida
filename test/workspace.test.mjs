@@ -64,6 +64,14 @@ test("CLI setup starts the workspace and configure reuses its running server", a
   configure.stderr.on("data", (chunk) => (result += chunk));
   assert.equal((await once(configure, "exit"))[0], 0, result);
   assert.match(result, /Pida settings:/);
+  const restarted = spawn(process.execPath, [cli, "start", dir], { stdio: ["ignore", "pipe", "pipe"] });
+  let reopened = "";
+  restarted.stdout.on("data", c => reopened += c); restarted.stderr.on("data", c => reopened += c);
+  assert.equal((await once(restarted, "exit"))[0], 0, reopened);
+  assert.match(reopened, /Pida already running:/);
+  assert.equal(server.exitCode, null);
+  assert.ok(!reopened.includes(workspaceEnvironment(dir).PIDA_API_TOKEN));
+
   assert.match(startup, /server log, not the TUI/);
   assert.match(startup, /npm run tui --/);
   assert.ok(!startup.includes(workspaceEnvironment(dir).PIDA_API_TOKEN));

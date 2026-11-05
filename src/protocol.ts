@@ -12,6 +12,8 @@ export interface SessionSummary {
   handoff?: SessionHandoff;
 }
 export interface RuntimeInfo {
+  /** Opaque lifetime identity, available only through authenticated discovery. */
+  instanceId?: string;
   persistence: boolean;
   tools: { name: string; description: string; permitted: boolean }[];
   provider?: { mode: string; model: string };

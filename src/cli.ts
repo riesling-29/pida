@@ -16,6 +16,7 @@ import {
 } from "./workspace.js";
 import { nativeProviderCatalog } from "./provider-catalog.js";
 import { unlockWorkspaceState } from "./workspace-unlock.js";
+import { inspectRuntimeLock } from "./storage.js";
 import { PidaClient } from "./client.js";
 import { discoverPrograms, createManifest } from "./program-catalog.js";
 import { inspectProgramProxy } from "./program-proxy.js";
@@ -184,30 +185,33 @@ async function startWorkspace(
   open: boolean,
   setup: boolean,
 ) {
-  if (setup) {
-    const config = readConfig(directory),
-      token = workspaceEnvironment(directory).PIDA_API_TOKEN;
+  const config = readConfig(directory), token = workspaceEnvironment(directory).PIDA_API_TOKEN;
+  const lock = inspectRuntimeLock(join(directory, config.stateDir));
+  if (lock.state === "live" && lock.nonce && token) {
     const available = await fetch(
-      `http://127.0.0.1:${config.port}/v1/provider`,
+      `http://127.0.0.1:${config.port}/v1/info`,
       {
         headers: { Authorization: `Bearer ${token ?? ""}` },
         signal: AbortSignal.timeout(1500),
         redirect: "error",
       },
     )
-      .then((response) => response.ok)
+      .then(async response => response.ok && (await response.json()).instanceId === lock.nonce)
       .catch(() => false);
     if (available) {
       if (open)
-        await openBrowser(directory, true).catch((e) =>
+        await openBrowser(directory, setup).catch((e) =>
           console.error(e.message),
         );
       console.log(
-        `Pida settings: http://127.0.0.1:${config.port} (use the model settings button after login)`,
+        setup ? `Pida settings: http://127.0.0.1:${config.port} (use the model settings button after login)`
+          : `Pida already running: http://127.0.0.1:${config.port}\nConnected to the existing workspace server.\nOpen the terminal UI: npm run tui -- "${directory}"\nTo apply configuration changes, stop the original server first.`,
       );
       return;
     }
   }
+  if (lock.state === "stale") throw new Error(`WORKSPACE_STALE_LOCK: The previous local process has stopped.\nRecover: node dist/cli.js unlock "${directory}"\nThen: npm start -- "${directory}" --open`);
+  if (lock.state === "unverified") throw new Error("WORKSPACE_LOCK_UNVERIFIED: Cannot verify runtime.lock ownership. Inspect the lock and original host; it was preserved.");
   // CLI owns its process environment, including credentials used by trusted business tools.
   const env = workspaceEnvironment(directory);
   for (const [key, value] of Object.entries(env))

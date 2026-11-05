@@ -7,7 +7,7 @@ An embedded, reusable **Pi-based agent harness** for applications. Bring the pac
 
 **Product goals (2026-11-02):** a reusable core for different agent forms, plus a ready-to-use home harness for coding and personal-assistant work that can replace the user's Codex/OpenClaw workflows. Tools, channels and private provider connectors must be attachable without editing the core. These are delivery requirements, not claims of current feature parity. See [core and home-harness requirements, missing capabilities and acceptance gates](docs/CORE-AND-HOME-HARNESS.md).
 
-**Workspace 0.8.14:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+**Workspace 0.8.15:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
 
 New in 0.8.14: **actual multi-agent tabs and nested split panes in both Web and Pi TUI**. Run `npm run tui -- ./my-agent`; the header says `MULTI TUI`. Up to eight tabs/four panels, independent drafts, owned job controls, saved layout and detach without cancellation reuse the existing supervisor. Single-session mode remains `--main`. See [home setup, controls, actual PTY evidence and browser/Windows limitations](docs/MULTI-AGENT-0.8.14.md).
 
@@ -45,7 +45,7 @@ New in 0.8.3: optional official Pi Codemode with authorized nested calls, manage
 
 ## Quick start — choose npm, pnpm or bun
 
-For the 0.8.14 walkthrough, use **npm** and the [user guide](docs/USER-GUIDE.ko.md). The current pnpm lockfile is missing the direct Pi TUI dependency, so its frozen install fails until that lockfile is synchronized. This is separate from a workspace runtime lock.
+The [user guide](docs/USER-GUIDE.ko.md) uses npm. Version 0.8.15 synchronizes the direct Pi TUI dependency in the pnpm lockfile. Repeating `start` reconnects to the authenticated instance for this workspace; stopped or unverifiable owners receive distinct recovery guidance.
 
 Requires **Git and Node.js 22.19+**, including when installing with bun. The production runtime stays on Node.
 

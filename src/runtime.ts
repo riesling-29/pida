@@ -840,6 +840,7 @@ export class PidaRuntime {
     const p = principalCopy(principal);
     return {
       persistence: !!this.store,
+      ...(this.store ? { instanceId: this.store.instanceId } : {}),
       provider: this.options.providerInfo,
       capabilities: { steering: true, followUp: true, queuedInputDurable: false, ...this.resources.info() },
       tools: this.options.tools!.map((t) => ({

@@ -28,6 +28,9 @@ importers:
       '@earendil-works/pi-mcp':
         specifier: 1.2.0
         version: 1.2.0
+      '@earendil-works/pi-tui':
+        specifier: 1.2.0
+        version: 1.2.0
       quickjs-emscripten:
         specifier: 0.32.0
         version: 0.32.0
