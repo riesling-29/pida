@@ -1,0 +1,81 @@
+{
+  "profile": "pida-tui-pty/1",
+  "version": "0.8.11",
+  "platform": "Linux PTY",
+  "node": "v24.22.1",
+  "color_mode": "truecolor",
+  "checks": [
+    {
+      "name": "CLI attaches to local host and enters alternate-screen Pi renderer",
+      "status": "PASS"
+    },
+    {
+      "name": "default workspace visibly exposes intent structure execution and judgment",
+      "status": "PASS"
+    },
+    {
+      "name": "real CLI paints approved black-green background and cool light text",
+      "status": "PASS"
+    },
+    {
+      "name": "TUI does not mutate terminal palette or font",
+      "status": "PASS"
+    },
+    {
+      "name": "F1 opens a real keyboard menu without starting an agent run",
+      "status": "PASS"
+    },
+    {
+      "name": "bracketed Korean paste does not submit automatically",
+      "status": "PASS"
+    },
+    {
+      "name": "real terminal request executes actual Pi mock-model tool loop",
+      "status": "PASS"
+    },
+    {
+      "name": "resize and help remain interactive",
+      "status": "PASS"
+    },
+    {
+      "name": "session selector opens without spawning another run",
+      "status": "PASS"
+    },
+    {
+      "name": "Ctrl+D cleanly detaches and restores terminal buffer",
+      "status": "PASS"
+    },
+    {
+      "name": "terminal canonical input and echo restored",
+      "status": "PASS"
+    },
+    {
+      "name": "independent host survives TUI exit",
+      "status": "PASS"
+    },
+    {
+      "name": "application credential never printed in TUI",
+      "status": "PASS"
+    },
+    {
+      "name": "new terminal process resumes history without replay",
+      "status": "PASS"
+    }
+  ],
+  "source_sha256": {
+    "package.json": "2ff65b78d0fa9cc90197c1c85a9696ea43331f2c26ea3df53c6ee7e0b99eda7b",
+    "src/tui.ts": "9f3117cfa487df034a84510dc289807678ff7f4e821a5c3fcecc3cd9431e3117",
+    "src/tui-theme.ts": "d83c070c87d7176e8e241cbb808bf2fb39add02ba0809033f4c5eeef10ead5de",
+    "src/tui-controller.ts": "3599a719b2bc4353c4afc1d5aa7d71d4531515cc587d2ba1ee34d19e38f6644a",
+    "src/cli.ts": "d2096e315c428a13a7c8c5b9cf0a83734a5e8740cd5cc5ff3f9c2466efafe2c0",
+    "src/client.ts": "cc6713d5251e56db8c4e76b064b39b58e56f74ec6f8a754c6d1ebea077dc42c8",
+    "src/runtime.ts": "6d49b68f582cad66b5d47d5af2f253e92ff0e53fc6ab9f1d963f4b553fd12ed7",
+    "src/http.ts": "564677ef2a9ad88e9f5c89a9825aafef6a1b3aef55f5f3fd7e52807fd0bbebd6",
+    "examples/web/app.js": "d6c950fe88311b0e312066479b6710dec8a4c9fe617e0e6a54606ae99aadd1e2",
+    "scripts/tui-terminal-check.py": "771f0a4d554bc9e9df8900b52943867cb38ab329d292da0471e924535797950e"
+  },
+  "limits": [
+    "Actual Pi, HTTP, CLI, editor and PTY; mock model decisions.",
+    "No browser engine, live LLM, company gateway or Windows-terminal/IME validation."
+  ]
+}

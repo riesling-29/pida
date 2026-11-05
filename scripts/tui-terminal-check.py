@@ -24,6 +24,7 @@ import urllib.request
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--color', action='store_true', help='Exercise actual 24-bit TUI painting as well as host/input integration')
     args = parser.parse_args()
     if args.output.exists():
         raise ValueError('OUTPUT_EXISTS')
@@ -71,6 +72,9 @@ def main():
             fcntl.ioctl(slave,termios.TIOCSWINSZ,struct.pack('HHHH',32,112,0,0))
             initial=termios.tcgetattr(slave)
             env={**os.environ,'TERM':'xterm-256color','NO_COLOR':'1','PIDA_API_TOKEN':token}
+            if args.color:
+                env.pop('NO_COLOR',None)
+                env['COLORTERM']='truecolor'
             child=subprocess.Popen(['node',str(cli),'tui',str(workspace),'--new'],stdin=slave,stdout=slave,stderr=slave,env=env)
             capture=bytearray()
             def pump():
@@ -88,6 +92,9 @@ def main():
             check('CLI attaches to local host and enters alternate-screen Pi renderer',child.poll() is None)
             wait_for(lambda: 'JUDGMENT'.encode() in capture,pump)
             check('default workspace visibly exposes intent structure execution and judgment', all(s.encode() in capture for s in ['TUI','INTENT','STRUCTURE','EXECUTION','JUDGMENT','F1 메뉴']))
+            if args.color:
+                check('real CLI paints approved black-green background and cool light text',b'\x1b[48;2;1;2;1m' in capture and b'\x1b[38;2;187;198;195m' in capture)
+                check('TUI does not mutate terminal palette or font',all(b'\x1b]'+str(n).encode()+b';' not in capture for n in [4,10,11,50]))
             os.write(master,b'\x1bOP')
             wait_for(lambda:'기능 메뉴'.encode() in capture,pump)
             os.write(master,b'\x1b');time.sleep(.1);pump()
@@ -135,9 +142,9 @@ def main():
             server.terminate()
             try:server.communicate(timeout=5)
             except subprocess.TimeoutExpired:server.kill();server.communicate()
-    files=['package.json','src/tui.ts','src/tui-controller.ts','src/cli.ts','src/client.ts','src/runtime.ts','src/http.ts','examples/web/app.js','scripts/tui-terminal-check.py']
+    files=['package.json','src/tui.ts','src/tui-theme.ts','src/tui-controller.ts','src/cli.ts','src/client.ts','src/runtime.ts','src/http.ts','examples/web/app.js','scripts/tui-terminal-check.py']
     report={'profile':'pida-tui-pty/1','version':json.loads((root/'package.json').read_text())['version'],'platform':'Linux PTY',
-            'node':subprocess.check_output(['node','--version'],text=True).strip(),'checks':checks,
+            'node':subprocess.check_output(['node','--version'],text=True).strip(),'color_mode':'truecolor' if args.color else 'NO_COLOR','checks':checks,
             'source_sha256':{name:hashlib.sha256((root/name).read_bytes()).hexdigest() for name in files},
             'limits':['Actual Pi, HTTP, CLI, editor and PTY; mock model decisions.','No browser engine, live LLM, company gateway or Windows-terminal/IME validation.']}
     args.output.parent.mkdir(parents=True,exist_ok=True)

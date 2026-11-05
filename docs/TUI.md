@@ -1,6 +1,6 @@
 # Terminal and Web on the same Pida host
 
-Available from 0.8.7; current work surface 0.8.8. The terminal uses the existing Pi TUI 1.2.0 components and
+Available from 0.8.7; current work surface/theme 0.8.11. The terminal uses the existing Pi TUI 1.2.0 components and
 Pida HTTP client. One separately running host owns sessions, Pi execution,
 provider/OAuth configuration, tools, permissions, persistence and workspace
 locks. Web and TUI are views of that same host.
@@ -24,7 +24,7 @@ npm run tui -- .\my-agent
 
 `npm start` opens the **server log**, not the terminal interface. The new startup
 message states this and prints the exact attach command. In the TUI, the header
-must say `pida 0.8.8 · TUI`, with visible function-key menus and a prompt editor.
+must say `pida 0.8.11 · TUI`, with visible function-key menus and a prompt editor.
 If the header shows an older version, update the PR branch and rebuild the same
 checkout before relaunching. No second workspace server is needed.
 
@@ -66,10 +66,27 @@ cognitive benefit or establish Terry Davis's motives.
 | Adapt density | Side-by-side conversation/overview at 104+ columns; narrow screens retain goal and verification, with F7 opening the full overview; F8 toggles guidance |
 | Reduce routine effort | Session attach and observation reuse server state; no duplicate model run or per-tool confirmation loop |
 
-The accent follows the terminal palette; `NO_COLOR=1` disables Pida's decorative
-colors. Status is written in text as well. Untrusted model, file and tool content
+From 0.8.11 the actual renderer uses the approved near-black green background
+(`#010201`) and cool light text (`#bbc6c3`), with subtly shaded section headers,
+menus and selection. Blank cells are painted too; the terminal's global palette
+and font settings are not changed. Pi detects truecolor support and otherwise
+uses a 256-color approximation (near-black shades may become plain black).
+`NO_COLOR=1` disables Pida's decorative colors. Status is written in text as well.
+Untrusted model, file and tool content
 is stripped of terminal control sequences before display. Message and panel
 display limits are explicit; they do not truncate the server's saved history.
+
+The earlier green Web/TUI HTML previews were interactive **design prototypes**.
+0.8.11 applies their color direction to the existing real TUI. Multi-agent tabs,
+arbitrary split panes and structured request-target binding in those previews
+remain planned, as recorded in the shared-work-surface and multi-agent design
+documents. A preview is not evidence that those runtime connections exist.
+
+Font selection belongs to the terminal application. Pida cannot apply an HTML
+font stack to Windows Terminal. In a truecolor-capable terminal that is not
+detected automatically, `$env:COLORTERM = 'truecolor'` before launching enables
+Pi's truecolor path. If `NO_COLOR` is set, the terminal remains monochrome until
+that opt-out is removed. No credential or workspace configuration needs changing.
 
 ## Commands and controls
 
@@ -131,7 +148,7 @@ native command PTY, daemon scheduler, shell permission, OS sandbox or auto-updat
 The terminal UI's own PTY verification is distinct from agent command execution.
 
 Actual Linux PTY, Pi/HTTP cross-client and DOM-handler evidence is recorded in
-[0.8.8 validation](TUI-0.8.8.md) and [historical 0.8.7 validation](TUI-VALIDATION.md). Windows Terminal/PowerShell and interactive
+[0.8.11 theme validation](TUI-0.8.11.md), [0.8.8 validation](TUI-0.8.8.md) and [historical 0.8.7 validation](TUI-VALIDATION.md). Windows Terminal/PowerShell and interactive
 Korean IME require user-environment validation; synthetic Korean paste and width
 checks are not a claim of native IME testing. Live LLM, company gateway and actual
 browser rendering were not executed for this patch.

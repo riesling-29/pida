@@ -127,13 +127,21 @@ class TerminalFixture {
 test('actual Pi renderer/editor handles Korean paste, responsive panels, session selection and control sanitization',async()=>{
   const terminal=new TerminalFixture(), c=new TuiController({}), s=c.state;
   s.connected=true;s.session={sessionId:'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',title:'제조 설비 확인',messages:[{role:'user',text:'요구사항을 보존해 주세요'},{role:'assistant',text:'확인 중\x1b]52;c;ZXZpbA==\x07\x1b[2J입니다'}],running:false,runs:1,tools:[],autoCompaction:true,lastStatus:'completed'};
-  const view=createTuiView(c,{terminal,workspace:'D:/pida/my-agent',color:false}), submitted=[];
+  const view=createTuiView(c,{terminal,workspace:'D:/pida/my-agent',color:true,colorMode:'truecolor'}), submitted=[];
   c.submit=async text=>{submitted.push(text);return true;};view.start();await delay(50);
   const screen=view.getScreenLines().map(stripTerminalSequences).join('\n');assert.match(screen,/제조 설비 확인/);assert.match(screen,/독립 검증 미확인/);assert.doesNotMatch(screen,/ZXZpbA/);
+  // Inspect actual Pi frames, including blank cells: the prototype colors must
+  // reach the renderer, survive its composed resets and leave no shell palette changes.
+  for(const line of view.getScreenLines()){
+    assert.equal(visibleWidth(line),terminal.columns);
+    assert.ok(line.includes('\x1b[48;2;1;2;1m'));
+    assert.ok(line.includes('\x1b[38;2;187;198;195m'));
+  }
+  assert.doesNotMatch(terminal.output,/\x1b\](?:4|10|11|50);/);
   terminal.input('\x1b[200~한글 입력\n둘째 줄\x1b[201~');await delay(20);assert.equal(view.editor.getExpandedText(),'한글 입력\n둘째 줄');assert.equal(submitted.length,0);
   terminal.input('\r');await delay(30);assert.deepEqual(submitted,['한글 입력\n둘째 줄']);
   s.panel={title:'변경 내역',text:'diff --git a/a.ts b/a.ts\n+hello 한글'};c.onChange();terminal.columns=64;terminal.rows=24;terminal.resize();await delay(40);
-  const narrow=view.getScreenLines();assert.ok(narrow.every(l=>visibleWidth(l)<=64));assert.match(narrow.map(stripTerminalSequences).join('\n'),/변경 내역/);
+  const narrow=view.getScreenLines();assert.ok(narrow.every(l=>visibleWidth(l)===64&&l.includes('\x1b[48;2;1;2;1m')));assert.match(narrow.map(stripTerminalSequences).join('\n'),/변경 내역/);
   c.onSessions([{sessionId:s.session.sessionId,title:'같은 세션',running:false}]);await delay(20);terminal.input('\x1b');await delay(20);
   view.stop();c.close();assert.ok(terminal.output.includes('\x1b[?1049h'));assert.ok(terminal.output.includes('\x1b[?1049l'));
   assert.equal(terminalText('safe\x1b]0;evil\x07\x1b[31mRED\x1b[0m\x00'), 'safeRED');

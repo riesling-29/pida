@@ -31,7 +31,7 @@ Object.assign(controller.state, {
   ],
 });
 const clock = Date.now; Date.now = () => Date.parse('2026-11-04T09:00:07Z');
-const view = createTuiView(controller, { terminal, workspace: 'D:/pida/my-agent', target: 'D:/pida/demo-project', color: true });
+const view = createTuiView(controller, { terminal, workspace: 'D:/pida/my-agent', target: 'D:/pida/demo-project', color: true, colorMode: 'truecolor' });
 const captures = [];
 async function capture(name) {
   await delay(35);
@@ -41,6 +41,9 @@ async function capture(name) {
 }
 try {
   view.start(); await capture('wide-running');
+  controller.state.panel = { title: 'app/index.html', text: '<nav aria-label="설비 메뉴">\n  <a href="#home">홈</a>\n  <a href="#analysis">분석</a>\n  <a href="#alerts">점검 알림</a>\n</nav>\n\n// 파일·대화 배치 예시 · 실제 변경 아님' };
+  controller.onChange(); await capture('wide-file');
+  controller.state.panel = undefined; controller.onChange();
   terminal.input('\x1bOP'); await capture('menu'); terminal.input('\x1b');
   terminal.columns = 64; terminal.rows = 24; terminal.resize(); await capture('narrow-running');
   terminal.input('\x1b[18~'); await capture('narrow-overview'); terminal.input('\x1b');

@@ -1,20 +1,17 @@
 import {
-  Container, Editor, HStack, MouseRegion, ProcessTerminal, ScrollView, SelectList, Text, TuiAltScreen, VStack,
+  Box, Editor, HStack, MouseRegion, ProcessTerminal, ScrollView, SelectList, Text, TuiAltScreen, VStack,
   isKeyRelease, matchesKey, stripTerminalSequences, truncateToWidth, visibleWidth,
-  type AutocompleteProvider, type OverlayHandle, type Terminal, type SelectItem,
+  type AutocompleteProvider, type OverlayHandle, type Terminal, type SelectItem, type TerminalColorMode,
 } from "@earendil-works/pi-tui";
 import { readFileSync } from "node:fs";
 import { PidaClient, sessionDisplayMessages } from "./client.js";
 import { TuiController, terminalCommands, type TuiState } from "./tui-controller.js";
+import { terminalPalette } from "./tui-theme.js";
 
 /** Host/model/file content must never introduce terminal controls (OSC clipboard/title etc.). */
 export function terminalText(value: unknown, limit = 48_000): string {
   const text = stripTerminalSequences(String(value ?? "")).replace(/[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, "").replace(/\r/g, "");
   return text.length <= limit ? text : text.slice(0, limit) + "\n[표시 한도 · 원문은 Web UI에서 확인]";
-}
-function palette(color: boolean) {
-  const wrap = (code: string) => (s: string) => color ? `\x1b[${code}m${s}\x1b[0m` : s;
-  return { strong: wrap("1"), dim: wrap("2"), accent: wrap("33"), bad: wrap("31"), good: wrap("32") };
 }
 const phaseNames: Record<string, string> = { run_started: "시작", turn_started: "모델 응답 대기", tool_started: "도구 실행", tool_completed: "도구 완료", tool_failed: "도구 실패", retry_scheduled: "재시도 대기", auto_compaction_start: "대화 압축", run_finished: "실행 종료" };
 const statusNames: Record<string, string> = { completed: "실행 완료 · 독립 검증 미확인", failed: "실패", cancelled: "중단됨", limited: "실행 한도 도달", interrupted: "서버 종료로 중단됨" };
@@ -23,9 +20,10 @@ const singleLine = (value: unknown, limit = 120) => terminalText(value, limit).r
 /** Fixed-height signals must clip at the current render width, including between polls on resize. */
 class SignalLines {
   private text = "";
+  constructor(private paint: (s: string, width: number) => string = s => s) {}
   setText(text: string) { this.text = text; }
   invalidate() {}
-  render(width: number) { return this.text.split("\n").map(text => " ".slice(0, width) + truncateToWidth(text, Math.max(0, width - 2))); }
+  render(width: number) { return this.text.split("\n").map(text => this.paint(" ".slice(0, width) + truncateToWidth(text, Math.max(0, width - 2)), width)); }
 }
 
 /** Only observed facts. No invented plan, inferred completion criteria or progress percentage. */
@@ -48,17 +46,24 @@ export function workSignals(state: TuiState, now = Date.now()) {
 }
 
 /** Stable dense surface; Pi owns layout, Unicode cells, editor, paste, scroll and terminal lifecycle. */
-export function createTuiView(controller: TuiController, options: { terminal?: Terminal; workspace: string; target?: string; color?: boolean }) {
+export function createTuiView(controller: TuiController, options: { terminal?: Terminal; workspace: string; target?: string; color?: boolean; colorMode?: TerminalColorMode }) {
   const terminal = options.terminal ?? new ProcessTerminal();
-  const tui = new TuiAltScreen(terminal, true, undefined, { copyOnSelect: false, openUrl: () => {}, mouse: true });
-  const colors = palette(options.color ?? !process.env.NO_COLOR);
-  const theme = { selectedPrefix: colors.accent, selectedText: colors.strong, description: colors.dim, scrollInfo: colors.dim, noMatch: colors.dim };
-  const header = new SignalLines(), context = new SignalLines(), status = new SignalLines(), footer = new SignalLines();
-  const conversationTitle = new SignalLines(), detailTitle = new SignalLines(), compact = new SignalLines(), inputTitle = new SignalLines();
+  const colors = terminalPalette(options.color ?? !process.env.NO_COLOR, options.colorMode);
+  // Use Pi's protected final-line styling hook; layout, cursor, overlays, selection,
+  // input and differential painting remain owned by the pinned upstream renderer.
+  const tui: TuiAltScreen = new (class extends TuiAltScreen {
+    protected override applyLineResets(lines: string[]) {
+      return super.applyLineResets(lines.map(line => colors.frameLine(line, this.terminal.columns)));
+    }
+  })(terminal, true, undefined, { copyOnSelect: false, openUrl: () => {}, mouse: true });
+  const theme = { selectedPrefix: colors.accent, selectedText: colors.selected, description: colors.dim, scrollInfo: colors.dim, noMatch: colors.dim };
+  const header = new SignalLines(colors.band), context = new SignalLines(), status = new SignalLines(colors.band), footer = new SignalLines();
+  const conversationTitle = new SignalLines(colors.band), detailTitle = new SignalLines(colors.band), compact = new SignalLines(), inputTitle = new SignalLines(colors.band);
   const conversation = new Text("", 1, 1), detail = new Text("", 1, 1);
-  const transcript = new ScrollView(conversation, { follow: "end", primary: true });
-  const inspector = new ScrollView(detail, { follow: "none" });
-  const editor = new Editor(tui, { borderColor: colors.accent, selectList: theme }, { paddingX: 1, autocompleteMaxVisible: 6 });
+  const scrollColors = { scrollbarTrackStyle: colors.border, scrollbarThumbStyle: colors.accent };
+  const transcript = new ScrollView(conversation, { follow: "end", primary: true, ...scrollColors });
+  const inspector = new ScrollView(detail, { follow: "none", ...scrollColors });
+  const editor = new Editor(tui, { borderColor: colors.border, selectList: theme }, { paddingX: 1, autocompleteMaxVisible: 6 });
   // Slash-only completion does not read the local filesystem or bypass the host's file permissions.
   const autocomplete: AutocompleteProvider = {
     triggerCharacters: ["/"],
@@ -88,7 +93,7 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
         if (start + visibleWidth(value) > width) break;
         hitRegions.push({ start, end: start + visibleWidth(value) - 1, command }); text += value;
       }
-      return [colors.accent(truncateToWidth(text, width))];
+      return [colors.band(colors.accent(truncateToWidth(text, width)), width)];
     },
   }, event => {
     if (event.type === "click" && event.button === "left") {
@@ -96,7 +101,7 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
       if (hit) { void controller.submit("/" + hit.command); return { handled: true }; }
     }
   });
-  const divider = { invalidate() {}, render: () => Array.from({ length: terminal.rows }, () => colors.dim("│")) };
+  const divider = { invalidate() {}, render: () => Array.from({ length: terminal.rows }, () => colors.border("│")) };
   const document = new HStack([
     { component: new VStack([{ component: conversationTitle, basis: 1 }, { component: transcript, basis: 0, grow: 1 }]), grow: 3, basis: 0, minSize: 12, visible: viewport => !(panelVisible || overviewSelected) || viewport.width >= 104 },
     { component: divider, basis: 1, visible: viewport => viewport.width >= 104 },
@@ -138,20 +143,22 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
     const outline = [
       colors.accent("목표 / INTENT"), short(signals.goal || "아직 요청 없음 · 아래에 입력"), ...gap,
       colors.accent("구조 / STRUCTURE"), state.info ? `허용 도구 ${state.info.tools.filter(t => t.permitted).length}개 · F4 결과` : "도구 권한 정보 미확인",
-      capability ? `지침 ${capability.instructions.files} · 스킬 ${capability.skills}` : "지침·스킬 정보 미확인",
+      capability ? singleLine(`지침 ${capability.instructions.files} · 스킬 ${capability.skills}`) : "지침·스킬 정보 미확인",
       ...(guided && !tight ? [colors.dim("계획·가정은 대화에서 확인")] : []), ...gap,
       colors.accent("실행 / EXECUTION"), short(signals.phase),
       `도구 완료 ${signals.complete} · 실패 ${signals.failed}${signals.elapsed === undefined ? "" : ` · ${signals.elapsed}초`}`,
       ...(signals.last?.code ? ["사유 " + singleLine(signals.last.code)] : []),
-      ...(tight ? [] : [colors.dim(signals.run ? `run ${signals.run.slice(0, 8)}${state.traceGap ? " · 기록 일부" : ""} · F3 상세` : "아직 실행 없음")]), ...gap,
-      colors.accent("판단 / JUDGMENT"), signals.verification,
+      ...(tight ? [] : [colors.dim(signals.run ? `run ${singleLine(signals.run.slice(0, 8))}${state.traceGap ? " · 기록 일부" : ""} · F3 상세` : "아직 실행 없음")]), ...gap,
+      colors.accent("판단 / JUDGMENT"), singleLine(signals.verification),
       ...(checks.length ? [short(`종료 때 검사: 유효 통과 ${checks.filter(v => v.status === "PASSED" && v.current_at_run_end).length} · 실패 ${checks.filter(v => v.status === "FAILED").length} · 오래됨 ${checks.filter(v => !v.current_at_run_end).length}`)] : ["기록된 검사 결과 없음"]),
-      change,
+      terminalText(change),
       ...(guided && !tight ? [colors.dim("검사 통과 ≠ 작업 전체 검증")] : []),
     ].join("\n");
     detailTitle.setText(colors.strong(state.panel ? `${singleLine(state.panel.title, 100)} · Esc 닫기` : "작업 개요 · F8 표시 전환"));
     const panelKey = state.panel ? JSON.stringify(state.panel) : "overview";
-    detail.setText(state.panel ? terminalText(state.panel.text) : terminalText(outline));
+    // The outline is trusted UI markup with separately sanitized host values.
+    // Sanitizing it a second time stripped its own section colors.
+    detail.setText(state.panel ? terminalText(state.panel.text) : outline);
     if (panelKey !== lastPanel) { inspector.scrollToStart(); lastPanel = panelKey; }
     if (lastSession !== session?.sessionId) { transcript.scrollToEnd(); inspector.scrollToStart(); tui.resetTextSelection(); lastSession = session?.sessionId; }
     compact.setText(`목표 ${singleLine(signals.goal || "입력 대기", 160)}\n${signals.verification} · F7 작업 개요`);
@@ -168,7 +175,7 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
     const list = new SelectList(items, Math.max(3, Math.min(14, terminal.rows - 8)), theme, { minPrimaryColumnWidth: 18, maxPrimaryColumnWidth: 30 });
     list.onCancel = dismiss;
     list.onSelect = item => { dismiss(); onSelect(item); };
-    const content = new (class extends Container { handleInput(data: string) { list.handleInput(data); } })();
+    const content = new (class extends Box { handleInput(data: string) { list.handleInput(data); } })(1, 1, colors.panel);
     content.addChild(new Text(singleLine(title, 200) + "\n↑↓ 선택 · Enter 열기 · Esc 닫기", 1, 1)); content.addChild(list);
     overlay = tui.showOverlay(content, { width: "85%", maxHeight: "85%" });
   };
