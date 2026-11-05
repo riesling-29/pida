@@ -17,8 +17,10 @@ try {
   const f = fauxProvider(); f.setResponses([() => { calls++; return answer(call('workspace_write', { path: 'a.txt', content: 'changed\n' }), { stopReason: 'toolUse' }); }, () => { calls++; return answer('done'); }]);
   runtime = new PidaRuntime({ provider: () => ({ provider: f.provider, modelId: f.getModel().id }), providerInfo: { mode: 'endpoint', model: 'scripted browser fixture' }, tools: b.tools(),
     storageDir: join(root, 'runtime'), workSurface: new WorkSurface(join(root, 'reviews'), b), inspectArtifacts: p => b.captureArtifacts(p) });
-  server = createPidaServer({ runtime, workbench: b, serveDemo: true, authenticate: staticTokenAuth([{ token, principal: owner }]) });
+  const httpOptions = { runtime, workbench: b, serveDemo: true, authenticate: staticTokenAuth([{ token, principal: owner }]) };
+  server = createPidaServer(httpOptions);
   server.listen(0, '127.0.0.1'); await once(server, 'listening');
+  httpOptions.allowedOrigin = `http://127.0.0.1:${server.address().port}`;
   browser = await chromium.launch({ headless: true, ...(process.env.PIDA_CHROMIUM_EXECUTABLE ? { executablePath: process.env.PIDA_CHROMIUM_EXECUTABLE } : {}), args: ['--no-sandbox'] });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors = []; page.on('pageerror', e => { errors.push(e.message); console.error('PAGE_ERROR:', e.message); });
