@@ -1,6 +1,7 @@
 // Real Chromium + HTTP + Pi. Deterministic mock model; no live-provider claim.
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, mkdir, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, mkdir, writeFile, readFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { once } from 'node:events';
@@ -15,14 +16,24 @@ const directory = await mkdtemp(join(root,'.pida-test-multi-browser-'));
 let app, browser, observer;
 const checks=[], errors=[];
 try {
-  initWorkspace(directory); app=await createWorkspace(directory); app.server.listen(0,'127.0.0.1'); await once(app.server,'listening');
+  // Match the workspace's configured Origin to its actual browser address.
+  const probe=createServer();probe.listen(0,'127.0.0.1');await once(probe,'listening');
+  const port=probe.address().port;await new Promise(resolve=>probe.close(resolve));
+  initWorkspace(directory);const configPath=join(directory,'pida.config.json');
+  const config=JSON.parse(await readFile(configPath,'utf8'));config.port=port;await writeFile(configPath,JSON.stringify(config));
+  app=await createWorkspace(directory); app.server.listen(port,'127.0.0.1'); await once(app.server,'listening');
   const url=`http://127.0.0.1:${app.server.address().port}`, token=workspaceEnvironment(directory).PIDA_API_TOKEN;
   const client=new PidaClient({baseUrl:url,token:()=>token});
   const a=await client.createAgent({name:'코드 · A'}), b=await client.createAgent({name:'조사 · B'});
   await client.pauseAgent(a.id); await client.pauseAgent(b.id);
   browser=await chromium.launch({...(process.env.PIDA_BROWSER_EXECUTABLE ? {executablePath:process.env.PIDA_BROWSER_EXECUTABLE} : {}),headless:true,args:['--no-sandbox']});
-  const page=await browser.newPage({viewport:{width:1720,height:1120}}); page.on('pageerror',e=>errors.push(e.message));
-  async function signIn() { await page.locator('#token').fill(token); await page.locator('#connect').click(); await page.locator('#mode-tabs button[data-mode="fleet"]').waitFor({state:'visible'}); await page.locator('#mode-tabs button[data-mode="fleet"]').click(); await page.locator('.fleet-pane').waitFor(); }
+  const page=await browser.newPage({viewport:{width:1720,height:1120}}); page.on('pageerror',e=>{errors.push(e.message);console.error('PAGE_ERROR:',e.message);});
+  page.on('response',response=>{if(response.status()>=400)console.error('HTTP:',response.status(),new URL(response.url()).pathname);});
+  async function signIn() {
+    await page.locator('#token').fill(token); await page.locator('#connect').click();
+    await page.locator('#mode-tabs button[data-mode="fleet"]').waitFor({state:'visible'}).catch(async error=>{console.error('CONNECT_ERROR:',await page.locator('#error').textContent(),'PAGE_ERRORS:',errors);throw error;});
+    await page.locator('#mode-tabs button[data-mode="fleet"]').click(); await page.locator('.fleet-pane').first().waitFor();
+  }
   await page.goto(url); await signIn();
   const panes=page.locator('.fleet-pane');
   await panes.nth(0).getByLabel('에이전트 선택',{exact:true}).selectOption(a.id);

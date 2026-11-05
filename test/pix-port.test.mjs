@@ -95,10 +95,17 @@ test("PIX cancellation and deadline wait for actual direct-child exit; pre-cance
   assert.equal(alive(pid), false);
   const long = createPixProcessPort({ ...f.config, timeoutMs: 5000 });
   const controller = new AbortController();
+  t.after(() => controller.abort());
   const pending = long.compute(request("hang"), controller.signal);
   // Wait for a new real child to prove cancellation acts after process admission.
-  const until = Date.now() + 2000;
-  while (Date.now() < until) { await new Promise(resolve => setTimeout(resolve, 10)); const next = Number(await readFile(join(f.directory, "pid"), "utf8")); if (next !== pid) { pid = next; break; } }
+  const previousPid = pid, until = Date.now() + 2000;
+  while (Date.now() < until) {
+    await new Promise(resolve => setTimeout(resolve, 10));
+    const text = await readFile(join(f.directory, "pid"), "utf8"), next = Number(text);
+    // The fixture can be between open('w') and write; Number('') is 0, a process group.
+    if (/^[1-9]\d*$/.test(text) && Number.isSafeInteger(next) && next !== previousPid) { pid = next; break; }
+  }
+  assert.notEqual(pid, previousPid, 'new child PID was not published');
   assert.equal(alive(pid), true); controller.abort();
   await assert.rejects(pending, /PIX_CANCELLED/); assert.equal(alive(pid), false);
   const already = new AbortController(); already.abort();
