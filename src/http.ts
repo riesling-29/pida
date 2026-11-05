@@ -172,13 +172,13 @@ export function createPidaServer(options: HttpOptions) {
       if (
         options.serveDemo &&
         req.method === "GET" &&
-        ["/", "/app.js", "/studio.js", "/agents.js", "/run-state.js", "/run-input.js", "/run-details.js", "/commands.js", "/composition.js", "/style.css", "/pida-client.js"].includes(path)
+        ["/", "/app.js", "/studio.js", "/agents.js", "/fleet.js", "/workspace-layout.js", "/agent-workspace-controller.js", "/client.js", "/run-state.js", "/run-input.js", "/run-details.js", "/commands.js", "/composition.js", "/style.css", "/pida-client.js"].includes(path)
       ) {
         const file = path === "/" ? "index.html" : path.slice(1);
         const contents = await readFile(
           new URL(
-            path === "/pida-client.js"
-              ? "./client.js"
+            ["/pida-client.js", "/client.js", "/workspace-layout.js", "/agent-workspace-controller.js"].includes(path)
+              ? `./${path === "/pida-client.js" ? "client.js" : file}`
               : `../examples/web/${file}`,
             import.meta.url,
           ),

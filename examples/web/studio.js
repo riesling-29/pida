@@ -133,7 +133,7 @@ export function createStudio({ client, request, changed, disconnected }) {
   }
   function showMode(next) {
     mode = next;
-    for (const name of ["service", "studio", "workspace", "agents"]) {
+    for (const name of ["service", "studio", "workspace", "agents", "fleet"]) {
       $(name === "workspace" ? "workspace" : name + "-view").hidden = !connected || name !== mode;
       document.querySelector(`#mode-tabs [data-mode="${name}"]`).setAttribute("aria-pressed", String(name === mode));
     }

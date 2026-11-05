@@ -15,7 +15,7 @@
       <div class="brand" aria-label="Pida">pida<span class="cursor-mark" aria-hidden="true">_</span></div>
       <span class="app-divider" aria-hidden="true">/</span>
       <h1>workspace</h1>
-      <span class="version">core 0.8.8</span>
+      <span class="version">core 0.8.13</span>
       <div class="app-actions">
         <button id="toggle-sessions" class="mobile-control" aria-controls="session-navigation" aria-expanded="false" disabled>대화 목록</button>
         <button id="toggle-inspector" class="inspector-control" aria-controls="inspector" aria-expanded="false" disabled>작업 패널</button>
@@ -40,6 +40,7 @@
       <button data-mode="service" aria-pressed="false">서비스</button>
       <button data-mode="studio" aria-pressed="true">개발자 · 운영자</button>
       <button data-mode="workspace" aria-pressed="false">에이전트 작업 공간</button>
+      <button data-mode="fleet" aria-pressed="false">멀티 에이전트</button>
       <button data-mode="agents" aria-pressed="false">상주 에이전트</button>
       <span class="mode-caption">PIDA / BUILD YOUR WORKSPACE</span>
       <button id="mode-disconnect" class="quiet">로그아웃</button>
@@ -122,6 +123,7 @@
         <section id="tools-panel" class="inspector-panel" role="tabpanel" aria-labelledby="tab-tools" hidden><div class="inspector-description"><span class="section-label">AVAILABLE TOOLS</span><p>현재 연결된 도구와 실행 권한입니다.</p></div><ul id="tools"></ul></section>
       </aside>
     </div>
+    <section id="fleet-view" class="fleet-view" aria-label="멀티 에이전트 작업 공간" hidden></section>
     <section id="agents-view" class="agents-view" aria-label="상주 에이전트" hidden>
       <aside class="agents-navigation">
         <div class="section-heading"><h2>상주 에이전트</h2><button id="agents-refresh" class="quiet">새로고침</button></div>

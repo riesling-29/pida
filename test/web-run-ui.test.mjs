@@ -31,7 +31,7 @@ function environment() {
   const nodes=new Map([...read('examples/web/index.html').matchAll(/id="([^"]+)"/g)].map(m=>[m[1],new Node()]));
   const $=id=>{assert(nodes.has(id),'Missing DOM element '+id);return nodes.get(id);};
   for(const id of ['workspace-input-mode','studio-input-mode']) { for(const value of ['steer','followUp']) { const o=new Node('option');o.value=value;$(id).append(o); } $(id).value='steer'; }
-  const modeTabs=['studio','workspace','service','agents'].map(mode=>{const n=new Node('button');n.dataset.mode=mode;return n;});
+  const modeTabs=['studio','workspace','service','agents','fleet'].map(mode=>{const n=new Node('button');n.dataset.mode=mode;return n;});
   const doc={getElementById:$,createElement:t=>new Node(t),createTextNode:t=>({textContent:t}),body:new Node('body'),hidden:false,addEventListener(){},querySelector:selector=>modeTabs.find(n=>selector.includes(`data-mode="${n.dataset.mode}"`))??new Node(),querySelectorAll:selector=>selector.includes('#mode-tabs')?modeTabs:[]};
   const storage=new Map(), timers=new Map();let timer=0;
   const context={document:doc,RunState,submitQueuedInput,Date,Map,Set,URL,URLSearchParams,TextEncoder,Blob,crypto:webcrypto,console,explainError:x=>x??'',ResizeObserver:class{observe(){}},requestAnimationFrame:()=>{},setInterval:()=>1,clearInterval(){},setTimeout:fn=>{timers.set(++timer,fn);return timer;},clearTimeout:id=>timers.delete(id),window:{addEventListener(){}},location:{origin:'http://fixture.invalid',hash:'',pathname:'/',search:''},history:{replaceState(){}},sessionStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)}};
@@ -100,7 +100,7 @@ test('a removed source clears a pending creation choice without silently selecti
 test('idle Web view discovers a TUI-started run and projects partial/final text without losing a draft',async()=>{
   const env=environment(),f=fixtureClient();let snapshot={sessionId:'s1',messages:[],running:false},trace=[];
   f.client.getSession=async()=>structuredClone(snapshot);f.client.getTrace=async()=>({events:structuredClone(trace)});
-  Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
+  Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createFleet:()=>({async connect(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
   runInNewContext(read('examples/web/app.js').replace(/^import .*\n/gm,''),env.context);
   env.$('token').value='fixture';await env.$('connection-form').requestSubmit();await flush();
   assert.ok(env.timers.size>0,'idle session continues observing peer activity');env.$('prompt').value='내가 작성 중인 요청';
@@ -118,7 +118,7 @@ test('launch fragment selects its exact session and never silently falls back fr
     env.context.location.hash='#token=fixture&session='+id;
     f.client.getSession=async session=>{reads.push(session);if(denied)throw {code:'SESSION_NOT_FOUND',status:404};return {sessionId:session,messages:[{role:'user',text:'selected exact session'}],running:false};};
     f.client.getTrace=async()=>({events:[]});
-    Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
+    Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createFleet:()=>({async connect(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
     runInNewContext(read('examples/web/app.js').replace(/^import .*\n/gm,''),env.context);await flush();
     assert.deepEqual(reads,[id]);assert.equal(env.storage.get('pida-session'),denied?undefined:id);
   }
@@ -162,7 +162,7 @@ test('tool details are lazy, use recorded failure/exit code, and discard a late 
 
 test('workspace actual submit handler steers/follows the active run and preserves a draft at completion', async()=>{
   const env=environment(),f=fixtureClient();
-  Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
+  Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createFleet:()=>({async connect(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
   runInNewContext(read('examples/web/app.js').replace(/^import .*\n/gm,''),env.context);
   env.$('token').value='fixture';env.$('connection-form').requestSubmit();await flush();assert.equal(env.$('send').disabled,false,env.$('error').textContent);
   env.$('prompt').value='Run tests';const execution=env.$('form').requestSubmit();await flush();assert.equal(env.$('prompt').disabled,false);assert.equal(env.$('prompt').value,'');assert.equal(env.$('workspace-live-input').hidden,false);
@@ -184,7 +184,7 @@ test('Studio actual handler allows run-correlated instructions and keeps a newer
 test('provider form preserves a native model whose only supported thinking level is high', async()=>{
   const env=environment(),f=fixtureClient();
   f.client.getProviderSettings=async()=>({provider:{kind:'native',providerId:'openai',modelId:'restricted'},catalog:[{id:'openai',name:'OpenAI',apiKeyEnv:'OPENAI_API_KEY',models:[{id:'restricted',name:'restricted',reasoning:true,thinkingLevels:['high']}]}]});
-  Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
+  Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createFleet:()=>({async connect(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
   runInNewContext(read('examples/web/app.js').replace(/^import .*\n/gm,''),env.context);
   env.$('token').value='fixture';await env.$('connection-form').requestSubmit();await flush();
   assert.equal(env.$('provider-thinking').value,'high');
@@ -203,7 +203,7 @@ test('workspace and Studio command panels use the selected session and reset pri
     f.client.readCommand=async(id,commandId,options)=>{reads.push(['read',id,commandId,options.offset]);return {command,output:{text:'OK',offset:0,nextOffset:2,totalBytes:2,eof:true,lossy:false}};};
     let reset;
     if (surface==='workspace') {
-      Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
+      Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createFleet:()=>({async connect(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
       runInNewContext(read('examples/web/app.js').replace(/^import .*\n/gm,''),env.context);
       env.$('token').value='fixture';env.$('connection-form').requestSubmit();await flush();reset=()=>env.$('disconnect').onclick();
     } else {
@@ -229,7 +229,7 @@ test('provider restore failure keeps owned command management available, blocks 
     f.client.readCommand=async()=>({command,output:{text:'LIVE',offset:0,nextOffset:4,totalBytes:4,eof:true,lossy:false}});
     let reset,refresh;
     if(surface==='workspace') {
-      Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){throw failure;},async refresh(){},reset(){}}),createAgents:()=>({async connect(){agentConnections++;},reset(){}})});
+      Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){throw failure;},async refresh(){},reset(){}}),createFleet:()=>({async connect(){},reset(){}}),createAgents:()=>({async connect(){agentConnections++;},reset(){}})});
       runInNewContext(read('examples/web/app.js').replace(/^import .*\n/gm,''),env.context);
       env.$('token').value='fixture';env.$('connection-form').requestSubmit();await flush();
       assert.equal(agentConnections,1,'a failed Studio restore does not block agent connection');
@@ -254,7 +254,7 @@ test('session authorization and missing-session errors never fall back to comman
     const failure=Object.assign(new Error('not owned'),{code:status===404?'SESSION_NOT_FOUND':'FORBIDDEN',status});
     f.client.getInfo=async()=>commandInfo;f.client.getSession=async()=>{throw failure;};f.client.listCommands=async()=>{lists++;return {commands:[]};};
     if(surface==='workspace') {
-      Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
+      Object.assign(env.context,{PidaClient:class{constructor(){return f.client;}},createStudio:()=>({busy:false,update(){},async connect(){},async refresh(){},reset(){}}),createFleet:()=>({async connect(){},reset(){}}),createAgents:()=>({async connect(){},reset(){}})});
       runInNewContext(read('examples/web/app.js').replace(/^import .*\n/gm,''),env.context);env.$('token').value='fixture';env.$('connection-form').requestSubmit();await flush();
       assert.equal(env.$('send').disabled,true);env.$('disconnect').onclick();
     }else{

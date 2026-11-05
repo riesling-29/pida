@@ -4,6 +4,7 @@ import { createRunInput } from "/run-input.js";
 import { createRunDetails } from "/run-details.js";
 import { createCommands } from "/commands.js";
 import { createAgents } from "/agents.js";
+import { createFleet } from "/fleet.js";
 import { createComposition } from "/composition.js";
 import { PidaClient, explainError, sessionDisplayMessages } from "/pida-client.js";
 const $ = (id) => document.getElementById(id);
@@ -22,6 +23,7 @@ const runDetails = createRunDetails({ container: $("workspace-run-details"), loa
 const commands = createCommands({ container: $("workspace-commands"), list: id => client.listCommands(id), read: (id, commandId, options) => client.readCommand(id, commandId, options), cancel: (id, commandId) => client.cancelCommand(id, commandId), recover: (id, commandId, input) => client.acknowledgeCommandRecovery(id, commandId, input), explain: explainError });
 const composition = createComposition({ client });
 const agents = createAgents({ client });
+const fleet = createFleet({ client });
 const studio = createStudio({
   client,
   async request(path, options = {}) {
@@ -290,7 +292,7 @@ async function connect() {
   if (recent) { try { await select(recent.sessionId); } catch (error) { problem(error); if (error.status === 401) throw error; } }
   else emptyConversation();
   // A failed model/session restore in one surface does not disable independent agent management.
-  for (const result of await Promise.allSettled([studio.connect(info), agents.connect(info)])) if (result.status === "rejected") problem(result.reason);
+  for (const result of await Promise.allSettled([studio.connect(info), agents.connect(info), fleet.connect(info)])) if (result.status === "rejected") problem(result.reason);
   pollChatGPT();
 }
 $("connection-form").onsubmit = (e) => {
@@ -343,6 +345,7 @@ $("disconnect").onclick = () => {
   clearWorkbench();
   studio.reset();
   agents.reset();
+  fleet.reset();
   composition.reset();
   token = "";
   $("provider-key").value = "";

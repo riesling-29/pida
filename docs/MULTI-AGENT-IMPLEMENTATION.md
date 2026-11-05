@@ -42,3 +42,20 @@ with read-only delivery reconciliation. `npm run build` passed;
 `node --test --test-timeout=20000 test/agent-workspace.test.mjs test/agent-supervisor.test.mjs`
 passed 9/9 on Node 24.22.1/Linux (mock model; real Pi/HTTP).
 Web and TUI surfaces are the following version slices, not claimed complete here.
+
+## 0.8.13 checkpoint
+
+Web **멀티 에이전트** now uses the shared controller: eight tabs, four nested
+panels, pointer/keyboard separator resize, focus/zoom, cross-tab panel swap,
+agent registration/source selection, job selection/control and scoped local
+layout restoration. Existing agent memory/recovery administration is retained.
+Colors now follow the approved near-black green palette.
+
+Build and 17 targeted controller/Web handler tests passed. The new DOM adapter
+test executes actual fleet handlers, preserves textarea identity/drafts across
+polls/tabs, and checks the submission destination. It is not a browser test.
+`node scripts/multi-agent-browser-check.mjs fixtures/workspace/0.8.13` was
+**blocked before testing**: Chromium process singleton socket creation returned
+EPERM in this executor. A separate cloud browser could not reach the local
+fixture server (connection refused). No browser pass or screenshot is claimed.
+The script is provided for a host with Chromium (`PIDA_BROWSER_EXECUTABLE`).

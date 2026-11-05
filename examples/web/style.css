@@ -1,18 +1,18 @@
 :root {
   color-scheme:dark;
-  --bg:#141715;
-  --surface:#1a1e1b;
-  --raised:#202520;
-  --selected:#293126;
-  --ink:#e2e1d5;
-  --muted:#a0a697;
-  --dim:#747d70;
-  --line:#343c32;
-  --accent:#bacb9b;
+  --bg:#010201;
+  --surface:#020503;
+  --raised:#061109;
+  --selected:#051009;
+  --ink:#bbc6c3;
+  --muted:#92a29a;
+  --dim:#718878;
+  --line:#263b2b;
+  --accent:#a4b99f;
   --terra:#c58d75;
   --error:#e6a092;
   --mono:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",monospace;
-  --sans:Inter,"Pretendard","Noto Sans KR",system-ui,sans-serif
+  --sans:"IBM Plex Sans","Pretendard","Noto Sans KR",system-ui,sans-serif
 }
 
 * {
@@ -21,7 +21,7 @@
 
 body {
   margin:0;
-  background:#101310;
+  background:var(--bg);
   color:var(--ink);
   font:13px/1.65 var(--sans)
 }
@@ -1616,3 +1616,25 @@ body[data-mode=agents] #toggle-sessions,body[data-mode=agents] #toggle-inspector
 .command-panel label { display:flex; align-items:flex-start; gap:6px; margin:7px 0; }
 .command-panel input[type=checkbox] { width:auto; flex:none; margin-top:3px; }
 .command-panel [data-status=failed], .command-panel [data-status=unknown], .command-panel [data-status=interrupted], .command-panel [data-status=timed_out] { color:var(--terra); }
+
+/* Live multi-agent workbench. Near-black green; structural lines, no decorative chrome. */
+body[data-mode=fleet] .app-shell{max-width:none}
+body[data-mode=fleet] #toggle-sessions,body[data-mode=fleet] #toggle-inspector{display:none}
+.fleet-view{display:flex;flex-direction:column;flex:1;min-height:0;background:var(--bg);overflow:hidden}
+.fleet-tabs{display:flex;gap:4px;min-height:38px;overflow-x:auto;padding:3px 10px;border-bottom:1px solid var(--line)}
+.fleet-tab{display:flex;flex:none}.fleet-tab button{border-radius:0;padding:4px 12px}.fleet-tab button+button{border-left:0;padding:4px 8px}.fleet-tab [aria-pressed=true]{background:var(--selected);border-bottom:2px solid var(--accent)}
+.fleet-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:7px 10px;border-bottom:1px solid var(--line)}
+.fleet-toolbar button,.fleet-toolbar select{font-size:11px;padding:4px 8px;max-width:210px}
+.fleet-hint,.fleet-warning{margin:0;padding:3px 10px;font:11px/1.6 var(--mono);color:var(--muted)}.fleet-warning:empty{display:none}.fleet-warning{color:var(--error)}
+.fleet-stage{flex:1;min-height:0;padding:6px;overflow:hidden}.fleet-stage>.fleet-pane,.fleet-stage>.fleet-split{height:100%}
+.fleet-split{display:grid;min-width:0;min-height:0;overflow:hidden}.fleet-split.horizontal{grid-template-rows:minmax(0,1fr)}.fleet-split.vertical{grid-template-columns:minmax(0,1fr)}
+.fleet-divider{background:var(--line);touch-action:none}.horizontal>.fleet-divider{cursor:col-resize}.vertical>.fleet-divider{cursor:row-resize}.fleet-divider:hover,.fleet-divider:focus-visible{background:var(--accent)}
+.fleet-pane{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--surface);border:1px solid var(--line);overflow:hidden}.fleet-pane.focused{border-color:#52745b}
+.fleet-pane header{display:flex;gap:6px;padding:6px;border-bottom:1px solid var(--line);background:var(--selected)}.fleet-pane header select{padding:3px 6px;font-size:11px;flex:1;width:0;min-width:45px}.fleet-pane header select:first-child{flex:1.25}
+.fleet-status{margin:0;padding:5px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:11px/1.6 var(--mono);color:var(--accent)}
+.fleet-controls{display:flex;gap:4px;padding:0 6px 5px;flex-wrap:wrap}.fleet-controls button,.fleet-controls select{font-size:10px;padding:2px 6px}.fleet-controls select{max-width:100%}
+.fleet-transcript{flex:1;min-height:20px;margin:0;padding:10px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.65 var(--mono);border-top:1px solid var(--line)}
+.fleet-receipt{margin:0;padding:0 6px;font-size:11px;color:var(--accent)}.fleet-receipt:empty{display:none}
+.fleet-pane form{display:flex;gap:5px;flex-wrap:wrap;padding:6px;border-top:1px solid var(--line)}.fleet-pane form textarea{flex-basis:100%;width:100%;font-size:12px;padding:6px;resize:none;min-height:45px;max-height:100px}.fleet-pane form button{font-size:10px;padding:3px 6px}
+.fleet-view dialog{max-width:520px;width:90%;background:var(--surface);color:var(--ink);border:1px solid var(--line)}.fleet-view dialog input,.fleet-view dialog textarea,.fleet-view dialog select{width:100%;margin:6px 0 12px}.fleet-view dialog button{margin-right:8px}
+@media(max-width:760px){body[data-connected=true][data-mode=fleet] .app-shell{height:100dvh;min-height:650px;overflow:hidden}.fleet-toolbar{gap:4px}.fleet-hint{font-size:10px}.fleet-toolbar select{max-width:130px}.fleet-stage{min-height:260px}}
