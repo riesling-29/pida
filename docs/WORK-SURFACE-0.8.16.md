@@ -35,4 +35,4 @@ npm run tui -- .\my-agent --main --session <세션-ID>
 
 실제 Pi·HTTP·파일·재시작 시험에서 stale 요청의 모델 호출 0회, CRLF 원본 바이트 해시, 잘못된 범위·경로 거절, 중복 접수, 기존 결과 재조회, 권한 경계, TUI 초안 복원과 양방향 기록 조회를 확인했다. Web 실제 이벤트 핸들러의 A 고정/B 열람·범위·거절 후 초안 유지도 통과했다.
 
-로컬 실제 Chromium 실행은 OS의 `socket() EPERM`으로 차단됐다. `scripts/work-surface-browser-check.mjs`와 별도 CI job을 추가했으며, 브라우저 320/768/1440px·실제 클릭 통과는 그 실행 결과를 확인해야 한다. Linux TUI renderer의 입력·폭 회귀는 자동시험 범위이며 Windows IME와 실모델은 미실행이다.
+로컬 Chromium은 OS의 `socket() EPERM`으로 차단됐으나, [GitHub CI](https://github.com/riesling-29/pida/actions/runs/41980231234)에서 실제 Chromium 시험이 통과했다. 파일 고정·stale 거절·실제 Pi 변경·재접속·320/768/1440px 표시 7개 점검을 수행했다. Linux TUI renderer의 입력·폭 회귀는 자동시험 범위이며 Windows IME와 실모델은 미실행이다.

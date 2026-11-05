@@ -1,5 +1,7 @@
 # PI-native organization execution: reuse and remaining gaps
 
+> Implementation update: the bounded batch-join/exact-workbench-acceptance slice is delivered in [0.8.17](ORGANIZATION-0.8.17.md), with durable attempts, continuation, current-revision checks and repair budgets. The assessment below preserves its original baseline; generalized inbox/federation and project-wide independent verification remain subsequent work.
+
 Date: 2026-11-03 KST. Scope: pida only. This is a source assessment and a next-slice design, not an implemented organization controller or a live integration result.
 
 Assessment baseline: local `fix/runtime-stabilization` at `0b454cb` (package 0.8.3), corresponding delivered PR #1 head `e08edcfc98b0ca7e3450714865eaae294b1c1c3f`. The local worktree was clean when this assessment began. The accompanying first implementation slice addresses producer validation, Persona consumption and direct PIX analysis; it does not implement the organization design below.

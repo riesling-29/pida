@@ -757,6 +757,9 @@ export class PidaRuntime {
     }
   }
   /** Trusted host operation. Refuse changes while a run or session creation is in flight. */
+  hasUnsettledWork(): boolean {
+    return !!this.pendingSessions || this.pendingTools.size > 0 || [...this.sessions.values()].some(r => !!r.active || !!r.deleting);
+  }
   assertIdle(): void {
     if (this.closed) throw new PidaError("RUNTIME_CLOSED", 503);
     if (

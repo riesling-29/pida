@@ -200,6 +200,25 @@ export function createPidaServer(options: HttpOptions) {
         throw new PidaError("UNAUTHORIZED", 401);
       const principal = await options.authenticate(auth.slice(7));
       if (!principal) throw new PidaError("UNAUTHORIZED", 401);
+      if (path === "/v1/organizations" || path.startsWith("/v1/organizations/") || path === "/v1/joins" || path.startsWith("/v1/joins/")) {
+        if (!principal.permissions.includes("pida:agents")) throw new PidaError("FORBIDDEN", 403);
+        const agents = options.agents; if (!agents) throw new PidaError("AGENTS_DISABLED", 404);
+        if (path === "/v1/organizations" && req.method === "GET") { json(res, 200, { organizations: agents.listOrganizations(principal), criteria: agents.acceptanceCriteria(principal) }); return; }
+        if (path === "/v1/organizations" && req.method === "POST") { json(res, 202, agents.createOrganization(principal, await body(req) as any)); return; }
+        const org = /^\/v1\/organizations\/([a-f0-9-]{36})$/.exec(path);
+        if (org && req.method === "GET") { json(res, 200, await agents.getOrganization(org[1]!, principal)); return; }
+        const cancelOrg = /^\/v1\/organizations\/([a-f0-9-]{36})\/cancel$/.exec(path);
+        if (cancelOrg && req.method === "POST") { keys(await body(req), []); json(res, 200, await agents.cancelOrganization(cancelOrg[1]!, principal)); return; }
+        if (path === "/v1/joins" && req.method === "POST") {
+          const input = await body(req); keys(input, ["parentJobId", "requestId", "required", "optional", "timeoutMs"]);
+          const { parentJobId, ...join } = input;
+          if (typeof parentJobId !== "string") throw new PidaError("JOIN_ARGUMENT_INVALID", 400);
+          json(res, 202, agents.registerJoin(parentJobId, principal, join as any)); return;
+        }
+        const join = /^\/v1\/joins\/([a-f0-9-]{36})\/cancel$/.exec(path);
+        if (join && req.method === "POST") { const input = await body(req); keys(input, ["expectedRevision"]); json(res, 200, await agents.cancelJoin(join[1]!, principal, input.expectedRevision as number)); return; }
+        throw new PidaError("NOT_FOUND", 404);
+      }
       if (path === "/v1/composition") {
         if (!principal.permissions.includes("pida:configure")) throw new PidaError("FORBIDDEN", 403);
         if (req.method !== "GET") throw new PidaError("METHOD_NOT_ALLOWED", 405);

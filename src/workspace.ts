@@ -13,6 +13,7 @@ import { createPixOcelPort, type PixOcelPort } from "./pix-ocel.js";
 import { loadProviderConnector, type ProviderConnectorConfig } from "./provider-connector.js";
 import { ProjectView } from "./project-view.js";
 import { WorkSurface } from "./work-surface.js";
+import { validCriteria, type LocalCriterion } from "./organization.js";
 import { codingPacks } from "./coding-packs.js";
 import { createProjectTools, type ProjectConfig } from "./project-tools.js";
 import { normalizeCodemodeConfig, type CodemodeConfig } from "./codemode.js";
@@ -116,6 +117,7 @@ const configSchema = Type.Object(
     codemode: Type.Optional(Type.Object({ enabled: Type.Boolean(), tools: Type.Optional(Type.Array(Type.String({ pattern: "^[a-z][a-z0-9_]{0,63}$" }), { maxItems: 64, uniqueItems: true })), maxCalls: Type.Optional(Type.Integer({ minimum: 1, maximum: 64 })), timeoutMs: Type.Optional(Type.Integer({ minimum: 100, maximum: 120000 })), memoryLimitBytes: Type.Optional(Type.Integer({ minimum: 4194304, maximum: 134217728 })), maxOutputChars: Type.Optional(Type.Integer({ minimum: 256, maximum: 24000 })) }, { additionalProperties: false })),
     skills: Type.Optional(Type.Array(Type.String({ minLength: 1 }), { maxItems: 16, uniqueItems: true })),
     agents: Type.Optional(Type.Object({ enabled: Type.Boolean(), maxConcurrent: Type.Optional(Type.Integer({ minimum: 1, maximum: 8 })) }, { additionalProperties: false })),
+    acceptanceChecks: Type.Optional(Type.Array(Type.Object({ id: Type.String({ pattern: "^[a-z][a-z0-9_-]{0,63}$" }), kind: Type.Union([Type.Literal("file-contains"), Type.Literal("json-equals")]), path: Type.String({ minLength: 1, maxLength: 240 }), expected: Type.String({ minLength: 1, maxLength: 16000 }), required: Type.Boolean() }, { additionalProperties: false }), { maxItems: 32 })),
     codingPacks: Type.Optional(Type.Array(Type.Union([Type.Literal("debugging"), Type.Literal("verification"), Type.Literal("pix")]), { uniqueItems: true })),
     browserChecks: Type.Optional(Type.Boolean()),
     project: Type.Optional(Type.Object({
@@ -153,6 +155,7 @@ export interface WorkspaceConfig {
   codemode?: CodemodeConfig;
   skills?: string[];
   agents?: { enabled: boolean; maxConcurrent?: number };
+  acceptanceChecks?: LocalCriterion[];
   codingPacks?: string[];
   browserChecks?: boolean;
   project?: ProjectConfig;
@@ -210,6 +213,7 @@ export function validateConfig(
     );
   inside(root, config.stateDir);
   inside(root, config.tools.directory);
+  if (config.acceptanceChecks && !validCriteria(config.acceptanceChecks)) throw new Error("ACCEPTANCE_CRITERIA_INVALID");
   if (config.provider.kind === "endpoint")
     endpointProvider({ id: "workspace", ...config.provider });
   if (config.provider.kind === "native") validateNativeProvider(config.provider);
@@ -673,6 +677,10 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
     lifetime.add(closeMain);
     agents = selectedMain.agents ? await AgentSupervisor.open({
       directory: agentDirectory, maxConcurrent: config.agents?.maxConcurrent ?? 3,
+      acceptance: { criteria: config.acceptanceChecks ?? [], capture: async (profile, requestPrincipal) => {
+        if (!selectedAgent.workbench) throw new PidaError("WORKBENCH_DISABLED", 404);
+        return agentWorkbench(profile.id).captureFiles(requestPrincipal);
+      } },
       personaSources,
       runtimeKey: () => revisionOf(activeConfig()),
       workspaceKey: profile => sharedWorkspaceKey ?? profile.id,

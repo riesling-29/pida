@@ -3,7 +3,7 @@ import { Box, Editor, HStack, MouseRegion, ProcessTerminal, ScrollView, SelectLi
 import { readFileSync } from "node:fs";
 import type { PidaClient } from "./client.js";
 import { AgentWorkspaceController, admissionLabels, viewLabels, detailText, type WorkspaceControllerOptions } from "./agent-workspace-controller.js";
-import { fitsLayout, paneList, splitList, type WorkNode, type WorkPane } from "./workspace-layout.js";
+import { WorkspaceLayout, fitsLayout, paneList, splitList, type WorkNode, type WorkPane } from "./workspace-layout.js";
 import { terminalPalette } from "./tui-theme.js";
 import { terminalText } from "./tui.js";
 
@@ -15,6 +15,16 @@ class Row implements Component {
   constructor(private paint: (s: string, width: number) => string = s => s) {}
   invalidate() {}
   render(width: number) { return [this.paint(truncateToWidth(" " + this.text, width), width)]; }
+}
+
+/** Start with visible work areas; this only supplies a layout when no saved layout exists. */
+export function terminalDefaultLayout() {
+  const layout = new WorkspaceLayout(), first = layout.active.focus;
+  const second = layout.split(first, "horizontal");
+  layout.bind(second.id, { view: "activity" });
+  layout.resize(splitList(layout.active.root)[0]!.id, .62);
+  layout.focus(first);
+  return layout.data;
 }
 
 /** One upstream Pi screen, multiple retained upstream editors/scroll views. No terminal emulator. */
@@ -128,7 +138,7 @@ export function createAgentTui(controller: AgentWorkspaceController, options: {
     let regions: { from: number; to: number; action: () => void }[] = [];
     return new MouseRegion({ invalidate() {}, render(width) {
       let text = " "; regions = [];
-      for (const item of items()) { const start = visibleWidth(text), label = `[${item.label}] `; if (start + visibleWidth(label) > width) break;
+      for (const item of items()) { const start = visibleWidth(text), label = ` ${item.label} │`; if (start + visibleWidth(label) > width) break;
         text += item.selected ? colors.selected(label) : colors.accent(label); regions.push({ from: start, to: start + visibleWidth(label), action: item.action }); }
       return [colors.band(truncateToWidth(text, width), width)];
     } }, event => { if (event.type === "click" && event.button === "left") { const region = regions.find(r => event.x >= r.from && event.x < r.to); if (region) { invoke(region.action); return { handled: true }; } } });
@@ -136,7 +146,11 @@ export function createAgentTui(controller: AgentWorkspaceController, options: {
   const nav = mouseBar(() => actions.map(([label, action]) => ({ label, action })));
   const tabs = mouseBar(() => [...controller.layout.data.tabs.map(t => ({ label: line(t.title), action: () => controller.layout.selectTab(t.id), selected: t.id === controller.layout.active.id })), { label: "+", action: () => controller.layout.addTab() }]);
   function newPanel(p: WorkPane) {
-    const heading = new Row(colors.band), signal = new Row(), receipt = new Row();
+    const border = (value: string) => (focusId() === p.id ? colors.accent : colors.border)(value);
+    const heading = new Row((value, width) => {
+      const title = truncateToWidth(value, Math.max(0, width - 4));
+      return border("╭─") + title + border("─".repeat(Math.max(0, width - visibleWidth(title) - 3)) + "╮");
+    }), signal = new Row(), receipt = new Row();
     const content = new Text("", 1, 0), scroll = new ScrollView(content, { follow: "end", scrollbarTrackStyle: colors.border, scrollbarThumbStyle: colors.accent });
     const editor = new Editor(tui, { borderColor: colors.border, selectList: theme }, { paddingX: 1 });
     const renderEditor = editor.render.bind(editor);
@@ -155,14 +169,19 @@ export function createAgentTui(controller: AgentWorkspaceController, options: {
     // Pi clears its buffer before onSubmit; retain the supplied text until host ACK.
     editor.onSubmit = text => { controller.setDraft(p.id, text); invoke(() => controller.submit(p.id)); };
     const header = new MouseRegion(heading, e => { if (e.type === "click" && e.button === "left") { controller.layout.focus(p.id); return { handled: true }; } });
-    const component = new VStack([{ component: header, basis: 1 }, { component: signal, basis: 1 }, { component: scroll, grow: 1, basis: 0, minSize: 1 },
+    const inside = new VStack([{ component: signal, basis: 1 }, { component: scroll, grow: 1, basis: 0, minSize: 1 },
       { component: receipt, basis: 1 }, { component: editor, basis: "auto", minSize: 3, maxSize: 5, shrink: 1 }]);
+    const side = (): Component => ({ invalidate() {}, render: () => Array.from({ length: terminal.rows }, () => border("│")) });
+    const bottom: Component = { invalidate() {}, render: width => [border("╰" + "─".repeat(Math.max(0, width - 2)) + "╯")] };
+    const component = new VStack([{ component: header, basis: 1, shrink: 0 },
+      { component: new HStack([{ component: side(), basis: 1, shrink: 0 }, { component: inside, grow: 1, basis: 0, minSize: 6 }, { component: side(), basis: 1, shrink: 0 }]), grow: 1, basis: 0, minSize: 1 },
+      { component: bottom, basis: 1, shrink: 0 }]);
     return { component, heading, signal, receipt, content, scroll, editor };
   }
   function tree(node: WorkNode, width: number, height: number): Component {
     if (node.kind === "pane") return panels.get(node.id)!.component;
     const horizontal = node.axis === "horizontal";
-    const divider: Component = { invalidate() {}, render: width => horizontal ? Array.from({ length: terminal.rows }, () => colors.border("│")) : [colors.border("─".repeat(width))] };
+    const divider: Component = { invalidate() {}, render: width => horizontal ? Array.from({ length: terminal.rows }, () => " ") : [" ".repeat(width)] };
     // Pi 1.2 uses integer growth weights. Explicit cell sizes keep ratios exact.
     const available = Math.max(2, (horizontal ? width : height) - 1), first = Math.floor(available * node.ratio), second = available - first;
     const children = [{ component: tree(node.first, horizontal ? first : width, horizontal ? height : first), basis: first, shrink: 0 }, { component: divider, basis: 1, shrink: 0 }, { component: tree(node.second, horizontal ? second : width, horizontal ? height : second), basis: second, shrink: 0 }];
@@ -191,7 +210,8 @@ export function createAgentTui(controller: AgentWorkspaceController, options: {
     const active = controller.layout.active;
     const fits = (v: { width: number; height: number }) => !active.zoom && fitsLayout(active.root, v.width, Math.max(1, v.height - 6), 38, 12);
     head.text = `${colors.strong(`pida ${version} · MULTI TUI`)} · ${controller.overview?.agents.length ?? 0} agents · ${controller.layout.panes.length}/4 panels`;
-    context.text = line(options.workspace);
+    const collapsed = !active.zoom && !fits({ width: terminal.columns, height: terminal.rows });
+    context.text = line(active.zoom ? `F9 확대 중 · 다시 F9로 분할 복귀 · ${options.workspace}` : collapsed ? `창 ${terminal.columns}×${terminal.rows} · 초점 패널만 표시 · 창 확대 시 분할 복귀 · ${options.workspace}` : options.workspace);
     footer.text = colors.dim(line(controller.error || controller.storageError || notice || "배치 자동 저장 · 같은 작업공간 쓰기는 호스트에서 순차 실행"));
     help.text = "F1 메뉴 · Alt+←/→ 초점 · Alt+↑/↓ 크기 · Ctrl+D 연결 종료 · 초점만 보이면 창을 넓히세요";
     const root = new VStack([{ component: head, basis: 1 }, { component: context, basis: 1 }, { component: tabs, basis: 1 }, { component: nav, basis: 1 },
@@ -220,7 +240,9 @@ export function createAgentTui(controller: AgentWorkspaceController, options: {
 
 export async function runAgentTerminal(options: { client: PidaClient; workspace: string; openWeb: () => Promise<void> } & WorkspaceControllerOptions) {
   if (!process.stdin.isTTY || !process.stdout.isTTY) throw Error("TUI에는 대화형 터미널이 필요합니다.");
-  const controller = new AgentWorkspaceController(options.client, options);
+  const controller = new AgentWorkspaceController(options.client, { ...options,
+    loadLayout: async scope => (await options.loadLayout?.(scope)) ?? terminalDefaultLayout(),
+  });
   await controller.start();
   let finish!: () => void, stopped = false;
   const done = new Promise<void>(resolve => { finish = resolve; });

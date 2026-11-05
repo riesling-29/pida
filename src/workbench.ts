@@ -23,7 +23,7 @@ function fail(code: string): never { throw new WorkError(code); }
 // Raw guest/file error messages are conversation data, never trace codes.
 const workbenchErrorCodes = new Set([
   "INVALID_PATH", "UNSAFE_DIRECTORY", "UNSAFE_FILE", "FILE_TOO_LARGE_OR_UNSAFE",
-  "FILE_LIMIT", "FILE_TOO_LARGE", "PATH_CONFLICT", "WORKSPACE_TOO_LARGE",
+  "FILE_LIMIT", "FILE_TOO_LARGE", "FILE_ENCODING_UNSUPPORTED", "PATH_CONFLICT", "WORKSPACE_TOO_LARGE",
   "GIT_OPERATION_FAILED", "UI_REVISION_CONFLICT", "UI_FULL_DOCUMENT_REQUIRED",
   "UI_TEMPLATE_NOT_FOUND", "UI_EDIT_MATCH_REQUIRED", "FILE_NOT_FOUND",
   "SKILL_NOT_FOUND", "INVALID_SKILL_NAME", "SKILL_LIMIT", "SKILL_EXISTS_USE_NEW_VERSION_NAME",
@@ -61,7 +61,8 @@ function snapshot(root: string): Record<string, string> {
       if (entry.isDirectory()) walk(full);
       else {
         if (!entry.isFile() || lstatSync(full).size > 131072) fail("FILE_TOO_LARGE_OR_UNSAFE");
-        files[path] = readFileSync(full, "utf8");
+        try { files[path] = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(readFileSync(full)); }
+        catch { fail("FILE_ENCODING_UNSUPPORTED"); }
         if (Object.keys(files).length > 64) fail("FILE_LIMIT");
       }
     }
@@ -207,6 +208,11 @@ export class PidaWorkbench {
   async captureArtifacts(principal: Principal) {
     this.authorize(principal, ["workbench:read"]);
     return this.locked(principal, area => artifactSnapshot(snapshot(area.files)));
+  }
+  /** Bounded exact UTF-8 subject, copied under the existing workbench gate for host-owned checks. */
+  async captureFiles(principal: Principal) {
+    this.authorize(principal, ["workbench:read"]);
+    return this.locked(principal, area => snapshot(area.files));
   }
   async read(principal: Principal, path: string) {
     this.authorize(principal, ["workbench:read"]);

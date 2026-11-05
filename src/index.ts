@@ -1,5 +1,6 @@
 export * from "./runtime.js";
 export { WorkSurface } from "./work-surface.js";
+export type { OrgSession, OrgTask, OrgAttempt, BatchJoin, LocalCriterion, LocalReceipt, LocalAcceptanceOptions } from "./organization.js";
 export type { WorkTarget, WorkBinding, WorkReview, RunMetadata } from "./protocol.js";
 export type { RunContextDescriptor, RunContextSnapshot, LoadedRunContext, SessionHandoff } from "./run-context.js";
 export * from "./mcp.js";

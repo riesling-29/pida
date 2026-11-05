@@ -8,7 +8,7 @@
 - 구현: start/setup/configure가 인증 응답과 로컬 lock nonce를 대조해 기존 서버를 재사용한다. 단순 HTTP 200만으로 다른 작업공간을 선택하지 않는다.
 - 구현: live/stale/unverified 잠금과 EACCES/ENOSPC 같은 파일 쓰기 실패를 구분한다. 임의 잠금 삭제나 실행 중인 프로세스 종료는 하지 않는다.
 - 시험: Linux Node 24 전체 374건 중 373 통과, PIX 외부 소스가 필요한 1건 skip. 기존 서버 재시작 명령·잠금 분류·파일 오류 회귀 포함.
-- 설치 시험: npm offline lock 갱신 성공. pnpm 11의 offline frozen 검사는 로컬 패키지 메타데이터 부재(`ERR_PNPM_NO_OFFLINE_META`)로 완료하지 못했다. CI의 pnpm 12 실제 설치는 별도 확인해야 한다.
+- 설치 시험: npm offline lock 갱신 성공. 로컬 pnpm offline 검사는 메타데이터 부재로 중단됐으나, 이후 GitHub CI에서 npm·pnpm 12·Bun의 실제 깨끗한 설치와 패키징·실행 모두 통과했다. Bun 설치본의 내장 가이드 하드링크만 허용하도록 수정했으며 작업공간의 지침 파일은 기존 제한을 유지한다.
 - 실환경: Windows/회사 게이트웨이/실모델은 미실행.
 
 ## 2. 파일·범위와 공통 기록 · 0.8.16
@@ -16,11 +16,29 @@
 - WS-01~05의 첫 파일 흐름 구현: 원본 바이트 해시·행 범위, 기존 admission 안의 stale 거절, durable request dedup, 서버 전후 기록과 검사 신선도, Studio와 `--main` TUI 연결.
 - 도구 결과 참조·DOM 선택·멀티 탭의 대상 고정 UI는 이 묶음에 포함하지 않는다. 원래 무대상 요청과 기존 TUI/멀티 탭은 유지한다.
 - 실제 Pi/API/TUI 통합 11건 통과, Web 핸들러 14건 통과. 전체 회귀에서 발견한 오류 메시지 표시 1건을 수정하고 해당 Web 묶음을 재검증했다. 마지막 통합 전체 결과는 후속 기록을 따른다.
-- Chromium은 로컬 OS socket 제약으로 차단. 전용 browser runner와 CI job 추가. Windows와 live LLM은 미실행.
+- Chromium은 로컬 OS socket 제약으로 차단됐으나 GitHub CI에서 실행했다. 시험 서버의 정확한 origin을 설정한 뒤, 파일 A 고정/B 보기·stale 0호출·실제 Pi 파일 변경과 diff·재접속 후 같은 기록·320/768/1440px 표시 7개 점검 통과. 모델 결정은 scripted다.
 - [사용법과 검증 범위](WORK-SURFACE-0.8.16.md).
 
-## 다음 순서
+## 3. 조직 실행 첫 묶음 · 0.8.17
 
-3. 조직 실행 첫 묶음: durable batch join, 부모 continuation, 정확한 산출물 버전의 독립 검증과 제한된 repair.
+- v2 supervisor 상태에 조직·작업·시도·합류·영수증 저장. 기존 v1 에이전트와 작업은 유지한다.
+- `agent_join`은 즉시 반환하고 부모가 실행을 끝낸 후 호스트가 결과를 모은다. 원래 부모 세션에서 후속 실행을 한 번 접수한다. 중첩 위임은 하위의 마지막 시도를 참조한다.
+- 호스트 설정의 문자열 포함·JSON 값 검사, 정확한 workbench 바이트 해시, 검사·환경 해시를 묶는다. 새 파일 버전은 이전 PASS를 현재 판정으로 재사용하지 않는다.
+- 필수 실패 때만 별도 수정 시도, 최대 3회/조직 deadline. 미확인 외부 효과는 자동 재시도하지 않는다.
+- 조직 API/SDK 생성·조회·취소와 join revision 취소 제공. 조직 전용 Web/TUI 생성 화면과 일반 프로젝트 검증은 후속 범위다.
+- 실제 Pi·HTTP·파일/재시작 시험 13건 통과: 최대 동시 실행 1, 중첩 합류, 필수/선택 실패, 중복/충돌, 취소 경합, callback 잠금, 권한 회수, 중단된 후속 작업, repair 복원, 검사 신선도·부재·한도·소유권·형식 이전.
+- [사용법과 판정 범위](ORGANIZATION-0.8.17.md).
+
+## 4. 사용자 화면 보고 반영 · 0.8.17
+
+- 0.8.14의 초기 단일 패널과 대괄호 메뉴로 실제 분할 구획이 드러나지 않는 문제 확인.
+- 각 패널에 실제 제목·외곽선 표시, 새 배치는 대화/활동 두 패널. 기존 배치 유지. 축소·확대 상태를 상단에 표시.
+- 실제 Pi renderer 2건, Linux CLI/HTTP/Pi/PTY 18개 점검 통과. [화면과 사용법](TUI-0.8.17.md).
+
+## 통합 검증과 경계
+
+- Linux Node 24 전체 393건: **392 통과, 0 실패, 1 skip**. skip은 외부 PIX 소스 경로가 필요한 시험이다.
+- 설치·공통 작업대 기준 [GitHub CI](https://github.com/riesling-29/pida/actions/runs/41980231234): Node 22.19/24, npm/pnpm/Bun, 실제 Chromium 모두 성공. 0.8.17 전체 최종 SHA의 CI는 반영 후 따로 확인한다.
+- Windows, live LLM, 회사 게이트웨이, Persona/Schumpeter와의 실제 배포 통합은 미실행. Pida 저장소와 기존 개발 브랜치만 수정한다.
 
 화면 요소 DOM 매핑(WS-06), 메신저·스케줄러·외부 runner는 이번 순차 작업의 범위 밖이다.

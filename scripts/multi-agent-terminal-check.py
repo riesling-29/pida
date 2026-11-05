@@ -55,11 +55,11 @@ def main():
             wait(lambda:bool(api('/v1/info')))
             a=api('/v1/agents',{'name':'Code A'})['id'];b=api('/v1/agents',{'name':'Research B'})['id']
             for agent in [a,b]:api('/v1/agents/'+agent+'/pause',{})
-            launch();check('default CLI opens green multi-agent TUI',b'\x1b[48;2;1;2;1m' in capture)
+            launch();wait(lambda:b'2/4 panels' in capture and '╭'.encode() in capture and '╰'.encode() in capture);check('default CLI opens two framed green panes',b'\x1b[48;2;1;2;1m' in capture)
             check('opening workspace does not create unrelated main session',api('/v1/sessions')['sessions']==[])
             key(b'\x1bOR');key(b'\x1b[B');key(b'\r');wait(lambda:b'Code A' in capture)
             key('\x1b[200~LOT-001 한글 요청\x1b[201~'.encode());check('Korean paste remains an unsent draft',not api('/v1/agents/'+a+'/jobs')['jobs'])
-            key(b'\x1b[17~');key(b'\r');wait(lambda:b'2/4 panels' in capture)
+            key(b'\x1b[1;3C')
             key(b'\x1bOR');key(b'\x1b[B');key(b'\x1b[B');key(b'\r')
             key(b'\x1b[200~LOT-002\x1b[201~');key(b'\r');wait(lambda:len(api('/v1/agents/'+b+'/jobs')['jobs'])==1)
             key(b'\x1b[<0;5;5M');key(b'\x1b[<0;5;5m');key(b'\r');wait(lambda:len(api('/v1/agents/'+a+'/jobs')['jobs'])==1)

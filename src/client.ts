@@ -62,6 +62,12 @@ export interface CommandReadOptions { offset?: number; maxBytes?: number }
 export interface CommandWaitOptions { waitTimeoutMs?: number; signal?: AbortSignal }
 /** Browser/Node fetch SDK. Native apps may use the same documented HTTP/SSE contract. */
 export class PidaClient {
+  async listOrganizations(): Promise<{ organizations: import("./organization.js").OrgSession[]; criteria: import("./organization.js").LocalCriterion[] }> { return (await this.request("/v1/organizations")).json(); }
+  async createOrganization(input: Parameters<import("./agent-supervisor.js").AgentSupervisor["createOrganization"]>[1]): Promise<import("./organization.js").OrgSession> { return (await this.request("/v1/organizations", "POST", input)).json(); }
+  async getOrganization(id: string): Promise<Awaited<ReturnType<import("./agent-supervisor.js").AgentSupervisor["getOrganization"]>>> { return (await this.request("/v1/organizations/" + encodeURIComponent(id))).json(); }
+  async cancelOrganization(id: string): Promise<import("./organization.js").OrgSession> { return (await this.request("/v1/organizations/" + encodeURIComponent(id) + "/cancel", "POST", {})).json(); }
+  async registerJoin(parentJobId: string, input: Parameters<import("./agent-supervisor.js").AgentSupervisor["registerJoin"]>[2]): Promise<import("./organization.js").BatchJoin> { return (await this.request("/v1/joins", "POST", { parentJobId, ...input })).json(); }
+  async cancelJoin(id: string, expectedRevision: number): Promise<import("./organization.js").BatchJoin> { return (await this.request("/v1/joins/" + encodeURIComponent(id) + "/cancel", "POST", { expectedRevision })).json(); }
   private readonly options: ClientOptions;
   constructor(options: ClientOptions) {
     this.options = { ...options, baseUrl: options.baseUrl.replace(/\/$/, "") };

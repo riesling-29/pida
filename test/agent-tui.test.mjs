@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {setTimeout as delay} from 'node:timers/promises';
 import {stripTerminalSequences,visibleWidth} from '@earendil-works/pi-tui';
 import {AgentWorkspaceController} from '../dist/agent-workspace-controller.js';
-import {createAgentTui} from '../dist/agent-tui.js';
+import {createAgentTui,terminalDefaultLayout} from '../dist/agent-tui.js';
 
 export class TerminalFixture {
   columns=180;rows=52;output='';kittyProtocolActive=false;
@@ -23,7 +23,7 @@ test('actual Pi multi-pane renderer: keyboard/mouse menus, independent Korean ed
   const terminal=new TerminalFixture(),v=createAgentTui(c,{terminal,workspace:'fixture workspace',color:true,colorMode:'truecolor'});
   t.after(()=>{v.stop();c.close();});v.start();await delay(40);
   const screen=()=>v.getScreenLines().map(stripTerminalSequences).join('\n');
-  assert.match(screen(),/MULTI TUI/);assert.match(screen(),/F6 분할/);
+  assert.match(screen(),/MULTI TUI/);assert.match(screen(),/F6 분할/);assert.match(screen(),/╭─/);assert.match(screen(),/╰─/);assert.doesNotMatch(screen(),/\[F1 메뉴\]/);
   terminal.input('\x1b[200~A 미전송 한글 지시\x1b[201~');await delay(20);
   assert.equal(c.draft(first),'A 미전송 한글 지시');assert.equal(sent.length,0);
   terminal.input('\x1b[17~');await delay(20);assert.match(screen(),/분할과 배치/);
@@ -43,6 +43,7 @@ test('actual Pi multi-pane renderer: keyboard/mouse menus, independent Korean ed
   for(const row of v.getScreenLines()){assert.equal(visibleWidth(row),terminal.columns);assert.ok(row.includes('\x1b[48;2;1;2;1m'));}
   terminal.columns=64;terminal.rows=24;terminal.resize();await delay(25);
   assert.equal(c.layout.panes.length,4);assert.equal((screen().match(/(?:A 코드|B 조사) \/ 대화/g)||[]).length,1);
+  assert.match(screen(),/초점 패널만 표시/);
   terminal.columns=180;terminal.rows=52;terminal.resize();await delay(25);
   assert.equal((screen().match(/(?:A 코드|B 조사) \/ 대화/g)||[]).length,4);
   const oldEditor=v.editor(first),oldTab=c.layout.active.id;
@@ -51,4 +52,14 @@ test('actual Pi multi-pane renderer: keyboard/mouse menus, independent Korean ed
   terminal.input('\x1b[<0;5;3M');terminal.input('\x1b[<0;5;3m');await delay(20);
   assert.equal(c.layout.active.id,oldTab);assert.equal(v.editor(first),oldEditor);assert.equal(oldEditor.getExpandedText(),'A 미전송 한글 지시');
   assert.doesNotMatch(terminal.output,/\x1b\](?:4|10|11|50|52);/);
+});
+
+test('fresh terminal starts with two framed views',async t=>{
+  const client={async getAgentOverview(){return {scopeId:'empty',maxConcurrent:1,agents:[],personaSources:{defaultSourceId:'local',sources:[]}};}};
+  const c=new AgentWorkspaceController(client,{pollMs:0,loadLayout:()=>terminalDefaultLayout()});await c.start();
+  const terminal=new TerminalFixture(),v=createAgentTui(c,{terminal,workspace:'fresh fixture',color:false});
+  t.after(()=>{v.stop();c.close();});v.start();await delay(40);
+  assert.equal(c.layout.panes.length,2);
+  assert.deepEqual(c.layout.panes.map(p=>p.binding.view),['chat','activity']);
+  assert.equal(v.getScreenLines().map(stripTerminalSequences).join('\n').match(/╭/g).length,2);
 });
