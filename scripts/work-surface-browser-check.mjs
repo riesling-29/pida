@@ -21,8 +21,12 @@ try {
   server.listen(0, '127.0.0.1'); await once(server, 'listening');
   browser = await chromium.launch({ headless: true, ...(process.env.PIDA_CHROMIUM_EXECUTABLE ? { executablePath: process.env.PIDA_CHROMIUM_EXECUTABLE } : {}), args: ['--no-sandbox'] });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
-  const errors = []; page.on('pageerror', e => errors.push(e.message));
+  const errors = []; page.on('pageerror', e => { errors.push(e.message); console.error('PAGE_ERROR:', e.message); });
+  page.on('response', response => { if (response.status() >= 400) console.error('HTTP:', response.status(), new URL(response.url()).pathname); });
   await page.goto(`http://127.0.0.1:${server.address().port}/#token=${token}`);
+  await page.waitForFunction(() => !document.getElementById('mode-tabs').hidden, null, { timeout: 5000 }).catch(async error => {
+    console.error('CONNECT_ERROR:', await page.locator('#error').textContent(), 'PAGE_ERRORS:', errors); throw error;
+  });
   await page.locator('#mode-tabs [data-mode="studio"]').click();
   await page.locator('#studio-target-mode').selectOption('files');
   await page.locator('#studio-file').selectOption('a.txt');
