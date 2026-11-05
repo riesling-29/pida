@@ -866,18 +866,20 @@ function consumeLaunch() {
   const initial = fragment.get("token");
   const requestedSession = fragment.get("session");
   launchSession = requestedSession && /^[a-f0-9-]{36}$/.test(requestedSession) ? requestedSession : undefined;
+  const studioLaunch = fragment.get("surface") === "studio";
+  if (studioLaunch && launchSession) sessionStorage.setItem("pida-studio-session", launchSession);
   initialSetup = fragment.get("setup") === "1";
   if (location.hash)
     history.replaceState(null, "", location.pathname + location.search);
   if (initial && connected && initial === token) {
-    if (launchSession) { const id = launchSession; launchSession = undefined; action(() => select(id)); document.querySelector('#mode-tabs [data-mode="workspace"]')?.click(); }
+    if (launchSession) { const id = launchSession; launchSession = undefined; action(async () => { await select(id); if (studioLaunch) await studio.openSession(id); }); document.querySelector('#mode-tabs [data-mode="workspace"]')?.click(); }
     if (initialSetup) openSettings();
     return;
   }
   if (initial) {
     $("token").value = initial;
     const openSession = !!launchSession;
-    action(async () => { await connect(); if (openSession) document.querySelector('#mode-tabs [data-mode="workspace"]')?.click(); });
+    action(async () => { await connect(); if (openSession) document.querySelector(studioLaunch ? '#mode-tabs [data-mode="studio"]' : '#mode-tabs [data-mode="workspace"]')?.click(); });
   }
 }
 controls();

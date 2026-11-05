@@ -91,7 +91,7 @@ export class ProjectView {
       const data = buffer.subarray(0, bytesRead);
       if (data.includes(0)) throw new PidaError("PROJECT_BINARY_UNSUPPORTED", 415);
       let content: string;
-      try { content = new TextDecoder("utf-8", { fatal: true }).decode(data); }
+      try { content = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(data); }
       catch { throw new PidaError("PROJECT_BINARY_UNSUPPORTED", 415); }
       return { path: posix(relative(this.root, full)), content, bytes: bytesRead, revision: digest(data), truncated: false };
     } finally { await file.close(); }

@@ -2,7 +2,7 @@ import { RunState } from "/run-state.js";
 import { createRunInput } from "/run-input.js";
 import { createRunDetails } from "/run-details.js";
 import { createCommands } from "/commands.js";
-import { explainError } from "/pida-client.js";
+import { explainError, formatWorkReview } from "/pida-client.js";
 const $ = id => document.getElementById(id);
 const outcomes = { completed: "실행 완료", failed: "실행 실패", cancelled: "중단됨", limited: "실행 한도 도달", interrupted: "서버 종료로 중단됨" };
 const cleanPrompt = text => text.replace(/^\[PIDA (?:UI|CODE) STUDIO\][\s\S]*?\nUSER REQUEST:\n/, "");
@@ -14,6 +14,7 @@ export function createStudio({ client, request, changed, disconnected }) {
   let state = { html: "", revision: "", templates: [] }, workspace = { files: [] }, mode = "studio", session, selectedTemplate;
   let generation = 0, refreshSequence = 0, fileSequence = 0, mobile = false, selectedFile = "", target = "ui", view = "preview", poll;
   let review, changes, bundle, reviewNote = "";
+  let workSurfaceEnabled = false, viewedFile, draftBinding, pendingRequest, serverReview;
   let activity, activityTimer, projectTools = false, previewRefreshing = false;
   let project = { files: [] }, projectPath = ".", projectChanges, projectSequence = 0;
   let programs, programsLoading = false, programDrafting = false, programSequence = 0, programDownloadUrl;
@@ -126,6 +127,10 @@ export function createStudio({ client, request, changed, disconnected }) {
     $("studio-program-candidate").disabled = programsLoading || programDrafting;
     $("studio-program-draft").disabled = locked || programsLoading || programDrafting || !programs?.catalog?.candidates.some(candidate => candidate.id === $("studio-program-candidate").value && candidate.status === "ready");
     $("mode-tabs").hidden = !connected;
+    $("studio-bind-file").disabled = !workSurfaceEnabled || !viewedFile?.revision || locked;
+    $("studio-unbind").disabled = !draftBinding || locked;
+    $("studio-binding").textContent = draftBinding ? `고정 대상: ${draftBinding.resource}/${draftBinding.path}${draftBinding.range ? `:${draftBinding.range.startLine}–${draftBinding.range.endLine}` : ""} · ${draftBinding.contentSha256.slice(0, 12)} · 허용된 관련 파일도 수정될 수 있습니다.` : "고정한 요청 대상 없음 · 파일 보기에서 명시적으로 고정할 수 있습니다.";
+    $("studio-session-link").textContent = session ? `TUI: npm run tui -- <작업공간> --main --session ${session}  · /review로 같은 기록 조회` : "대화가 시작되면 같은 세션의 열기 명령을 표시합니다.";
     $("studio-target-mode").value = target;
     $("studio-target").textContent = target === "ui" ? "app/index.html" : target === "project" ? "서버에 설정한 프로젝트 · project_* 도구" : selectedFile || "작업 공간 전체";
     $("studio-prompt").placeholder = target === "ui" ? "왼쪽 메뉴에 분석 페이지를 추가하고 기존 기능을 유지해줘." : target === "project" ? "프로젝트 구조를 살펴보고 버그를 수정한 뒤 관련 테스트를 실행해줘." : "이 파일을 수정하고 테스트를 실행해줘. 실제 검사 결과도 알려줘.";
@@ -189,12 +194,13 @@ export function createStudio({ client, request, changed, disconnected }) {
   async function readFile() {
     const active = generation, sequence = ++fileSequence, path = selectedFile, currentTarget = target;
     $("studio-source").textContent = path ? "파일을 읽고 있습니다…" : currentTarget === "project" ? "프로젝트의 파일 또는 폴더를 선택하세요." : "대화로 파일을 만들거나 작업 공간에서 올리세요.";
-    $("studio-file-meta").textContent = "";
+    $("studio-file-meta").textContent = ""; viewedFile = undefined; controls();
     if (!path) return;
     try {
       const file = await (currentTarget === "project" ? client.readProjectFile(path) : client.readWorkspaceFile(path));
       if (active !== generation || sequence !== fileSequence || currentTarget !== target) return;
-      $("studio-source").textContent = file.content;
+      viewedFile = { ...file, resource: currentTarget === "project" ? "project" : "workbench" };
+      $("studio-source").textContent = file.content.split("\n").map((line, i) => `${i + 1}  ${line}`).join("\n"); controls();
       $("studio-file-meta").textContent = `${new TextEncoder().encode(file.content).length.toLocaleString()} bytes · 읽기 전용 보기`;
     } catch (error) { if (active === generation && sequence === fileSequence) $("studio-source").textContent = explainError(error.code); }
   }
@@ -309,6 +315,18 @@ export function createStudio({ client, request, changed, disconnected }) {
     controls();
   }
   async function loadReview() {
+    if (workSurfaceEnabled && session) {
+      const active = generation, id = session;
+      try {
+        const records = (await client.listWorkReviews(id)).reviews;
+        const runId = review?.runId ?? records.at(-1)?.binding.runId;
+        const saved = runId ? await client.getWorkReview(id, runId) : undefined;
+        if (active !== generation || id !== session) return;
+        serverReview = saved;
+        $("studio-common-review").textContent = saved ? formatWorkReview(saved) : "접수 기록 없음";
+        if (saved) { review = { runId: saved.binding.runId, base: saved.base, head: saved.head, revision: saved.revision }; changes = saved.changes; saveReview(); }
+      } catch (error) { if (active === generation && id === session) $("studio-common-review").textContent = `공통 기록 조회 실패: ${explainError(error.code)}`; }
+    }
     if (!review || !session) { renderReview(); return; }
     const active = generation, current = review, id = session;
     const results = await Promise.allSettled([
@@ -328,7 +346,7 @@ export function createStudio({ client, request, changed, disconnected }) {
     renderReview();
   }
   async function finishReview() {
-    if (review?.base && !review.head) {
+    if (!workSurfaceEnabled && review?.base && !review.head) {
       try { const end = await client.captureCheckpoint(); review.head = end.checkpoint; review.revision = end.revision; saveReview(); }
       catch { reviewNote = "요청 후 파일 상태를 기록하지 못했습니다. 자동 복원은 사용할 수 없습니다."; }
     }
@@ -416,7 +434,7 @@ export function createStudio({ client, request, changed, disconnected }) {
         } catch (commandError) { error = commandError; }
       }
       if (active !== generation || id !== session || !run.current(ticket, { revision: true })) return;
-      session = undefined; sessionUnavailable = false; run.reset(); runInput.reset(); runDetails.select(); remoteRunning = false; clearTimeout(poll); sessionStorage.removeItem("pida-studio-session"); clearReview(); $("studio-messages").replaceChildren(); controls();
+      session = undefined; draftBinding = pendingRequest = serverReview = undefined; sessionUnavailable = false; run.reset(); runInput.reset(); runDetails.select(); remoteRunning = false; clearTimeout(poll); sessionStorage.removeItem("pida-studio-session"); clearReview(); $("studio-messages").replaceChildren(); controls();
       if (error.status !== 404) throw error;
     }
   }
@@ -449,7 +467,8 @@ export function createStudio({ client, request, changed, disconnected }) {
       if (active !== generation) return;
       if (run.sessionId !== session) run.reset(session);
       run.begin(); runInput.reset(); runDetails.select(session); ticket = run.ticket(); controls();
-      if (target === "project") reviewNote = "프로젝트 저장소 변경은 서비스 작업 공간의 파일 비교·복원 범위에 포함되지 않습니다.";
+      if (workSurfaceEnabled) reviewNote = "서버가 접수·종료 경계의 변경 기준을 보관합니다.";
+      else if (target === "project") reviewNote = "프로젝트 저장소 변경은 서비스 작업 공간의 파일 비교·복원 범위에 포함되지 않습니다.";
       else if (workspace.canCheckpoint) {
         try { review.base = (await client.captureCheckpoint()).checkpoint; }
         catch { reviewNote = "요청 전 변경 기준을 기록하지 못했습니다. 변경 비교·자동 복원을 사용할 수 없습니다."; }
@@ -459,9 +478,12 @@ export function createStudio({ client, request, changed, disconnected }) {
         ? `You are editing the service UI shown beside this chat. Read the current app with ui_read, preserve existing features, then use ui_patch for small changes or ui_apply for a complete replacement. Re-read revisions between changes. Keep self-contained HTML with inline CSS/JavaScript and addEventListener. No external resources, network, frames, localStorage or parent access. Current revision at request start: ${before}.`
         : target === "project" ? `You are working in the operator-configured host project, not the isolated service workbench. Use registered project_* tools to inspect the project and its applicable AGENTS.md instructions, read relevant files, make requested changes, and execute relevant tests when project_shell is available. Check actual registered tool capabilities and permissions. Preserve unrelated and user changes. Do not put project changes into the service workbench unless explicitly requested. The service workbench's checkpoints, diff and restore do not cover this project or external side effects. Report changed paths and actual verification outputs honestly.`
         : `You are working on files in the isolated service workbench. Selected file (context, not a scope authorization): ${JSON.stringify(selectedFile || null)}. Read relevant files before editing; use registered workbench tools. JavaScript tests run in QuickJS using workspace_test; this workbench has no Node.js, Python, npm or network. The separately configured host project, if any, is a different target. Preserve unrelated files and the service UI unless the user requests changes.`;
-      const prompt = `[PIDA ${target === "ui" ? "UI" : "CODE"} STUDIO]\n${instructions} Apply requested changes with tools, not just a code block in chat. Run relevant available checks and report their scope honestly. Rendering is not verification.\nUSER REQUEST:\n${text}`;
+      const prompt = draftBinding ? text : `[PIDA ${target === "ui" ? "UI" : "CODE"} STUDIO]\n${instructions} Apply requested changes with tools, not just a code block in chat. Run relevant available checks and report their scope honestly. Rendering is not verification.\nUSER REQUEST:\n${text}`;
       if (!run.current(ticket) || active !== generation) return;
-      for await (const event of client.stream(session, prompt, { disconnectPolicy: "continue" })) {
+      const targets = draftBinding ? [structuredClone(draftBinding)] : undefined;
+      const payload = JSON.stringify({ session, prompt, targets });
+      if (!pendingRequest || pendingRequest.payload !== payload) pendingRequest = { payload, requestId: crypto.randomUUID() };
+      for await (const event of client.stream(session, prompt, { disconnectPolicy: "continue", ...(workSurfaceEnabled ? { requestId: pendingRequest.requestId, targets } : {}) })) {
         if (!run.current(ticket) || active !== generation) continue;
         if (event.type === "text_delta" && run.running) {
           answer += event.delta; output.textContent = answer;
@@ -471,13 +493,13 @@ export function createStudio({ client, request, changed, disconnected }) {
           if (event.trace.type === "run_started") { admitted = true; if ($("studio-prompt").value === raw) $("studio-prompt").value = ""; review.runId = event.trace.runId; saveReview(); schedulePoll(); }
           if (["tool_completed", "tool_failed"].includes(event.trace.type)) refreshDuringRun();
         }
-        if (event.type === "result" && run.acceptResult(event.result)) { result = event.result; if (activity?.running) stopActivity(); review.runId = result.runId; saveReview(); output.textContent = [result.text, ...[...new Set([result.code, result.persistenceError])].filter(Boolean).map(explainError)].filter(Boolean).join("\n\n") || "응답이 없습니다."; }
+        if (event.type === "result" && run.acceptResult(event.result)) { pendingRequest = undefined; result = event.result; if (activity?.running) stopActivity(); review.runId = result.runId; saveReview(); output.textContent = [result.text, ...[...new Set([result.code, result.persistenceError])].filter(Boolean).map(explainError)].filter(Boolean).join("\n\n") || "응답이 없습니다."; }
         $("studio-messages").scrollTop = $("studio-messages").scrollHeight;
       }
       if (!run.current(ticket) || active !== generation) return;
       status(`${outcomes[result?.status] ?? "실행 상태 미확인"} · 아래 변경·검증 결과를 확인하세요.`);
     } catch (error) {
-      if (active === generation && (!ticket || run.current(ticket))) { issue(error); if (!admitted && !$("studio-prompt").value) $("studio-prompt").value = raw; }
+      if (active === generation && (!ticket || run.current(ticket))) { issue(error); output.textContent = explainError(error.code); if (!admitted && !$("studio-prompt").value) $("studio-prompt").value = raw; }
     }
     finally {
       if (active !== generation || (ticket && !run.current(ticket))) return;
@@ -505,6 +527,19 @@ export function createStudio({ client, request, changed, disconnected }) {
     const next = event.key === "ArrowRight" ? (index + 1) % names.length : event.key === "ArrowLeft" ? (index + names.length - 1) % names.length : event.key === "Home" ? 0 : event.key === "End" ? names.length - 1 : undefined;
     if (next !== undefined) { event.preventDefault(); showView(names[next]); $("studio-tab-" + names[next]).focus(); }
   };
+  $("studio-bind-file").onclick = () => {
+    if (!viewedFile?.revision || !workSurfaceEnabled || busy || remoteRunning) return;
+    const base = { resource: viewedFile.resource, path: viewedFile.path, contentSha256: viewedFile.revision };
+    const start = $("studio-range-start").value, end = $("studio-range-end").value;
+    if (start || end) {
+      const startLine = Number(start), endLine = Number(end);
+      if (!Number.isSafeInteger(startLine) || !Number.isSafeInteger(endLine) || startLine < 1 || endLine < startLine || endLine > viewedFile.content.split("\n").length) { status("시작행과 끝행을 파일 안의 범위로 입력하세요."); return; }
+      draftBinding = { ...base, kind: "source-range", range: { startLine, endLine } };
+    } else draftBinding = { ...base, kind: "file" };
+    controls();
+  };
+  $("studio-unbind").onclick = () => { if (!busy && !remoteRunning) { draftBinding = undefined; controls(); } };
+  $("studio-open-session").onclick = () => { void openSession($("studio-session-id").value.trim()).catch(issue); };
   $("studio-target-mode").onchange = () => { target = $("studio-target-mode").value; selectedFile = ""; fileSequence++; showView(target === "ui" ? "preview" : "files"); renderFiles(); renderState(); controls(); void refresh().catch(issue); };
   $("studio-file").onchange = () => {
     const path = $("studio-file").value;
@@ -548,7 +583,7 @@ export function createStudio({ client, request, changed, disconnected }) {
   };
   $("studio-compact").onclick = () => compact(false); $("studio-handoff").onclick = () => compact(true); $("studio-form").onsubmit = send;
   $("studio-prompt").onkeydown = event => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !event.isComposing) { event.preventDefault(); $("studio-form").requestSubmit(); } };
-  $("studio-new-chat").onclick = () => { if (busy || remoteRunning || hostBusy) return; session = undefined; sessionUnavailable = false; run.reset(); runInput.reset(); runDetails.select(); sessionStorage.removeItem("pida-studio-session"); clearReview(); $("studio-messages").replaceChildren(); status("새 대화 · 현재 파일은 유지됩니다."); controls(); };
+  $("studio-new-chat").onclick = () => { if (busy || remoteRunning || hostBusy) return; session = undefined; draftBinding = pendingRequest = serverReview = undefined; sessionUnavailable = false; run.reset(); runInput.reset(); runDetails.select(); sessionStorage.removeItem("pida-studio-session"); clearReview(); $("studio-messages").replaceChildren(); status("새 대화 · 현재 파일은 유지됩니다."); controls(); };
   $("studio-cancel").onclick = async () => {
     const id = session, ticket = run.ticket(); run.cancel(); controls();
     if (activity?.running) { activity.cancelling = true; activityStatus(""); }
@@ -558,10 +593,19 @@ export function createStudio({ client, request, changed, disconnected }) {
   $("studio-refresh").onclick = async () => { try { await refresh(true); await restoreChat(); if (!remoteRunning && !sessionUnavailable) await finishReview(); } catch (error) { issue(error); } };
   for (const button of document.querySelectorAll("[data-suggestion]")) button.onclick = () => { $("studio-prompt").value = button.dataset.suggestion; $("studio-prompt").focus(); };
   for (const size of ["desktop", "mobile"]) $("preview-" + size).onclick = () => { mobile = size === "mobile"; $("preview-desktop").setAttribute("aria-pressed", String(!mobile)); $("preview-mobile").setAttribute("aria-pressed", String(mobile)); resize(); };
+  async function openSession(id) {
+    if (!/^[a-f0-9-]{36}$/.test(id) || busy || remoteRunning) throw Error("세션 ID와 실행 상태를 확인하세요.");
+    await client.getSession(id);
+    generation++; run.reset(id); runInput.reset(); session = id;
+    sessionStorage.setItem("pida-studio-session", id); clearReview(); draftBinding = undefined; pendingRequest = undefined;
+    await restoreChat(); await loadReview(); controls(); showMode("studio");
+  }
   return {
+    openSession,
     get busy() { return busy || remoteRunning; },
     update({ connected: value, busy: parentBusy }) { connected = value; hostBusy = parentBusy; controls(); },
     async connect(info) {
+      workSurfaceEnabled = !!info.workSurface;
       generation++; sessionUnavailable = false; run.reset(); runInput.reset(); runDetails.select(); capabilities = info.capabilities ?? {}; clearTimeout(poll); connected = true; mock = info.provider?.mode === "mock";
       programSequence++; programs = undefined; programsLoading = programDrafting = false; clearProgramDraft();
       projectTools = info.tools?.some(tool => tool.permitted && tool.name.startsWith("project_")) ?? false;
@@ -578,6 +622,7 @@ export function createStudio({ client, request, changed, disconnected }) {
       if ($("studio-programs").open) void refreshPrograms();
     },
     reset() {
+      draftBinding = viewedFile = pendingRequest = serverReview = undefined; workSurfaceEnabled = false;
       programSequence++; programs = undefined; programsLoading = programDrafting = false; clearProgramDraft(); $("studio-programs-enabled").replaceChildren(); $("studio-program-candidate").replaceChildren(); $("studio-program-source").textContent = ""; $("studio-programs-status").textContent = ""; $("studio-programs").open = false;
       generation++; sessionUnavailable = false; run.reset(); runInput.reset(); runDetails.select(); fileSequence++; projectSequence++; clearTimeout(poll); connected = busy = remoteRunning = available = false; state = { html: "", revision: "", templates: [] }; workspace = { files: [] }; project = { files: [] }; projectPath = "."; projectChanges = undefined; session = undefined; selectedFile = ""; target = "ui";
       payloads.clear(); rendered.clear(); renderErrors.clear(); for (const frame of frames) frame.removeAttribute("src");

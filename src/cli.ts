@@ -60,7 +60,7 @@ async function openBrowser(directory: string, setup = false, sessionId?: string)
   if (!token || token.length < 32)
     throw new Error("Missing local token; run pida doctor.");
   // Fragment never reaches the HTTP server. The UI immediately removes it from browser history.
-  const url = `http://127.0.0.1:${config.port}/#token=${encodeURIComponent(token)}${setup ? "&setup=1" : ""}${sessionId ? "&session=" + encodeURIComponent(sessionId) : ""}`;
+  const url = `http://127.0.0.1:${config.port}/#token=${encodeURIComponent(token)}${setup ? "&setup=1" : ""}${sessionId ? "&surface=studio&session=" + encodeURIComponent(sessionId) : ""}`;
   const command =
     process.platform === "win32"
       ? "rundll32"

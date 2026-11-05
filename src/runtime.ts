@@ -12,9 +12,10 @@ import type { ArtifactSnapshot, ToolEvidence, VerificationResult, ObservationBun
 const runtimeVersion: string = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
 import { basename, join, resolve } from "node:path";
 import { SessionStore, type SavedSession } from "./storage.js";
+import { validateWorkRequest, type WorkSurface } from "./work-surface.js";
 import { AgentResources, AgentResourceError } from "./agent-resources.js";
 import { projectToolDetails } from "./tool-details.js";
-import type { SessionSummary, RuntimeInfo } from "./protocol.js";
+import type { SessionSummary, RuntimeInfo, RunMetadata } from "./protocol.js";
 import { InMemoryCredentialStore } from "@earendil-works/pi-ai";
 import {
   createAgentSession,
@@ -110,6 +111,7 @@ export interface RuntimeOptions {
   agentId?: string;
   observationSink?: ObservationSink;
   inspectArtifacts?: (principal: Principal) => Promise<ArtifactSnapshot>;
+  workSurface?: WorkSurface;
   /** Host-declared evidence gaps for optional execution profiles. */
   evidenceLimits?: readonly string[];
   /** Serialize all task runs when they share a writable host project. */
@@ -840,6 +842,7 @@ export class PidaRuntime {
     const p = principalCopy(principal);
     return {
       persistence: !!this.store,
+      workSurface: !!this.options.workSurface,
       ...(this.store ? { instanceId: this.store.instanceId } : {}),
       provider: this.options.providerInfo,
       capabilities: { steering: true, followUp: true, queuedInputDurable: false, ...this.resources.info() },
@@ -997,16 +1000,21 @@ export class PidaRuntime {
     prompt: string,
     onEvent?: (event: StreamEvent) => void,
     signal?: AbortSignal,
-    metadata: { taskId?: string } = {},
+    metadata: RunMetadata = {},
   ): Promise<RunResult> {
+    metadata = structuredClone(metadata);
     if (!this.sessions.has(id)) await this.resumeSession(id, principal);
     const record = this.owned(id, principal);
     if (this.closed) throw new PidaError("RUNTIME_CLOSED", 503);
+    validateWorkRequest(metadata);
+    if (metadata.targets && !this.options.workSurface) throw new PidaError("WORK_SURFACE_UNAVAILABLE", 404);
+    const replay = this.options.workSurface?.replay(id, principal, prompt, metadata);
+    if (replay) { onEvent?.({ type: "result", result: replay }); return replay; }
     if (typeof prompt !== "string" || !prompt.trim() || prompt.length > 16_000)
       throw new PidaError("INVALID_PROMPT", 400);
     if (record.deleting) throw new PidaError("SESSION_NOT_FOUND", 404);
     if (record.active || [...this.pendingTools.values()].includes(id)) throw new PidaError("SESSION_BUSY", 409);
-    if (this.options.singleWriter && (this.pendingTools.size > 0 || [...this.sessions.values()].some(session => session.active)))
+    if ((this.options.singleWriter || this.options.workSurface) && (this.pendingTools.size > 0 || [...this.sessions.values()].some(session => session.active)))
       throw new PidaError("WORKSPACE_BUSY", 409);
     if (record.runs >= this.limits.runs)
       throw new PidaError("SESSION_RUN_LIMIT", 429);
@@ -1026,6 +1034,11 @@ export class PidaRuntime {
     try {
     let lastAssistant: Extract<(typeof record.pi.messages)[number], { role: "assistant" }> | undefined;
     record.active = run;
+    let finish!: () => void;
+    record.finished = new Promise<void>(resolve => { finish = resolve; });
+    let workContext = "";
+    try { workContext = await this.options.workSurface?.prepare(id, run.id, run.principal, prompt, metadata) ?? ""; }
+    catch (error) { record.active = undefined; finish(); throw error; }
     record.saved.activeRunId = run.id;
     record.saved.activeTaskId = run.taskId;
     record.runs++;
@@ -1037,12 +1050,9 @@ export class PidaRuntime {
     } catch {
       record.active = undefined;
       record.runs--;
+      finish();
       throw new PidaError("PERSISTENCE_FAILED", 500);
     }
-    let finish!: () => void;
-    record.finished = new Promise<void>((resolve) => {
-      finish = resolve;
-    });
     const stop = (status: RunStatus, code: string) => {
       this.stopRun(record, run, status, code);
     };
@@ -1082,6 +1092,7 @@ export class PidaRuntime {
     run.traceInput = type => { trace(type); };
     const externalAbort = () => stop("cancelled", "CANCELLED");
     signal?.addEventListener("abort", externalAbort, { once: true });
+    if (signal?.aborted) externalAbort();
     const timer = setTimeout(
       () => stop("limited", "RUN_TIMEOUT"),
       this.limits.runMs,
@@ -1235,6 +1246,7 @@ export class PidaRuntime {
         }
         run.abort.signal.throwIfAborted();
         run.acceptingInput = true;
+        if (workContext) await record.pi.sendCustomMessage({ customType: "pida-work-target", display: true, content: workContext, details: { runId: run.id } }, { triggerTurn: false });
         await record.pi.prompt(prompt, { expandPromptTemplates: false });
         for (let attempt = 0; run.code === "OUTPUT_LIMIT" && attempt < this.limits.outputRetries && !run.abort.signal.aborted && run.turns < this.limits.turns; attempt++) {
           if (this.effects.pending(id).length) { run.status = "failed"; run.code = "EFFECT_STATE_UNKNOWN"; break; }
@@ -1293,6 +1305,7 @@ export class PidaRuntime {
       if (pending.length) result.recovery = { autoRetry: false, pendingEffectIds: pending.map(r => r.id), action: "inspect-and-reconcile" };
     } catch { result.recovery = { autoRetry: false, pendingEffectIds: [], action: "repair-effect-ledger" }; }
     if (result.recovery && result.status === "completed") { result.status = "failed"; result.code = "EFFECT_STATE_UNKNOWN"; }
+    try { await this.options.workSurface?.finish(run.principal, result); } catch { /* Admission stays inspectable; incomplete review cannot trigger replay. */ }
     const finalTrace = trace(
       "run_finished",
       { status: result.status, code: result.code },
@@ -1323,6 +1336,7 @@ export class PidaRuntime {
         ...(this.options.evidenceLimits ?? []), ...(!this.options.pricingVerified ? ["COST_UNKNOWN"] : []), ...(result.recovery ? ["EFFECT_STATE_REQUIRES_RECONCILIATION"] : []), ...(run.evidenceFailed || result.persistenceError ? ["EVIDENCE_OR_STORAGE_INCOMPLETE"] : [])] });
     this.observe(id, run, "run_finished", { status: result.status, code: result.code ?? null, persistence_error: result.persistenceError ?? null });
     this.observations.finish({ sessionId: id, taskId: run.taskId, runId: run.id }, manifest);
+    try { this.options.workSurface?.settle(result); } catch { /* Preserve admission receipt; never replay a run because review storage failed. */ }
     finish();
     emit({ type: "trace", trace: { ...finalTrace } });
     emit({ type: "result", result });
@@ -1332,6 +1346,17 @@ export class PidaRuntime {
       if (pending.length) void Promise.allSettled(pending).then(() => releaseLease?.());
       else releaseLease?.();
     }
+  }
+  async getWorkReview(id: string, runId: string, principal: Principal) {
+    this.assertSessionOwner(id, principal);
+    if (!this.options.workSurface) throw new PidaError("WORK_SURFACE_UNAVAILABLE", 404);
+    const review = await this.options.workSurface.get(id, runId, principal);
+    try { review.manifest = this.exportRun(id, runId, principal).manifest; } catch { review.limits.push("MANIFEST_UNAVAILABLE"); }
+    return review;
+  }
+  listWorkReviews(id: string, principal: Principal) {
+    this.assertSessionOwner(id, principal);
+    return this.options.workSurface?.list(id, principal) ?? [];
   }
   /** Compact/transfer only an idle, owned session. Never replay tools during handoff. */
   async compactSession(id: string, principal: Principal, handoff = false): Promise<{ sessionId: string; compacted: boolean }> {

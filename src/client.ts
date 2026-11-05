@@ -11,6 +11,7 @@ export type { AgentMemoryView, InformationTransition } from "./agent-memory.js";
 import type { ObservationBundle, ResultManifest } from "./execution-contract.js";
 export type { ObservationBundle, ResultManifest } from "./execution-contract.js";
 import type {
+  WorkTarget, WorkReview, RunMetadata,
   RunResult,
   StreamEvent,
   TraceEvent,
@@ -20,6 +21,7 @@ import type {
   TracePage,
 } from "./protocol.js";
 export type {
+  WorkTarget, WorkReview, RunMetadata,
   RunResult,
   StreamEvent,
   TraceEvent,
@@ -137,7 +139,7 @@ export class PidaClient {
   async retractAgentExperience(id: string, input: {id: string; expectedRevision: number; reason: string; sourceRefs: string[]}): Promise<AgentExperience> { return (await this.request(this.agentPath(id) + "/memory/retract", "POST", input)).json(); }
   async transitionAgentMemory(id: string, input: InformationTransition): Promise<AgentInformationState> { return (await this.request(this.agentPath(id) + "/memory/states", "POST", input)).json(); }
   async getAgentWorkbench(id: string): Promise<Awaited<ReturnType<PidaClient["getWorkbench"]>>> { return (await this.request(this.agentPath(id) + "/workbench")).json(); }
-  async readAgentFile(id: string, path: string): Promise<{path: string; content: string}> { return (await this.request(this.agentPath(id) + "/workbench/file?path=" + encodeURIComponent(path))).json(); }
+  async readAgentFile(id: string, path: string): Promise<{path: string; content: string; revision: string}> { return (await this.request(this.agentPath(id) + "/workbench/file?path=" + encodeURIComponent(path))).json(); }
   async getPrograms(): Promise<ReturnType<import("./program-registry.js").ProgramRegistry["list"]>> { return (await this.request("/v1/programs")).json(); }
   async draftProgram(input: {candidateId: string; sourceDigest: string}): Promise<ReturnType<import("./program-registry.js").ProgramRegistry["draft"]>> { return (await this.request("/v1/programs/draft", "POST", input)).json(); }
   async getProject(path = "."): Promise<{enabled: true; path: string; files: ProjectEntry[]; truncated: boolean}> { return (await this.request("/v1/project?path=" + encodeURIComponent(path))).json(); }
@@ -148,7 +150,7 @@ export class PidaClient {
   async getWorkbench(): Promise<{ enabled: boolean; engine: string; revision?: string; canCheckpoint?: boolean; files: { path: string; bytes: number }[]; skills: { name: string; description: string }[]; history: { id: string; message: string }[] }> {
     return (await this.request("/v1/workbench")).json();
   }
-  async readWorkspaceFile(path: string): Promise<{ path: string; content: string }> {
+  async readWorkspaceFile(path: string): Promise<{ path: string; content: string; revision: string; bytes: number }> {
     return (await this.request("/v1/workbench/file?path=" + encodeURIComponent(path))).json();
   }
   async captureCheckpoint(): Promise<{ checkpoint: string; revision: string }> { return (await this.request("/v1/workbench/checkpoint", "POST", {})).json(); }
@@ -247,12 +249,13 @@ export class PidaClient {
   async *stream(
     id: string,
     prompt: string,
-    options: { signal?: AbortSignal; taskId?: string; disconnectPolicy?: "cancel" | "continue" } = {},
+    options: RunMetadata & { signal?: AbortSignal; disconnectPolicy?: "cancel" | "continue" } = {},
   ): AsyncGenerator<StreamEvent> {
     const response = await this.request(
       this.path(id) + "/runs",
       "POST",
       { prompt, ...(options.taskId !== undefined ? { taskId: options.taskId } : {}),
+        ...(options.requestId !== undefined ? { requestId: options.requestId } : {}), ...(options.targets !== undefined ? { targets: options.targets } : {}),
         ...(options.disconnectPolicy !== undefined ? { disconnectPolicy: options.disconnectPolicy } : {}) },
       options.signal,
     );
@@ -295,6 +298,8 @@ export class PidaClient {
     options: {
       signal?: AbortSignal;
       taskId?: string;
+      requestId?: string;
+      targets?: WorkTarget[];
       /** continue detaches observation on abort/disconnect; call cancel(id) to stop the run. */
       disconnectPolicy?: "cancel" | "continue";
       onEvent?: (event: StreamEvent) => void;
@@ -308,9 +313,21 @@ export class PidaClient {
     if (!result) throw new PidaClientError("STREAM_INTERRUPTED", 502);
     return result;
   }
+  async getWorkReview(id: string, runId: string): Promise<WorkReview> { return (await this.request(this.path(id) + "/runs/" + encodeURIComponent(runId) + "/review")).json(); }
+  async listWorkReviews(id: string): Promise<{ reviews: Pick<WorkReview, "requestId" | "status" | "binding">[] }> { return (await this.request(this.path(id) + "/work-reviews")).json(); }
 }
 
 /** Shared rendering projection for peer clients; active text is bounded and not persisted. */
+export function formatWorkReview(review: WorkReview): string {
+  const targets = review.binding.targets.map(t => `${t.resource}/${t.path}${t.kind === "source-range" ? `:${t.range.startLine}-${t.range.endLine}` : ""} · ${t.contentSha256.slice(0, 12)}`).join("\n") || "지정 대상 없음";
+  const checks = review.manifest?.verification_results.map(c => `${c.scope}: ${c.status} · ${review.verificationCurrent === "current" && c.artifact_snapshot_digest === review.revision && c.current_at_run_end ? "현재 버전" : review.verificationCurrent === "unknown" ? "현재 일치 여부 확인 불가" : "이전 버전 검사"}`).join("\n") || "검사 근거 없음";
+  const selected = review.before.filter(f => f.resource === "project").map(f => {
+    const end = review.end?.find(e => e.resource === f.resource && e.path === f.path);
+    return `${f.path} · 접수 ${f.contentSha256.slice(0, 12)} → 종료 ${end?.contentSha256.slice(0, 12) ?? "확인 불가"}\n${end && f.contentSha256 === end.contentSha256 ? "선택 파일 변경 없음" : `--- 접수 시 파일 ---\n${f.content.slice(0, 16000)}\n--- 종료 관찰 파일 ---\n${end?.content.slice(0, 16000) ?? "읽기 실패/삭제"}\n[표시는 각 16,000자까지]`}`;
+  }).join("\n\n");
+  return `실행 ${review.binding.runId}\n상태 ${review.status}\n접수 대상\n${targets}\n\n현재 파일\n${review.freshness?.map(f => `${f.path}: ${f.state}`).join("\n") || "확인 불가"}\n\n실행 구간에 관찰한 작업공간 변경 (단독 인과 귀속 아님)\n${review.changes?.diff || "변경 없음 또는 비교 기준 없음"}\n${selected}\n\n검사\n${checks}\n독립 과제 판정: 미확인\n\n제약\n${review.limits.join("\n")}`;
+}
+
 export function sessionDisplayMessages(session: Awaited<ReturnType<PidaClient["getSession"]>>) {
   const live = session.activeResponse;
   return [...session.messages, ...(session.running && live && live.runId === session.activeRunId && live.text
@@ -319,6 +336,10 @@ export function sessionDisplayMessages(session: Awaited<ReturnType<PidaClient["g
 
 /** Stable, credential-free explanations shared by both bundled chat surfaces. */
 export function explainError(code?: string): string {
+  if (code === "TARGET_STALE") return "고정한 뒤 파일이 바뀌었습니다. 초안을 유지하고 파일을 다시 읽어 새 버전으로 고정하세요. 실행은 시작하지 않았습니다.";
+  if (code === "TARGET_RANGE_INVALID") return "선택한 행 범위가 현재 파일을 벗어납니다.";
+  if (code === "WORK_REQUEST_ALREADY_ACCEPTED") return "이미 접수된 요청입니다. 접수 기록에서 원래 실행을 확인하세요. 자동 재실행하지 않습니다.";
+  if (code === "WORK_REQUEST_CONFLICT") return "같은 요청 ID에 다른 내용이 전달되었습니다. 원래 접수 기록을 먼저 확인하세요.";
   const messages: Record<string, string> = {
     COMMANDS_DISABLED: "이 서버에는 실행 명령 관리가 연결되지 않았습니다.",
     COMMAND_NOT_FOUND: "이 대화나 작업에서 접근할 수 있는 명령을 찾지 못했습니다.",

@@ -163,7 +163,7 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
     if (lastSession !== session?.sessionId) { transcript.scrollToEnd(); inspector.scrollToStart(); tui.resetTextSelection(); lastSession = session?.sessionId; }
     compact.setText(`목표 ${singleLine(signals.goal || "입력 대기", 160)}\n${signals.verification} · F7 작업 개요`);
     const usage = session?.context?.percent == null ? "" : ` · 컨텍스트 ${session.context.percent.toFixed(0)}%`;
-    status.setText(`${state.connected ? signals.phase : colors.bad("연결 끊김 · 표시된 상태는 마지막 관측")}${usage}${state.traceGap ? " · 실행 기록 일부" : ""}\n` + colors.dim(singleLine(state.notice, 300)));
+    status.setText(`${state.draftBinding ? "고정 " + singleLine(state.draftBinding.path, 80) + (state.draftBinding.kind === "source-range" ? `:${state.draftBinding.range.startLine}-${state.draftBinding.range.endLine}` : "") + " · " : ""}${state.connected ? signals.phase : colors.bad("연결 끊김 · 표시된 상태는 마지막 관측")}${usage}${state.traceGap ? " · 실행 기록 일부" : ""}\n` + colors.dim(singleLine(state.notice, 300)));
     inputTitle.setText(colors.accent(session?.running ? "지시 입력 · F1에서 추가 지시 / 후속 요청 선택" : "요청 입력 · 목표 + 완료 조건"));
     footer.setText(colors.dim(guided ? "Enter 보내기 · F1 메뉴 · Ctrl+C 중단 · Ctrl+D 분리" : "F1 메뉴 · F7 개요 · F8 안내 · Ctrl+C 중단 · Ctrl+D 분리"));
     tui.requestRender();
@@ -192,6 +192,7 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
   };
   controller.onOverview = () => { controller.state.panel = undefined; overviewSelected = !overviewSelected; update(controller.state); };
   controller.onDensity = () => { guided = !guided; update(controller.state); };
+  controller.onRestoreDraft = text => { if (!editor.getExpandedText()) editor.setText(text); tui.requestRender(); };
   controller.onMenu = () => choose("기능 메뉴 · 명령을 외울 필요 없이 선택하세요", terminalCommands.filter(([name]) => !["menu", "resume", "read"].includes(name)).map(([name, description]) => ({ value: name, label: description, description: "/" + name })), item => {
     if (item.value === "steer" || item.value === "followup") {
       // Preserve any draft; choosing a destination does not submit it.

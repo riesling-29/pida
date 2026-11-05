@@ -11,9 +11,16 @@
 - 설치 시험: npm offline lock 갱신 성공. pnpm 11의 offline frozen 검사는 로컬 패키지 메타데이터 부재(`ERR_PNPM_NO_OFFLINE_META`)로 완료하지 못했다. CI의 pnpm 12 실제 설치는 별도 확인해야 한다.
 - 실환경: Windows/회사 게이트웨이/실모델은 미실행.
 
+## 2. 파일·범위와 공통 기록 · 0.8.16
+
+- WS-01~05의 첫 파일 흐름 구현: 원본 바이트 해시·행 범위, 기존 admission 안의 stale 거절, durable request dedup, 서버 전후 기록과 검사 신선도, Studio와 `--main` TUI 연결.
+- 도구 결과 참조·DOM 선택·멀티 탭의 대상 고정 UI는 이 묶음에 포함하지 않는다. 원래 무대상 요청과 기존 TUI/멀티 탭은 유지한다.
+- 실제 Pi/API/TUI 통합 11건 통과, Web 핸들러 14건 통과. 전체 회귀에서 발견한 오류 메시지 표시 1건을 수정하고 해당 Web 묶음을 재검증했다. 마지막 통합 전체 결과는 후속 기록을 따른다.
+- Chromium은 로컬 OS socket 제약으로 차단. 전용 browser runner와 CI job 추가. Windows와 live LLM은 미실행.
+- [사용법과 검증 범위](WORK-SURFACE-0.8.16.md).
+
 ## 다음 순서
 
-2. WS-01~05: 파일·범위·바이트 해시 고정, 실행 접수와 중복 방지, 서버 review, Web/TUI 연속 조회.
 3. 조직 실행 첫 묶음: durable batch join, 부모 continuation, 정확한 산출물 버전의 독립 검증과 제한된 repair.
 
 화면 요소 DOM 매핑(WS-06), 메신저·스케줄러·외부 runner는 이번 순차 작업의 범위 밖이다.

@@ -3,7 +3,7 @@ import { toolEvidence, artifactSnapshot } from "./evidence.js";
 import { canonical } from "./private-state.js";
 import type { ToolEvidence } from "./execution-contract.js";
 import { createHash, randomUUID } from "node:crypto";
-import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync, readdirSync, unlinkSync, rmSync } from "node:fs";
+import { constants, openSync, fstatSync, readSync, closeSync, existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync, readdirSync, unlinkSync, rmSync } from "node:fs";
 import { resolve, join, relative, dirname } from "node:path";
 import { execFileSync } from "node:child_process";
 import { Worker } from "node:worker_threads";
@@ -210,7 +210,19 @@ export class PidaWorkbench {
   }
   async read(principal: Principal, path: string) {
     this.authorize(principal, ["workbench:read"]);
-    return this.locked(principal, area => ({ path, content: this.readText(area, path) }));
+    return this.locked(principal, area => {
+      this.readText(area, path); // Reuse the workbench's complete path/file policy.
+      const fd = openSync(safePath(area.files, path), constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+      try {
+        const stat = fstatSync(fd);
+        if (!stat.isFile() || stat.nlink !== 1 || stat.size > 131072) fail("FILE_TOO_LARGE_OR_UNSAFE");
+        const buffer = Buffer.alloc(131073), bytes = readSync(fd, buffer, 0, buffer.length, 0), data = buffer.subarray(0, bytes);
+        if (bytes > 131072) fail("FILE_TOO_LARGE_OR_UNSAFE");
+        let content: string;
+        try { content = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(data); } catch { throw new PidaError("FILE_ENCODING_UNSUPPORTED", 415); }
+        return { path, content, revision: createHash("sha256").update(data).digest("hex"), bytes };
+      } finally { closeSync(fd); }
+    });
   }
   async write(principal: Principal, path: string, content: string) {
     this.authorize(principal, ["workbench:write"]);

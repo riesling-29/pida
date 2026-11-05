@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { webcrypto } from 'node:crypto';
 import { RunState, submitQueuedInput } from '../examples/web/run-state.js';
-import { sessionDisplayMessages } from '../dist/client.js';
+import { sessionDisplayMessages, formatWorkReview } from '../dist/client.js';
 const read = path => readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 const deferred = () => Promise.withResolvers();
 const flush = async () => { for (let i=0;i<12;i++) await new Promise(resolve => setImmediate(resolve)); };
@@ -35,7 +35,7 @@ function environment() {
   const doc={getElementById:$,createElement:t=>new Node(t),createTextNode:t=>({textContent:t}),body:new Node('body'),hidden:false,addEventListener(){},querySelector:selector=>modeTabs.find(n=>selector.includes(`data-mode="${n.dataset.mode}"`))??new Node(),querySelectorAll:selector=>selector.includes('#mode-tabs')?modeTabs:[]};
   const storage=new Map(), timers=new Map();let timer=0;
   const context={document:doc,RunState,submitQueuedInput,Date,Map,Set,URL,URLSearchParams,TextEncoder,Blob,crypto:webcrypto,console,explainError:x=>x??'',ResizeObserver:class{observe(){}},requestAnimationFrame:()=>{},setInterval:()=>1,clearInterval(){},setTimeout:fn=>{timers.set(++timer,fn);return timer;},clearTimeout:id=>timers.delete(id),window:{addEventListener(){}},location:{origin:'http://fixture.invalid',hash:'',pathname:'/',search:''},history:{replaceState(){}},sessionStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)}};
-  context.sessionDisplayMessages = sessionDisplayMessages;
+  context.sessionDisplayMessages = sessionDisplayMessages; context.formatWorkReview = formatWorkReview; context.structuredClone = structuredClone;
   for(const [path,name] of [['run-input.js','createRunInput'],['run-details.js','createRunDetails'],['commands.js','createCommands'],['composition.js','createComposition']]) runInNewContext(read('examples/web/'+path).replace(/^import .*\n/gm,'').replace(/export function /g,'function ')+`\nthis.${name}=${name};`,context);
   return {context,$,storage,timers,doc};
 }
@@ -130,6 +130,29 @@ function fixtureClient() {
     async *stream(){active=true;traces=[row(1,'run_started'),{...row(2,'tool_started'),toolName:'project_shell',toolCallId:'call1'}];for(const trace of traces)yield {type:'trace',trace};await gate.promise;active=false;const end={...row(3,'run_finished'),status:'completed'};traces.push(end);yield {type:'trace',trace:end};yield {type:'result',result:{sessionId:'s1',runId:'r1',status:'completed',text:'actual result'}};}
   }; return {client,gate,queue};
 }
+
+test('Studio binds a versioned range independently of browsing and preserves stale request draft', async () => {
+  const env = environment(), f = fixtureClient(), requests = [];
+  f.client.getWorkbench = async () => ({ files: [{ path: 'a.txt' }, { path: 'b.txt' }], canCheckpoint: false });
+  f.client.readWorkspaceFile = async path => ({ path, revision: 'a'.repeat(64), content: path === 'a.txt' ? 'one\ntwo' : 'other' });
+  f.client.listWorkReviews = async () => ({ reviews: [] });
+  f.client.stream = async function* (id, prompt, options) { requests.push({ id, prompt, options }); throw { code: 'TARGET_STALE', status: 409 }; };
+  runInNewContext(read('examples/web/studio.js').replace(/^import .*\n/gm, '').replace('export function createStudio', 'function createStudio') + '\nthis.createStudio=createStudio;', env.context);
+  const studio = env.context.createStudio({ client: f.client, request: async () => ({ html: '', revision: 'base', templates: [] }), changed() {}, disconnected() {} });
+  await studio.connect({ ...info, workSurface: true });
+  env.$('studio-target-mode').value = 'files'; env.$('studio-target-mode').onchange(); await flush();
+  env.$('studio-file').value = 'a.txt'; env.$('studio-file').onchange(); await flush();
+  env.$('studio-range-start').value = '2'; env.$('studio-range-end').value = '2'; env.$('studio-bind-file').click();
+  env.$('studio-file').value = 'b.txt'; env.$('studio-file').onchange(); await flush();
+  assert.match(env.$('studio-binding').textContent, /a.txt:2–2/);
+  env.$('studio-prompt').value = 'change pinned A'; await env.$('studio-form').requestSubmit();
+  assert.equal(requests.length, 1); assert.equal(requests[0].prompt, 'change pinned A');
+  assert.equal(requests[0].options.targets[0].path, 'a.txt'); assert.equal(requests[0].options.targets[0].range.startLine, 2);
+  assert.equal(env.$('studio-prompt').value, 'change pinned A'); assert.match(env.$('studio-messages').textContent, /TARGET_STALE/);
+  const requestId = requests[0].options.requestId;
+  await env.$('studio-form').requestSubmit(); assert.equal(requests[1].options.requestId, requestId);
+  studio.reset(); assert.doesNotMatch(env.$('studio-binding').textContent, /a.txt/);
+});
 
 test('shared input keeps replacement drafts and reports only accepted live queue receipts', async()=>{
   const env=environment(), run=new RunState('s1');run.acceptTrace(row(1,'run_started'));

@@ -77,7 +77,7 @@ test('menu and file picker expose real host actions without losing draft or bypa
   assert.match(view.getScreenLines().map(stripTerminalSequences).join('\n'),/기능 메뉴/);
   terminal.input('\x1b');await delay(20);assert.equal(view.editor.getExpandedText(),'유지할 요청');
   terminal.input('\x1b[15~');await delay(25);assert.match(view.getScreenLines().map(stripTerminalSequences).join('\n'),/file with space.ts/);
-  terminal.input('\r');await delay(25);assert.deepEqual(reads,['source/file with space.ts']);assert.equal(c.state.panel.text,'actual source content');assert.equal(view.editor.getExpandedText(),'유지할 요청');
+  terminal.input('\r');await delay(25);assert.deepEqual(reads,['source/file with space.ts']);assert.equal(c.state.panel.text,'1  actual source content');assert.equal(view.editor.getExpandedText(),'유지할 요청');
   // Real SGR mouse dispatch activates the visible F1 menu button.
   terminal.input('\x1b[<0;4;3M');terminal.input('\x1b[<0;4;3m');await delay(30);
   assert.match(view.getScreenLines().map(stripTerminalSequences).join('\n'),/기능 메뉴/);

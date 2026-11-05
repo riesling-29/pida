@@ -16,6 +16,7 @@ import { uiFrame, uiFramePolicy } from "./ui-frame.js";
 import { readFile } from "node:fs/promises";
 import type { ProviderSettings } from "./provider-settings.js";
 import { PidaError, type PidaRuntime, type Principal } from "./runtime.js";
+import type { RunMetadata } from "./protocol.js";
 
 export interface HttpOptions {
   runtime: PidaRuntime;
@@ -420,8 +421,11 @@ export function createPidaServer(options: HttpOptions) {
         json(res, 201, await runtime.createSession(principal));
         return;
       }
-      const artifactRoute = path.match(/^\/v1\/sessions\/([a-f0-9-]{36})\/runs\/([a-f0-9-]{36})\/(export|manifest)$/);
+      const reviewsRoute = path.match(/^\/v1\/sessions\/([a-f0-9-]{36})\/work-reviews$/);
+      if (reviewsRoute && req.method === "GET") { json(res, 200, { reviews: runtime.listWorkReviews(reviewsRoute[1]!, principal) }); return; }
+      const artifactRoute = path.match(/^\/v1\/sessions\/([a-f0-9-]{36})\/runs\/([a-f0-9-]{36})\/(export|manifest|review)$/);
       if (artifactRoute && req.method === "GET") {
+        if (artifactRoute[3] === "review") { json(res, 200, await runtime.getWorkReview(artifactRoute[1]!, artifactRoute[2]!, principal)); return; }
         const format = new URL(req.url!, "http://pida.invalid").searchParams.get("format");
         if (artifactRoute[3] === "export" && (format === "ocel" || format === "ocel-bundle")) {
           const output = runtime.exportRunOcel(artifactRoute[1]!, artifactRoute[2]!, principal);
@@ -499,7 +503,7 @@ export function createPidaServer(options: HttpOptions) {
       }
       if (action === "runs" && req.method === "POST") {
         const input = await body(req);
-        keys(input, ["prompt", "taskId", "disconnectPolicy"]);
+        keys(input, ["prompt", "taskId", "disconnectPolicy", "requestId", "targets"]);
         if (typeof input.prompt !== "string")
           throw new PidaError("INVALID_PROMPT", 400);
         if (input.taskId !== undefined && typeof input.taskId !== "string") throw new PidaError("INVALID_TASK_ID", 400);
@@ -533,7 +537,7 @@ export function createPidaServer(options: HttpOptions) {
               );
             },
             controller.signal,
-            { taskId: input.taskId as string | undefined },
+            { taskId: input.taskId, requestId: input.requestId, targets: input.targets } as RunMetadata,
           );
           if (!res.destroyed) res.end();
         } finally {

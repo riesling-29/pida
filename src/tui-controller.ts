@@ -1,10 +1,12 @@
-import { PidaClient, PidaClientError, explainError, type RuntimeInfo, type SessionSummary, type TraceEvent, type ResultManifest } from "./client.js";
+import { PidaClient, PidaClientError, explainError, formatWorkReview, type WorkTarget, type RuntimeInfo, type SessionSummary, type TraceEvent, type ResultManifest } from "./client.js";
 
 export type TuiSession = Awaited<ReturnType<PidaClient["getSession"]>>;
 export interface TuiState {
   info?: RuntimeInfo; session?: TuiSession; sessions: SessionSummary[]; trace: TraceEvent[];
   connected: boolean; submitting: boolean; notice: string;
   panel?: { title: string; text: string }; traceGap: boolean;
+  viewedFile?: { resource: "project" | "workbench"; path: string; revision: string; content: string };
+  draftBinding?: WorkTarget;
   manifest?: ResultManifest; evidenceState?: "loading" | "available" | "missing" | "error";
   changes?: { files: number; untracked: number; revision: string; observedAt: string; available: boolean; truncated: boolean };
 }
@@ -15,6 +17,8 @@ export const terminalCommands = [
   ["status", "대상·모델·컨텍스트"], ["activity", "실행 과정"], ["tools", "도구 실행 결과"],
   ["ocel", "현재 실행의 OCEL 객체·관계·기록 범위"],
   ["files", "프로젝트 파일 목록"], ["read", "파일 내용"], ["diff", "Git 변경 내역"],
+  ["bind", "열어 둔 파일을 요청 대상으로 고정 · /bind 시작행 끝행"], ["unbind", "요청 대상 고정 해제"],
+  ["review", "서버에 저장된 실행 대상·변경·검사"], ["requests", "접수 기록 조회 · 재실행 없음"],
   ["steer", "현재 실행에 추가 지시"], ["followup", "현재 실행 뒤의 요청 예약"],
   ["stop", "현재 작업 중단"], ["compact", "대화 압축"], ["handoff", "요약하고 이어가기"],
   ["refresh", "서버 상태 다시 확인"], ["web", "같은 대화를 웹에서 열기"],
@@ -31,6 +35,8 @@ export class TuiController {
   onOverview: () => void = () => {};
   onDensity: () => void = () => {};
   onQuit: () => void = () => {};
+  onRestoreDraft: (text: string) => void = () => {};
+  private pendingRequest?: { payload: string; id: string };
   private epoch = 0;
   private selectionRequest = 0;
   private closed = false;
@@ -70,6 +76,7 @@ export class TuiController {
     this.streamAbort?.abort(); this.streamAbort = undefined;
     this.state.session = session; this.state.trace = trace.events; this.state.traceGap = trace.truncated;
     this.state.submitting = false; this.state.connected = true; this.state.panel = undefined;
+    this.state.viewedFile = undefined; this.state.draftBinding = undefined; this.pendingRequest = undefined;
     this.state.manifest = undefined; this.state.evidenceState = undefined; this.state.changes = undefined; this.evidenceKey = undefined;
     this.state.notice = session.running ? "서버에서 진행 중인 작업에 연결했습니다." : "목표와 완료 조건을 입력하세요. F1 메뉴 · F2 대화 선택";
     this.loadEvidence();
@@ -118,11 +125,15 @@ export class TuiController {
     const session = this.selected();
     if (this.state.submitting || session.running) { this.state.notice = "실행 중입니다. /steer 내용 또는 /followup 내용으로 전달하세요."; this.changed(); return false; }
     const id = session.sessionId, ticket = this.epoch, controller = new AbortController();
+    const targets = this.state.draftBinding ? [structuredClone(this.state.draftBinding)] : undefined;
+    const payload = JSON.stringify({ id, prompt, targets });
+    if (!this.pendingRequest || this.pendingRequest.payload !== payload) this.pendingRequest = { payload, id: crypto.randomUUID() };
+    const requestId = this.state.info?.workSurface ? this.pendingRequest.id : undefined;
     this.streamAbort = controller; this.state.submitting = true;
     this.state.notice = "전송 중 · 서버가 실행을 소유합니다."; this.changed();
     this.streamTask = (async () => {
       try {
-        for await (const event of this.client.stream(id, prompt, { signal: controller.signal, disconnectPolicy: "continue" })) {
+        for await (const event of this.client.stream(id, prompt, { signal: controller.signal, disconnectPolicy: "continue", requestId, targets })) {
           if (ticket !== this.epoch || this.closed) break;
           if (event.type === "trace") {
             if (event.trace.type === "run_started") {
@@ -132,12 +143,13 @@ export class TuiController {
             if (!this.state.trace.some(t => t.sequence === event.trace.sequence)) this.state.trace.push(event.trace);
             this.state.trace = this.state.trace.slice(-300);
           }
-          if (event.type === "result") this.state.notice = `${event.result.code ? event.result.code + " · " : ""}실행 근거 /activity · 실제 변경 /diff`;
+          if (event.type === "result") { this.pendingRequest = undefined; this.state.notice = `${event.result.code ? event.result.code + " · " : ""}실행 근거 /activity · 접수 대상·변경 /review`; }
           this.changed();
         }
       } catch (error) {
         if (!controller.signal.aborted && ticket === this.epoch && !this.closed) {
           this.problem(error);
+          this.onRestoreDraft(prompt);
           this.state.panel = { title: "전송·연결 결과 확인 필요", text: "자동 재전송하지 않았습니다. /refresh로 서버 기록을 확인하세요.\n\n보낸 요청:\n" + prompt };
         }
       } finally {
@@ -215,9 +227,33 @@ export class TuiController {
         }
         case "read": {
           if (!arg) throw new PidaClientError("INVALID_PATH", 400);
-          let content: string;
-          try { content = (await this.client.readProjectFile(arg)).content; } catch (e) { if (!(e instanceof PidaClientError) || e.code !== "PROJECT_DISABLED") throw e; content = (await this.client.readWorkspaceFile(arg)).content; }
-          this.state.panel = { title: arg, text: content }; break;
+          let file, resource: "project" | "workbench" = "project";
+          try { file = await this.client.readProjectFile(arg); } catch (e) { if (!(e instanceof PidaClientError) || e.code !== "PROJECT_DISABLED") throw e; resource = "workbench"; file = await this.client.readWorkspaceFile(arg); }
+          this.state.viewedFile = { ...file, resource };
+          this.state.panel = { title: arg, text: file.content.split("\n").map((line, i) => `${i + 1}  ${line}`).join("\n") };
+          this.state.notice = "보기만 변경했습니다. 요청 대상으로 고정: /bind 또는 /bind 시작행 끝행"; break;
+        }
+        case "bind": {
+          const file = this.state.viewedFile;
+          if (!file?.revision || !this.state.info?.workSurface) throw new PidaClientError("WORK_SURFACE_UNAVAILABLE", 409);
+          const base = { resource: file.resource, path: file.path, contentSha256: file.revision };
+          if (arg) {
+            const match = /^(\d+)\s+(\d+)$/.exec(arg), startLine = Number(match?.[1]), endLine = Number(match?.[2]);
+            if (!match || startLine < 1 || endLine < startLine || endLine > file.content.split("\n").length) throw new PidaClientError("TARGET_RANGE_INVALID", 400);
+            this.state.draftBinding = { ...base, kind: "source-range", range: { startLine, endLine } };
+          } else this.state.draftBinding = { ...base, kind: "file" };
+          this.state.notice = "요청 대상을 고정했습니다. 다른 파일을 열어도 유지됩니다. /unbind 해제"; break;
+        }
+        case "unbind": this.state.draftBinding = undefined; this.state.notice = "요청 대상 고정을 해제했습니다."; break;
+        case "requests": {
+          const records = await this.client.listWorkReviews(this.selected().sessionId);
+          this.state.panel = { title: "접수 기록 · 조회만 수행", text: records.reviews.map(r => `${r.binding.runId} · ${r.status}\nrequest ${r.requestId}`).join("\n\n") || "접수 기록 없음" }; break;
+        }
+        case "review": {
+          const session = this.selected(), records = await this.client.listWorkReviews(session.sessionId);
+          const id = arg || records.reviews.at(-1)?.binding.runId;
+          if (!id) throw new PidaClientError("WORK_REVIEW_NOT_FOUND", 404);
+          this.state.panel = { title: "공통 작업 기록", text: formatWorkReview(await this.client.getWorkReview(session.sessionId, id)) }; break;
         }
         case "diff": { const p = await this.client.getProjectChanges(); this.state.changes = { files: p.files.length, untracked: p.untracked.length, revision: p.revision, observedAt: new Date().toISOString(), available: p.available, truncated: p.truncated }; this.state.panel = { title: "Git 변경 · 현재 작업 트리", text: (p.available ? p.diff || "추적 파일 변경 없음" : "Git 비교를 사용할 수 없습니다.") + (p.untracked.length ? "\n\n추적되지 않은 파일:\n" + p.untracked.join("\n") : "") + (p.truncated ? "\n[변경 내역 일부]" : "") }; break; }
         default: this.state.notice = "알 수 없는 명령입니다. /help로 확인하세요."; return false;

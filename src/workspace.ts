@@ -12,6 +12,7 @@ import { createPixProcessPort, type PixPort } from "./pix-port.js";
 import { createPixOcelPort, type PixOcelPort } from "./pix-ocel.js";
 import { loadProviderConnector, type ProviderConnectorConfig } from "./provider-connector.js";
 import { ProjectView } from "./project-view.js";
+import { WorkSurface } from "./work-surface.js";
 import { codingPacks } from "./coding-packs.js";
 import { createProjectTools, type ProjectConfig } from "./project-tools.js";
 import { normalizeCodemodeConfig, type CodemodeConfig } from "./codemode.js";
@@ -470,6 +471,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
     const protectedPaths = [join(root, "pida.config.json"), join(root, ".env"), join(root, "connectors"), join(root, "programs"), join(root, config.tools.directory), inside(root, config.stateDir), ...(config.programs ?? []).map(p => resolve(root, p.manifest))];
     const programs = await createProgramRegistry(root, config.programs, { projectRoot: config.project?.enabled ? resolve(root, config.project.root) : undefined, protectedPaths, outputDirectory: join(inside(root, config.stateDir), "program-output") });
     const project = config.project?.enabled ? createProjectTools({ ...config.project, root: resolve(root, config.project.root) }, { protectedPaths, commandStateDirectory: join(inside(root, config.stateDir), "commands"), commandExecutor: options.commandExecutor }) : undefined;
+    const projectView = config.project?.enabled ? new ProjectView({ ...config.project, root: resolve(root, config.project.root) }, { protectedPaths }) : undefined;
     if (project?.commands) lifetime.add(() => project.commands!.close());
     const sharedWorkspaceKey = config.project?.enabled ? resolve(root, config.project.root)
       : programs.tools.some(t => t.effect !== "read") ? "host-programs"
@@ -603,6 +605,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
           ...(profile ? { agentId: profile.id } : {}), provider,
           providerInfo: connector ? { mode: "host-connector", model: connector.manifest.displayName } : providerLabel(selected.provider),
           workspaceDir: root, storageDir: profile ? join(agentDirectory, "agents", profile.id, "runtime") : inside(root, config.stateDir),
+          workSurface: new WorkSurface(join(profile ? join(agentDirectory, "agents", profile.id, "runtime") : inside(root, config.stateDir), "work-reviews"), area, projectView),
           instructionRoot: config.project?.enabled ? resolve(root, config.project.root) : undefined,
           skillPaths: config.skills?.map(path => inside(root, path)), skills: packs.skills,
           tools, acquireRunLease, codemode: config.codemode,
@@ -684,7 +687,6 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
       configureMainProvider(provider, info); providerGeneration++;
       const main = inventories.get("main"); if (main) main.revision = activeRevisionOf(readConfig(root));
     };
-    const projectView = config.project?.enabled ? new ProjectView({ ...config.project, root: resolve(root, config.project.root) }, { protectedPaths }) : undefined;
     const settings = new ProviderSettings(root, runtime);
     lifetime.add(() => settings.close());
     const server = createPidaServer({
