@@ -1,6 +1,6 @@
 # Terminal and Web on the same Pida host
 
-Available from 0.8.7; current work surface 0.8.14. The terminal uses the existing Pi TUI 1.2.0 components and
+Available from 0.8.7; current work surface 0.8.17. The terminal uses the existing Pi TUI 1.2.0 components and
 Pida HTTP client. One separately running host owns sessions, Pi execution,
 provider/OAuth configuration, tools, permissions, persistence and workspace
 locks. Web and TUI are views of that same host.
@@ -24,7 +24,7 @@ npm run tui -- .\my-agent
 
 `npm start` opens the **server log**, not the terminal interface. The new startup
 message states this and prints the exact attach command. In the TUI, the header
-must say `pida 0.8.14 · MULTI TUI`, with visible function-key menus and a prompt editor.
+must say `pida 0.8.17 · MULTI TUI`, with visible function-key menus and a prompt editor.
 If the header shows an older version, update the PR branch and rebuild the same
 checkout before relaunching. No second workspace server is needed.
 

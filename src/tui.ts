@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import { PidaClient, sessionDisplayMessages } from "./client.js";
 import { TuiController, terminalCommands, type TuiState } from "./tui-controller.js";
 import { terminalPalette } from "./tui-theme.js";
+import { formatTuiTimestamp } from "./tui-time.js";
 
 /** Host/model/file content must never introduce terminal controls (OSC clipboard/title etc.). */
 export function terminalText(value: unknown, limit = 48_000): string {
@@ -82,14 +83,24 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
   editor.setAutocompleteProvider(autocomplete);
   let overlay: OverlayHandle | undefined, panelVisible = false, overviewSelected = false, guided = true, lastPanel = "", lastSession: string | undefined, editorSubmitting = false;
   const actions = [["F1 메뉴", "menu"], ["F2 대화", "sessions"], ["F3 실행", "activity"], ["F4 도구", "tools"], ["F5 파일", "files"], ["F6 변경", "diff"], ["F7 개요", "overview"], ["F8 표시", "density"]] as const;
+  const navLabel = (full: string, compact: boolean) => compact ? (/^(F\d+)/.exec(full)?.[1] ?? full) : full;
+  const navFits = (compact: boolean, width: number) => {
+    let used = 1;
+    for (const [label] of actions) {
+      used += visibleWidth(` ${navLabel(label, compact)} │`);
+      if (used > width) return false;
+    }
+    return true;
+  };
   // A small view component only; Pi owns cell widths, mouse dispatch and all terminal mechanics.
   let hitRegions: { start: number; end: number; command: string }[] = [];
   const navigation = new MouseRegion({
     invalidate() {},
     render(width: number) {
       let text = " "; hitRegions = [];
+      const compact = !navFits(false, width);
       for (const [label, command] of actions) {
-        const start = visibleWidth(text), value = `[${label}] `;
+        const start = visibleWidth(text), shown = navLabel(label, compact), value = ` ${shown} │`;
         if (start + visibleWidth(value) > width) break;
         hitRegions.push({ start, end: start + visibleWidth(value) - 1, command }); text += value;
       }
@@ -126,7 +137,9 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
     const messages = session ? sessionDisplayMessages(session) : [];
     const parts: string[] = []; let remaining = 64_000;
     for (const m of messages.slice(-80).reverse()) {
-      const part = `${m.role === "user" ? colors.accent("YOU") : colors.strong("PIDA")}\n${terminalText(m.text, 16_000)}`;
+      const text = terminalText(m.text, 16_000).trim();
+      if (m.role === "assistant" && !text) continue;
+      const part = `${m.role === "user" ? colors.accent("YOU") : colors.strong("PIDA")}\n${text}`;
       if (part.length > remaining) break;
       parts.unshift(part); remaining -= part.length;
     }
@@ -135,7 +148,7 @@ export function createTuiView(controller: TuiController, options: { terminal?: T
     conversation.setText(body || (guided ? "어떤 결과를 만들까요?\n\n목표와 완료 조건을 아래에 입력하세요.\n예: 검색 필터를 추가하고 기존 테스트를 실행해 주세요.\n\nF1 메뉴에서 기능을 고를 수 있습니다.\nF2 이전 대화 · F5 작업 파일\n오른쪽 개요에서 실제 실행과 검증 상태를 확인하세요." : "목표를 입력하세요. F1 메뉴 · F2 이전 대화"));
     panelVisible = !!state.panel;
     const checks = signals.checks;
-    const change = state.changes ? state.changes.available ? `변경 ${state.changes.files} · 미추적 ${state.changes.untracked}${state.changes.truncated ? " · 일부" : ""}\n${state.changes.observedAt.slice(11, 19)} UTC 조회 · F6 갱신\n전체 작업 트리 기준` : "Git 비교 사용 불가" : "변경 미조회 · F6으로 확인";
+    const change = state.changes ? state.changes.available ? `변경 ${state.changes.files} · 미추적 ${state.changes.untracked}${state.changes.truncated ? " · 일부" : ""}\n${formatTuiTimestamp(state.changes.observedAt, "time")} 조회 · F6 갱신\n전체 작업 트리 기준` : "Git 비교 사용 불가" : "변경 미조회 · F6으로 확인";
     const capability = state.info?.capabilities;
     const detailWidth = Math.max(20, (terminal.columns >= 104 ? Math.floor(terminal.columns * .4) : terminal.columns) - 4);
     const short = (s: unknown) => truncateToWidth(singleLine(s, 400), detailWidth);

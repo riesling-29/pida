@@ -8,7 +8,7 @@ import {
 const ink = {
   background: "#010201", panel: "#020503", selected: "#051009",
   text: "#bbc6c3", secondary: "#92a29a", strong: "#c6d1cc",
-  accent: "#a4b99f", border: "#36523c", error: "#d59b91",
+  accent: "#a4b99f", border: "#5a8764", error: "#d59b91",
 };
 
 export function terminalPalette(color: boolean, mode: TerminalColorMode = getTerminalColorMode()) {

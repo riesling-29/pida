@@ -61,5 +61,10 @@ test('fresh terminal starts with two framed views',async t=>{
   t.after(()=>{v.stop();c.close();});v.start();await delay(40);
   assert.equal(c.layout.panes.length,2);
   assert.deepEqual(c.layout.panes.map(p=>p.binding.view),['chat','activity']);
+  const screen=()=>v.getScreenLines().map(stripTerminalSequences).join('\n');
+  assert.match(screen(),/아직 에이전트 없음/);
+  assert.match(screen(),/F3/);
   assert.equal(v.getScreenLines().map(stripTerminalSequences).join('\n').match(/╭/g).length,2);
+  terminal.columns=80;terminal.rows=24;terminal.resize();await delay(25);
+  assert.match(screen(),/F8/);assert.match(screen(),/F9/);
 });

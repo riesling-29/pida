@@ -5,6 +5,7 @@ import type { PidaClient } from "./client.js";
 import { AgentWorkspaceController, admissionLabels, viewLabels, detailText, type WorkspaceControllerOptions } from "./agent-workspace-controller.js";
 import { WorkspaceLayout, fitsLayout, paneList, splitList, type WorkNode, type WorkPane } from "./workspace-layout.js";
 import { terminalPalette } from "./tui-theme.js";
+import { formatTuiTimestamp } from "./tui-time.js";
 import { terminalText } from "./tui.js";
 
 const version: string = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
@@ -14,7 +15,10 @@ class Row implements Component {
   text = "";
   constructor(private paint: (s: string, width: number) => string = s => s) {}
   invalidate() {}
-  render(width: number) { return [this.paint(truncateToWidth(" " + this.text, width), width)]; }
+  render(width: number) {
+    const lines = this.text ? this.text.split("\n") : [""];
+    return lines.map(line => this.paint(truncateToWidth(" " + line, width), width));
+  }
 }
 
 /** Start with visible work areas; this only supplies a layout when no saved layout exists. */
@@ -41,7 +45,7 @@ export function createAgentTui(controller: AgentWorkspaceController, options: {
   const theme = { selectedPrefix: colors.accent, selectedText: colors.selected, description: colors.dim, scrollInfo: colors.dim, noMatch: colors.dim };
   const panels = new Map<string, { component: Component; editor: Editor; heading: Row; signal: Row; content: Text; scroll: ScrollView; receipt: Row }>();
   let overlay: OverlayHandle | undefined, notice = "", stopped = false;
-  const head = new Row(colors.band), context = new Row(), footer = new Row(colors.band), help = new Row();
+  const head = new Row(colors.band), context = new Row(), footer = new Row(colors.band), help = new Row(), emptyGuide = new Row();
   const focusId = () => controller.layout.active.focus;
   const focusEditor = () => { const p = panels.get(focusId()); if (p) tui.setFocus(p.editor); };
   const invoke = (fn: () => unknown) => { try { const result = fn(); if (result instanceof Promise) void result.catch(e => { notice = line(e.message); update(); }); } catch (e) { notice = line(e instanceof Error ? e.message : e); update(); } };
@@ -86,7 +90,7 @@ export function createAgentTui(controller: AgentWorkspaceController, options: {
   }
   function jobMenu() {
     const paneId = focusId(), entry = controller.entry(paneId);
-    choose("작업 선택 · 지시를 재실행하지 않습니다", [{ value: "latest", label: "최신 작업 따라가기" }, ...(entry?.jobs ?? []).slice().reverse().map(j => ({ value: j.id, label: `${statusNames[j.status]} · ${j.id.slice(0, 8)}`, description: j.createdAt }))], value => controller.bind(paneId, { ...controller.layout.find(paneId).binding, jobId: value === "latest" ? undefined : value }));
+    choose("작업 선택 · 지시를 재실행하지 않습니다", [{ value: "latest", label: "최신 작업 따라가기" }, ...(entry?.jobs ?? []).slice().reverse().map(j => ({ value: j.id, label: `${statusNames[j.status]} · ${j.id.slice(0, 8)}`, description: formatTuiTimestamp(j.createdAt, "datetime") }))], value => controller.bind(paneId, { ...controller.layout.find(paneId).binding, jobId: value === "latest" ? undefined : value }));
   }
   function views() {
     const paneId = focusId();
@@ -132,13 +136,35 @@ export function createAgentTui(controller: AgentWorkspaceController, options: {
       return options.openWeb?.();
     }));
   }
-  const actions = [ ["F1 메뉴", () => choose("작업 환경", ["탭", "에이전트 연결 / 생성", "작업 선택", "패널 보기 / 파일", "분할 / 크기 / 교환", "초점 패널", "실행 제어", "Web 열기", "연결 종료 · 작업 유지"].map((label, i) => ({ value: String(i + 1), label })), v => [tabMenu, agentMenu, jobMenu, views, splitMenu, focusMenu, controlMenu, () => invoke(() => options.openWeb?.()), () => options.onQuit?.()][Number(v) - 1]!())],
+  const envMenu = [
+    { value: "1", label: "탭", description: "F2" },
+    { value: "2", label: "에이전트 연결 / 생성", description: "F3" },
+    { value: "3", label: "작업 선택", description: "F4" },
+    { value: "4", label: "패널 보기 / 파일", description: "F5" },
+    { value: "5", label: "분할 / 크기 / 교환", description: "F6" },
+    { value: "6", label: "초점 패널", description: "F7" },
+    { value: "7", label: "실행 제어", description: "F8" },
+    { value: "8", label: "Web 열기", description: "Web UI" },
+    { value: "9", label: "연결 종료 · 작업 유지", description: "Ctrl+D" },
+  ] as const;
+  const actions = [ ["F1 메뉴", () => choose("작업 환경", [...envMenu], v => [tabMenu, agentMenu, jobMenu, views, splitMenu, focusMenu, controlMenu, () => invoke(() => options.openWeb?.()), () => options.onQuit?.()][Number(v) - 1]!())],
     ["F2 탭", tabMenu], ["F3 에이전트", agentMenu], ["F4 작업", jobMenu], ["F5 보기", views], ["F6 분할", splitMenu], ["F7 초점", focusMenu], ["F8 제어", controlMenu], ["F9 확대", () => controller.layout.zoom()] ] as const;
+  function navLabel(full: string, compact: boolean) { return compact ? (/^(F\d+)/.exec(full)?.[1] ?? full) : full; }
+  function navFits(items: { label: string }[], width: number, compact: boolean) {
+    let used = 1;
+    for (const item of items) {
+      used += visibleWidth(` ${navLabel(item.label, compact)} │`);
+      if (used > width) return false;
+    }
+    return true;
+  }
   function mouseBar(items: () => { label: string; action: () => void; selected?: boolean }[]) {
     let regions: { from: number; to: number; action: () => void }[] = [];
     return new MouseRegion({ invalidate() {}, render(width) {
       let text = " "; regions = [];
-      for (const item of items()) { const start = visibleWidth(text), label = ` ${item.label} │`; if (start + visibleWidth(label) > width) break;
+      const list = items();
+      const compact = !navFits(list, width, false);
+      for (const item of list) { const start = visibleWidth(text), label = ` ${navLabel(item.label, compact)} │`; if (start + visibleWidth(label) > width) break;
         text += item.selected ? colors.selected(label) : colors.accent(label); regions.push({ from: start, to: start + visibleWidth(label), action: item.action }); }
       return [colors.band(truncateToWidth(text, width), width)];
     } }, event => { if (event.type === "click" && event.button === "left") { const region = regions.find(r => event.x >= r.from && event.x < r.to); if (region) { invoke(region.action); return { handled: true }; } } });
@@ -198,7 +224,7 @@ export function createAgentTui(controller: AgentWorkspaceController, options: {
       n.signal.text = entry ? `${admissionLabels[entry.admission]}${job ? ` | ${statusNames[job.status]} ${line(job.currentTool ?? "")} · ${job.id.slice(0, 8)}${age !== undefined && job.status === "running" ? ` · ${age}초 전` : ""}` : " · 작업 없음"}` : "F3에서 생성 / 연결 · F1 전체 메뉴";
       let body: string;
       if (p.binding.view === "chat") body = job ? `${colors.accent("요청")}\n${terminalText(job.input)}\n\n${colors.strong("응답")}\n${terminalText(job.result?.text || job.latestText || "응답 대기 중")}` : "에이전트를 연결하고 아래에 목표를 입력하세요.\n\nF6으로 패널을 나누고 F3에서 다른 에이전트를 연결합니다.\n\n창은 관찰 도구입니다. 닫아도 서버의 작업은 유지됩니다.";
-      else if (p.binding.view === "activity") body = job?.activity.map(e => terminalText(`${e.timestamp}  ${e.type}${e.toolName ? " · " + e.toolName : ""}`)).join("\n") || "관측된 실행 기록 없음";
+      else if (p.binding.view === "activity") body = job?.activity.map(e => terminalText(`${formatTuiTimestamp(e.timestamp, "time")}  ${e.type}${e.toolName ? " · " + e.toolName : ""}`)).join("\n") || "관측된 실행 기록 없음";
       else body = terminalText(detailText(controller.detail(p.id), p.binding.view) ?? `${viewLabels[p.binding.view]} 미조회 · F5 현재 보기 새로고침\n독립 검증 근거가 없으면 UNKNOWN입니다.`);
       n.content.setText(body);
       n.receipt.text = colors.dim(line(controller.message(p.id) || (controller.isBusy(p.id) ? "요청 처리 중" : "Enter 새 작업 · F8 추가 지시 / 취소")));
@@ -209,12 +235,17 @@ export function createAgentTui(controller: AgentWorkspaceController, options: {
     for (const key of panels.keys()) if (!all.some(p => p.id === key)) panels.delete(key);
     const active = controller.layout.active;
     const fits = (v: { width: number; height: number }) => !active.zoom && fitsLayout(active.root, v.width, Math.max(1, v.height - 6), 38, 12);
-    head.text = `${colors.strong(`pida ${version} · MULTI TUI`)} · ${controller.overview?.agents.length ?? 0} agents · ${controller.layout.panes.length}/4 panels`;
+    const agentCount = controller.overview?.agents.length ?? 0;
+    emptyGuide.text = agentCount === 0
+      ? colors.strong("아직 에이전트 없음") + colors.dim("\nF3 → + 새 에이전트 → 이름 · Persona 선택  ·  F1 → 에이전트 연결 / 생성\n왼쪽·오른쪽 패널은 대화·활동 보기입니다. F3으로 연결한 뒤 아래에 목표를 입력하세요.")
+      : "";
+    head.text = `${colors.strong(`pida ${version} · MULTI TUI`)} · ${agentCount} agents · ${controller.layout.panes.length}/4 panels`;
     const collapsed = !active.zoom && !fits({ width: terminal.columns, height: terminal.rows });
     context.text = line(active.zoom ? `F9 확대 중 · 다시 F9로 분할 복귀 · ${options.workspace}` : collapsed ? `창 ${terminal.columns}×${terminal.rows} · 초점 패널만 표시 · 창 확대 시 분할 복귀 · ${options.workspace}` : options.workspace);
     footer.text = colors.dim(line(controller.error || controller.storageError || notice || "배치 자동 저장 · 같은 작업공간 쓰기는 호스트에서 순차 실행"));
     help.text = "F1 메뉴 · Alt+←/→ 초점 · Alt+↑/↓ 크기 · Ctrl+D 연결 종료 · 초점만 보이면 창을 넓히세요";
     const root = new VStack([{ component: head, basis: 1 }, { component: context, basis: 1 }, { component: tabs, basis: 1 }, { component: nav, basis: 1 },
+      { component: emptyGuide, basis: agentCount === 0 ? 3 : 1, visible: () => agentCount === 0 },
       { component: tree(active.root, terminal.columns, Math.max(1, terminal.rows - 6)), basis: 0, grow: 1, minSize: 1, visible: fits },
       { component: panels.get(active.focus)!.component, basis: 0, grow: 1, minSize: 1, visible: v => !fits(v) },
       { component: footer, basis: 1 }, { component: help, basis: 1 }]);
