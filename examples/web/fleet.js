@@ -14,7 +14,7 @@ function choices(node, items, selected) {
 
 export function createFleet({ client }) {
   const root = document.getElementById("fleet-view");
-  let controller, signature = "", dragging = false, generation = 0;
+  let controller, signature = "", tabSignature = "", dragging = false, generation = 0;
   const panels = new Map();
   const tabs = el("nav", undefined, "fleet-tabs"); tabs.setAttribute("aria-label", "작업 탭");
   const toolbar = el("div", undefined, "fleet-toolbar");
@@ -119,17 +119,27 @@ export function createFleet({ client }) {
     };
     box.append(tree(node.first), divider, tree(node.second)); size(); return box;
   }
+  // Focus/binding changes only update existing controls. Reattaching their pane
+  // during focusin can cancel the browser's pending pointer click or text input.
+  function shape(node) {
+    return node.kind === "pane" ? [node.id] : [node.id, node.axis, node.ratio, shape(node.first), shape(node.second)];
+  }
   function render() {
     if (!controller?.overview) return;
     const c = controller, active = document.activeElement, selection = active?.tagName === "TEXTAREA" ? [active.selectionStart, active.selectionEnd] : undefined;
     for (const p of c.layout.allPanes()) { if (!panels.has(p.id)) panels.set(p.id,newPanel(p)); updatePanel(p,panels.get(p.id)); }
     for (const id of panels.keys()) if (!c.layout.allPanes().some(p=>p.id===id)) panels.delete(id);
     const narrow = !fitsLayout(c.layout.active.root, stage.clientWidth, stage.clientHeight, 340, 245);
-    const next = c.layout.serialize() + narrow;
+    const focusedOnly = c.layout.active.zoom || narrow;
+    const next = JSON.stringify([c.layout.active.id, focusedOnly ? [current()] : shape(c.layout.active.root)]);
+    const nextTabs = JSON.stringify(c.layout.data.tabs.map(t => [t.id, t.title, t.id === c.layout.active.id]));
+    if (nextTabs !== tabSignature) {
+      tabSignature = nextTabs;
+      tabs.replaceChildren(...c.layout.data.tabs.map(t => { const group=el("span",undefined,"fleet-tab"); const b=button(t.title,()=>c.layout.selectTab(t.id)); b.setAttribute("aria-pressed",String(t.id===c.layout.active.id)); b.ondblclick=()=>{const name=window.prompt("탭 이름",t.title);if(name!==null)c.layout.renameTab(t.id,name);}; const close=button("×",()=>c.layout.closeTab(t.id));close.setAttribute("aria-label",`${t.title} 탭 닫기 · 작업 유지`);group.append(b,close);return group;}));
+    }
     if (next !== signature && !dragging) {
       signature = next;
-      tabs.replaceChildren(...c.layout.data.tabs.map(t => { const group=el("span",undefined,"fleet-tab"); const b=button(t.title,()=>c.layout.selectTab(t.id)); b.setAttribute("aria-pressed",String(t.id===c.layout.active.id)); b.ondblclick=()=>{const name=window.prompt("탭 이름",t.title);if(name!==null)c.layout.renameTab(t.id,name);}; const close=button("×",()=>c.layout.closeTab(t.id));close.setAttribute("aria-label",`${t.title} 탭 닫기 · 작업 유지`);group.append(b,close);return group;}));
-      stage.replaceChildren(c.layout.active.zoom || narrow ? panels.get(current()).box : tree(c.layout.active.root));
+      stage.replaceChildren(focusedOnly ? panels.get(current()).box : tree(c.layout.active.root));
       if (active?.isConnected) { active.focus({preventScroll:true}); if (selection) active.setSelectionRange(...selection); }
     }
     choices(panelPicker,c.layout.panes.map((p,i)=>[p.id,`${i+1} · ${c.entry(p.id)?.profile.name ?? "미연결"} · ${viewLabels[p.binding.view]}`]),current());
@@ -145,11 +155,11 @@ export function createFleet({ client }) {
   root.addEventListener("keydown",e=>{ if (!controller) return; if(e.altKey && e.key==="z"){e.preventDefault();controller.layout.zoom();} if(e.altKey && e.key==="]"){e.preventDefault();controller.layout.nextFocus();panels.get(current())?.draft.focus();} });
   return {
     async connect() {
-      controller?.close(); panels.clear(); signature=""; ++generation;
+      controller?.close(); panels.clear(); signature=tabSignature=""; ++generation;
       controller = new AgentWorkspaceController(client, {loadLayout:scope=>localStorage.getItem(`pida-fleet:${scope}`) ?? undefined,saveLayout:(scope,json)=>localStorage.setItem(`pida-fleet:${scope}`,json)});
       controller.onChange = render;
       try { await controller.start(); render(); } catch(e) { warning.textContent=e.message; throw e; }
     },
-    reset() { ++generation; controller?.close(); controller=undefined; panels.clear(); stage.replaceChildren(); tabs.replaceChildren(); signature=""; createDialog.close(); name.value=role.value=createError.textContent=""; },
+    reset() { ++generation; controller?.close(); controller=undefined; panels.clear(); stage.replaceChildren(); tabs.replaceChildren(); signature=tabSignature=""; createDialog.close(); name.value=role.value=createError.textContent=""; },
   };
 }

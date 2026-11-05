@@ -37,10 +37,18 @@ test('actual fleet handlers keep textarea nodes and drafts stable across polling
   buttons('좌우 분할')[0].click();assert.equal(panes().length,2);
   const second=panes()[1], selectB=field(second,'에이전트 선택');selectB.value=b;selectB.onchange();await c.refresh();
   const draftB=field(second,'이 패널의 작업 지시');draftB.value='B request';draftB.oninput();
+  const stage=root.children.find(n=>n.className==='fleet-stage'), split=stage.firstChild;
+  c.layout.focus(first.dataset.pane);
+  assert.equal(stage.firstChild,split,'focusin must not detach the clicked pane before the browser dispatches click');
+  c.layout.focus(second.dataset.pane);
+  assert.equal(stage.firstChild,split);
+  c.layout.bind(second.dataset.pane,{...c.layout.find(second.dataset.pane).binding,view:'activity'});
+  assert.equal(stage.firstChild,split,'binding updates must preserve the current DOM tree and text selection');
   await c.refresh(); assert.equal(field(panes()[0],'이 패널의 작업 지시'),draft);assert.equal(draft.value,'A private draft');
   second.children.find(n=>n.tagName==='FORM').onsubmit({preventDefault(){}});
   while(c.isBusy(second.dataset.pane))await new Promise(r=>setTimeout(r,0));
   assert.equal([...jobs.values()][0].agentId,b);assert.equal(draft.value,'A private draft');assert.equal(draftB.value,'');
+  assert.equal(stage.firstChild,split,'job acknowledgement must not reattach the pane');
   buttons('+ 탭')[0].click();assert.equal(panes().length,1);buttons('작업 1')[0].click();assert.equal(panes().length,2);assert.equal(field(panes()[0],'이 패널의 작업 지시'),draft);
   assert.equal([...storage.values()].some(v=>v.includes('private draft')),false);
   ui.reset();assert.equal(root.children.find(n=>n.className==='fleet-stage').children.length,0);
