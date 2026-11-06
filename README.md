@@ -1,18 +1,57 @@
 # Pida-core
 
+**처음 사용하시나요? → [한국어 사용 가이드](docs/USER-GUIDE.ko.md)**  
+설치·모델 연결, 평소 시작과 종료, 멀티 에이전트 Web/TUI, 프로젝트 연결, 업데이트와 잠금 오류 복구를 한곳에서 확인할 수 있습니다.
+
 An embedded, reusable **Pi-based agent harness** for applications. Bring the package into a host backend, register business tools, and connect a web or app interface through the client SDK. The host does not implement the agent loop.
 
-**Workspace MVP 0.6.1:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces now persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call business authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+**Product goals (2026-11-02):** a reusable core for different agent forms, plus a ready-to-use home harness for coding and personal-assistant work that can replace the user's Codex/OpenClaw workflows. Tools, channels and private provider connectors must be attachable without editing the core. These are delivery requirements, not claims of current feature parity. See [core and home-harness requirements, missing capabilities and acceptance gates](docs/CORE-AND-HOME-HARNESS.md).
+
+**Workspace 0.8.18:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+
+New in 0.8.18: **WMC display design plus audit corrections**: shared KST/status labels, visible menu hit targets, flushed session/observation writes, persistent loss diagnostics, request-ID steering retries, validated join receipts, and immediate single-TUI streaming. See [audit corrections and verification boundaries](docs/AUDIT-FIXES-0.8.18.md).
+
+New in 0.8.17: **visible TUI pane frames and a two-pane starting layout**, plus durable child-batch joins, parent continuation, host-selected exact-workbench checks and bounded repair. Existing layouts remain intact. See [terminal frames and controls](docs/TUI-0.8.17.md), [organization API and verification scope](docs/ORGANIZATION-0.8.17.md), and [ordered implementation/testing record](docs/ORDERED-DEVELOPMENT-20261105.md).
+
+New in 0.8.14: **actual multi-agent tabs and nested split panes in both Web and Pi TUI**. Run `npm run tui -- ./my-agent`; the header says `멀티`. Up to eight tabs/four panels, independent drafts, owned job controls, saved layout and detach without cancellation reuse the existing supervisor. Single-session mode remains `--main`. See [home setup, controls, actual PTY evidence and browser/Windows limitations](docs/MULTI-AGENT-0.8.14.md).
+
+New in 0.8: **persistent agents with independent sessions/workbenches, a durable job queue, three-tier sourced memory, bounded asynchronous delegation, real project instructions/skills, guarded steering, host private-provider connectors and project files/Git changes in the UI**. Restart recovery does not replay interrupted work. See the [patch plan](docs/PERSISTENT-CORE-PATCH-PLAN.md), [usage and boundaries](docs/PERSISTENT-AGENTS.md), [private connectors](docs/PRIVATE-CONNECTORS.md) and [validation record](docs/PERSISTENT-CORE-VALIDATION.md). Repository program discovery and callable Node/npm/native program proxies are also included; see [program proxy usage](docs/PROGRAM-PROXIES.md). These are foundations for the home harness; PTY/sandbox executors, messaging/schedules and full Codex/OpenClaw parity are not claimed.
+
+New in 0.7: live Studio activity and elapsed time, reconnectable server-owned runs, richer isolated browser checks, opt-in existing-project coding with Pi tools, and company endpoint compatibility/header settings. See the [MAGI source audit and patch decisions](docs/MAGI-ADOPTION-PATCH-PLAN.md), [project coding](docs/PROJECT-CODING.md), [browser checks](docs/UI-CHECKS.md) and [LightLLM/company API setup](docs/COMPANY-ENDPOINTS.md). Host project tools do not turn the service preview into a React/dev-server preview; project files are outside workbench restore and artifact verification.
 
 The lot-status tool is **replaceable synthetic sample data**, not a manufacturing-specific restriction. The default mock is deterministic and not an intelligent model.
 
 New workspaces include a practical **work → test → repair → save/reuse** profile. Pi handles file reads/writes/edits and SKILL.md discovery; QuickJS runs bounded JavaScript in WASM; Git checkpoints changes. The web UI exposes files, static HTML previews, downloads and saved skills. Connect a real model to ask Pida to build artifacts. The default mock only demonstrates lot lookup. See [workbench usage and limits](docs/WORKBENCH.md).
 
-New in 0.6: **Service / Developer–Operator / Agent workspace** tabs. Choose a sidebar, three-column, top-navigation or blank template, then ask the connected Pida model to edit the service UI. Both views load the same saved HTML. Inline JavaScript interactions run in a separate opaque-origin frame; network/backend access and role management are not included. See [UI Studio](docs/UI-STUDIO.md).
+New in 0.6: **Service / Developer–Operator / Agent workspace** tabs. Choose a sidebar, three-column, top-navigation or blank template, then ask the connected Pida model to edit the service UI. Both views load the same saved HTML. Inline JavaScript interactions run in a separate opaque-origin frame; network/backend access and role management are not included. The developer view also supports file work without a UI template, real Git changes, revision-bound check results and guarded file restoration. See [UI Studio](docs/UI-STUDIO.md).
+
+New in 0.8.1: live steering/follow-up controls, private command/result details, explicit model thinking capabilities and attempt/cache-usage metadata, plus retained large program output. See the [DeepSeek source review](docs/DEEPSEEK-HARNESS-REVIEW.md) and [versioned implementation/validation record](docs/DEEPSEEK-PATCH-VALIDATION.md).
+
+New in 0.8.2: bounded Pi-owned model recovery, stream-idle detection, compaction progress guards, sourced memory snapshots/handoff lineage, scoped extension factories, named presets and managed MCP. Model settings includes the actual composition inventory. See [extensions and presets](docs/EXTENSIONS.md), [MCP configuration](docs/MANAGED-MCP.md) and the validation record above.
+
+New in 0.8.8: **a visible terminal workspace**, with a persistent intent/structure/execution/judgment overview, clickable navigation, F1 action menu, F5 file picker and guidance/concise modes. Run evidence stays distinct from independent verification; server startup explains how to attach the TUI. See [usage](docs/TUI.md) and [validation](docs/TUI-0.8.8.md).
+
+New in 0.8.10: **bundled PIX native skill and automatic OCEL 2.0 run/turn records** with qualified agent/session/task/tool/artifact/verification relationships. Actual pinned PIX checks OCEL semantics and per-object runtime lifecycles; process conformance stays separate from artifact correctness. SDK/HTTP/CLI export, TUI `/ocel`, and Studio download are included. See [setup, evidence and limits](docs/PIX-OCEL-0.8.10.md).
+
+Fixed in 0.8.11: **the approved black-green theme now reaches the actual terminal**, including empty cells, menus and the existing conversation/file/overview work surface. Earlier green previews were design prototypes, not shipped TUI styling. That theme-only version did not implement multi-agent tabs or split screens; 0.8.14 adds the real agent workbench. Structured file/line target binding is now available in the Studio and `--main` TUI; see [shared work surface usage](docs/WORK-SURFACE-0.8.16.md). See [scope, real-renderer frames and validation](docs/TUI-0.8.11.md).
+
+New in 0.8.9: **local and Persona-connected agents in the same workspace**. Select a host-approved identity/memory source when registering an agent. Local workers retain their own memory tools; externally bound workers do not acquire local canonical writers. Source choices survive restart, missing connections never silently fall back, and external job history stays visible without local memory. Connections are installed through the host SDK; a deployed Persona service is not bundled. See [setup and boundaries](docs/PERSONA-PROVIDER.md#mixed-local-and-external-agents--089).
+
+New in 0.8.7: **a Pi-based TUI attached to the same host as Web**. Run `npm run tui -- ./my-agent` in another terminal after starting the host. Shared sessions, live assistant previews, explicit steering/follow-up, guarded cancellation, file/diff/tool inspection and detach/reattach reuse the existing runtime. `/web` opens the same session. See [TUI design and usage](docs/TUI.md), [patch plan](docs/TUI-PATCH-PLAN.md) and [validation](docs/TUI-VALIDATION.md).
+
+New in 0.8.6: separately pinned PIX prefix and completed-object analysis, exact native checkpoint bytes, source/model revalidation and optional host-selected workspace tools. The prefix result stays approximate/partial and pending completion; no DFG conversion or automatic model adoption. See [profiles and host setup](docs/PIX-PROFILES.md) and [CR follow-up validation](docs/CR-FOLLOWUP-VALIDATION.md).
+
+0.8.5 introduced an opt-in Vera 0.2 context adapter, per-request authorization (including compaction), exact logical-input fingerprints, and an [inbound CR/response index](docs/change-requests/README.md). Actual local Persona source integration is tested; the current Schumpeter importer incompatibility is reproduced and documented. A public remote Persona transport remains owner-pending. See [validation and limits](docs/CR-INTAKE-VALIDATION.md).
+
+0.8.4 introduced optional direct PIX Reflection/Awareness tools, fixed-model batch analysis with source/cohort/evidence checks, managed Persona context and corrected closed observation export validation. The default local Persona provider reuses existing memory. See [setup and scope](docs/PROCESS-INTELLIGENCE.md) and [0.8.4 requirement/validation ledger](docs/PI-NATIVE-VALIDATION.md). No Schumpeter installation is required.
+
+New in 0.8.3: optional official Pi Codemode with authorized nested calls, managed long-running project commands with independent output cursors and cancellation/recovery UI, and shared-project mutation guards. See [tool composition](docs/CODEMODE.md) and [managed commands and exact executor limits](docs/COMMANDS.md). Interactive PTY and an enforcing OS sandbox are not supplied by the default backend.
 
 ## Quick start — choose npm, pnpm or bun
 
-Requires **Git and Node.js 22.19+**, including when installing with bun. This release supports all three package managers; the production runtime stays on Node.
+The [user guide](docs/USER-GUIDE.ko.md) uses npm. Version 0.8.15 synchronizes the direct Pi TUI dependency in the pnpm lockfile. Repeating `start` reconnects to the authenticated instance for this workspace; stopped or unverifiable owners receive distinct recovery guidance.
+
+Requires **Git and Node.js 22.19+**, including when installing with bun. The production runtime stays on Node.
 
 From a checkout of this feature branch, choose one row:
 
@@ -33,7 +72,7 @@ In the browser:
 
 **LM Studio**, **Ollama**, and **사내 API · 다른 서버** remain separate choices. Local presets supply the URL and keyless mode; custom connections expose protocol and token limits under advanced settings. Their model-list button queries the chosen server. Native service catalogs come from pinned Pi 1.2.0, not a live account entitlement check; newer models require a Pi update or a custom connection.
 
-Native API keys are stored separately per provider, server-side, with private file permissions; switching back can reuse that provider's key. Keys are never returned by the settings API. **Subscription OAuth login (ChatGPT, Claude, Copilot, etc.) and AWS/Azure/Vertex credential flows are not implemented in this setup UI.** They are not interchangeable with API keys.
+Native API keys are stored separately per provider, server-side, with private file permissions; switching back can reuse that provider's key. Keys are never returned by the settings API. **OpenAI also supports ChatGPT account login** through Pi's official Sign in with ChatGPT flow. Select **OpenAI → 인증 방식 → ChatGPT 계정 · 구독 사용**, log in, select an account-supported model and apply. Credentials refresh server-side; missing subscription auth never falls back to an API key. See [ChatGPT setup, patch scope and actual validation](docs/CHATGPT-AUTH.md). Claude/Copilot subscription login and AWS/Azure/Vertex credential flows remain outside this setup UI.
 
 You can also select **데모만 사용** and try `LOT-001의 상태를 알려줘` without LLM credentials. The mock is deterministic and cannot choose arbitrary custom tools.
 
@@ -50,7 +89,7 @@ The package has **not** been published to npm. Create and install a local packag
 ```sh
 npm pack
 # Run from your host application directory:
-npm install /absolute/path/to/pida-core-0.6.1.tgz
+npm install /absolute/path/to/pida-core-0.8.18.tgz
 ```
 
 Entry points separate standalone configuration, server code and browser code:

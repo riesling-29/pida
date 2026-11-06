@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "pida.pi.analysis/1",
+  "kind": "awareness",
+  "status": "unsupported",
+  "processJudgment": "unknown",
+  "businessAcceptance": "UNKNOWN",
+  "modelKind": "empirical",
+  "mapping": "pida.sequential-tool-lifecycle/1",
+  "profile": "completed-sequential-batch",
+  "inputDigest": "2eaf32c224d5a50fe068c814168fcdab47b4301e4ef02e20a47dcef0e5955617",
+  "inputs": [
+    {
+      "sessionId": "01a19f9e-a4c2-77f6-9a9d-05578aa3d2d2",
+      "runId": "f9d02407-32a0-4578-a8fc-aca254a157aa",
+      "digest": "86bb41dad312dd1e1a45b224533791aec3bb13e88b8fdc93e2c74edc93543baa"
+    }
+  ],
+  "coverage": {
+    "selectedCases": 1,
+    "includedCases": 1,
+    "excludedCases": 0,
+    "failedCases": 0,
+    "outcomeCounts": {
+      "completed": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "limited": 0,
+      "interrupted": 0,
+      "unknown": 0
+    },
+    "observationCoverage": 1,
+    "sourceCoverage": "selected-runs-only",
+    "exclusions": []
+  },
+  "modelRef": "pi-model:4a17c79aec88276bf2fd182257945c34d976cb1a5d88cac5b26313276896f474",
+  "modelDigest": "e004f6d0b8a7e59a33748e5c3834671e21e91e6833f9074211deb9daa8b5124d",
+  "empiricalDeviationIsViolation": false,
+  "automaticCorrection": false,
+  "limits": [
+    "SELECTED_RUNS_ONLY",
+    "SEQUENTIAL_TOOL_LIFECYCLE_PROJECTION",
+    "NO_BUSINESS_ACCEPTANCE",
+    "NO_LIVE_CURRENT_CUT",
+    "NO_CAUSAL_IMPROVEMENT_CLAIM"
+  ],
+  "issues": [
+    "TRAIN_EVALUATION_OVERLAP"
+  ],
+  "durationMs": 0.041873000000123284,
+  "analysisCost": {
+    "elapsedMs": 0.041873000000123284,
+    "billingCost": null,
+    "billingMeasured": false
+  },
+  "cohortDigest": "fd5c43c931ca8f0715b3f5c105503191b23d8e61b8d32622f000f0b1e442904c"
+}

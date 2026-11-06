@@ -1,0 +1,197 @@
+{
+  "profile": "pida-real-pix-profiles-synthetic/1",
+  "occurredAt": "2026-11-03T11:32:27.154Z",
+  "version": "0.8.6",
+  "engine": {
+    "repository": "Chanta-Research-Group/PIX",
+    "sourceCommit": "a0831bc0b34fd7feebfba928066b90b114ae531e",
+    "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+    "packageVersion": "0.5.0",
+    "pythonVersion": "3.12.14",
+    "sourceVerified": true
+  },
+  "environment": {
+    "node": "v24.22.1",
+    "platform": "linux"
+  },
+  "checks": [
+    {
+      "name": "actual engine build pin",
+      "status": "PASS"
+    },
+    {
+      "name": "open prefix is partial zero-cost witness with pending completion",
+      "status": "PASS"
+    },
+    {
+      "name": "explicit early close includes terminal cost two but remains approximate",
+      "status": "PASS"
+    },
+    {
+      "name": "serialized checkpoint continuation equals uninterrupted native bytes",
+      "status": "PASS"
+    },
+    {
+      "name": "completed witness remains partial and does not imply business acceptance",
+      "status": "PASS"
+    },
+    {
+      "name": "native fractional-number bytes preserved across JavaScript transport",
+      "status": "PASS"
+    },
+    {
+      "name": "checkpoint cannot cross generation",
+      "status": "PASS"
+    },
+    {
+      "name": "reserializing native numbers cannot forge valid native checkpoint",
+      "status": "PASS"
+    },
+    {
+      "name": "proxy budget leaves computation unavailable without invented cost",
+      "status": "PASS"
+    },
+    {
+      "name": "object model is not silently converted into sequential model",
+      "status": "PASS"
+    },
+    {
+      "name": "actual whole-object alignment is optimal for selected complete scope",
+      "status": "PASS"
+    },
+    {
+      "name": "shared verification occurs once and carries both artifact revisions",
+      "status": "PASS"
+    },
+    {
+      "name": "independent reads remain incomparable",
+      "status": "PASS"
+    },
+    {
+      "name": "actor exclusion and relation loss remain explicit",
+      "status": "PASS"
+    },
+    {
+      "name": "same-object time tie has no invented ID ordering",
+      "status": "PASS"
+    },
+    {
+      "name": "bounded object search retains partial unknown cost",
+      "status": "PASS"
+    },
+    {
+      "name": "open object cut is rejected by terminal-only consumer profile",
+      "status": "PASS"
+    },
+    {
+      "name": "Pida open-cut interpretation is pending with UNKNOWN business acceptance",
+      "status": "PASS"
+    },
+    {
+      "name": "Pida restart resumes only stored matching native checkpoint",
+      "status": "PASS"
+    },
+    {
+      "name": "new task and artifact identity cannot reuse old checkpoint",
+      "status": "PASS"
+    },
+    {
+      "name": "same-generation correction cannot mutate an old checkpoint",
+      "status": "PASS"
+    },
+    {
+      "name": "explicit new generation recomputes and preserves prior evidence",
+      "status": "PASS"
+    },
+    {
+      "name": "current source revocation blocks historical result access",
+      "status": "PASS"
+    },
+    {
+      "name": "source policy change during actual compute prevents applicability publication",
+      "status": "PASS"
+    },
+    {
+      "name": "actual Pi workspace tool invokes real PIX and completes",
+      "status": "PASS"
+    },
+    {
+      "name": "PI tool remains permission guarded and contributes no host writer",
+      "status": "PASS"
+    },
+    {
+      "name": "runtime completion still has UNKNOWN independent verification",
+      "status": "PASS"
+    },
+    {
+      "name": "executed Pida source and build unchanged during probe",
+      "status": "PASS"
+    }
+  ],
+  "executedFiles": {
+    "package.json": "16e2902b7797d07dada4ee38c674fda11df404ac4cbf121d4a29e2588ca14b75",
+    "scripts/pix-worker.py": "cdefceb39ff6b3c5b1de145b040c850df75d44b3a65911c968505e1788d098ce",
+    "scripts/pix-profiles-check.mjs": "bde43d7ccd9ff0014fbbb930e8c8f465f7fccb3d2d76ee90c11ba2f458f767eb",
+    "src/pix-port.ts": "e77774dcec66f0ee7dba52a003da1fdd6169d838ef5dcd66b5570156aa884f0d",
+    "src/pix-profiles.ts": "eb29b759e8e70e47259d99c6edec9712da715284190a71bd5b080ac012d8a762",
+    "src/process-profiles.ts": "f728ebf85823e2fb6dcc7320b30ede4ca7b0fe29489df769d540058cb5fcf36e",
+    "src/workspace.ts": "8929da8e9fe4c8e5260f6219f8238d379dbdc50357694865e6291fa4053c55ec",
+    "dist/pix-port.js": "bf28fa5a490c4ed741ca36bd11444e15e4b3b7126e11fbba97d1922fc65cb933",
+    "dist/pix-profiles.js": "c77957c583fda3ccd404d99c4055b5742a08183a307c8af84307cc1f3cf2cfe1",
+    "dist/process-profiles.js": "61afc095393d1ca20650668f54e6e1d143fc59e232a765c0d12225d412bfcd47",
+    "dist/workspace.js": "532d5fc20210f6816b28f9aa120da1ef94e3577d7888f57da85fe57fe33dcc38",
+    "test/fixtures/pix-profiles/helpers.mjs": "8f8a0d5df4b963c898b804cd2c624a14098fca6ee78aeee3b9ccf0deeaeda671",
+    "test/fixtures/pix-profiles/sequential.model.json": "843d3db1c45e6a4578d11f0283ebfd9017b9267e880994be8bd0e87e57fec64c",
+    "test/fixtures/pix-profiles/objects.model.json": "c06c51e39de6f046ff3a758fa797cdcc3b43517b350e141be42e9de06e35fee1",
+    "test/fixtures/pix-profiles/objects.input.json": "e0529cadaae6bb8a2d97a789563e66925eaf3421d081d3a087c9470b45c594a5"
+  },
+  "artifacts": [
+    {
+      "path": "open.json",
+      "sha256": "dbde23d74ebf1efd98f5d1fe35247ad06064691028548eee8792a15921762e48",
+      "bytes": 32994
+    },
+    {
+      "path": "early-close.json",
+      "sha256": "21c6203592492d23e3230cbca028ac05a24e62eb1ede23fc178c4e094d71fe7e",
+      "bytes": 30781
+    },
+    {
+      "path": "continued.json",
+      "sha256": "8d8f5efe8c9533c761ce4ef55728d03da88a6c98a24d93bb56f7733aaf384bc9",
+      "bytes": 44896
+    },
+    {
+      "path": "objects.json",
+      "sha256": "8f62147b71c3fccd3614b668927ba4b3fede5265c69ffba1d999547938b0cf46",
+      "bytes": 11414
+    },
+    {
+      "path": "negative-results.json",
+      "sha256": "ad93d3a28c13cb1ce7a5a07bdda10c65ba4d245fe79fcd5cf21b664eba8794ba",
+      "bytes": 14120
+    },
+    {
+      "path": "host-results.json",
+      "sha256": "e94ab69fb5646e2532fd89f4588252cf946383ec6978a3b4e70bff8b58833320",
+      "bytes": 164689
+    },
+    {
+      "path": "workspace-run.json",
+      "sha256": "1b8640449ae8f49b6a2420376a190c0729aaf099c3937ef986219e9956f61f84",
+      "bytes": 19602
+    }
+  ],
+  "integration": {
+    "pix": "PASS_PINNED_SOURCE",
+    "workspace": "PASS_ACTUAL_PI_SCRIPTED_MODEL",
+    "personaSite": "NOT_RUN_IN_THIS_PROBE",
+    "schumpeter": "SEE_SEPARATE_CURRENT_CONSUMER_PROBE"
+  },
+  "limitations": [
+    "Synthetic source facts; host must implement its authoritative publication/CAS and access port.",
+    "No live LLM, remote Persona grant, Windows Pida run or independent task acceptance.",
+    "No generic DFG conversion or live object alignment.",
+    "No source publication, automatic model adoption, memory write or policy change."
+  ]
+}

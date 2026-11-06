@@ -5,6 +5,7 @@ export function uiFrame(nonce: string) {
   const receive = event => {
     if (event.source !== parent || event.data?.type !== 'pida:render' || typeof event.data.html !== 'string' || event.data.html.length > 131072) return;
     removeEventListener('message', receive);
+    const renderId = typeof event.data.renderId === 'string' ? event.data.renderId : undefined;
     const parsed = new DOMParser().parseFromString(event.data.html, 'text/html');
     parsed.querySelectorAll('meta[http-equiv],base,iframe,object,embed').forEach(node => node.remove());
     const scripts = [...parsed.querySelectorAll('script')].map(node => ({ text: node.src ? '' : node.textContent, type: node.getAttribute('type') }));
@@ -13,15 +14,15 @@ export function uiFrame(nonce: string) {
     document.documentElement.lang = parsed.documentElement.lang;
     document.head.replaceChildren(...parsed.head.childNodes);
     document.body.replaceWith(parsed.body);
-    addEventListener('error', () => parent.postMessage({ type: 'pida:render-error' }, '*'));
-    addEventListener('unhandledrejection', () => parent.postMessage({ type: 'pida:render-error' }, '*'));
+    addEventListener('error', () => parent.postMessage({ type: 'pida:render-error', renderId }, '*'));
+    addEventListener('unhandledrejection', () => parent.postMessage({ type: 'pida:render-error', renderId }, '*'));
     for (const source of scripts) {
       const script = document.createElement('script'); script.nonce = nonce;
       if (source.type) script.type = source.type;
       script.textContent = source.text; document.body.append(script);
     }
     document.dispatchEvent(new Event('DOMContentLoaded'));
-    parent.postMessage({ type: 'pida:rendered' }, '*');
+    parent.postMessage({ type: 'pida:rendered', renderId }, '*');
   };
   addEventListener('message', receive);
   parent.postMessage({ type: 'pida:ready' }, '*');

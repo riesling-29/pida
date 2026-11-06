@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "pida.pix.worker.v1",
+  "operation": "awareness",
+  "model": {
+    "activities": [
+      "abort",
+      "deliver",
+      "edit",
+      "reproduce",
+      "request",
+      "test",
+      "tool_error"
+    ],
+    "edges": [
+      [
+        "edit",
+        "test"
+      ],
+      [
+        "reproduce",
+        "edit"
+      ],
+      [
+        "request",
+        "edit"
+      ],
+      [
+        "request",
+        "reproduce"
+      ],
+      [
+        "request",
+        "tool_error"
+      ],
+      [
+        "test",
+        "deliver"
+      ],
+      [
+        "tool_error",
+        "abort"
+      ]
+    ],
+    "starts": [
+      "request"
+    ],
+    "ends": [
+      "abort",
+      "deliver"
+    ],
+    "acceptsEmpty": false
+  },
+  "traces": [
+    {
+      "caseId": "heldout-conforming",
+      "events": [
+        {
+          "eventId": "heldout-conforming:0",
+          "activity": "request"
+        },
+        {
+          "eventId": "heldout-conforming:1",
+          "activity": "edit"
+        },
+        {
+          "eventId": "heldout-conforming:2",
+          "activity": "test"
+        },
+        {
+          "eventId": "heldout-conforming:3",
+          "activity": "deliver"
+        }
+      ]
+    }
+  ]
+}

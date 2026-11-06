@@ -1,0 +1,621 @@
+{
+  "profile": "pida-0.8.6-actual-hub-file-integration/1",
+  "consumer_commit": "fa6535763141ef686baac3d4dd91ab2be7450ae7",
+  "consumer_build": {
+    "scheme": "schumpeter-python-source-build/0.1",
+    "modules": {
+      "__init__.py": "sha256:a8b10f7246b76d673c442eacd7d8727ae0255d0b1629ddea39483a30c09da4cc",
+      "__main__.py": "sha256:bbb4e153fe2e32e93df4ea90ba24821881f81c0294a2a29755a22b290e1ed5ab",
+      "audit.py": "sha256:0049de95e125e6a768794618ab396af2578d6a6db732a1977bd6123425cb76e1",
+      "cli.py": "sha256:b4e31e99d73f161eb0c259ee5a282d65a49b6f7a9f5b4ca7e46718ae8b156f93",
+      "conformance.py": "sha256:f63a9304cc941cd7939479b21630b203244891789118ac5320c4b2a54f1750a2",
+      "contracts.py": "sha256:0d8d27061baa72c338d495f9746c9d1552aa73df08d5b053422ff506f0c8a583",
+      "evidence_bundle.py": "sha256:ac3654e6c17e4709102cb20ecaa7254c8827c5ff3b45a0917bf62aee078b7f4f",
+      "hub_api.py": "sha256:46eb4782fd8db4ee59be3fdc654f6f3b273e55daa355c65d41658ce26f72eaff",
+      "pida_current.py": "sha256:4a8229eb6ebee90130fe5a0d69f78c4d212529242d2c0bf7bc546c27f9583035",
+      "pida_native.py": "sha256:574b65dab6bce270d1fb605854b11f518f67b9573047fd1194fdf978305b3f70",
+      "pix_port.py": "sha256:441647bd7897555229ec703cc1060c44447e2fe818939e96bcdc207a5b6245cb",
+      "product_runner.py": "sha256:4424e2c992b3237d56abc9234332708313c492953bfe73f85be28274bec5f64c",
+      "source_profiles.py": "sha256:82ae5237de7d9310db5048bcf9c1ac7432c507eb0a832d05af4fc56ff4e97c25",
+      "store.py": "sha256:5701ff3369de15e8683818996bcb2da4b08f606906a674e3dde8d6e865c928a5",
+      "trusted_verifier.py": "sha256:4563583c291f6e4d3b9ce51a4171bce5df45c77b549eb90bbdf149e5f67e62f2"
+    },
+    "python_executable_digest": "sha256:fa67443527ed9647f760d807e2a38f26340757123e643c4639cf273ed15d5ea7",
+    "python_version": "3.12.14",
+    "digest": "sha256:7f42ed047d088459d37051e3d91d4b677ff5a5003520fe300ec740acc823f8b7"
+  },
+  "consumer_source_files": {
+    "src/schumpeter/__init__.py": "a8b10f7246b76d673c442eacd7d8727ae0255d0b1629ddea39483a30c09da4cc",
+    "src/schumpeter/__main__.py": "bbb4e153fe2e32e93df4ea90ba24821881f81c0294a2a29755a22b290e1ed5ab",
+    "src/schumpeter/audit.py": "0049de95e125e6a768794618ab396af2578d6a6db732a1977bd6123425cb76e1",
+    "src/schumpeter/cli.py": "b4e31e99d73f161eb0c259ee5a282d65a49b6f7a9f5b4ca7e46718ae8b156f93",
+    "src/schumpeter/conformance.py": "f63a9304cc941cd7939479b21630b203244891789118ac5320c4b2a54f1750a2",
+    "src/schumpeter/contracts.py": "0d8d27061baa72c338d495f9746c9d1552aa73df08d5b053422ff506f0c8a583",
+    "src/schumpeter/evidence_bundle.py": "ac3654e6c17e4709102cb20ecaa7254c8827c5ff3b45a0917bf62aee078b7f4f",
+    "src/schumpeter/hub_api.py": "46eb4782fd8db4ee59be3fdc654f6f3b273e55daa355c65d41658ce26f72eaff",
+    "src/schumpeter/pida_current.py": "4a8229eb6ebee90130fe5a0d69f78c4d212529242d2c0bf7bc546c27f9583035",
+    "src/schumpeter/pida_native.py": "574b65dab6bce270d1fb605854b11f518f67b9573047fd1194fdf978305b3f70",
+    "src/schumpeter/pix_port.py": "441647bd7897555229ec703cc1060c44447e2fe818939e96bcdc207a5b6245cb",
+    "src/schumpeter/product_runner.py": "4424e2c992b3237d56abc9234332708313c492953bfe73f85be28274bec5f64c",
+    "src/schumpeter/source_profiles.py": "82ae5237de7d9310db5048bcf9c1ac7432c507eb0a832d05af4fc56ff4e97c25",
+    "src/schumpeter/store.py": "5701ff3369de15e8683818996bcb2da4b08f606906a674e3dde8d6e865c928a5",
+    "src/schumpeter/trusted_verifier.py": "4563583c291f6e4d3b9ce51a4171bce5df45c77b549eb90bbdf149e5f67e62f2"
+  },
+  "source_profile": "pida-native/export-validation-0.3",
+  "pix_engine": {
+    "repository": "Chanta-Research-Group/PIX",
+    "sourceCommit": "3205d832d5dcdc6901f916b35496a0c60b657e7a",
+    "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+    "packageVersion": "0.5.0",
+    "pythonVersion": "3.12.14",
+    "sourceVerified": true
+  },
+  "checks": [
+    {
+      "name": "0: actual latest-profile ingestion",
+      "status": "PASS"
+    },
+    {
+      "name": "0: stable replay identities",
+      "status": "PASS"
+    },
+    {
+      "name": "0: exact metadata retained",
+      "status": "PASS"
+    },
+    {
+      "name": "0: model/runtime completion does not become task acceptance",
+      "status": "PASS"
+    },
+    {
+      "name": "1: actual latest-profile ingestion",
+      "status": "PASS"
+    },
+    {
+      "name": "1: stable replay identities",
+      "status": "PASS"
+    },
+    {
+      "name": "1: exact metadata retained",
+      "status": "PASS"
+    },
+    {
+      "name": "1: model/runtime completion does not become task acceptance",
+      "status": "PASS"
+    },
+    {
+      "name": "2: actual latest-profile ingestion",
+      "status": "PASS"
+    },
+    {
+      "name": "2: stable replay identities",
+      "status": "PASS"
+    },
+    {
+      "name": "2: exact metadata retained",
+      "status": "PASS"
+    },
+    {
+      "name": "2: model/runtime completion does not become task acceptance",
+      "status": "PASS"
+    },
+    {
+      "name": "3: actual latest-profile ingestion",
+      "status": "PASS"
+    },
+    {
+      "name": "3: stable replay identities",
+      "status": "PASS"
+    },
+    {
+      "name": "3: exact metadata retained",
+      "status": "PASS"
+    },
+    {
+      "name": "3: model/runtime completion does not become task acceptance",
+      "status": "PASS"
+    },
+    {
+      "name": "4: actual latest-profile ingestion",
+      "status": "PASS"
+    },
+    {
+      "name": "4: stable replay identities",
+      "status": "PASS"
+    },
+    {
+      "name": "4: exact metadata retained",
+      "status": "PASS"
+    },
+    {
+      "name": "4: model/runtime completion does not become task acceptance",
+      "status": "PASS"
+    },
+    {
+      "name": "5: actual latest-profile ingestion",
+      "status": "PASS"
+    },
+    {
+      "name": "5: stable replay identities",
+      "status": "PASS"
+    },
+    {
+      "name": "5: exact metadata retained",
+      "status": "PASS"
+    },
+    {
+      "name": "5: model/runtime completion does not become task acceptance",
+      "status": "PASS"
+    },
+    {
+      "name": "6: actual latest-profile ingestion",
+      "status": "PASS"
+    },
+    {
+      "name": "6: stable replay identities",
+      "status": "PASS"
+    },
+    {
+      "name": "6: exact metadata retained",
+      "status": "PASS"
+    },
+    {
+      "name": "6: model/runtime completion does not become task acceptance",
+      "status": "PASS"
+    },
+    {
+      "name": "7: actual latest-profile ingestion",
+      "status": "PASS"
+    },
+    {
+      "name": "7: stable replay identities",
+      "status": "PASS"
+    },
+    {
+      "name": "7: exact metadata retained",
+      "status": "PASS"
+    },
+    {
+      "name": "7: model/runtime completion does not become task acceptance",
+      "status": "PASS"
+    },
+    {
+      "name": "8: actual latest-profile ingestion",
+      "status": "PASS"
+    },
+    {
+      "name": "8: stable replay identities",
+      "status": "PASS"
+    },
+    {
+      "name": "8: exact metadata retained",
+      "status": "PASS"
+    },
+    {
+      "name": "8: model/runtime completion does not become task acceptance",
+      "status": "PASS"
+    },
+    {
+      "name": "invalid-context-descriptor.json: rejects invalid producer bytes",
+      "status": "PASS"
+    },
+    {
+      "name": "conflicting-event-id.json: rejects invalid producer bytes",
+      "status": "PASS"
+    },
+    {
+      "name": "legacy profile remains explicit and does not silently accept latest fields",
+      "status": "PASS"
+    }
+  ],
+  "positive_cases": [
+    {
+      "fixture": "context-mcp-retry.json",
+      "sha256": "72ed2008137aa7c5a8b8edf95f2d135ca2dfc22bbad89e27895c4ae4f99c8558",
+      "producer_version": "0.8.6",
+      "event_count": 21,
+      "ingest": {
+        "ACCEPTED": 21,
+        "DUPLICATE": 0,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "replay": {
+        "ACCEPTED": 0,
+        "DUPLICATE": 21,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "metadata_equal": true,
+      "mapping_profile": "schumpeter-observation-v0.2-closed-native-metadata",
+      "mapping_digest": "f8da815865fc524de07d5cf358029f85feb7e9e760d1a963b86e4d0de3539eea",
+      "decision": "REQUEST_EVIDENCE",
+      "criteria": {
+        "observation_coverage": "PASS",
+        "artifact_integrity": "UNKNOWN",
+        "task_outcome": "UNKNOWN"
+      },
+      "adapter": {
+        "schema_version": "pida.bundle/0.1-draft",
+        "raw_file_sha256": "sha256:72ed2008137aa7c5a8b8edf95f2d135ca2dfc22bbad89e27895c4ae4f99c8558",
+        "duplicates": 0,
+        "complete": true,
+        "known_limits": [],
+        "adapter_version": "pida-native-adapter/0.2.0",
+        "validation_revision": "pida.export-validation/0.3"
+      },
+      "consumer_reported_pix_identity": {
+        "package_version": null,
+        "api_source_sha256": "ef28efe3608f24672785c78b2a27c78709c7c3185e8c693a33e9acc668e61cd3",
+        "commit": null
+      }
+    },
+    {
+      "fixture": "workspace-run.json",
+      "sha256": "1b8640449ae8f49b6a2420376a190c0729aaf099c3937ef986219e9956f61f84",
+      "producer_version": "0.8.6",
+      "event_count": 14,
+      "ingest": {
+        "ACCEPTED": 14,
+        "DUPLICATE": 0,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "replay": {
+        "ACCEPTED": 0,
+        "DUPLICATE": 14,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "metadata_equal": true,
+      "mapping_profile": "schumpeter-observation-v0.2-closed-native-metadata",
+      "mapping_digest": "f8da815865fc524de07d5cf358029f85feb7e9e760d1a963b86e4d0de3539eea",
+      "decision": "REQUEST_EVIDENCE",
+      "criteria": {
+        "observation_coverage": "PASS",
+        "artifact_integrity": "UNKNOWN",
+        "task_outcome": "UNKNOWN"
+      },
+      "adapter": {
+        "schema_version": "pida.bundle/0.1-draft",
+        "raw_file_sha256": "sha256:1b8640449ae8f49b6a2420376a190c0729aaf099c3937ef986219e9956f61f84",
+        "duplicates": 0,
+        "complete": true,
+        "known_limits": [],
+        "adapter_version": "pida-native-adapter/0.2.0",
+        "validation_revision": "pida.export-validation/0.3"
+      },
+      "consumer_reported_pix_identity": {
+        "package_version": null,
+        "api_source_sha256": "ef28efe3608f24672785c78b2a27c78709c7c3185e8c693a33e9acc668e61cd3",
+        "commit": null
+      }
+    },
+    {
+      "fixture": "expire-bundle.json",
+      "sha256": "903c472d4e01322cf13e1671d9e70c6160d6818177c236f8ca5661a92000fe04",
+      "producer_version": "0.8.5",
+      "event_count": 15,
+      "ingest": {
+        "ACCEPTED": 15,
+        "DUPLICATE": 0,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "replay": {
+        "ACCEPTED": 0,
+        "DUPLICATE": 15,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "metadata_equal": true,
+      "mapping_profile": "schumpeter-observation-v0.2-closed-native-metadata",
+      "mapping_digest": "f8da815865fc524de07d5cf358029f85feb7e9e760d1a963b86e4d0de3539eea",
+      "decision": "REQUEST_EVIDENCE",
+      "criteria": {
+        "observation_coverage": "PASS",
+        "artifact_integrity": "UNKNOWN",
+        "task_outcome": "UNKNOWN"
+      },
+      "adapter": {
+        "schema_version": "pida.bundle/0.1-draft",
+        "raw_file_sha256": "sha256:903c472d4e01322cf13e1671d9e70c6160d6818177c236f8ca5661a92000fe04",
+        "duplicates": 0,
+        "complete": true,
+        "known_limits": [],
+        "adapter_version": "pida-native-adapter/0.2.0",
+        "validation_revision": "pida.export-validation/0.3"
+      },
+      "consumer_reported_pix_identity": {
+        "package_version": null,
+        "api_source_sha256": "ef28efe3608f24672785c78b2a27c78709c7c3185e8c693a33e9acc668e61cd3",
+        "commit": null
+      }
+    },
+    {
+      "fixture": "normal-bundle.json",
+      "sha256": "7233f133b66b154898e76ad73b334ec068ff9ae925aa3992cc392392463f5c14",
+      "producer_version": "0.8.5",
+      "event_count": 14,
+      "ingest": {
+        "ACCEPTED": 14,
+        "DUPLICATE": 0,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "replay": {
+        "ACCEPTED": 0,
+        "DUPLICATE": 14,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "metadata_equal": true,
+      "mapping_profile": "schumpeter-observation-v0.2-closed-native-metadata",
+      "mapping_digest": "f8da815865fc524de07d5cf358029f85feb7e9e760d1a963b86e4d0de3539eea",
+      "decision": "REQUEST_EVIDENCE",
+      "criteria": {
+        "observation_coverage": "PASS",
+        "artifact_integrity": "UNKNOWN",
+        "task_outcome": "UNKNOWN"
+      },
+      "adapter": {
+        "schema_version": "pida.bundle/0.1-draft",
+        "raw_file_sha256": "sha256:7233f133b66b154898e76ad73b334ec068ff9ae925aa3992cc392392463f5c14",
+        "duplicates": 0,
+        "complete": true,
+        "known_limits": [],
+        "adapter_version": "pida-native-adapter/0.2.0",
+        "validation_revision": "pida.export-validation/0.3"
+      },
+      "consumer_reported_pix_identity": {
+        "package_version": null,
+        "api_source_sha256": "ef28efe3608f24672785c78b2a27c78709c7c3185e8c693a33e9acc668e61cd3",
+        "commit": null
+      }
+    },
+    {
+      "fixture": "revoke-bundle.json",
+      "sha256": "41051a21d02afe141443ef4fa4f24f2af0a1b46e1545ae4ec4edde6ebf0d3d3f",
+      "producer_version": "0.8.5",
+      "event_count": 15,
+      "ingest": {
+        "ACCEPTED": 15,
+        "DUPLICATE": 0,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "replay": {
+        "ACCEPTED": 0,
+        "DUPLICATE": 15,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "metadata_equal": true,
+      "mapping_profile": "schumpeter-observation-v0.2-closed-native-metadata",
+      "mapping_digest": "f8da815865fc524de07d5cf358029f85feb7e9e760d1a963b86e4d0de3539eea",
+      "decision": "REQUEST_EVIDENCE",
+      "criteria": {
+        "observation_coverage": "PASS",
+        "artifact_integrity": "UNKNOWN",
+        "task_outcome": "UNKNOWN"
+      },
+      "adapter": {
+        "schema_version": "pida.bundle/0.1-draft",
+        "raw_file_sha256": "sha256:41051a21d02afe141443ef4fa4f24f2af0a1b46e1545ae4ec4edde6ebf0d3d3f",
+        "duplicates": 0,
+        "complete": true,
+        "known_limits": [],
+        "adapter_version": "pida-native-adapter/0.2.0",
+        "validation_revision": "pida.export-validation/0.3"
+      },
+      "consumer_reported_pix_identity": {
+        "package_version": null,
+        "api_source_sha256": "ef28efe3608f24672785c78b2a27c78709c7c3185e8c693a33e9acc668e61cd3",
+        "commit": null
+      }
+    },
+    {
+      "fixture": "subagent-bundle.json",
+      "sha256": "c463816ddaffa3c14b8aaa9845548ea8a64a3ae5d09e7996635901661b594bfe",
+      "producer_version": "0.8.5",
+      "event_count": 14,
+      "ingest": {
+        "ACCEPTED": 14,
+        "DUPLICATE": 0,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "replay": {
+        "ACCEPTED": 0,
+        "DUPLICATE": 14,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "metadata_equal": true,
+      "mapping_profile": "schumpeter-observation-v0.2-closed-native-metadata",
+      "mapping_digest": "f8da815865fc524de07d5cf358029f85feb7e9e760d1a963b86e4d0de3539eea",
+      "decision": "REQUEST_EVIDENCE",
+      "criteria": {
+        "observation_coverage": "PASS",
+        "artifact_integrity": "UNKNOWN",
+        "task_outcome": "UNKNOWN"
+      },
+      "adapter": {
+        "schema_version": "pida.bundle/0.1-draft",
+        "raw_file_sha256": "sha256:c463816ddaffa3c14b8aaa9845548ea8a64a3ae5d09e7996635901661b594bfe",
+        "duplicates": 0,
+        "complete": true,
+        "known_limits": [],
+        "adapter_version": "pida-native-adapter/0.2.0",
+        "validation_revision": "pida.export-validation/0.3"
+      },
+      "consumer_reported_pix_identity": {
+        "package_version": null,
+        "api_source_sha256": "ef28efe3608f24672785c78b2a27c78709c7c3185e8c693a33e9acc668e61cd3",
+        "commit": null
+      }
+    },
+    {
+      "fixture": "verifier-bundle.json",
+      "sha256": "5815846f2b56fa63664b9606a72516917af9ea4823478f63a8c9e7d7054f35e9",
+      "producer_version": "0.8.5",
+      "event_count": 14,
+      "ingest": {
+        "ACCEPTED": 14,
+        "DUPLICATE": 0,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "replay": {
+        "ACCEPTED": 0,
+        "DUPLICATE": 14,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "metadata_equal": true,
+      "mapping_profile": "schumpeter-observation-v0.2-closed-native-metadata",
+      "mapping_digest": "f8da815865fc524de07d5cf358029f85feb7e9e760d1a963b86e4d0de3539eea",
+      "decision": "REQUEST_EVIDENCE",
+      "criteria": {
+        "observation_coverage": "PASS",
+        "artifact_integrity": "UNKNOWN",
+        "task_outcome": "UNKNOWN"
+      },
+      "adapter": {
+        "schema_version": "pida.bundle/0.1-draft",
+        "raw_file_sha256": "sha256:5815846f2b56fa63664b9606a72516917af9ea4823478f63a8c9e7d7054f35e9",
+        "duplicates": 0,
+        "complete": true,
+        "known_limits": [],
+        "adapter_version": "pida-native-adapter/0.2.0",
+        "validation_revision": "pida.export-validation/0.3"
+      },
+      "consumer_reported_pix_identity": {
+        "package_version": null,
+        "api_source_sha256": "ef28efe3608f24672785c78b2a27c78709c7c3185e8c693a33e9acc668e61cd3",
+        "commit": null
+      }
+    },
+    {
+      "fixture": "withdraw-bundle.json",
+      "sha256": "2a602d5908b61fccf9b411b12c1b0b28fcc09c5075bcae16d96fc2b0bd1445fe",
+      "producer_version": "0.8.5",
+      "event_count": 15,
+      "ingest": {
+        "ACCEPTED": 15,
+        "DUPLICATE": 0,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "replay": {
+        "ACCEPTED": 0,
+        "DUPLICATE": 15,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "metadata_equal": true,
+      "mapping_profile": "schumpeter-observation-v0.2-closed-native-metadata",
+      "mapping_digest": "f8da815865fc524de07d5cf358029f85feb7e9e760d1a963b86e4d0de3539eea",
+      "decision": "REQUEST_EVIDENCE",
+      "criteria": {
+        "observation_coverage": "PASS",
+        "artifact_integrity": "UNKNOWN",
+        "task_outcome": "UNKNOWN"
+      },
+      "adapter": {
+        "schema_version": "pida.bundle/0.1-draft",
+        "raw_file_sha256": "sha256:2a602d5908b61fccf9b411b12c1b0b28fcc09c5075bcae16d96fc2b0bd1445fe",
+        "duplicates": 0,
+        "complete": true,
+        "known_limits": [],
+        "adapter_version": "pida-native-adapter/0.2.0",
+        "validation_revision": "pida.export-validation/0.3"
+      },
+      "consumer_reported_pix_identity": {
+        "package_version": null,
+        "api_source_sha256": "ef28efe3608f24672785c78b2a27c78709c7c3185e8c693a33e9acc668e61cd3",
+        "commit": null
+      }
+    },
+    {
+      "fixture": "worker-bundle.json",
+      "sha256": "0032715c3c0722d4b2e070e818879064518f2fd66868453acf276915d14cb611",
+      "producer_version": "0.8.5",
+      "event_count": 14,
+      "ingest": {
+        "ACCEPTED": 14,
+        "DUPLICATE": 0,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "replay": {
+        "ACCEPTED": 0,
+        "DUPLICATE": 14,
+        "CONFLICT": 0,
+        "QUARANTINED": 0,
+        "REJECTED": 0
+      },
+      "metadata_equal": true,
+      "mapping_profile": "schumpeter-observation-v0.2-closed-native-metadata",
+      "mapping_digest": "f8da815865fc524de07d5cf358029f85feb7e9e760d1a963b86e4d0de3539eea",
+      "decision": "REQUEST_EVIDENCE",
+      "criteria": {
+        "observation_coverage": "PASS",
+        "artifact_integrity": "UNKNOWN",
+        "task_outcome": "UNKNOWN"
+      },
+      "adapter": {
+        "schema_version": "pida.bundle/0.1-draft",
+        "raw_file_sha256": "sha256:0032715c3c0722d4b2e070e818879064518f2fd66868453acf276915d14cb611",
+        "duplicates": 0,
+        "complete": true,
+        "known_limits": [],
+        "adapter_version": "pida-native-adapter/0.2.0",
+        "validation_revision": "pida.export-validation/0.3"
+      },
+      "consumer_reported_pix_identity": {
+        "package_version": null,
+        "api_source_sha256": "ef28efe3608f24672785c78b2a27c78709c7c3185e8c693a33e9acc668e61cd3",
+        "commit": null
+      }
+    }
+  ],
+  "negative_cases": [
+    {
+      "fixture": "invalid-context-descriptor.json",
+      "sha256": "6dd9e93956b2e7df76e47121854d5c55adeee7db0ee0dfa2112730af938711fd",
+      "reason": "PIDA_CONTEXT_DESCRIPTOR_INVALID"
+    },
+    {
+      "fixture": "conflicting-event-id.json",
+      "sha256": "8945328ee4785df46fdb60fed2dfab0d85956c08517a53823fa6d7d3d35e0a00",
+      "reason": "PIDA_EVENT_ID_CONFLICT"
+    }
+  ],
+  "probe_sha256": "ebacb3d7d78cbc57c14d1f47736faaf84b508397e34cc3bfcbf205353eec57ea",
+  "worker_sha256": "cdefceb39ff6b3c5b1de145b040c850df75d44b3a65911c968505e1788d098ce",
+  "limits": [
+    "Synthetic file import and actual local Hub/PIX only.",
+    "Two current 0.8.6 captures plus seven historical 0.8.5 Persona captures.",
+    "No live LLM, provider service, private data, enterprise issuer or federation execution.",
+    "Task acceptance remains UNKNOWN.",
+    "PIX build authority is the hash-verified pix_engine pin; consumer-reported installed-package/Git metadata is advisory."
+  ]
+}

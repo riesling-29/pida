@@ -3,18 +3,24 @@ import { once } from "node:events";
 import { resolve, join } from "node:path";
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline/promises";
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, writeFileSync, mkdirSync, lstatSync, readFileSync } from "node:fs";
 import { stdin, stdout } from "node:process";
 import {
   createWorkspace,
   initWorkspace,
   readConfig,
+  validateConfig,
   listToolFiles,
   setToolEnabled,
   workspaceEnvironment,
 } from "./workspace.js";
 import { nativeProviderCatalog } from "./provider-catalog.js";
-import { unlockStore } from "./storage.js";
+import { unlockWorkspaceState } from "./workspace-unlock.js";
+import { inspectRuntimeLock } from "./storage.js";
+import { PidaClient } from "./client.js";
+import { discoverPrograms, createManifest } from "./program-catalog.js";
+import { inspectProgramProxy } from "./program-proxy.js";
+import { savePrivate } from "./private-state.js";
 
 const help = `Pida — reusable local agent workspace
 
@@ -22,25 +28,39 @@ const help = `Pida — reusable local agent workspace
   pida setup [directory] [--no-open]    Initialize and open easy model setup
   pida configure [directory]            Open easy model setup (--terminal for advanced wizard)
   pida start [directory] [--open]        Serve web UI and API; save conversations
+  pida tui [directory]                  Multi-agent tabs and split terminal UI
+  pida tui [directory] --main [--session ID | --new]  Main-workspace single-session UI
   pida open [directory]                 Open the UI with local authentication
   pida token [directory]                Explicitly print the local UI token
+  pida programs scan ROOT              Discover declared repository programs without execution
+  pida programs draft ROOT ID [dir]    Write a callable proxy contract for a discovered candidate
+  pida programs enable ROOT FILE [dir] Pin a host-trusted program and grant its tool permission
+  pida programs disable ID [dir]       Disable a registered proxy (restart required)
   pida tools [directory]                List tool files without importing them
   pida tools enable FILE [directory]    Approve a module; restart to load
   pida tools disable FILE [directory]   Disable a module; restart to unload
   pida doctor [directory]               Validate config, credentials and module paths
+  pida runs SESSION [directory]         List captured run/operation IDs from a running server
+  pida export SESSION RUN [directory] [--ocel|--jsonl]  Export OCEL 2.0, bundle or JSONL
+  pida recovery SESSION [dir]          Inspect main-session unknown effects
+  pida recovery resolve SESSION EFFECT applied|not_applied [dir]
+                                      Record an inspected effect outcome; never replay it
   pida unlock [directory]               Clear a lock only if its local process is gone
+  pida browser enable [directory]       Probe Chromium, then enable isolated UI checks
+  pida project enable ROOT [directory] [--trusted-host]  Enable Pi project tools; flag also enables host shell
+  pida project disable [directory]      Disable project tools (restart required)
 
 Default directory: current working directory. Requires Node 22.19+.
 The default mock demonstrates LOT-001/LOT-002; it is not a language model.
 `;
 
-async function openBrowser(directory: string, setup = false) {
+async function openBrowser(directory: string, setup = false, sessionId?: string) {
   const config = readConfig(directory),
     token = workspaceEnvironment(directory).PIDA_API_TOKEN;
   if (!token || token.length < 32)
     throw new Error("Missing local token; run pida doctor.");
   // Fragment never reaches the HTTP server. The UI immediately removes it from browser history.
-  const url = `http://127.0.0.1:${config.port}/#token=${encodeURIComponent(token)}${setup ? "&setup=1" : ""}`;
+  const url = `http://127.0.0.1:${config.port}/#token=${encodeURIComponent(token)}${setup ? "&setup=1" : ""}${sessionId ? "&surface=studio&session=" + encodeURIComponent(sessionId) : ""}`;
   const command =
     process.platform === "win32"
       ? "rundll32"
@@ -87,10 +107,15 @@ async function configure(directory: string) {
       const previous =
         config.provider.kind === "endpoint" ? config.provider : undefined;
       const api = await ask("Protocol", previous?.api ?? "openai-completions");
-      const baseUrl = await ask(
+      const enteredUrl = await ask(
         "Base URL",
         previous?.baseUrl ?? "http://localhost:1234/v1",
       );
+      const normalizeUrl = (value: string) => new URL(value.trim()).href
+        .replace(/\/$/, "")
+        .replace(/\/(chat\/completions|responses|messages)$/, "");
+      const baseUrl = normalizeUrl(enteredUrl);
+      const sameEndpoint = previous?.api === api && normalizeUrl(previous.baseUrl) === baseUrl;
       const modelId = await ask(
         "Exact model/deployment ID",
         previous?.modelId ?? "your-model-id",
@@ -123,6 +148,9 @@ async function configure(directory: string) {
         maxTokens,
         apiKeyEnv,
         allowInsecureHttp,
+        ...(sameEndpoint && previous?.authMode ? { authMode: previous.authMode } : {}),
+        ...(sameEndpoint && previous?.headersEnv ? { headersEnv: previous.headersEnv } : {}),
+        ...(sameEndpoint && previous?.compat ? { compat: previous.compat } : {}),
       };
     } else {
       const selected = catalog.find(p => p.id === mode);
@@ -157,30 +185,33 @@ async function startWorkspace(
   open: boolean,
   setup: boolean,
 ) {
-  if (setup) {
-    const config = readConfig(directory),
-      token = workspaceEnvironment(directory).PIDA_API_TOKEN;
+  const config = readConfig(directory), token = workspaceEnvironment(directory).PIDA_API_TOKEN;
+  const lock = inspectRuntimeLock(join(directory, config.stateDir));
+  if (lock.state === "live" && lock.nonce && token) {
     const available = await fetch(
-      `http://127.0.0.1:${config.port}/v1/provider`,
+      `http://127.0.0.1:${config.port}/v1/info`,
       {
         headers: { Authorization: `Bearer ${token ?? ""}` },
         signal: AbortSignal.timeout(1500),
         redirect: "error",
       },
     )
-      .then((response) => response.ok)
+      .then(async response => response.ok && (await response.json()).instanceId === lock.nonce)
       .catch(() => false);
     if (available) {
       if (open)
-        await openBrowser(directory, true).catch((e) =>
+        await openBrowser(directory, setup).catch((e) =>
           console.error(e.message),
         );
       console.log(
-        `Pida settings: http://127.0.0.1:${config.port} (use the model settings button after login)`,
+        setup ? `Pida settings: http://127.0.0.1:${config.port} (use the model settings button after login)`
+          : `Pida already running: http://127.0.0.1:${config.port}\nConnected to the existing workspace server.\nOpen the terminal UI: npm run tui -- "${directory}"\nTo apply configuration changes, stop the original server first.`,
       );
       return;
     }
   }
+  if (lock.state === "stale") throw new Error(`WORKSPACE_STALE_LOCK: The previous local process has stopped.\nRecover: node dist/cli.js unlock "${directory}"\nThen: npm start -- "${directory}" --open`);
+  if (lock.state === "unverified") throw new Error("WORKSPACE_LOCK_UNVERIFIED: Cannot verify runtime.lock ownership. Inspect the lock and original host; it was preserved.");
   // CLI owns its process environment, including credentials used by trusted business tools.
   const env = workspaceEnvironment(directory);
   for (const [key, value] of Object.entries(env))
@@ -192,14 +223,14 @@ async function startWorkspace(
     if (closing) return;
     closing = true;
     app.server.close();
-    await app.runtime.close();
+    await app.close();
     app.server.closeAllConnections();
   };
   try {
     app.server.listen(app.config.port, "127.0.0.1");
     await once(app.server, "listening");
   } catch (error) {
-    await app.runtime.close();
+    await app.close();
     throw error;
   }
   process.once("SIGINT", () => {
@@ -209,7 +240,7 @@ async function startWorkspace(
     void stop();
   });
   console.log(
-    `Pida ready: http://127.0.0.1:${app.config.port}\nProvider: ${app.config.provider.kind} · conversations saved locally\nUse pida open to sign in, or pida token for manual sign-in. Ctrl+C stops the server.`,
+    `Pida ready: http://127.0.0.1:${app.config.port}\nWorkspace: ${directory}\nProvider: ${app.config.provider.kind} · conversations saved locally\nThis window is the server log, not the TUI. Keep it running.\nOpen another terminal: pida tui "${directory}"\nFrom this source checkout: npm run tui -- "${directory}"\nUse pida open "${directory}" to sign in, or pida token "${directory}" for manual sign-in. Ctrl+C stops the server.`,
   );
   if (open)
     await openBrowser(directory, setup).catch((e) => console.error(e.message));
@@ -223,6 +254,106 @@ async function main() {
   }
   const directory = resolve(args.find((a) => !a.startsWith("--")) ?? ".");
   switch (command) {
+    case "tui": {
+      let selected = ".", sessionId: string | undefined, newSession = false, directorySeen = false, main = false;
+      for (let i = 0; i < args.length; i++) {
+        const arg = args[i]!;
+        if (arg === "--new") newSession = true;
+        else if (arg === "--main") main = true;
+        else if (arg === "--session") { sessionId = args[++i]; if (!sessionId || !/^[a-f0-9-]{36}$/.test(sessionId)) throw new Error("Use --session with a session ID."); }
+        else if (!arg.startsWith("-") && !directorySeen) { selected = arg; directorySeen = true; }
+        else throw new Error("Use pida tui [directory] [--main] [--session ID | --new].");
+      }
+      if (sessionId && newSession) throw new Error("Choose --session or --new.");
+      if (!stdin.isTTY || !stdout.isTTY) throw new Error("TUI에는 대화형 터미널이 필요합니다. pida start는 Web UI와 API를 실행합니다.");
+      selected = resolve(selected);
+      const config = readConfig(selected), env = workspaceEnvironment(selected), token = env.PIDA_API_TOKEN;
+      if (!token) throw new Error("Missing local application token. Run pida doctor.");
+      const lifetime = new AbortController();
+      const client = new PidaClient({ baseUrl: `http://127.0.0.1:${config.port}`, token: () => token,
+        fetch: (url, init = {}) => {
+          const stream = init.method === "POST" && typeof url === "string" && url.endsWith("/runs");
+          const signal = AbortSignal.any([lifetime.signal, ...(init.signal ? [init.signal] : []),
+            ...(stream ? [] : [AbortSignal.timeout(init.method === "POST" ? 120_000 : 10_000)])]);
+          return fetch(url, { ...init, signal, redirect: "error" });
+        } });
+      try { await client.getInfo(); }
+      catch { throw new Error(`Pida 서버에 연결하지 못했습니다. 다른 터미널에서 pida start "${selected}" --open을 실행한 뒤 다시 연결하세요. 서버가 실행 중이면 pida doctor로 작업 공간과 인증을 확인하세요.`); }
+      try {
+        if (main || sessionId || newSession) {
+          const { runTerminal } = await import("./tui.js");
+          await runTerminal({ client, workspace: selected, target: config.project?.enabled ? resolve(selected, config.project.root) : selected,
+            sessionId, newSession, openWeb: id => openBrowser(selected, false, id) });
+        } else {
+          const { runAgentTerminal } = await import("./agent-tui.js");
+          const layoutDirectory = join(selected, config.stateDir, "tui-layouts");
+          const layoutPath = (scope: string) => {
+            if (!/^[a-f0-9]{64}$/.test(scope)) throw Error("LAYOUT_SCOPE_INVALID");
+            if (existsSync(layoutDirectory) && lstatSync(layoutDirectory).isSymbolicLink()) throw Error("LAYOUT_STORAGE_UNSAFE");
+            const path = join(layoutDirectory, scope + ".json");
+            if (existsSync(path)) { const stat = lstatSync(path); if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1 || stat.size > 64000) throw Error("LAYOUT_STORAGE_UNSAFE"); }
+            return path;
+          };
+          await runAgentTerminal({ client, workspace: selected, openWeb: () => openBrowser(selected, false),
+            loadLayout: scope => { const path = layoutPath(scope); return existsSync(path) ? readFileSync(path, "utf8") : undefined; },
+            saveLayout: (scope, json) => savePrivate(layoutPath(scope), JSON.parse(json)) });
+        }
+      } finally { lifetime.abort(); }
+      return;
+    }
+    case "browser": {
+      if (args[0] !== "enable") throw new Error("Use pida browser enable [workspace-directory].");
+      const selected = resolve(args[1] ?? "."), config = readConfig(selected);
+      const browserExecutable = workspaceEnvironment(selected).PIDA_BROWSER_EXECUTABLE;
+      if (browserExecutable) process.env.PIDA_BROWSER_EXECUTABLE = browserExecutable;
+      const { checkUi } = await import("./ui-check.js");
+      const result = await checkUi("<!doctype html><html><body>Pida browser ready</body></html>", [], new AbortController().signal);
+      if (!result.ok) throw new Error(`${result.error ?? "UI_CHECK_FAILED"}: install Chromium with npx playwright install chromium, or set PIDA_BROWSER_EXECUTABLE to an existing browser. Configuration was not changed.`);
+      config.browserChecks = true;
+      validateConfig(config, selected);
+      writeFileSync(join(selected, "pida.config.json"), JSON.stringify(config, null, 2) + "\n");
+      console.log("Isolated browser probe passed; browserChecks enabled. Restart Pida to register ui_check.");
+      return;
+    }
+    case "project": {
+      const enable = args[0] === "enable";
+      if (!enable && args[0] !== "disable") throw new Error("Use pida project enable ROOT [workspace] [--trusted-host], or pida project disable [workspace].");
+      if (enable && (!args[1] || args[1].startsWith("--"))) throw new Error("Supply the project root directory.");
+      const candidate = args[enable ? 2 : 1];
+      const selected = resolve(candidate && !candidate.startsWith("--") ? candidate : "."), config = readConfig(selected);
+      config.permissions = config.permissions.filter(p => !["project:read", "project:write", "project:execute"].includes(p));
+      if (enable) {
+        const trustedHost = args.includes("--trusted-host");
+        config.project = { enabled: true, root: resolve(args[1]!), trustedHost, timeoutSeconds: 120 };
+        config.permissions.push("project:read", "project:write", ...(trustedHost ? ["project:execute"] : []));
+      } else delete config.project;
+      validateConfig(config, selected);
+      writeFileSync(join(selected, "pida.config.json"), JSON.stringify(config, null, 2) + "\n");
+      console.log(enable ? `Project tools enabled: ${config.project!.root}\n${config.project!.trustedHost ? "Host shell enabled with your OS account privileges; this is not a sandbox." : "File tools only; host shell disabled."}\nRestart Pida. Workbench checkpoints do not restore project files.` : "Project tools disabled. Restart Pida.");
+      return;
+    }
+    case "runs":
+    case "export": {
+      const sessionId = args[0], runId = command === "export" ? args[1] : undefined;
+      if (!sessionId || (command === "export" && !runId)) throw new Error("Supply session ID and, for export, run ID.");
+      const selected = resolve(args[command === "export" ? 2 : 1]?.startsWith("--") ? "." : args[command === "export" ? 2 : 1] ?? ".");
+      const config = readConfig(selected), token = workspaceEnvironment(selected).PIDA_API_TOKEN;
+      if (!token) throw new Error("Missing local token; run pida doctor.");
+      const client = new PidaClient({ baseUrl: `http://127.0.0.1:${config.port}`, token: () => token });
+      if (command === "runs") console.log(JSON.stringify(await client.listRuns(sessionId), null, 2));
+      else if (args.includes("--ocel")) {
+        if (args.includes("--jsonl")) throw new Error("Choose --ocel or --jsonl.");
+        const output = await client.exportRunOcel(sessionId, runId!);
+        console.log(JSON.stringify(output.document, null, 2));
+        if (!output.complete) { console.error("OBSERVATION_INCOMPLETE: OCEL is an open or incomplete cut."); process.exitCode = 2; }
+      }
+      else if (args.includes("--jsonl")) {
+        const output = await client.exportRunJsonl(sessionId, runId!);
+        process.stdout.write(output.jsonl);
+        if (!output.complete) { console.error("OBSERVATION_INCOMPLETE: export is partial; inspect the JSON bundle."); process.exitCode = 2; }
+      } else console.log(JSON.stringify(await client.exportRun(sessionId, runId!), null, 2));
+      return;
+    }
     case "init":
       initWorkspace(directory);
       console.log(
@@ -250,8 +381,54 @@ async function main() {
     case "open":
       await openBrowser(directory);
       return;
+    case "recovery": {
+      const resolving = args[0] === "resolve", sessionId = args[resolving ? 1 : 0];
+      if (!sessionId) throw new Error("Supply the main session ID.");
+      const selected = resolve(args[resolving ? 4 : 1] ?? "."), config = readConfig(selected), env = workspaceEnvironment(selected);
+      if (!env.PIDA_API_TOKEN) throw new Error("Missing local application token.");
+      const client = new PidaClient({ baseUrl: `http://127.0.0.1:${config.port}`, token: () => env.PIDA_API_TOKEN! });
+      if (resolving) {
+        const id = args[2], state = args[3];
+        if (!id || !["applied", "not_applied"].includes(state ?? "")) throw new Error("Supply effect ID and inspected state applied or not_applied.");
+        console.log(JSON.stringify(await client.reconcileSession(sessionId, [{ id, state: state as "applied" | "not_applied" }]), null, 2));
+      } else console.log(JSON.stringify(await client.getRecovery(sessionId), null, 2));
+      return;
+    }
+    case "programs": {
+      const action = args[0];
+      if (action === "scan" && args[1]) { console.log(JSON.stringify(discoverPrograms(resolve(args[1])), null, 2)); return; }
+      if (action === "draft" && args[1] && args[2]) {
+        const source = resolve(args[1]), selected = resolve(args[3] ?? ".");
+        readConfig(selected);
+        const candidate = discoverPrograms(source).candidates.find(item => item.id === args[2]);
+        if (!candidate) throw new Error("PROGRAM_CANDIDATE_NOT_FOUND: scan the repository again.");
+        const manifest = createManifest(candidate), folder = join(selected, "programs");
+        if (existsSync(folder) && (!lstatSync(folder).isDirectory() || lstatSync(folder).isSymbolicLink())) throw new Error("PROGRAM_REGISTRY_UNSAFE");
+        mkdirSync(folder, { recursive: true, mode: 0o700 });
+        const file = join(folder, manifest.id + ".json");
+        writeFileSync(file, JSON.stringify(manifest, null, 2) + "\n", { flag: "wx", mode: 0o600 });
+        console.log(`Proxy contract saved: ${file}\nInspect the fixed command/input/output contract, then use programs enable with the source root and this file. No program was run or enabled.`); return;
+      }
+      if (action === "enable" && args[1] && args[2]) {
+        const source = resolve(args[1]), file = resolve(args[2]), selected = resolve(args[3] ?? "."), config = readConfig(selected);
+        const inspected = await inspectProgramProxy(source, file);
+        const registration = { id: inspected.manifest.id, enabled: true, root: source, manifest: file, approval: inspected.approval };
+        config.programs = [...(config.programs ?? []).filter(item => item.id !== registration.id), registration];
+        config.permissions = [...new Set([...config.permissions, `program:${registration.id}`])];
+        validateConfig(config, selected); savePrivate(join(selected, "pida.config.json"), config);
+        console.log(`Pinned program ${registration.id}; permission program:${registration.id}. Restart Pida to register the callable proxy. No program was run.`); return;
+      }
+      if (action === "disable" && args[1]) {
+        const selected = resolve(args[2] ?? "."), config = readConfig(selected), id = args[1];
+        const item = config.programs?.find(item => item.id === id);
+        if (!item) throw new Error("PROGRAM_NOT_FOUND");
+        item.enabled = false; config.permissions = config.permissions.filter(permission => permission !== `program:${id}`);
+        savePrivate(join(selected, "pida.config.json"), config); console.log("Program proxy disabled. Restart Pida."); return;
+      }
+      throw new Error("Use programs scan ROOT, draft ROOT ID [workspace], enable ROOT MANIFEST [workspace], or disable ID [workspace].");
+    }
     case "unlock":
-      unlockStore(join(directory, readConfig(directory).stateDir));
+      unlockWorkspaceState(join(directory, readConfig(directory).stateDir));
       console.log("No stale lock remains.");
       return;
     case "tools": {

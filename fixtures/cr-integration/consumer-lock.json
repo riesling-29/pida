@@ -1,0 +1,49 @@
+{
+  "persona": {
+    "baseline": "7378040533b0333c3a24b01fbe8614c1de7b52f1",
+    "profile": "local-working-tree-source-snapshot",
+    "files": {
+      "persona_substrate/__init__.py": "7949d0517ee62483e7038ec9355dc28e9918e33359331439ce2299e5b07a1101",
+      "persona_substrate/consumer.py": "4ebc076458d7c60880d82473a94452df18e235a4bd1765e3e8dfdcaff5670a4f",
+      "persona_substrate/contracts.py": "ba662d91b24784ce418879ed608dfeb0127af6c3c0474ef9b44bbd2133081903",
+      "persona_substrate/provider.py": "3136e1f973d89190c1251cc0be864ced786be7b42a019eb5ab7f57da1a032ba8",
+      "persona_substrate/schemas/ContextUseReceipt.schema.json": "086a5f8887d83fe406bb22ec51e300e44d701e067c09b0a97640a911219bab30",
+      "persona_substrate/schemas/MemoryRecord.schema.json": "411551cb2b8c3f91bf36447841997beca8f14b7013fedbd40a92b47bf6b036e6",
+      "persona_substrate/schemas/PersonaContext.schema.json": "64a3b34796576e62887597223ea2f79522532942ed444bbbb45fc48933c90b2e",
+      "persona_substrate/schemas/PersonaDescriptor.schema.json": "f14696f55790aaaba67a5eab9a40f9afe0b0308dda376c53bb67b6f37c51bd43",
+      "persona_substrate/schemas/WorkingState.schema.json": "15efb39345466abd19aff3c02cd3fbbd80d06b638240bef7e472f87382d3b56f",
+      "persona_substrate/schemas/contracts.json": "a6a652fc73bbfc00713dc5142d261b903f92f70c129fccdd4f74e136604b5c6f",
+      "vera_persona/__init__.py": "5111b7cd5a0a219e91e9820cdd079d732b359c913a9bd6c7ccc69a1ad77fa9b9",
+      "vera_persona/behavior.py": "03e502adcd79100440fb5c1a9ad7ccb349d8a4b83e3191a4753c23891998ee2e",
+      "vera_persona/behavior_contracts.py": "062eb7616eeec7e747729276ccae7804a7d97438499ac0345d7c0f53f662e87f",
+      "vera_persona/behavior_schemas.json": "51f7ff694a16fe39591f53ed6fab2dbe555ac8c61e09c650f077a086c6a813f7",
+      "vera_persona/bridge.py": "f14f3d593f2b0a310a69ba39deb55b887aadff4bdf639959260c17f0d00d6c9a",
+      "vera_persona/continuity.py": "c8a7cba2a93deb4192d82d01594dc4bdc40d3208468d25bc896fb7ee5d1c91d3",
+      "vera_persona/continuity_demo.py": "14488f783d6f8fa9be832dcacda5e0f08722ed9990a67e01df30e87e6e4e4403",
+      "vera_persona/continuity_fixture.py": "be71ae5527b9c2505a10e721db97e30f553671904b9b0bfb6132de153a26df4c",
+      "vera_persona/demo.py": "d4647a14d0a6d502ec6a1956cec68e46a9a8c53ceabf33192a1b5574757a9a73",
+      "vera_persona/fixture.py": "499f738cdc14514f149f3e13eabccb032a8e00abf34d275b1fd711e9fe9cbe89",
+      "vera_persona/source.py": "8573099b2b0f1b4638f1e028bd94d508b55d5e8a7f68d3590b47072ccb2f91a3",
+      "vera_persona/working_graph.py": "aadfdf99a4cd2cdcf417f9ded9e31a191e81f6e78881874aca38fff0357d9d9c"
+    }
+  },
+  "schumpeter": {
+    "commit": "01d616d0dc32961dc0fc9ab76ca25e08d0f66fc0",
+    "files": {
+      "src/schumpeter/__init__.py": "a8b10f7246b76d673c442eacd7d8727ae0255d0b1629ddea39483a30c09da4cc",
+      "src/schumpeter/__main__.py": "bbb4e153fe2e32e93df4ea90ba24821881f81c0294a2a29755a22b290e1ed5ab",
+      "src/schumpeter/audit.py": "0049de95e125e6a768794618ab396af2578d6a6db732a1977bd6123425cb76e1",
+      "src/schumpeter/cli.py": "b4e31e99d73f161eb0c259ee5a282d65a49b6f7a9f5b4ca7e46718ae8b156f93",
+      "src/schumpeter/conformance.py": "f63a9304cc941cd7939479b21630b203244891789118ac5320c4b2a54f1750a2",
+      "src/schumpeter/contracts.py": "c833c2e9587c6a9cca5e2d315863d981f836ad2d6396ed1f5b8298ef198826fa",
+      "src/schumpeter/evidence_bundle.py": "ac3654e6c17e4709102cb20ecaa7254c8827c5ff3b45a0917bf62aee078b7f4f",
+      "src/schumpeter/hub_api.py": "a3e88c238a9e1a30fb33a548a479d2a979c9eb22b3871b8481668a8858a0b57b",
+      "src/schumpeter/pida_native.py": "3e52886bdb9599bd228a2426e7a5428e89ec592eaf685449339f4751027ac909",
+      "src/schumpeter/pix_port.py": "02f8ddd3eb19827aa899473d7063d54836744db5b0bd44d270da6f20df18fbd0",
+      "src/schumpeter/product_runner.py": "4424e2c992b3237d56abc9234332708313c492953bfe73f85be28274bec5f64c",
+      "src/schumpeter/source_profiles.py": "704968347180caad135edb84aa4f273193f3a8388d03e8baddff235c93967717",
+      "src/schumpeter/store.py": "5701ff3369de15e8683818996bcb2da4b08f606906a674e3dde8d6e865c928a5",
+      "src/schumpeter/trusted_verifier.py": "4563583c291f6e4d3b9ce51a4171bce5df45c77b549eb90bbdf149e5f67e62f2"
+    }
+  }
+}

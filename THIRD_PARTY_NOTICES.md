@@ -5,6 +5,8 @@ Pida consumes the official Pi packages as dependencies, without vendoring or for
 Source: https://github.com/earendil-works/pi/blob/v1.2.0/LICENSE
 Inspected: 2026-10-14. Package provenance/integrities are recorded in npm-shrinkwrap.json.
 
+The 0.8.7 terminal client directly consumes `@earendil-works/pi-tui` 1.2.0 (already pinned in the dependency graph): its renderer, editor, layout, scrolling, terminal lifecycle and selector are reused without source copying. Pida owns only its host-client adapter and screen composition.
+
 ## Pi
 
 MIT License
@@ -104,3 +106,56 @@ Unmodified `systematic-debugging` and `verification-before-completion` skill tex
 ## Optional browser verification
 
 Playwright and playwright-core 1.64.1 are optional dependencies under Apache-2.0. Their packages retain LICENSE/NOTICE. Browser binaries are installed separately by the deployment administrator.
+
+## PersonaSubstrate / Vera continuity contracts
+
+`src/vera-contract.ts` reuses the owner's closed `Binding` and `VeraContext` JSON Schema definitions from the authorized cross-app development source snapshot. Source paths and exact SHA-256 pins are in that generated file; the executable consumer source lock is in `fixtures/cr-integration/consumer-lock.json`. Synthetic context provenance is in `test/fixtures/vera/source.json`. No Persona runtime, canonical database, credentials or service code is bundled in Pida. The opt-in integration probe imports verified temporary copies of a separately supplied checkout.
+
+
+## DeepSeek Harness output collector
+
+Pida vendors `src/vendor/deepseek-output.ts` from the following exact source:
+
+- Repository: https://github.com/deepseek-ai/deepseek-harness
+- Commit: `ce7073d51254c26cd63b22a60835b8f948deb447`
+- Source: `packages/subprocess/subprocess-local/src/output.ts`
+- License: https://github.com/deepseek-ai/deepseek-harness/blob/ce7073d51254c26cd63b22a60835b8f948deb447/LICENSE
+- Local modification: replace the type-only `CollectedOutput` import with the same structural interface and add provenance comments. Collection, spill, and finalization implementation is retained.
+- Regression scenarios (tail retention, spill caps, failed spill recovery) were adapted from upstream `packages/subprocess/subprocess-local/tests/spawn.spec.ts` to Node's test runner. Upstream's test suite was inspected, not executed here.
+- Pida's wrapper adds head previews, UTF-8 window boundaries, owner/session-scoped artifact references, hash checks, and bounded retention. No DeepSeek agent runtime, Cordis service container, native process runner, or sandbox is bundled.
+
+```text
+MIT License
+
+Copyright (c) 2026 DeepSeek
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+# PIX profile reference fixtures (0.8.6)
+
+Synthetic native model/input fixtures under `test/fixtures/pix-profiles` originate
+from `Chanta-Research-Group/PIX` PR14, commit
+`a0831bc0b34fd7feebfba928066b90b114ae531e`. Their original byte hashes and paths
+are recorded in `source.json`. Pida calls the separately supplied unmodified PIX
+source; no PIX engine implementation is included in this package. Native result
+and checkpoint evidence retains PIX's format/version/identity and exact bytes.
+
+The synthetic Site descriptor fixture under `test/fixtures/vera-site` originates
+from the Persona Site's `c506e321c685573481648ecf120e8f2d1214bb83` owner response;
+its source pin/hash and deliberately limited contract-check scope are preserved.

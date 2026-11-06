@@ -1,0 +1,863 @@
+{
+  "schemaVersion": 1,
+  "owner": "synthetic-pi-integration-owner",
+  "hostAgentId": "main",
+  "digest": "7c07f17211b3519d42dec1a8f69503fbee847dff35c33d52e379213826a6a440",
+  "value": {
+    "schemaVersion": "pida.pi.analysis/1",
+    "kind": "awareness",
+    "status": "computed",
+    "processJudgment": "deviates",
+    "businessAcceptance": "UNKNOWN",
+    "modelKind": "empirical",
+    "mapping": "pida.sequential-tool-lifecycle/1",
+    "profile": "completed-sequential-batch",
+    "inputDigest": "e433de419f757f4cae715fc62f6aa626a84482e39fe628cf716e9697b3796f98",
+    "inputs": [
+      {
+        "sessionId": "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9",
+        "runId": "f3f07761-65f1-4258-b6b0-846aa31c05fa",
+        "digest": "807c572ac87d9e291cf3e86c2277a32d0d5b7ec13b1b429f60f8fd690236f217"
+      }
+    ],
+    "coverage": {
+      "selectedCases": 1,
+      "includedCases": 1,
+      "excludedCases": 0,
+      "failedCases": 0,
+      "outcomeCounts": {
+        "completed": 1,
+        "failed": 0,
+        "cancelled": 0,
+        "limited": 0,
+        "interrupted": 0,
+        "unknown": 0
+      },
+      "observationCoverage": 1,
+      "sourceCoverage": "selected-runs-only",
+      "exclusions": []
+    },
+    "modelRef": "pi-model:4a17c79aec88276bf2fd182257945c34d976cb1a5d88cac5b26313276896f474",
+    "modelDigest": "e004f6d0b8a7e59a33748e5c3834671e21e91e6833f9074211deb9daa8b5124d",
+    "empiricalDeviationIsViolation": false,
+    "automaticCorrection": false,
+    "limits": [
+      "SELECTED_RUNS_ONLY",
+      "SEQUENTIAL_TOOL_LIFECYCLE_PROJECTION",
+      "NO_BUSINESS_ACCEPTANCE",
+      "NO_LIVE_CURRENT_CUT",
+      "NO_CAUSAL_IMPROVEMENT_CLAIM",
+      "Completed source-sequence runs only; no live-current-cut or concurrent semantics.",
+      "DFG accepting-language conformance reports edit cost, not normalized fitness or business acceptance.",
+      "Discovery may generalize recombinations; zero cost does not prove an exact previously observed trace.",
+      "Empirical deviation does not authorize correction, identity change or tool execution."
+    ],
+    "issues": [
+      "source_sequence",
+      "unknown_timestamp"
+    ],
+    "durationMs": 1332.9556400000001,
+    "analysisCost": {
+      "elapsedMs": 1332.9556400000001,
+      "billingCost": null,
+      "billingMeasured": false
+    },
+    "cohortDigest": "fd5c43c931ca8f0715b3f5c105503191b23d8e61b8d32622f000f0b1e442904c",
+    "native": {
+      "schemaVersion": "pida.pix.worker.v1",
+      "operation": "awareness",
+      "status": "computed",
+      "issues": [
+        {
+          "code": "source_sequence",
+          "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order"
+        },
+        {
+          "code": "unknown_timestamp",
+          "message": "No timezone-aware timestamp is available; source facts remain in CaseLog"
+        }
+      ],
+      "nativeResults": [
+        {
+          "format": "pix.analysis-result",
+          "version": "1.3.0",
+          "payload_kind": "case-traces",
+          "computation": {
+            "operator_id": "pix.case_traces",
+            "operator_version": "1.0.0",
+            "source_digest": "pix.case-log.v1:sha256:00c86e718c858c6a10058a5e4e8a1f93f468500b975432a7ceb28c1843b55ce8",
+            "spec": {
+              "activity_key": "concept:name",
+              "timestamp_key": "time:timestamp",
+              "classifier": null,
+              "object_type": "case"
+            },
+            "status": "computed",
+            "value": {
+              "object_type": "case",
+              "traces": [
+                {
+                  "object_id": "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "object_type": "case",
+                  "events": [
+                    {
+                      "event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/2d3ce6aa-7a09-42c2-a7d9-d79924a6df86",
+                      "activity": "request",
+                      "time": null,
+                      "relations": [
+                        {
+                          "event": "7adb4d79-4800-4f45-8a87-eac94941dcf9/2d3ce6aa-7a09-42c2-a7d9-d79924a6df86",
+                          "object": "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                          "qualifier": "case"
+                        }
+                      ],
+                      "order_group": null,
+                      "time_lower": null,
+                      "time_upper": null
+                    },
+                    {
+                      "event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/d1e845fc-33c9-4744-9d44-5898473455fe",
+                      "activity": "inspect_context:started",
+                      "time": null,
+                      "relations": [
+                        {
+                          "event": "7adb4d79-4800-4f45-8a87-eac94941dcf9/d1e845fc-33c9-4744-9d44-5898473455fe",
+                          "object": "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                          "qualifier": "case"
+                        }
+                      ],
+                      "order_group": null,
+                      "time_lower": null,
+                      "time_upper": null
+                    },
+                    {
+                      "event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/5566aa08-0af0-45cf-b475-e907ba2965ca",
+                      "activity": "inspect_context:completed",
+                      "time": null,
+                      "relations": [
+                        {
+                          "event": "7adb4d79-4800-4f45-8a87-eac94941dcf9/5566aa08-0af0-45cf-b475-e907ba2965ca",
+                          "object": "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                          "qualifier": "case"
+                        }
+                      ],
+                      "order_group": null,
+                      "time_lower": null,
+                      "time_upper": null
+                    },
+                    {
+                      "event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/8df843c0-33a8-4f71-8876-79cc6a7cb042",
+                      "activity": "reproduce_issue:started",
+                      "time": null,
+                      "relations": [
+                        {
+                          "event": "7adb4d79-4800-4f45-8a87-eac94941dcf9/8df843c0-33a8-4f71-8876-79cc6a7cb042",
+                          "object": "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                          "qualifier": "case"
+                        }
+                      ],
+                      "order_group": null,
+                      "time_lower": null,
+                      "time_upper": null
+                    },
+                    {
+                      "event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/bd421910-a640-41ca-b4c0-b4dda5ea6b1e",
+                      "activity": "reproduce_issue:completed",
+                      "time": null,
+                      "relations": [
+                        {
+                          "event": "7adb4d79-4800-4f45-8a87-eac94941dcf9/bd421910-a640-41ca-b4c0-b4dda5ea6b1e",
+                          "object": "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                          "qualifier": "case"
+                        }
+                      ],
+                      "order_group": null,
+                      "time_lower": null,
+                      "time_upper": null
+                    },
+                    {
+                      "event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/be643aa4-abbe-4751-9ff2-47bc49120989",
+                      "activity": "edit_code:started",
+                      "time": null,
+                      "relations": [
+                        {
+                          "event": "7adb4d79-4800-4f45-8a87-eac94941dcf9/be643aa4-abbe-4751-9ff2-47bc49120989",
+                          "object": "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                          "qualifier": "case"
+                        }
+                      ],
+                      "order_group": null,
+                      "time_lower": null,
+                      "time_upper": null
+                    },
+                    {
+                      "event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/13c5eed2-3a2e-4a24-b0c8-7f77ecbc926d",
+                      "activity": "edit_code:completed",
+                      "time": null,
+                      "relations": [
+                        {
+                          "event": "7adb4d79-4800-4f45-8a87-eac94941dcf9/13c5eed2-3a2e-4a24-b0c8-7f77ecbc926d",
+                          "object": "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                          "qualifier": "case"
+                        }
+                      ],
+                      "order_group": null,
+                      "time_lower": null,
+                      "time_upper": null
+                    },
+                    {
+                      "event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/422df9a6-7cdf-4879-b6a0-625ab27f0edd",
+                      "activity": "verify_code:started",
+                      "time": null,
+                      "relations": [
+                        {
+                          "event": "7adb4d79-4800-4f45-8a87-eac94941dcf9/422df9a6-7cdf-4879-b6a0-625ab27f0edd",
+                          "object": "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                          "qualifier": "case"
+                        }
+                      ],
+                      "order_group": null,
+                      "time_lower": null,
+                      "time_upper": null
+                    },
+                    {
+                      "event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/6cc92941-d57b-4b49-9d02-5106f63f5136",
+                      "activity": "verify_code:completed",
+                      "time": null,
+                      "relations": [
+                        {
+                          "event": "7adb4d79-4800-4f45-8a87-eac94941dcf9/6cc92941-d57b-4b49-9d02-5106f63f5136",
+                          "object": "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                          "qualifier": "case"
+                        }
+                      ],
+                      "order_group": null,
+                      "time_lower": null,
+                      "time_upper": null
+                    },
+                    {
+                      "event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/9cbf862a-4cc0-4c1d-9173-2ca2dda6237d",
+                      "activity": "outcome:completed",
+                      "time": null,
+                      "relations": [
+                        {
+                          "event": "7adb4d79-4800-4f45-8a87-eac94941dcf9/9cbf862a-4cc0-4c1d-9173-2ca2dda6237d",
+                          "object": "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                          "qualifier": "case"
+                        }
+                      ],
+                      "order_group": null,
+                      "time_lower": null,
+                      "time_upper": null
+                    }
+                  ]
+                }
+              ]
+            },
+            "issues": [
+              {
+                "code": "source_sequence",
+                "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order",
+                "at": []
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/2d3ce6aa-7a09-42c2-a7d9-d79924a6df86"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/d1e845fc-33c9-4744-9d44-5898473455fe"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/5566aa08-0af0-45cf-b475-e907ba2965ca"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/8df843c0-33a8-4f71-8876-79cc6a7cb042"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/bd421910-a640-41ca-b4c0-b4dda5ea6b1e"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/be643aa4-abbe-4751-9ff2-47bc49120989"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/13c5eed2-3a2e-4a24-b0c8-7f77ecbc926d"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/422df9a6-7cdf-4879-b6a0-625ab27f0edd"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/6cc92941-d57b-4b49-9d02-5106f63f5136"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/9cbf862a-4cc0-4c1d-9173-2ca2dda6237d"
+                ]
+              }
+            ],
+            "computation_id": "pix.computation.v1:sha256:80fb212689b2e2a281effa0433fcf0bcbb87ccbd61c368ad5040e654a13b54c3",
+            "parent_computation_ids": []
+          },
+          "document_digest": "pix.analysis-result.v1:sha256:db27df27e340a729817bd8af5c40070587297e31f55072df0d73c27841d299bd"
+        },
+        {
+          "format": "pix.analysis-result",
+          "version": "1.3.0",
+          "payload_kind": "case_dfg_alignment_set",
+          "computation": {
+            "operator_id": "pix.case_centric.align_dfg",
+            "operator_version": "1.0.0",
+            "source_digest": "pix.case-log.v1:sha256:00c86e718c858c6a10058a5e4e8a1f93f468500b975432a7ceb28c1843b55ce8",
+            "spec": {
+              "model": {
+                "activities": [
+                  "edit_code:completed",
+                  "edit_code:started",
+                  "fail_case:failed:SYNTHETIC_ACTION_FAILURE",
+                  "fail_case:started",
+                  "outcome:completed",
+                  "outcome:failed",
+                  "reproduce_issue:completed",
+                  "reproduce_issue:started",
+                  "request",
+                  "verify_code:completed",
+                  "verify_code:started"
+                ],
+                "edges": [
+                  [
+                    "edit_code:completed",
+                    "verify_code:started"
+                  ],
+                  [
+                    "edit_code:started",
+                    "edit_code:completed"
+                  ],
+                  [
+                    "fail_case:failed:SYNTHETIC_ACTION_FAILURE",
+                    "outcome:failed"
+                  ],
+                  [
+                    "fail_case:started",
+                    "fail_case:failed:SYNTHETIC_ACTION_FAILURE"
+                  ],
+                  [
+                    "reproduce_issue:completed",
+                    "edit_code:started"
+                  ],
+                  [
+                    "reproduce_issue:started",
+                    "reproduce_issue:completed"
+                  ],
+                  [
+                    "request",
+                    "edit_code:started"
+                  ],
+                  [
+                    "request",
+                    "fail_case:started"
+                  ],
+                  [
+                    "request",
+                    "reproduce_issue:started"
+                  ],
+                  [
+                    "verify_code:completed",
+                    "outcome:completed"
+                  ],
+                  [
+                    "verify_code:started",
+                    "verify_code:completed"
+                  ]
+                ],
+                "starts": [
+                  "request"
+                ],
+                "ends": [
+                  "outcome:completed",
+                  "outcome:failed"
+                ],
+                "accepts_empty": false
+              },
+              "parameters": {
+                "log_move_cost": 1,
+                "model_move_cost": 1,
+                "max_states": 100000
+              }
+            },
+            "status": "computed",
+            "value": {
+              "traces": [
+                {
+                  "case_id": "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "status": "optimal",
+                  "cost": 2,
+                  "moves": [
+                    {
+                      "kind": "synchronous",
+                      "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/2d3ce6aa-7a09-42c2-a7d9-d79924a6df86",
+                      "log_activity": "request",
+                      "model_activity": "request",
+                      "reference_event_id": null,
+                      "cost": 0
+                    },
+                    {
+                      "kind": "log",
+                      "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/d1e845fc-33c9-4744-9d44-5898473455fe",
+                      "log_activity": "inspect_context:started",
+                      "model_activity": null,
+                      "reference_event_id": null,
+                      "cost": 1
+                    },
+                    {
+                      "kind": "log",
+                      "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/5566aa08-0af0-45cf-b475-e907ba2965ca",
+                      "log_activity": "inspect_context:completed",
+                      "model_activity": null,
+                      "reference_event_id": null,
+                      "cost": 1
+                    },
+                    {
+                      "kind": "synchronous",
+                      "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/8df843c0-33a8-4f71-8876-79cc6a7cb042",
+                      "log_activity": "reproduce_issue:started",
+                      "model_activity": "reproduce_issue:started",
+                      "reference_event_id": null,
+                      "cost": 0
+                    },
+                    {
+                      "kind": "synchronous",
+                      "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/bd421910-a640-41ca-b4c0-b4dda5ea6b1e",
+                      "log_activity": "reproduce_issue:completed",
+                      "model_activity": "reproduce_issue:completed",
+                      "reference_event_id": null,
+                      "cost": 0
+                    },
+                    {
+                      "kind": "synchronous",
+                      "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/be643aa4-abbe-4751-9ff2-47bc49120989",
+                      "log_activity": "edit_code:started",
+                      "model_activity": "edit_code:started",
+                      "reference_event_id": null,
+                      "cost": 0
+                    },
+                    {
+                      "kind": "synchronous",
+                      "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/13c5eed2-3a2e-4a24-b0c8-7f77ecbc926d",
+                      "log_activity": "edit_code:completed",
+                      "model_activity": "edit_code:completed",
+                      "reference_event_id": null,
+                      "cost": 0
+                    },
+                    {
+                      "kind": "synchronous",
+                      "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/422df9a6-7cdf-4879-b6a0-625ab27f0edd",
+                      "log_activity": "verify_code:started",
+                      "model_activity": "verify_code:started",
+                      "reference_event_id": null,
+                      "cost": 0
+                    },
+                    {
+                      "kind": "synchronous",
+                      "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/6cc92941-d57b-4b49-9d02-5106f63f5136",
+                      "log_activity": "verify_code:completed",
+                      "model_activity": "verify_code:completed",
+                      "reference_event_id": null,
+                      "cost": 0
+                    },
+                    {
+                      "kind": "synchronous",
+                      "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/9cbf862a-4cc0-4c1d-9173-2ca2dda6237d",
+                      "log_activity": "outcome:completed",
+                      "model_activity": "outcome:completed",
+                      "reference_event_id": null,
+                      "cost": 0
+                    }
+                  ],
+                  "settled_states": 26,
+                  "discovered_states": 51,
+                  "lower_bound_cost": 2
+                }
+              ],
+              "optimal_count": 1,
+              "unreachable_count": 0,
+              "limited_count": 0
+            },
+            "issues": [
+              {
+                "code": "source_sequence",
+                "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order",
+                "at": []
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/2d3ce6aa-7a09-42c2-a7d9-d79924a6df86"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/d1e845fc-33c9-4744-9d44-5898473455fe"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/5566aa08-0af0-45cf-b475-e907ba2965ca"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/8df843c0-33a8-4f71-8876-79cc6a7cb042"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/bd421910-a640-41ca-b4c0-b4dda5ea6b1e"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/be643aa4-abbe-4751-9ff2-47bc49120989"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/13c5eed2-3a2e-4a24-b0c8-7f77ecbc926d"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/422df9a6-7cdf-4879-b6a0-625ab27f0edd"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/6cc92941-d57b-4b49-9d02-5106f63f5136"
+                ]
+              },
+              {
+                "code": "unknown_timestamp",
+                "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+                "at": [
+                  "trace",
+                  "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+                  "event",
+                  "7adb4d79-4800-4f45-8a87-eac94941dcf9/9cbf862a-4cc0-4c1d-9173-2ca2dda6237d"
+                ]
+              }
+            ],
+            "computation_id": "pix.computation.v1:sha256:7e72920480ab8cc9c37f2868e9c8fe5a786900db4dd245a7e0a7b4dc0c6ce084",
+            "parent_computation_ids": [
+              "pix.computation.v1:sha256:80fb212689b2e2a281effa0433fcf0bcbb87ccbd61c368ad5040e654a13b54c3"
+            ]
+          },
+          "document_digest": "pix.analysis-result.v1:sha256:e441f4e8c7036fea1c16bc356540e1b016bd2dc09ec5682acb41ec826a073c00"
+        }
+      ],
+      "limits": [
+        "Completed source-sequence runs only; no live-current-cut or concurrent semantics.",
+        "DFG accepting-language conformance reports edit cost, not normalized fitness or business acceptance.",
+        "Discovery may generalize recombinations; zero cost does not prove an exact previously observed trace.",
+        "Empirical deviation does not authorize correction, identity change or tool execution."
+      ],
+      "engine": {
+        "repository": "Chanta-Research-Group/PIX",
+        "sourceCommit": "3205d832d5dcdc6901f916b35496a0c60b657e7a",
+        "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+        "packageVersion": "0.5.0",
+        "pythonVersion": "3.12.14",
+        "sourceVerified": true
+      },
+      "sampleCount": 1,
+      "alignments": [
+        {
+          "caseId": "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+          "status": "optimal",
+          "cost": 2,
+          "moves": [
+            {
+              "kind": "synchronous",
+              "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/2d3ce6aa-7a09-42c2-a7d9-d79924a6df86",
+              "log_activity": "request",
+              "model_activity": "request",
+              "reference_event_id": null,
+              "cost": 0
+            },
+            {
+              "kind": "log",
+              "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/d1e845fc-33c9-4744-9d44-5898473455fe",
+              "log_activity": "inspect_context:started",
+              "model_activity": null,
+              "reference_event_id": null,
+              "cost": 1
+            },
+            {
+              "kind": "log",
+              "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/5566aa08-0af0-45cf-b475-e907ba2965ca",
+              "log_activity": "inspect_context:completed",
+              "model_activity": null,
+              "reference_event_id": null,
+              "cost": 1
+            },
+            {
+              "kind": "synchronous",
+              "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/8df843c0-33a8-4f71-8876-79cc6a7cb042",
+              "log_activity": "reproduce_issue:started",
+              "model_activity": "reproduce_issue:started",
+              "reference_event_id": null,
+              "cost": 0
+            },
+            {
+              "kind": "synchronous",
+              "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/bd421910-a640-41ca-b4c0-b4dda5ea6b1e",
+              "log_activity": "reproduce_issue:completed",
+              "model_activity": "reproduce_issue:completed",
+              "reference_event_id": null,
+              "cost": 0
+            },
+            {
+              "kind": "synchronous",
+              "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/be643aa4-abbe-4751-9ff2-47bc49120989",
+              "log_activity": "edit_code:started",
+              "model_activity": "edit_code:started",
+              "reference_event_id": null,
+              "cost": 0
+            },
+            {
+              "kind": "synchronous",
+              "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/13c5eed2-3a2e-4a24-b0c8-7f77ecbc926d",
+              "log_activity": "edit_code:completed",
+              "model_activity": "edit_code:completed",
+              "reference_event_id": null,
+              "cost": 0
+            },
+            {
+              "kind": "synchronous",
+              "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/422df9a6-7cdf-4879-b6a0-625ab27f0edd",
+              "log_activity": "verify_code:started",
+              "model_activity": "verify_code:started",
+              "reference_event_id": null,
+              "cost": 0
+            },
+            {
+              "kind": "synchronous",
+              "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/6cc92941-d57b-4b49-9d02-5106f63f5136",
+              "log_activity": "verify_code:completed",
+              "model_activity": "verify_code:completed",
+              "reference_event_id": null,
+              "cost": 0
+            },
+            {
+              "kind": "synchronous",
+              "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/9cbf862a-4cc0-4c1d-9173-2ca2dda6237d",
+              "log_activity": "outcome:completed",
+              "model_activity": "outcome:completed",
+              "reference_event_id": null,
+              "cost": 0
+            }
+          ],
+          "lowerBoundCost": 2
+        }
+      ]
+    },
+    "alignments": [
+      {
+        "caseId": "01a19f9e-ae57-77f6-9a9d-0580d6d87bb9/f3f07761-65f1-4258-b6b0-846aa31c05fa",
+        "status": "optimal",
+        "cost": 2,
+        "moves": [
+          {
+            "kind": "synchronous",
+            "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/2d3ce6aa-7a09-42c2-a7d9-d79924a6df86",
+            "log_activity": "request",
+            "model_activity": "request",
+            "reference_event_id": null,
+            "cost": 0
+          },
+          {
+            "kind": "log",
+            "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/d1e845fc-33c9-4744-9d44-5898473455fe",
+            "log_activity": "inspect_context:started",
+            "model_activity": null,
+            "reference_event_id": null,
+            "cost": 1
+          },
+          {
+            "kind": "log",
+            "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/5566aa08-0af0-45cf-b475-e907ba2965ca",
+            "log_activity": "inspect_context:completed",
+            "model_activity": null,
+            "reference_event_id": null,
+            "cost": 1
+          },
+          {
+            "kind": "synchronous",
+            "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/8df843c0-33a8-4f71-8876-79cc6a7cb042",
+            "log_activity": "reproduce_issue:started",
+            "model_activity": "reproduce_issue:started",
+            "reference_event_id": null,
+            "cost": 0
+          },
+          {
+            "kind": "synchronous",
+            "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/bd421910-a640-41ca-b4c0-b4dda5ea6b1e",
+            "log_activity": "reproduce_issue:completed",
+            "model_activity": "reproduce_issue:completed",
+            "reference_event_id": null,
+            "cost": 0
+          },
+          {
+            "kind": "synchronous",
+            "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/be643aa4-abbe-4751-9ff2-47bc49120989",
+            "log_activity": "edit_code:started",
+            "model_activity": "edit_code:started",
+            "reference_event_id": null,
+            "cost": 0
+          },
+          {
+            "kind": "synchronous",
+            "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/13c5eed2-3a2e-4a24-b0c8-7f77ecbc926d",
+            "log_activity": "edit_code:completed",
+            "model_activity": "edit_code:completed",
+            "reference_event_id": null,
+            "cost": 0
+          },
+          {
+            "kind": "synchronous",
+            "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/422df9a6-7cdf-4879-b6a0-625ab27f0edd",
+            "log_activity": "verify_code:started",
+            "model_activity": "verify_code:started",
+            "reference_event_id": null,
+            "cost": 0
+          },
+          {
+            "kind": "synchronous",
+            "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/6cc92941-d57b-4b49-9d02-5106f63f5136",
+            "log_activity": "verify_code:completed",
+            "model_activity": "verify_code:completed",
+            "reference_event_id": null,
+            "cost": 0
+          },
+          {
+            "kind": "synchronous",
+            "log_event_id": "7adb4d79-4800-4f45-8a87-eac94941dcf9/9cbf862a-4cc0-4c1d-9173-2ca2dda6237d",
+            "log_activity": "outcome:completed",
+            "model_activity": "outcome:completed",
+            "reference_event_id": null,
+            "cost": 0
+          }
+        ],
+        "lowerBoundCost": 2
+      }
+    ]
+  }
+}

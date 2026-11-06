@@ -1,0 +1,30 @@
+{
+  "version": "0.8.8",
+  "command": "npm test",
+  "environment": {
+    "platform": "linux x64",
+    "node": "24.22.1",
+    "npm": "11.9.0",
+    "python": "3.12.14",
+    "pi": "1.2.0"
+  },
+  "counts": {
+    "tests": 356,
+    "pass": 356,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "duration_ms": 24794.298423,
+  "transcript_sha256": "210c9160a0318486fdec8acebf4461463b790a3d50fc8200dce37fc87ac7eff0",
+  "includes_build": true,
+  "model_decisions": "synthetic/scripted",
+  "pty": "12 actual Linux PTY checks in pty-report.json",
+  "visual": "real Pi screen buffers with synthetic presentation data; PNG is cell rasterization",
+  "not_run": [
+    "live LLM",
+    "company API",
+    "Windows Terminal/native Korean IME",
+    "browser rendering"
+  ]
+}

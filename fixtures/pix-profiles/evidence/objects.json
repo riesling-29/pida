@@ -1,0 +1,282 @@
+{
+  "request": {
+    "schemaVersion": "pida.pix.profiles/1",
+    "profile": "object-terminal/1",
+    "generation": "fixture/objects-1",
+    "model": {
+      "document_digest": "pix.model-document.v1:sha256:bb1692577f9face5a7c294ec1eb02785e8836f67970c72132ae7aa71e0747115",
+      "format": "pix.model",
+      "kind": "object-centric-petri-net",
+      "model": {
+        "arcs": [
+          {
+            "max_objects": 2,
+            "min_objects": 2,
+            "source": "p0",
+            "target": "start",
+            "variable": true
+          },
+          {
+            "max_objects": 1,
+            "min_objects": 1,
+            "source": "p1",
+            "target": "read-a",
+            "variable": false
+          },
+          {
+            "max_objects": 1,
+            "min_objects": 1,
+            "source": "p1",
+            "target": "read-b",
+            "variable": false
+          },
+          {
+            "max_objects": 2,
+            "min_objects": 2,
+            "source": "p2",
+            "target": "verify",
+            "variable": true
+          },
+          {
+            "max_objects": 1,
+            "min_objects": 1,
+            "source": "read-a",
+            "target": "p2",
+            "variable": false
+          },
+          {
+            "max_objects": 1,
+            "min_objects": 1,
+            "source": "read-b",
+            "target": "p2",
+            "variable": false
+          },
+          {
+            "max_objects": 2,
+            "min_objects": 2,
+            "source": "start",
+            "target": "p1",
+            "variable": true
+          },
+          {
+            "max_objects": 2,
+            "min_objects": 2,
+            "source": "verify",
+            "target": "p3",
+            "variable": true
+          }
+        ],
+        "final_marking": {
+          "tokens": [
+            {
+              "object_id": "artifact-a@r1",
+              "place_id": "p3"
+            },
+            {
+              "object_id": "artifact-b@r7",
+              "place_id": "p3"
+            }
+          ]
+        },
+        "initial_marking": {
+          "tokens": [
+            {
+              "object_id": "artifact-a@r1",
+              "place_id": "p0"
+            },
+            {
+              "object_id": "artifact-b@r7",
+              "place_id": "p0"
+            }
+          ]
+        },
+        "objects": [
+          [
+            "artifact-a@r1",
+            "artifact_revision"
+          ],
+          [
+            "artifact-b@r7",
+            "artifact_revision"
+          ]
+        ],
+        "places": [
+          {
+            "id": "p0",
+            "object_type": "artifact_revision"
+          },
+          {
+            "id": "p1",
+            "object_type": "artifact_revision"
+          },
+          {
+            "id": "p2",
+            "object_type": "artifact_revision"
+          },
+          {
+            "id": "p3",
+            "object_type": "artifact_revision"
+          }
+        ],
+        "transitions": [
+          {
+            "activity": "read_a",
+            "id": "read-a"
+          },
+          {
+            "activity": "read_b",
+            "id": "read-b"
+          },
+          {
+            "activity": "start",
+            "id": "start"
+          },
+          {
+            "activity": "verify",
+            "id": "verify"
+          }
+        ]
+      },
+      "model_digest": "pix.model.ocpn.v1:sha256:a712156a78bc1a243bee8f69627b32bf9d6f103b5fdadeacd5a8a527b447bb38",
+      "profile": "unit-incidence-concrete-object-universe",
+      "provenance": {
+        "origin": "provided",
+        "source_computation_id": null
+      },
+      "version": "1.0.0"
+    },
+    "objects": {
+      "closed": true,
+      "objects": [
+        {
+          "id": "artifact-a@r1",
+          "type": "artifact_revision"
+        },
+        {
+          "id": "artifact-b@r7",
+          "type": "artifact_revision"
+        },
+        {
+          "id": "agent-shared",
+          "type": "agent"
+        }
+      ],
+      "events": [
+        {
+          "id": "start",
+          "activity": "start",
+          "time": "2026-01-01T00:00:00+00:00",
+          "relations": [
+            {
+              "objectId": "artifact-a@r1",
+              "qualifier": "uses"
+            },
+            {
+              "objectId": "artifact-b@r7",
+              "qualifier": "uses"
+            },
+            {
+              "objectId": "agent-shared",
+              "qualifier": "actor"
+            }
+          ]
+        },
+        {
+          "id": "read-a",
+          "activity": "read_a",
+          "time": "2026-01-01T00:00:01+00:00",
+          "relations": [
+            {
+              "objectId": "artifact-a@r1",
+              "qualifier": "uses"
+            },
+            {
+              "objectId": "agent-shared",
+              "qualifier": "actor"
+            }
+          ]
+        },
+        {
+          "id": "read-b",
+          "activity": "read_b",
+          "time": "2026-01-01T00:00:01+00:00",
+          "relations": [
+            {
+              "objectId": "artifact-b@r7",
+              "qualifier": "uses"
+            },
+            {
+              "objectId": "agent-shared",
+              "qualifier": "actor"
+            }
+          ]
+        },
+        {
+          "id": "verify",
+          "activity": "verify",
+          "time": "2026-01-01T00:00:02+00:00",
+          "relations": [
+            {
+              "objectId": "artifact-a@r1",
+              "qualifier": "uses"
+            },
+            {
+              "objectId": "artifact-b@r7",
+              "qualifier": "uses"
+            },
+            {
+              "objectId": "agent-shared",
+              "qualifier": "actor"
+            }
+          ]
+        }
+      ],
+      "objectTypes": [
+        "artifact_revision"
+      ],
+      "qualifiers": [
+        "uses"
+      ]
+    }
+  },
+  "result": {
+    "schemaVersion": "pida.pix.profiles/1",
+    "profile": "object-terminal/1",
+    "requestDigest": "9efa0845bfb2b52e80adb715db61f0cac6b9c5448321fa34d40b800d6e49de7f",
+    "status": "computed",
+    "issues": [],
+    "nativeResults": [
+      {
+        "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:568487aff509337b71eaf4f31ef7728ea2c2fcfe0a1fecd7c06072cfa25a7e8c\",\"issues\":[],\"operator_id\":\"pix.align_object_log\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.ocel.canonical.v1:sha256:577b0dc83aa501c26bffd24d3f655f67afca40bd4170495cca8d85b15c7c7669\",\"spec\":{\"model_digest\":\"pix.model.ocpn.v1:sha256:a712156a78bc1a243bee8f69627b32bf9d6f103b5fdadeacd5a8a527b447bb38\",\"parameters\":{\"cost_mode\":\"event\",\"log_move_cost\":1,\"max_bindings\":10000,\"max_states\":10000,\"model_move_cost\":1,\"object_types\":[\"artifact_revision\"],\"qualifiers\":[\"uses\"],\"scope\":\"whole_log\",\"silent_move_cost\":0,\"synchronous_move_cost\":0,\"tie_policy\":\"reject\"}},\"status\":\"computed\",\"value\":{\"cost\":0,\"cost_unit\":\"event_weighted_integer_cost\",\"coverage\":{\"excluded_scopes\":0,\"input_events\":4,\"limited_scopes\":0,\"optimal_scopes\":1,\"requested_scopes\":1,\"selected_objects\":2,\"unreachable_scopes\":0},\"discovered_states\":18,\"lower_bound_cost\":0,\"max_enabled_binding_count\":4,\"model_digest\":\"pix.model.ocpn.v1:sha256:a712156a78bc1a243bee8f69627b32bf9d6f103b5fdadeacd5a8a527b447bb38\",\"move_counts\":{\"log\":0,\"model\":0,\"silent\":0,\"synchronous\":4},\"moves\":[{\"activity\":\"start\",\"after_marking\":[[\"p1\",\"artifact-a@r1\"],[\"p1\",\"artifact-b@r7\"]],\"before_marking\":[[\"p0\",\"artifact-a@r1\"],[\"p0\",\"artifact-b@r7\"]],\"cost\":0,\"event_id\":\"start\",\"kind\":\"synchronous\",\"objects\":[[\"artifact_revision\",[\"artifact-a@r1\",\"artifact-b@r7\"]]],\"transition_id\":\"start\",\"weight\":1},{\"activity\":\"read_a\",\"after_marking\":[[\"p1\",\"artifact-b@r7\"],[\"p2\",\"artifact-a@r1\"]],\"before_marking\":[[\"p1\",\"artifact-a@r1\"],[\"p1\",\"artifact-b@r7\"]],\"cost\":0,\"event_id\":\"read-a\",\"kind\":\"synchronous\",\"objects\":[[\"artifact_revision\",[\"artifact-a@r1\"]]],\"transition_id\":\"read-a\",\"weight\":1},{\"activity\":\"read_b\",\"after_marking\":[[\"p2\",\"artifact-a@r1\"],[\"p2\",\"artifact-b@r7\"]],\"before_marking\":[[\"p1\",\"artifact-b@r7\"],[\"p2\",\"artifact-a@r1\"]],\"cost\":0,\"event_id\":\"read-b\",\"kind\":\"synchronous\",\"objects\":[[\"artifact_revision\",[\"artifact-b@r7\"]]],\"transition_id\":\"read-b\",\"weight\":1},{\"activity\":\"verify\",\"after_marking\":[[\"p3\",\"artifact-a@r1\"],[\"p3\",\"artifact-b@r7\"]],\"before_marking\":[[\"p2\",\"artifact-a@r1\"],[\"p2\",\"artifact-b@r7\"]],\"cost\":0,\"event_id\":\"verify\",\"kind\":\"synchronous\",\"objects\":[[\"artifact_revision\",[\"artifact-a@r1\",\"artifact-b@r7\"]]],\"transition_id\":\"verify\",\"weight\":1}],\"scope\":{\"events\":[{\"activity\":\"read_a\",\"event_id\":\"read-a\",\"objects\":[[\"artifact_revision\",[\"artifact-a@r1\"]]],\"relations\":[[\"read-a\",\"artifact-a@r1\",\"uses\"]]},{\"activity\":\"read_b\",\"event_id\":\"read-b\",\"objects\":[[\"artifact_revision\",[\"artifact-b@r7\"]]],\"relations\":[[\"read-b\",\"artifact-b@r7\",\"uses\"]]},{\"activity\":\"start\",\"event_id\":\"start\",\"objects\":[[\"artifact_revision\",[\"artifact-a@r1\",\"artifact-b@r7\"]]],\"relations\":[[\"start\",\"artifact-a@r1\",\"uses\"],[\"start\",\"artifact-b@r7\",\"uses\"]]},{\"activity\":\"verify\",\"event_id\":\"verify\",\"objects\":[[\"artifact_revision\",[\"artifact-a@r1\",\"artifact-b@r7\"]]],\"relations\":[[\"verify\",\"artifact-a@r1\",\"uses\"],[\"verify\",\"artifact-b@r7\",\"uses\"]]}],\"excluded_object_count\":1,\"excluded_relation_count\":4,\"precedence\":[{\"object_id\":\"artifact-a@r1\",\"predecessor_event_id\":\"start\",\"successor_event_id\":\"read-a\"},{\"object_id\":\"artifact-a@r1\",\"predecessor_event_id\":\"read-a\",\"successor_event_id\":\"verify\"},{\"object_id\":\"artifact-b@r7\",\"predecessor_event_id\":\"start\",\"successor_event_id\":\"read-b\"},{\"object_id\":\"artifact-b@r7\",\"predecessor_event_id\":\"read-b\",\"successor_event_id\":\"verify\"}],\"scope\":\"whole_log\",\"selected_objects\":[[\"artifact-a@r1\",\"artifact_revision\"],[\"artifact-b@r7\",\"artifact_revision\"]]},\"settled_states\":6,\"status\":\"optimal\"}},\"document_digest\":\"pix.analysis-result.v1:sha256:03771d9f4182baf26a0451dfc0a2c1cf62f9269a7d4d2ebbc56a8f4eb59f1f0f\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"object-alignments\",\"version\":\"1.3.0\"}",
+        "sha256": "16ab638087584de8fddc3783fc8e31c708600b03de97bca481005e11565577e4"
+      }
+    ],
+    "limits": [
+      "HOST_AUTHORIZED_SCOPE_ONLY",
+      "NO_BUSINESS_ACCEPTANCE",
+      "NO_MODEL_ACTIVATION",
+      "NO_CAUSAL_IMPROVEMENT_CLAIM"
+    ],
+    "engine": {
+      "repository": "Chanta-Research-Group/PIX",
+      "sourceCommit": "a0831bc0b34fd7feebfba928066b90b114ae531e",
+      "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+      "packageVersion": "0.5.0",
+      "pythonVersion": "3.12.14",
+      "sourceVerified": true
+    },
+    "summary": {
+      "metric": "terminal-event-edit-cost",
+      "cost": 0,
+      "eventCount": 4,
+      "closed": true,
+      "finalCostUnresolved": false,
+      "boundScope": "whole_log_terminal",
+      "outcome": "optimal",
+      "lowerBoundCost": 0,
+      "selectedObjectCount": 2,
+      "excludedObjectCount": 1,
+      "excludedRelationCount": 4
+    }
+  }
+}

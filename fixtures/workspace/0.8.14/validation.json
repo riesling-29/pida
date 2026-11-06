@@ -1,0 +1,44 @@
+{
+  "version": "0.8.14",
+  "environment": "Linux / Node v24.22.1 / Pi 1.2.0",
+  "full_suite": {
+    "command": "PIDA_TEST_PIX_SOURCE=.pida-test-pix-source npm test",
+    "passed": 372,
+    "failed": 0,
+    "skipped": 0,
+    "stage": "before final integrated-review adjustments"
+  },
+  "targeted_after_review": {
+    "command": "node --test --test-timeout=20000 test/agent-tui.test.mjs test/agent-workspace.test.mjs test/fleet-ui.test.mjs test/agent-supervisor.test.mjs",
+    "passed": 11,
+    "failed": 0
+  },
+  "pty": {
+    "passed": 18,
+    "report": "pty-report.json",
+    "model": "mock; real Pi/HTTP/CLI/PTY"
+  },
+  "browser": {
+    "status": "BLOCKED",
+    "attempts": [
+      "Chromium process singleton socket EPERM",
+      "Separate cloud browser connection refused to local fixture server"
+    ],
+    "script": "scripts/multi-agent-browser-check.mjs"
+  },
+  "unverified": [
+    "Windows Terminal / PowerShell / Korean IME",
+    "live LLM",
+    "company gateway"
+  ],
+  "source_sha256": {
+    "src/agent-tui.ts": "605935ac28629ae65c43a32c8fb943a97b66ee4e9618169aae160b44dea8206d",
+    "src/agent-workspace-controller.ts": "8a68f53180663786aea6e4f6bd8144e0b46160bb3ad5fe8fc0ed9d6999dc26c3",
+    "src/workspace-layout.ts": "5f68c3b7a7f396a58ed2b1079b7910103e1f494a20e48f2a2d0bec260e42415b",
+    "src/agent-supervisor.ts": "8a32ef872d27aa8e5b8492e9b1eb8982a961a17b37a91ab9c40de4842ace395b",
+    "src/http.ts": "67af058daf32866bad415543ec985bdb6ecebf30b88ecb2c3dd0fc08c9980103",
+    "src/cli.ts": "2c05bc53a065ec3af85a410bb46bc6e4b50881b00f84428919e06ec9f290123b",
+    "examples/web/fleet.js": "0828f1844c3a614dc343e16b821d6a64d98b60a53abd3743157a858f0ee55edb",
+    "examples/web/style.css": "3572a9febc4955f605ccf576f50dad2787a0b870014ca097133306ab465ad01f"
+  }
+}

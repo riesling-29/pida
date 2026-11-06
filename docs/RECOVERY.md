@@ -1,5 +1,9 @@
 # Pida 0.6.1: local-model recovery and coding guides
 
+Unreleased PATCH-03–08 adds durable effect receipts, controlled reconciliation, observation export and revision-bound evidence. See [EXECUTION-READINESS.md](EXECUTION-READINESS.md) for the current retry matrix and limitations. These additions do not certify real-model acceptance or introduce automatic provider/tool replay.
+
+For the unreleased PATCH-00–02 changes, see [RUNTIME-STABILIZATION.md](RUNTIME-STABILIZATION.md). Classified workbench failures now remain failures until explicitly superseded by a successful UI mutation or same-path test rerun. Cancellation/timeout keep the first interruption cause; a secondary final-state storage failure is exposed separately as `persistenceError`. Neither a repaired operation nor a model completion statement establishes independent verification.
+
 ## What changed
 
 - Provider response probe: up to 1,024 output tokens, 60 seconds, explicit output-limit/timeout errors. This tests a text response; it is not a tool-capability benchmark.
@@ -16,13 +20,15 @@ Add these optional top-level fields to the existing `pida.config.json`, preservi
 
 ```json
 {
-  "runtime": { "maxRunMs": 180000, "autoCompaction": true, "maxOutputRetries": 1 },
+  "runtime": { "maxRunMs": 180000, "autoCompaction": true, "maxOutputRetries": 1, "maxObservationEvents": 4000 },
   "codingPacks": ["debugging", "verification"],
   "browserChecks": false
 }
 ```
 
 This is a fragment, not a complete workspace config. `codingPacks: []` disables bundled guides. Restart after changing these options. No model context/output limit is silently increased: set the Pida context size to the actual context loaded by LM Studio. Larger output limits may also need a larger execution deadline. Automatic compression and output length are separate constraints.
+
+Optional `runtime.maxTotalTokens` adds a cumulative observed-response usage guard. It is not a context-window setting or a hard provider billing cap; Pi-internal auxiliary/compaction usage is not fully accounted. `maxObservationEvents` accepts 1–10,000; truncated archives are explicitly incomplete. Monetary budgets require trusted SDK configuration with verified pricing and are not accepted as workspace config fields.
 
 For browser checks, install optional dependencies and Chromium (`npx playwright install chromium`), set `browserChecks` to `true`, and restart. On hosts with an existing compatible browser, the server-only `PIDA_BROWSER_EXECUTABLE` environment variable selects it. Absence of a usable browser returns `BROWSER_UNAVAILABLE` without changing the UI. Browser checks are optional; normal use needs no browser installation on the server.
 
@@ -36,7 +42,7 @@ git status --short
 git pull --ff-only origin feat/pida-workspace
 npm ci --ignore-scripts
 npm run build
-npm start
+npm start -- .\my-agent --open
 ```
 
 If the earlier manual `src/provider-settings.ts` probe fix is still a local modification, preserve it before pulling:

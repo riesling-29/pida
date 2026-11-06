@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "pida.pix-ocel-fixture/1",
+  "runtimeVersion": "0.8.10",
+  "profile": "actual-pinned-pix-scripted-pi",
+  "inputData": "synthetic",
+  "liveModel": "NOT_RUN",
+  "actualSchumpeterIntegration": "NOT_RUN",
+  "engine": {
+    "repository": "Chanta-Research-Group/PIX",
+    "sourceCommit": "3205d832d5dcdc6901f916b35496a0c60b657e7a",
+    "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+    "packageVersion": "0.5.0",
+    "pythonVersion": "3.12.14",
+    "sourceVerified": true
+  },
+  "outcomes": {
+    "normal": "conforms",
+    "missingToolEnd": "deviates",
+    "openCut": "pending",
+    "invalidReference": "FAILED",
+    "parallelCalls": "conforms",
+    "agentToolDispatch": "conforms"
+  },
+  "files": [
+    {
+      "path": "runtime.bundle.json",
+      "sha256": "c1d9e31e6a9be3b5f374d3740f8ecbf4b2242ca21716935ee12557eb3c4e7f3b"
+    },
+    {
+      "path": "runtime.ocel.json",
+      "sha256": "75b4617f1f9c6e06bf12967c57d20b44a29aeea83b7204955e3f1e9a18248e69"
+    },
+    {
+      "path": "runtime.ocel.meta.json",
+      "sha256": "0f72d802f845a89d23a70a1cb3559a89c3d9c77fcdab34e869880ab43a5bc1ca"
+    },
+    {
+      "path": "pix-verification.json",
+      "sha256": "e6963115133f8f55e236a6cfc4ad053f309f8e93fc9170392376dfa8b0057ea5"
+    },
+    {
+      "path": "pix-negative-results.json",
+      "sha256": "b8638fc6fba52a0e5e954e6996d6df66e84cd2b6f4cbe06666e3c4d180d11a39"
+    }
+  ]
+}

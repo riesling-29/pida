@@ -1,0 +1,51 @@
+{
+  "profile": "pida-0.8.6-cr-followup-evidence/1",
+  "synthetic": true,
+  "artifacts": [
+    {
+      "path": "evidence/continued.json",
+      "sha256": "8d8f5efe8c9533c761ce4ef55728d03da88a6c98a24d93bb56f7733aaf384bc9",
+      "bytes": 44896
+    },
+    {
+      "path": "evidence/early-close.json",
+      "sha256": "21c6203592492d23e3230cbca028ac05a24e62eb1ede23fc178c4e094d71fe7e",
+      "bytes": 30781
+    },
+    {
+      "path": "evidence/host-results.json",
+      "sha256": "e94ab69fb5646e2532fd89f4588252cf946383ec6978a3b4e70bff8b58833320",
+      "bytes": 164689
+    },
+    {
+      "path": "evidence/negative-results.json",
+      "sha256": "ad93d3a28c13cb1ce7a5a07bdda10c65ba4d245fe79fcd5cf21b664eba8794ba",
+      "bytes": 14120
+    },
+    {
+      "path": "evidence/objects.json",
+      "sha256": "8f62147b71c3fccd3614b668927ba4b3fede5265c69ffba1d999547938b0cf46",
+      "bytes": 11414
+    },
+    {
+      "path": "evidence/open.json",
+      "sha256": "dbde23d74ebf1efd98f5d1fe35247ad06064691028548eee8792a15921762e48",
+      "bytes": 32994
+    },
+    {
+      "path": "evidence/report.json",
+      "sha256": "7645a798fffec8ea33acd2a7afb573fd5f255a2e926acc6d165e04680d02bb3d",
+      "bytes": 6882
+    },
+    {
+      "path": "evidence/schumpeter-current.json",
+      "sha256": "761c05c51f374d56ce6b537dcae8321d3df6976810c7153bd648f7ee2f387e81",
+      "bytes": 21600
+    },
+    {
+      "path": "evidence/workspace-run.json",
+      "sha256": "1b8640449ae8f49b6a2420376a190c0729aaf099c3937ef986219e9956f61f84",
+      "bytes": 19602
+    }
+  ]
+}

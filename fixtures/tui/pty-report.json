@@ -1,0 +1,63 @@
+{
+  "profile": "pida-tui-pty/1",
+  "version": "0.8.7",
+  "platform": "Linux PTY",
+  "node": "v24.22.1",
+  "checks": [
+    {
+      "name": "CLI attaches to local host and enters alternate-screen Pi renderer",
+      "status": "PASS"
+    },
+    {
+      "name": "bracketed Korean paste does not submit automatically",
+      "status": "PASS"
+    },
+    {
+      "name": "real terminal request executes actual Pi mock-model tool loop",
+      "status": "PASS"
+    },
+    {
+      "name": "resize and help remain interactive",
+      "status": "PASS"
+    },
+    {
+      "name": "session selector opens without spawning another run",
+      "status": "PASS"
+    },
+    {
+      "name": "Ctrl+D cleanly detaches and restores terminal buffer",
+      "status": "PASS"
+    },
+    {
+      "name": "terminal canonical input and echo restored",
+      "status": "PASS"
+    },
+    {
+      "name": "independent host survives TUI exit",
+      "status": "PASS"
+    },
+    {
+      "name": "application credential never printed in TUI",
+      "status": "PASS"
+    },
+    {
+      "name": "new terminal process resumes history without replay",
+      "status": "PASS"
+    }
+  ],
+  "source_sha256": {
+    "package.json": "e475f3269f55a8a29ffe57bbe138e20498e3e94b76eea4dcf66a71b671598b37",
+    "src/tui.ts": "3423f7147d84546b54db8b2c920d1a3b6b722dc91ddf382c67e9cf4152703b91",
+    "src/tui-controller.ts": "fe10eec662d3ef2964760e5e62a5e0c9655a5631f901e37c99c55f06eca94402",
+    "src/cli.ts": "c7fd5bf5cc41349554c005dfd9bc6bd9fc9e73a406032dca913e103b69e16a87",
+    "src/client.ts": "ca6b744476ad9de028a98279964c73ccb03598c52bfc69357b8e1f8f80f7b838",
+    "src/runtime.ts": "ef8c38cc5e71467a5dcfb4d08a356a69a744e89445cacad7e2f4068f055c2a41",
+    "src/http.ts": "2886713d27053cdf101baf7b401f88112230a7af0258e992e622d5cba61baddf",
+    "examples/web/app.js": "d6c950fe88311b0e312066479b6710dec8a4c9fe617e0e6a54606ae99aadd1e2",
+    "scripts/tui-terminal-check.py": "09249baae4c816b671fc1ff9b3789d7a9c973a640c9f30b0e8b3cd074397b10d"
+  },
+  "limits": [
+    "Actual Pi, HTTP, CLI, editor and PTY; mock model decisions.",
+    "No browser engine, live LLM, company gateway or Windows-terminal/IME validation."
+  ]
+}

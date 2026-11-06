@@ -1,0 +1,1599 @@
+{
+  "eventTypes": [
+    {
+      "name": "model_request",
+      "attributes": [
+        {
+          "name": "capture_mode",
+          "type": "string"
+        },
+        {
+          "name": "data_scope",
+          "type": "string"
+        },
+        {
+          "name": "payload_digest",
+          "type": "string"
+        },
+        {
+          "name": "payload.api",
+          "type": "string"
+        },
+        {
+          "name": "payload.attempt",
+          "type": "float"
+        },
+        {
+          "name": "payload.context_window",
+          "type": "float"
+        },
+        {
+          "name": "payload.effective_config_digest",
+          "type": "string"
+        },
+        {
+          "name": "payload.fingerprint_scope",
+          "type": "string"
+        },
+        {
+          "name": "payload.model",
+          "type": "string"
+        },
+        {
+          "name": "payload.model_max_tokens",
+          "type": "float"
+        },
+        {
+          "name": "payload.provider_generation",
+          "type": "string"
+        },
+        {
+          "name": "payload.request_id",
+          "type": "string"
+        },
+        {
+          "name": "payload.system_digest",
+          "type": "string"
+        },
+        {
+          "name": "payload.thinking_level",
+          "type": "string"
+        },
+        {
+          "name": "payload.tools_digest",
+          "type": "string"
+        },
+        {
+          "name": "payload.turn_id",
+          "type": "string"
+        },
+        {
+          "name": "payload.turn_index",
+          "type": "float"
+        },
+        {
+          "name": "sequence_number",
+          "type": "float"
+        },
+        {
+          "name": "source_event_id",
+          "type": "string"
+        },
+        {
+          "name": "source_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "model_response",
+      "attributes": [
+        {
+          "name": "capture_mode",
+          "type": "string"
+        },
+        {
+          "name": "data_scope",
+          "type": "string"
+        },
+        {
+          "name": "payload_digest",
+          "type": "string"
+        },
+        {
+          "name": "payload.attempt",
+          "type": "float"
+        },
+        {
+          "name": "payload.cache_read_tokens",
+          "type": "float"
+        },
+        {
+          "name": "payload.cache_write_tokens",
+          "type": "float"
+        },
+        {
+          "name": "payload.duration_ms",
+          "type": "float"
+        },
+        {
+          "name": "payload.first_output_ms",
+          "type": "float"
+        },
+        {
+          "name": "payload.input_tokens",
+          "type": "float"
+        },
+        {
+          "name": "payload.output_tokens",
+          "type": "float"
+        },
+        {
+          "name": "payload.request_id",
+          "type": "string"
+        },
+        {
+          "name": "payload.stop_reason",
+          "type": "string"
+        },
+        {
+          "name": "payload.tokens",
+          "type": "float"
+        },
+        {
+          "name": "payload.turn_id",
+          "type": "string"
+        },
+        {
+          "name": "payload.turn_index",
+          "type": "float"
+        },
+        {
+          "name": "payload.uncached_input_tokens",
+          "type": "float"
+        },
+        {
+          "name": "payload.usage_status",
+          "type": "string"
+        },
+        {
+          "name": "sequence_number",
+          "type": "float"
+        },
+        {
+          "name": "source_event_id",
+          "type": "string"
+        },
+        {
+          "name": "source_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "run_finished",
+      "attributes": [
+        {
+          "name": "capture_mode",
+          "type": "string"
+        },
+        {
+          "name": "data_scope",
+          "type": "string"
+        },
+        {
+          "name": "payload_digest",
+          "type": "string"
+        },
+        {
+          "name": "payload.status",
+          "type": "string"
+        },
+        {
+          "name": "sequence_number",
+          "type": "float"
+        },
+        {
+          "name": "source_event_id",
+          "type": "string"
+        },
+        {
+          "name": "source_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "run_started",
+      "attributes": [
+        {
+          "name": "capture_mode",
+          "type": "string"
+        },
+        {
+          "name": "data_scope",
+          "type": "string"
+        },
+        {
+          "name": "payload_digest",
+          "type": "string"
+        },
+        {
+          "name": "sequence_number",
+          "type": "float"
+        },
+        {
+          "name": "source_event_id",
+          "type": "string"
+        },
+        {
+          "name": "source_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "tool_completed",
+      "attributes": [
+        {
+          "name": "capture_mode",
+          "type": "string"
+        },
+        {
+          "name": "data_scope",
+          "type": "string"
+        },
+        {
+          "name": "payload_digest",
+          "type": "string"
+        },
+        {
+          "name": "payload.tool_call_id",
+          "type": "string"
+        },
+        {
+          "name": "payload.tool_name",
+          "type": "string"
+        },
+        {
+          "name": "payload.turn_id",
+          "type": "string"
+        },
+        {
+          "name": "payload.turn_index",
+          "type": "float"
+        },
+        {
+          "name": "sequence_number",
+          "type": "float"
+        },
+        {
+          "name": "source_event_id",
+          "type": "string"
+        },
+        {
+          "name": "source_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "tool_started",
+      "attributes": [
+        {
+          "name": "capture_mode",
+          "type": "string"
+        },
+        {
+          "name": "data_scope",
+          "type": "string"
+        },
+        {
+          "name": "payload_digest",
+          "type": "string"
+        },
+        {
+          "name": "payload.tool_call_id",
+          "type": "string"
+        },
+        {
+          "name": "payload.tool_name",
+          "type": "string"
+        },
+        {
+          "name": "payload.turn_id",
+          "type": "string"
+        },
+        {
+          "name": "payload.turn_index",
+          "type": "float"
+        },
+        {
+          "name": "sequence_number",
+          "type": "float"
+        },
+        {
+          "name": "source_event_id",
+          "type": "string"
+        },
+        {
+          "name": "source_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "turn_finished",
+      "attributes": [
+        {
+          "name": "capture_mode",
+          "type": "string"
+        },
+        {
+          "name": "data_scope",
+          "type": "string"
+        },
+        {
+          "name": "payload_digest",
+          "type": "string"
+        },
+        {
+          "name": "payload.turn_id",
+          "type": "string"
+        },
+        {
+          "name": "payload.turn_index",
+          "type": "float"
+        },
+        {
+          "name": "sequence_number",
+          "type": "float"
+        },
+        {
+          "name": "source_event_id",
+          "type": "string"
+        },
+        {
+          "name": "source_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "turn_started",
+      "attributes": [
+        {
+          "name": "capture_mode",
+          "type": "string"
+        },
+        {
+          "name": "data_scope",
+          "type": "string"
+        },
+        {
+          "name": "payload_digest",
+          "type": "string"
+        },
+        {
+          "name": "payload.turn_id",
+          "type": "string"
+        },
+        {
+          "name": "payload.turn_index",
+          "type": "float"
+        },
+        {
+          "name": "sequence_number",
+          "type": "float"
+        },
+        {
+          "name": "source_event_id",
+          "type": "string"
+        },
+        {
+          "name": "source_id",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "objectTypes": [
+    {
+      "name": "Agent",
+      "attributes": [
+        {
+          "name": "agent_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "ModelRequest",
+      "attributes": [
+        {
+          "name": "request_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "Run",
+      "attributes": [
+        {
+          "name": "reported_status",
+          "type": "string"
+        },
+        {
+          "name": "run_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "Session",
+      "attributes": [
+        {
+          "name": "session_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "Task",
+      "attributes": [
+        {
+          "name": "task_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "ToolCall",
+      "attributes": [
+        {
+          "name": "tool_call_id",
+          "type": "string"
+        },
+        {
+          "name": "tool_name",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "Turn",
+      "attributes": [
+        {
+          "name": "index",
+          "type": "float"
+        },
+        {
+          "name": "turn_id",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": "pida:Event:257d62f347dbcd2e91b9d24be57ee075984a29b7596441adda6696d0cc6d77a0",
+      "type": "run_started",
+      "time": "2026-11-04T14:37:42.996Z",
+      "attributes": [
+        {
+          "name": "source_id",
+          "value": "42565427-e68c-4330-84e5-a0a3b1b962f8"
+        },
+        {
+          "name": "source_event_id",
+          "value": "9760f46a-5646-4b73-a986-aa0c634cc86a"
+        },
+        {
+          "name": "sequence_number",
+          "value": 1
+        },
+        {
+          "name": "payload_digest",
+          "value": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "name": "capture_mode",
+          "value": "native-runtime"
+        },
+        {
+          "name": "data_scope",
+          "value": "metadata-only"
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Agent:fcfb0117d8627c37ac07f55ab4a09df1ac1b1010c0b7343fff028bc6d47e1e13",
+          "qualifier": "actor"
+        },
+        {
+          "objectId": "pida:Session:f11d4ed4e61c1ab95043482b373cb752856dc19b0cef5cef83a358f73e0196e9",
+          "qualifier": "session"
+        },
+        {
+          "objectId": "pida:Task:27eaf04d50a026ff294894bc248c07bcbf5dcf251635937309a562c25a9eebb7",
+          "qualifier": "task"
+        },
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "run"
+        }
+      ]
+    },
+    {
+      "id": "pida:Event:bc8664c54a86a4f6203ed29b9ab3db69ea500cfc870bd14d046c473ad2bcb919",
+      "type": "turn_started",
+      "time": "2026-11-04T14:37:43.003Z",
+      "attributes": [
+        {
+          "name": "source_id",
+          "value": "42565427-e68c-4330-84e5-a0a3b1b962f8"
+        },
+        {
+          "name": "source_event_id",
+          "value": "f1534136-6833-4cdc-9958-52218242cc4b"
+        },
+        {
+          "name": "sequence_number",
+          "value": 2
+        },
+        {
+          "name": "payload_digest",
+          "value": "bc7967de800b7fbe12ba410eb13490b1f2beb0edf57886e093c79979f801b4d6"
+        },
+        {
+          "name": "capture_mode",
+          "value": "native-runtime"
+        },
+        {
+          "name": "data_scope",
+          "value": "metadata-only"
+        },
+        {
+          "name": "payload.turn_id",
+          "value": "13195136-3324-444c-83ea-987254c22039"
+        },
+        {
+          "name": "payload.turn_index",
+          "value": 1
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Agent:fcfb0117d8627c37ac07f55ab4a09df1ac1b1010c0b7343fff028bc6d47e1e13",
+          "qualifier": "actor"
+        },
+        {
+          "objectId": "pida:Session:f11d4ed4e61c1ab95043482b373cb752856dc19b0cef5cef83a358f73e0196e9",
+          "qualifier": "session"
+        },
+        {
+          "objectId": "pida:Task:27eaf04d50a026ff294894bc248c07bcbf5dcf251635937309a562c25a9eebb7",
+          "qualifier": "task"
+        },
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "run"
+        },
+        {
+          "objectId": "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+          "qualifier": "turn"
+        }
+      ]
+    },
+    {
+      "id": "pida:Event:2115c8bcb574ba6d2702bfe3d034a14b441658a338d98fe47f09f551e1c85e67",
+      "type": "model_request",
+      "time": "2026-11-04T14:37:43.007Z",
+      "attributes": [
+        {
+          "name": "source_id",
+          "value": "42565427-e68c-4330-84e5-a0a3b1b962f8"
+        },
+        {
+          "name": "source_event_id",
+          "value": "c74e5356-144b-4163-abe5-cfa6449e858e"
+        },
+        {
+          "name": "sequence_number",
+          "value": 3
+        },
+        {
+          "name": "payload_digest",
+          "value": "bb0f948df3fe2d63b4e2a85f54dc70b7a88001f7a3c7c7d7c6343815420828a4"
+        },
+        {
+          "name": "capture_mode",
+          "value": "native-runtime"
+        },
+        {
+          "name": "data_scope",
+          "value": "metadata-only"
+        },
+        {
+          "name": "payload.turn_id",
+          "value": "13195136-3324-444c-83ea-987254c22039"
+        },
+        {
+          "name": "payload.turn_index",
+          "value": 1
+        },
+        {
+          "name": "payload.model",
+          "value": "faux-1"
+        },
+        {
+          "name": "payload.api",
+          "value": "faux:1793803062963:7gjzlzvbvn6"
+        },
+        {
+          "name": "payload.request_id",
+          "value": "3347b1f4-9414-4aa9-b3f6-94e3463fecc5"
+        },
+        {
+          "name": "payload.attempt",
+          "value": 1
+        },
+        {
+          "name": "payload.provider_generation",
+          "value": "ffa81a8a-6831-4144-8eb7-e0131688af74"
+        },
+        {
+          "name": "payload.thinking_level",
+          "value": "off"
+        },
+        {
+          "name": "payload.context_window",
+          "value": 128000
+        },
+        {
+          "name": "payload.model_max_tokens",
+          "value": 16384
+        },
+        {
+          "name": "payload.effective_config_digest",
+          "value": "17e42e27aceb6ff62f618bb497f93245ac2597eff9c5a5532982b6947af815bf"
+        },
+        {
+          "name": "payload.system_digest",
+          "value": "8225443b05042aaab9c119ef85bf292896df56a89e78632f6811b5b71b569f6d"
+        },
+        {
+          "name": "payload.tools_digest",
+          "value": "59f2084c96dcaf64a6c987e58a05b7aede0d1243e1c6a437692fdb6e960bfb1e"
+        },
+        {
+          "name": "payload.fingerprint_scope",
+          "value": "42565427-e68c-4330-84e5-a0a3b1b962f8"
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Agent:fcfb0117d8627c37ac07f55ab4a09df1ac1b1010c0b7343fff028bc6d47e1e13",
+          "qualifier": "actor"
+        },
+        {
+          "objectId": "pida:Session:f11d4ed4e61c1ab95043482b373cb752856dc19b0cef5cef83a358f73e0196e9",
+          "qualifier": "session"
+        },
+        {
+          "objectId": "pida:Task:27eaf04d50a026ff294894bc248c07bcbf5dcf251635937309a562c25a9eebb7",
+          "qualifier": "task"
+        },
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "run"
+        },
+        {
+          "objectId": "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+          "qualifier": "turn"
+        },
+        {
+          "objectId": "pida:ModelRequest:6c84bcab2268e648953fffee57966c6daffb8fd49fab383d666fe2a6687b3e9f",
+          "qualifier": "request"
+        }
+      ]
+    },
+    {
+      "id": "pida:Event:51fdc71ddc5b1f282558262e87f1d927c0e800a7cf110f97ea8e7044bdc124aa",
+      "type": "model_response",
+      "time": "2026-11-04T14:37:43.014Z",
+      "attributes": [
+        {
+          "name": "source_id",
+          "value": "42565427-e68c-4330-84e5-a0a3b1b962f8"
+        },
+        {
+          "name": "source_event_id",
+          "value": "aaa5c511-f453-46ec-a66a-e234ca8a20ae"
+        },
+        {
+          "name": "sequence_number",
+          "value": 4
+        },
+        {
+          "name": "payload_digest",
+          "value": "fd63bcdff3446f45fed22c90cdb37f817d258bf4e4f2975f5b151a8f6d047aec"
+        },
+        {
+          "name": "capture_mode",
+          "value": "native-runtime"
+        },
+        {
+          "name": "data_scope",
+          "value": "metadata-only"
+        },
+        {
+          "name": "payload.turn_id",
+          "value": "13195136-3324-444c-83ea-987254c22039"
+        },
+        {
+          "name": "payload.turn_index",
+          "value": 1
+        },
+        {
+          "name": "payload.request_id",
+          "value": "3347b1f4-9414-4aa9-b3f6-94e3463fecc5"
+        },
+        {
+          "name": "payload.attempt",
+          "value": 1
+        },
+        {
+          "name": "payload.stop_reason",
+          "value": "toolUse"
+        },
+        {
+          "name": "payload.usage_status",
+          "value": "normalized"
+        },
+        {
+          "name": "payload.input_tokens",
+          "value": 2212
+        },
+        {
+          "name": "payload.uncached_input_tokens",
+          "value": 1106
+        },
+        {
+          "name": "payload.output_tokens",
+          "value": 9
+        },
+        {
+          "name": "payload.cache_write_tokens",
+          "value": 1106
+        },
+        {
+          "name": "payload.tokens",
+          "value": 2221
+        },
+        {
+          "name": "payload.first_output_ms",
+          "value": 5.609851999999933
+        },
+        {
+          "name": "payload.duration_ms",
+          "value": 7.968669999999975
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Agent:fcfb0117d8627c37ac07f55ab4a09df1ac1b1010c0b7343fff028bc6d47e1e13",
+          "qualifier": "actor"
+        },
+        {
+          "objectId": "pida:Session:f11d4ed4e61c1ab95043482b373cb752856dc19b0cef5cef83a358f73e0196e9",
+          "qualifier": "session"
+        },
+        {
+          "objectId": "pida:Task:27eaf04d50a026ff294894bc248c07bcbf5dcf251635937309a562c25a9eebb7",
+          "qualifier": "task"
+        },
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "run"
+        },
+        {
+          "objectId": "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+          "qualifier": "turn"
+        },
+        {
+          "objectId": "pida:ModelRequest:6c84bcab2268e648953fffee57966c6daffb8fd49fab383d666fe2a6687b3e9f",
+          "qualifier": "request"
+        }
+      ]
+    },
+    {
+      "id": "pida:Event:d2a62ca139a52aa4c798ca966f7f9a73403cc982dec8152a47ac323d87603f18",
+      "type": "tool_started",
+      "time": "2026-11-04T14:37:43.014Z",
+      "attributes": [
+        {
+          "name": "source_id",
+          "value": "42565427-e68c-4330-84e5-a0a3b1b962f8"
+        },
+        {
+          "name": "source_event_id",
+          "value": "886df1c0-30d0-45eb-a0c8-d5d93fa8f303"
+        },
+        {
+          "name": "sequence_number",
+          "value": 5
+        },
+        {
+          "name": "payload_digest",
+          "value": "a9b1eeffdd013668293e705046068ba31fb784bc1f1857654c46ebe47897d49a"
+        },
+        {
+          "name": "capture_mode",
+          "value": "native-runtime"
+        },
+        {
+          "name": "data_scope",
+          "value": "metadata-only"
+        },
+        {
+          "name": "payload.turn_id",
+          "value": "13195136-3324-444c-83ea-987254c22039"
+        },
+        {
+          "name": "payload.turn_index",
+          "value": 1
+        },
+        {
+          "name": "payload.tool_name",
+          "value": "get_lot_status"
+        },
+        {
+          "name": "payload.tool_call_id",
+          "value": "tool:1793803062963:f6dh3gdivn"
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Agent:fcfb0117d8627c37ac07f55ab4a09df1ac1b1010c0b7343fff028bc6d47e1e13",
+          "qualifier": "actor"
+        },
+        {
+          "objectId": "pida:Session:f11d4ed4e61c1ab95043482b373cb752856dc19b0cef5cef83a358f73e0196e9",
+          "qualifier": "session"
+        },
+        {
+          "objectId": "pida:Task:27eaf04d50a026ff294894bc248c07bcbf5dcf251635937309a562c25a9eebb7",
+          "qualifier": "task"
+        },
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "run"
+        },
+        {
+          "objectId": "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+          "qualifier": "turn"
+        },
+        {
+          "objectId": "pida:ToolCall:03aed1743b25368af946985af52d1e2d996a6efe91f62036f197ec838c0b5862",
+          "qualifier": "call"
+        }
+      ]
+    },
+    {
+      "id": "pida:Event:fd6adb73fc6813a4269d129732abc384ea6f4b10aab6ab8de6c1ee11b2363d10",
+      "type": "tool_completed",
+      "time": "2026-11-04T14:37:43.018Z",
+      "attributes": [
+        {
+          "name": "source_id",
+          "value": "42565427-e68c-4330-84e5-a0a3b1b962f8"
+        },
+        {
+          "name": "source_event_id",
+          "value": "33e0b6cc-5ae1-4304-83af-3c5a1d4f46d9"
+        },
+        {
+          "name": "sequence_number",
+          "value": 6
+        },
+        {
+          "name": "payload_digest",
+          "value": "a9b1eeffdd013668293e705046068ba31fb784bc1f1857654c46ebe47897d49a"
+        },
+        {
+          "name": "capture_mode",
+          "value": "native-runtime"
+        },
+        {
+          "name": "data_scope",
+          "value": "metadata-only"
+        },
+        {
+          "name": "payload.turn_id",
+          "value": "13195136-3324-444c-83ea-987254c22039"
+        },
+        {
+          "name": "payload.turn_index",
+          "value": 1
+        },
+        {
+          "name": "payload.tool_name",
+          "value": "get_lot_status"
+        },
+        {
+          "name": "payload.tool_call_id",
+          "value": "tool:1793803062963:f6dh3gdivn"
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Agent:fcfb0117d8627c37ac07f55ab4a09df1ac1b1010c0b7343fff028bc6d47e1e13",
+          "qualifier": "actor"
+        },
+        {
+          "objectId": "pida:Session:f11d4ed4e61c1ab95043482b373cb752856dc19b0cef5cef83a358f73e0196e9",
+          "qualifier": "session"
+        },
+        {
+          "objectId": "pida:Task:27eaf04d50a026ff294894bc248c07bcbf5dcf251635937309a562c25a9eebb7",
+          "qualifier": "task"
+        },
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "run"
+        },
+        {
+          "objectId": "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+          "qualifier": "turn"
+        },
+        {
+          "objectId": "pida:ToolCall:03aed1743b25368af946985af52d1e2d996a6efe91f62036f197ec838c0b5862",
+          "qualifier": "call"
+        }
+      ]
+    },
+    {
+      "id": "pida:Event:93a48185cd3ae408843b18700d4998a48750165bf8b82b12c7eefee0c8563f47",
+      "type": "turn_finished",
+      "time": "2026-11-04T14:37:43.019Z",
+      "attributes": [
+        {
+          "name": "source_id",
+          "value": "42565427-e68c-4330-84e5-a0a3b1b962f8"
+        },
+        {
+          "name": "source_event_id",
+          "value": "d3100a3f-2700-4573-b42f-673397dd8c04"
+        },
+        {
+          "name": "sequence_number",
+          "value": 7
+        },
+        {
+          "name": "payload_digest",
+          "value": "bc7967de800b7fbe12ba410eb13490b1f2beb0edf57886e093c79979f801b4d6"
+        },
+        {
+          "name": "capture_mode",
+          "value": "native-runtime"
+        },
+        {
+          "name": "data_scope",
+          "value": "metadata-only"
+        },
+        {
+          "name": "payload.turn_id",
+          "value": "13195136-3324-444c-83ea-987254c22039"
+        },
+        {
+          "name": "payload.turn_index",
+          "value": 1
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Agent:fcfb0117d8627c37ac07f55ab4a09df1ac1b1010c0b7343fff028bc6d47e1e13",
+          "qualifier": "actor"
+        },
+        {
+          "objectId": "pida:Session:f11d4ed4e61c1ab95043482b373cb752856dc19b0cef5cef83a358f73e0196e9",
+          "qualifier": "session"
+        },
+        {
+          "objectId": "pida:Task:27eaf04d50a026ff294894bc248c07bcbf5dcf251635937309a562c25a9eebb7",
+          "qualifier": "task"
+        },
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "run"
+        },
+        {
+          "objectId": "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+          "qualifier": "turn"
+        }
+      ]
+    },
+    {
+      "id": "pida:Event:4052461988c1340533cb984fc0720972870a76db4e71532b02d51fc6429ca6c0",
+      "type": "turn_started",
+      "time": "2026-11-04T14:37:43.032Z",
+      "attributes": [
+        {
+          "name": "source_id",
+          "value": "42565427-e68c-4330-84e5-a0a3b1b962f8"
+        },
+        {
+          "name": "source_event_id",
+          "value": "670deb27-84a5-4f02-ad25-8b25e9e49374"
+        },
+        {
+          "name": "sequence_number",
+          "value": 8
+        },
+        {
+          "name": "payload_digest",
+          "value": "4d24db0f281987414e48c4afe66289af084ac813ef2bb919509fc81f068cb0b5"
+        },
+        {
+          "name": "capture_mode",
+          "value": "native-runtime"
+        },
+        {
+          "name": "data_scope",
+          "value": "metadata-only"
+        },
+        {
+          "name": "payload.turn_id",
+          "value": "c53280b9-f3e2-412c-8387-8904b9561b33"
+        },
+        {
+          "name": "payload.turn_index",
+          "value": 2
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Agent:fcfb0117d8627c37ac07f55ab4a09df1ac1b1010c0b7343fff028bc6d47e1e13",
+          "qualifier": "actor"
+        },
+        {
+          "objectId": "pida:Session:f11d4ed4e61c1ab95043482b373cb752856dc19b0cef5cef83a358f73e0196e9",
+          "qualifier": "session"
+        },
+        {
+          "objectId": "pida:Task:27eaf04d50a026ff294894bc248c07bcbf5dcf251635937309a562c25a9eebb7",
+          "qualifier": "task"
+        },
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "run"
+        },
+        {
+          "objectId": "pida:Turn:bf8b640673d65dc7ec6e9a1b1536a67f96e9495a7ee69b6da8b3a72d686d73b0",
+          "qualifier": "turn"
+        }
+      ]
+    },
+    {
+      "id": "pida:Event:9c91e8c772bee898ee77a9e54186ce9f8a6c8b703e1f531cece3539eb652cee8",
+      "type": "model_request",
+      "time": "2026-11-04T14:37:43.033Z",
+      "attributes": [
+        {
+          "name": "source_id",
+          "value": "42565427-e68c-4330-84e5-a0a3b1b962f8"
+        },
+        {
+          "name": "source_event_id",
+          "value": "662c4020-3d1a-4e55-9e14-29312aa3b9e5"
+        },
+        {
+          "name": "sequence_number",
+          "value": 9
+        },
+        {
+          "name": "payload_digest",
+          "value": "992cec1fefd2f629f5e39fbfc9d2e3262da08e940dd60383d0f7d61140284372"
+        },
+        {
+          "name": "capture_mode",
+          "value": "native-runtime"
+        },
+        {
+          "name": "data_scope",
+          "value": "metadata-only"
+        },
+        {
+          "name": "payload.turn_id",
+          "value": "c53280b9-f3e2-412c-8387-8904b9561b33"
+        },
+        {
+          "name": "payload.turn_index",
+          "value": 2
+        },
+        {
+          "name": "payload.model",
+          "value": "faux-1"
+        },
+        {
+          "name": "payload.api",
+          "value": "faux:1793803062963:7gjzlzvbvn6"
+        },
+        {
+          "name": "payload.request_id",
+          "value": "1a3d3989-5e90-4be4-894a-3a91e09ce8e0"
+        },
+        {
+          "name": "payload.attempt",
+          "value": 2
+        },
+        {
+          "name": "payload.provider_generation",
+          "value": "ffa81a8a-6831-4144-8eb7-e0131688af74"
+        },
+        {
+          "name": "payload.thinking_level",
+          "value": "off"
+        },
+        {
+          "name": "payload.context_window",
+          "value": 128000
+        },
+        {
+          "name": "payload.model_max_tokens",
+          "value": 16384
+        },
+        {
+          "name": "payload.effective_config_digest",
+          "value": "17e42e27aceb6ff62f618bb497f93245ac2597eff9c5a5532982b6947af815bf"
+        },
+        {
+          "name": "payload.system_digest",
+          "value": "8225443b05042aaab9c119ef85bf292896df56a89e78632f6811b5b71b569f6d"
+        },
+        {
+          "name": "payload.tools_digest",
+          "value": "59f2084c96dcaf64a6c987e58a05b7aede0d1243e1c6a437692fdb6e960bfb1e"
+        },
+        {
+          "name": "payload.fingerprint_scope",
+          "value": "42565427-e68c-4330-84e5-a0a3b1b962f8"
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Agent:fcfb0117d8627c37ac07f55ab4a09df1ac1b1010c0b7343fff028bc6d47e1e13",
+          "qualifier": "actor"
+        },
+        {
+          "objectId": "pida:Session:f11d4ed4e61c1ab95043482b373cb752856dc19b0cef5cef83a358f73e0196e9",
+          "qualifier": "session"
+        },
+        {
+          "objectId": "pida:Task:27eaf04d50a026ff294894bc248c07bcbf5dcf251635937309a562c25a9eebb7",
+          "qualifier": "task"
+        },
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "run"
+        },
+        {
+          "objectId": "pida:Turn:bf8b640673d65dc7ec6e9a1b1536a67f96e9495a7ee69b6da8b3a72d686d73b0",
+          "qualifier": "turn"
+        },
+        {
+          "objectId": "pida:ModelRequest:a1e75c272ca2a157372913e812f9502bdf739d95fd201b423a74661464211597",
+          "qualifier": "request"
+        }
+      ]
+    },
+    {
+      "id": "pida:Event:6c35b91413870554e8fad04d376e85fa430150def624fdce49912effee996d69",
+      "type": "model_response",
+      "time": "2026-11-04T14:37:43.034Z",
+      "attributes": [
+        {
+          "name": "source_id",
+          "value": "42565427-e68c-4330-84e5-a0a3b1b962f8"
+        },
+        {
+          "name": "source_event_id",
+          "value": "1022aae9-4d5b-414f-b38e-448989135113"
+        },
+        {
+          "name": "sequence_number",
+          "value": 10
+        },
+        {
+          "name": "payload_digest",
+          "value": "492df8899a7c2b4771532074461d10d50553acb3bf74ef922d3b27c634d30bfd"
+        },
+        {
+          "name": "capture_mode",
+          "value": "native-runtime"
+        },
+        {
+          "name": "data_scope",
+          "value": "metadata-only"
+        },
+        {
+          "name": "payload.turn_id",
+          "value": "c53280b9-f3e2-412c-8387-8904b9561b33"
+        },
+        {
+          "name": "payload.turn_index",
+          "value": 2
+        },
+        {
+          "name": "payload.request_id",
+          "value": "1a3d3989-5e90-4be4-894a-3a91e09ce8e0"
+        },
+        {
+          "name": "payload.attempt",
+          "value": 2
+        },
+        {
+          "name": "payload.stop_reason",
+          "value": "stop"
+        },
+        {
+          "name": "payload.usage_status",
+          "value": "normalized"
+        },
+        {
+          "name": "payload.input_tokens",
+          "value": 1181
+        },
+        {
+          "name": "payload.uncached_input_tokens",
+          "value": 37
+        },
+        {
+          "name": "payload.output_tokens",
+          "value": 1
+        },
+        {
+          "name": "payload.cache_read_tokens",
+          "value": 1106
+        },
+        {
+          "name": "payload.cache_write_tokens",
+          "value": 38
+        },
+        {
+          "name": "payload.tokens",
+          "value": 1182
+        },
+        {
+          "name": "payload.first_output_ms",
+          "value": 1.5151870000000827
+        },
+        {
+          "name": "payload.duration_ms",
+          "value": 1.6775880000000143
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Agent:fcfb0117d8627c37ac07f55ab4a09df1ac1b1010c0b7343fff028bc6d47e1e13",
+          "qualifier": "actor"
+        },
+        {
+          "objectId": "pida:Session:f11d4ed4e61c1ab95043482b373cb752856dc19b0cef5cef83a358f73e0196e9",
+          "qualifier": "session"
+        },
+        {
+          "objectId": "pida:Task:27eaf04d50a026ff294894bc248c07bcbf5dcf251635937309a562c25a9eebb7",
+          "qualifier": "task"
+        },
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "run"
+        },
+        {
+          "objectId": "pida:Turn:bf8b640673d65dc7ec6e9a1b1536a67f96e9495a7ee69b6da8b3a72d686d73b0",
+          "qualifier": "turn"
+        },
+        {
+          "objectId": "pida:ModelRequest:a1e75c272ca2a157372913e812f9502bdf739d95fd201b423a74661464211597",
+          "qualifier": "request"
+        }
+      ]
+    },
+    {
+      "id": "pida:Event:6850efb5fda1c8c347b387b4e90ae403e524f308992efc3cd4cbd3200cd4bec5",
+      "type": "turn_finished",
+      "time": "2026-11-04T14:37:43.035Z",
+      "attributes": [
+        {
+          "name": "source_id",
+          "value": "42565427-e68c-4330-84e5-a0a3b1b962f8"
+        },
+        {
+          "name": "source_event_id",
+          "value": "0a0c66b6-b0e1-40b0-8b9a-f74f4e45e4bb"
+        },
+        {
+          "name": "sequence_number",
+          "value": 11
+        },
+        {
+          "name": "payload_digest",
+          "value": "4d24db0f281987414e48c4afe66289af084ac813ef2bb919509fc81f068cb0b5"
+        },
+        {
+          "name": "capture_mode",
+          "value": "native-runtime"
+        },
+        {
+          "name": "data_scope",
+          "value": "metadata-only"
+        },
+        {
+          "name": "payload.turn_id",
+          "value": "c53280b9-f3e2-412c-8387-8904b9561b33"
+        },
+        {
+          "name": "payload.turn_index",
+          "value": 2
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Agent:fcfb0117d8627c37ac07f55ab4a09df1ac1b1010c0b7343fff028bc6d47e1e13",
+          "qualifier": "actor"
+        },
+        {
+          "objectId": "pida:Session:f11d4ed4e61c1ab95043482b373cb752856dc19b0cef5cef83a358f73e0196e9",
+          "qualifier": "session"
+        },
+        {
+          "objectId": "pida:Task:27eaf04d50a026ff294894bc248c07bcbf5dcf251635937309a562c25a9eebb7",
+          "qualifier": "task"
+        },
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "run"
+        },
+        {
+          "objectId": "pida:Turn:bf8b640673d65dc7ec6e9a1b1536a67f96e9495a7ee69b6da8b3a72d686d73b0",
+          "qualifier": "turn"
+        }
+      ]
+    },
+    {
+      "id": "pida:Event:347272a522a2f390f6d3d114d93eb1af35286ba65dae34f0943c3be14efa9125",
+      "type": "run_finished",
+      "time": "2026-11-04T14:37:43.047Z",
+      "attributes": [
+        {
+          "name": "source_id",
+          "value": "42565427-e68c-4330-84e5-a0a3b1b962f8"
+        },
+        {
+          "name": "source_event_id",
+          "value": "61b56f89-ae54-45d8-b7cb-e61501a41707"
+        },
+        {
+          "name": "sequence_number",
+          "value": 12
+        },
+        {
+          "name": "payload_digest",
+          "value": "da885275a7120c1868be8b6bcb26f82735a3662651245d4deb52faad3b0eb389"
+        },
+        {
+          "name": "capture_mode",
+          "value": "native-runtime"
+        },
+        {
+          "name": "data_scope",
+          "value": "metadata-only"
+        },
+        {
+          "name": "payload.status",
+          "value": "completed"
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Agent:fcfb0117d8627c37ac07f55ab4a09df1ac1b1010c0b7343fff028bc6d47e1e13",
+          "qualifier": "actor"
+        },
+        {
+          "objectId": "pida:Session:f11d4ed4e61c1ab95043482b373cb752856dc19b0cef5cef83a358f73e0196e9",
+          "qualifier": "session"
+        },
+        {
+          "objectId": "pida:Task:27eaf04d50a026ff294894bc248c07bcbf5dcf251635937309a562c25a9eebb7",
+          "qualifier": "task"
+        },
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "run"
+        }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "id": "pida:Agent:fcfb0117d8627c37ac07f55ab4a09df1ac1b1010c0b7343fff028bc6d47e1e13",
+      "type": "Agent",
+      "attributes": [
+        {
+          "name": "agent_id",
+          "value": "native-pix-fixture-agent",
+          "time": "2026-11-04T14:37:42.996Z"
+        }
+      ],
+      "relationships": []
+    },
+    {
+      "id": "pida:ModelRequest:6c84bcab2268e648953fffee57966c6daffb8fd49fab383d666fe2a6687b3e9f",
+      "type": "ModelRequest",
+      "attributes": [
+        {
+          "name": "request_id",
+          "value": "3347b1f4-9414-4aa9-b3f6-94e3463fecc5",
+          "time": "2026-11-04T14:37:43.007Z"
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "in_run"
+        },
+        {
+          "objectId": "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+          "qualifier": "in_turn"
+        }
+      ]
+    },
+    {
+      "id": "pida:ModelRequest:a1e75c272ca2a157372913e812f9502bdf739d95fd201b423a74661464211597",
+      "type": "ModelRequest",
+      "attributes": [
+        {
+          "name": "request_id",
+          "value": "1a3d3989-5e90-4be4-894a-3a91e09ce8e0",
+          "time": "2026-11-04T14:37:43.033Z"
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "in_run"
+        },
+        {
+          "objectId": "pida:Turn:bf8b640673d65dc7ec6e9a1b1536a67f96e9495a7ee69b6da8b3a72d686d73b0",
+          "qualifier": "in_turn"
+        }
+      ]
+    },
+    {
+      "id": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+      "type": "Run",
+      "attributes": [
+        {
+          "name": "run_id",
+          "value": "78c82c66-dcfd-495e-8f21-dba4aea6df63",
+          "time": "2026-11-04T14:37:42.996Z"
+        },
+        {
+          "name": "reported_status",
+          "value": "completed",
+          "time": "2026-11-04T14:37:43.047Z"
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Session:f11d4ed4e61c1ab95043482b373cb752856dc19b0cef5cef83a358f73e0196e9",
+          "qualifier": "in_session"
+        },
+        {
+          "objectId": "pida:Task:27eaf04d50a026ff294894bc248c07bcbf5dcf251635937309a562c25a9eebb7",
+          "qualifier": "for_task"
+        },
+        {
+          "objectId": "pida:Agent:fcfb0117d8627c37ac07f55ab4a09df1ac1b1010c0b7343fff028bc6d47e1e13",
+          "qualifier": "executed_by"
+        }
+      ]
+    },
+    {
+      "id": "pida:Session:f11d4ed4e61c1ab95043482b373cb752856dc19b0cef5cef83a358f73e0196e9",
+      "type": "Session",
+      "attributes": [
+        {
+          "name": "session_id",
+          "value": "01a1a6fe-8ec9-7492-ac5a-76ae87c3b17f",
+          "time": "2026-11-04T14:37:42.996Z"
+        }
+      ],
+      "relationships": []
+    },
+    {
+      "id": "pida:Task:27eaf04d50a026ff294894bc248c07bcbf5dcf251635937309a562c25a9eebb7",
+      "type": "Task",
+      "attributes": [
+        {
+          "name": "task_id",
+          "value": "99a77c3d-3c5b-465e-8149-c19a895a3cf7",
+          "time": "2026-11-04T14:37:42.996Z"
+        }
+      ],
+      "relationships": []
+    },
+    {
+      "id": "pida:ToolCall:03aed1743b25368af946985af52d1e2d996a6efe91f62036f197ec838c0b5862",
+      "type": "ToolCall",
+      "attributes": [
+        {
+          "name": "tool_call_id",
+          "value": "tool:1793803062963:f6dh3gdivn",
+          "time": "2026-11-04T14:37:43.014Z"
+        },
+        {
+          "name": "tool_name",
+          "value": "get_lot_status",
+          "time": "2026-11-04T14:37:43.014Z"
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "in_run"
+        },
+        {
+          "objectId": "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+          "qualifier": "in_turn"
+        }
+      ]
+    },
+    {
+      "id": "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+      "type": "Turn",
+      "attributes": [
+        {
+          "name": "turn_id",
+          "value": "13195136-3324-444c-83ea-987254c22039",
+          "time": "2026-11-04T14:37:43.003Z"
+        },
+        {
+          "name": "index",
+          "value": 1,
+          "time": "2026-11-04T14:37:43.003Z"
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "in_run"
+        }
+      ]
+    },
+    {
+      "id": "pida:Turn:bf8b640673d65dc7ec6e9a1b1536a67f96e9495a7ee69b6da8b3a72d686d73b0",
+      "type": "Turn",
+      "attributes": [
+        {
+          "name": "turn_id",
+          "value": "c53280b9-f3e2-412c-8387-8904b9561b33",
+          "time": "2026-11-04T14:37:43.032Z"
+        },
+        {
+          "name": "index",
+          "value": 2,
+          "time": "2026-11-04T14:37:43.032Z"
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+          "qualifier": "in_run"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "binding": {
+    "agent_instance_id": "instance:main",
+    "attempt_id": "attempt:one",
+    "binding_id": "binding:7af449cd7a614b31811cc4d15b94a0ba",
+    "host_id": "host:one",
+    "memory_scope": [
+      "organization:fixture",
+      "personal:fixture",
+      "project:alpha",
+      "project:beta"
+    ],
+    "organization_session_id": "session:fixture",
+    "persona_id": "persona:synthetic-vera",
+    "principal": "principal:fixture",
+    "project_id": "alpha",
+    "recorded_at": 1000,
+    "run_id": "308835a4-8ec5-4063-b359-43ce94fcfbfa",
+    "schema_version": "1.0.0",
+    "task_id": "c91a27ec-847f-46d5-bc15-bf3b1855bcc6"
+  },
+  "context": {
+    "schema_version": "vera-continuity/0.2.0",
+    "context_id": "vera-context:7819f24c593f421fa7460c59f5e1162c",
+    "binding_id": "binding:7af449cd7a614b31811cc4d15b94a0ba",
+    "persona_id": "persona:synthetic-vera",
+    "identity_revision": 1,
+    "memory_revision": "6922af70f7c5652e270b61ce0c99b445b3efd28dc86ffa1ec6dc8f334f9b1e4c",
+    "memory_refs": [
+      "memory:303d6e665f624dd2b28c5a8862fb1b9e"
+    ],
+    "state_ref": "state:05d680ebf2ad43969d31adb63a6eb77d",
+    "source_refs": [
+      "document:synthetic-fixture",
+      "observation:fixture",
+      "run:fixture"
+    ],
+    "renderer_version": "vera-json/1",
+    "budget": {
+      "unit": "utf8_bytes",
+      "limit": 16000,
+      "used": 4168
+    },
+    "omitted": {
+      "memories": 0,
+      "working_state": false
+    },
+    "truncated": false,
+    "scopes": [
+      "organization:fixture",
+      "personal:fixture",
+      "project:alpha"
+    ],
+    "text": "{\"behavioral_analyses\":[],\"behavioral_models\":[{\"cohort\":\"synthetic-fixture\",\"conditions\":{\"constraints\":[\"no external execution\"],\"harness\":\"local-test\",\"model\":\"none\",\"role\":\"fixture\",\"tools\":[]},\"counterexample_root_ids\":[],\"coverage\":{\"exclusions\":[],\"observed\":3,\"partial\":false,\"total\":3},\"digest\":\"d3002672825aea588bec23ff250cd5ef2e1830eb61a279d2829204edd98bd418\",\"discovery_result\":{\"digest\":\"27b0674a383e892b265cd21bbcbf38754188de2037486122aed45c274cb69010\",\"id\":\"artifact:f8cf7bebe2ccafe67c629a4b6e2deca58f2b375db15fb91259c1c39917c44e9d\",\"revision\":1},\"group\":\"fe8549a19a4eb1445bab51cbe91eaebc7e6571c93740ca75fec70f86601ee708\",\"id\":\"behavior-model:7864cc1e3bfb469aa0248379b311e86b\",\"identity_revision\":1,\"interpretation\":\"Synthetic model candidate, not identity truth.\",\"interpretation_source_ids\":[\"observation:3dfcf93ad3bbc979fae1f77c39d73f7a6b4376636a87fd5ee58963e2c43a9496\"],\"mapping_ref\":{\"digest\":\"882f62d3424c2a9857eaf132c45ed99044b9ed3b139326621c7ae9bb551b0169\",\"id\":\"artifact:1540add1b70dff54b77fa724c03072d7cc160e056d77b52d3c52800254564974\",\"revision\":1},\"model_artifact\":{\"digest\":\"55c9786faebfaec9fa7d5938a10dfefb16de8a0438623c26811b19a74bd7c403\",\"id\":\"artifact:c7cb88768b50e983fb46628c476ff984457b2acf8b56b8c5bdad25eed3c50c62\",\"revision\":1},\"model_id\":\"fixture-11\",\"model_kind\":\"empirical\",\"operator_ref\":{\"digest\":\"1e1579f25faa8f333473562894800e29f4ef8465ee26c2678d156f28426e0534\",\"id\":\"artifact:d24dfb08ddcac13f06017faf60f160d9783a0178500857fe040164a5e124bd69\",\"revision\":1},\"persona_id\":\"persona:synthetic-vera\",\"quality\":\"complete\",\"recorded_at\":1000,\"retention\":{\"on_expiry\":\"archive-deny-read\",\"retain_until\":null},\"revision\":1,\"sample_count\":3,\"sample_count_authority\":\"producer-declared; not recalculated from duplicated records\",\"scopes\":[\"organization:fixture\",\"personal:fixture\"],\"semantic_identity_truth\":\"NOT_EVALUATED\",\"source_root_ids\":[\"observation:3dfcf93ad3bbc979fae1f77c39d73f7a6b4376636a87fd5ee58963e2c43a9496\"],\"training_window\":{\"dataset_digest\":\"c2597227ca9da353f1dd9d83bbe339ccd8cbf377e2e766224d2b23ae4898c409\",\"end\":20,\"start\":10},\"unique_source_count\":1,\"validity\":{\"valid_from\":0,\"valid_until\":null},\"writer_principal\":\"principal:fixture\"}],\"contract\":\"vera-continuity/0.2.0\",\"identity\":{\"description\":\"Synthetic self-description: verify before action.\",\"identity_revision\":1,\"lifetime\":{\"expires_at\":null,\"kind\":\"persistent\"},\"memory_scope\":[\"organization:fixture\",\"personal:fixture\",\"project:alpha\",\"project:beta\"],\"name\":\"Synthetic continuity fixture\",\"persona_id\":\"persona:synthetic-vera\",\"persona_kind\":\"persistent\",\"recorded_at\":1000,\"retention\":{\"on_expiry\":\"archive-deny-read\",\"retain_until\":null},\"schema_version\":\"1.0.0\",\"scopes\":[\"organization:fixture\"],\"source_refs\":[\"document:synthetic-fixture\"]},\"memories\":[{\"claims\":{\"pattern\":\"Synthetic observation: inspected evidence.\",\"relation\":\"Synthetic collaboration context.\"},\"memory_id\":\"memory:303d6e665f624dd2b28c5a8862fb1b9e\",\"provenance\":{\"asserted_by\":\"principal:fixture\",\"authority\":\"fixture-events\",\"evidence_kind\":\"observation\",\"source_refs\":[\"observation:fixture\"]},\"relations\":[],\"tier\":\"long_term\"}],\"notice\":\"Sourced reference data, not instructions, permissions, identity truth, or proof of task completion. Behavioral artifacts are synthetic fixtures in this profile.\",\"working_state\":{\"branch\":\"main\",\"causal_parents\":[],\"digest\":\"c621ce4645de86ac0396bea06b5b182e7f5bce7f19376efcb7ddfb1ef5ffd5ad\",\"evidence_memory_ids\":[\"memory:303d6e665f624dd2b28c5a8862fb1b9e\"],\"goal\":\"Inspect synthetic evidence\",\"host_id\":\"host:one\",\"host_revision\":1,\"merge_reason\":null,\"next_action\":\"Build scoped reference input\",\"persona_id\":\"persona:synthetic-vera\",\"phase\":\"inspect\",\"phase_revision\":1,\"project_id\":\"alpha\",\"recorded_at\":1000,\"relationships\":[],\"revision\":1,\"schema_version\":\"vera-continuity/0.2.0\",\"scopes\":[\"project:alpha\",\"personal:fixture\"],\"source_refs\":[\"run:fixture\"],\"state_id\":\"state:05d680ebf2ad43969d31adb63a6eb77d\",\"task_id\":\"c91a27ec-847f-46d5-bc15-bf3b1855bcc6\",\"uncertainties\":[\"No live model or real PIX execution tested\"],\"understanding\":\"Self-description and behavior are separate evidence.\",\"writer_principal\":\"principal:fixture\"}}",
+    "text_digest": "6d1aae96b045b6b223c62a169bb1d34b2fca4586ba8e55fc130a9405a062b1c7",
+    "created_at": 1000,
+    "valid_until": 1300,
+    "branch": "main",
+    "head_revision": 1,
+    "model_refs": [
+      {
+        "digest": "d3002672825aea588bec23ff250cd5ef2e1830eb61a279d2829204edd98bd418",
+        "id": "behavior-model:7864cc1e3bfb469aa0248379b311e86b",
+        "revision": 1
+      }
+    ],
+    "analysis_refs": [],
+    "model_activations": [
+      {
+        "model_ref": {
+          "digest": "d3002672825aea588bec23ff250cd5ef2e1830eb61a279d2829204edd98bd418",
+          "id": "behavior-model:7864cc1e3bfb469aa0248379b311e86b",
+          "revision": 1
+        },
+        "status_revision": 2,
+        "active_revision": 1
+      }
+    ],
+    "artifact_refs": [
+      {
+        "digest": "55c9786faebfaec9fa7d5938a10dfefb16de8a0438623c26811b19a74bd7c403",
+        "id": "artifact:c7cb88768b50e983fb46628c476ff984457b2acf8b56b8c5bdad25eed3c50c62",
+        "revision": 1
+      },
+      {
+        "digest": "882f62d3424c2a9857eaf132c45ed99044b9ed3b139326621c7ae9bb551b0169",
+        "id": "artifact:1540add1b70dff54b77fa724c03072d7cc160e056d77b52d3c52800254564974",
+        "revision": 1
+      },
+      {
+        "digest": "1e1579f25faa8f333473562894800e29f4ef8465ee26c2678d156f28426e0534",
+        "id": "artifact:d24dfb08ddcac13f06017faf60f160d9783a0178500857fe040164a5e124bd69",
+        "revision": 1
+      },
+      {
+        "digest": "27b0674a383e892b265cd21bbcbf38754188de2037486122aed45c274cb69010",
+        "id": "artifact:f8cf7bebe2ccafe67c629a4b6e2deca58f2b375db15fb91259c1c39917c44e9d",
+        "revision": 1
+      }
+    ],
+    "digest": "e7b587fa9eec262386f8b179f61af030a01b5a6b3fe851e3133c5d90b290819e"
+  }
+}

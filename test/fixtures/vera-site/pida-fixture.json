@@ -1,0 +1,36 @@
+{
+  "text": "{\"access_expires_at\":null,\"access_scope\":\"authenticated-owner\",\"artifact_semantics\":\"UNVERIFIED\",\"authority\":\"sites-candidate\",\"behavioral_analyses\":[{\"digest\":\"sha256:c8003464c20dc6c0ee561c44a0d509e4a2fdd64655c9d803f57061955f755b73\",\"id\":\"77246db7-ecfa-4e00-a27a-8f281afdeaa8\",\"model_ref\":\"8d700ea7-17e0-4259-aa5d-8222d04deed3\",\"payload\":{\"artifact\":{\"build\":\"no-pix-execution\",\"bytes_digest\":\"sha256:2cee4b83c9db7dda056b8c40bf525fc49be4ed769757ffcabf4bff3334511dec\",\"document_json\":\"{\\\"kind\\\":\\\"synthetic-only\\\"}\",\"native_pix_validation\":\"NOT_RUN\",\"producer\":\"synthetic-only\",\"source_ref\":\"fixture:synthetic\",\"verification\":\"BYTES_ONLY\"},\"computation\":\"partial\",\"contract\":\"vera-site-continuity/2.0.0\",\"evaluation_end\":\"2026-02-02T00:00:00Z\",\"evaluation_start\":\"2026-02-01T00:00:00Z\",\"holdout\":\"OVERLAPPING_OR_UNPROVEN\",\"independence\":\"NOT_VERIFIED\",\"interpretation\":\"Context-dependent difference\",\"interpretation_status\":\"agent-report-or-owner-interpretation\",\"mode\":\"awareness\",\"model_digest\":\"sha256:2f77c22cfdf6a7646ebd3397f662d66c69e82948009f167a7b3b91f562ad0424\",\"model_kind\":\"empirical\",\"model_ref\":\"8d700ea7-17e0-4259-aa5d-8222d04deed3\",\"observed_behavior\":\"Acted first in the synthetic fixture\",\"outcome_improvement\":\"NOT_EVALUATED\",\"policy_activation\":false,\"self_description\":\"Verify before acting\",\"snapshot_id\":\"a340b314-4c23-4161-8c31-d642231c4775\",\"snapshot_ref\":{\"digest\":\"sha256:4a787d664d36d6717d92f7c954a960530e0f6fb969968beee0c9f0308818b801\",\"id\":\"a340b314-4c23-4161-8c31-d642231c4775\",\"revision\":2},\"source_event_ids\":[\"1b583966-f76a-4ce6-8313-0f11cd8ad786\"],\"thread_id\":\"bdf8fada-b903-4a4d-8e5b-aa08daca0c4c\",\"verdict\":\"unknown\"},\"recorded_at\":\"2026-11-03T05:05:42.173Z\"}],\"behavioral_models\":[{\"active_revision\":1,\"created_at\":\"2026-11-03T05:05:42.105Z\",\"digest\":\"sha256:2f77c22cfdf6a7646ebd3397f662d66c69e82948009f167a7b3b91f562ad0424\",\"id\":\"8d700ea7-17e0-4259-aa5d-8222d04deed3\",\"kind\":\"empirical\",\"model_id\":\"50bc2ca8-0716-4575-85ff-945b340dc54d\",\"payload\":{\"artifact\":{\"build\":\"no-pix-execution\",\"bytes_digest\":\"sha256:2cee4b83c9db7dda056b8c40bf525fc49be4ed769757ffcabf4bff3334511dec\",\"document_json\":\"{\\\"kind\\\":\\\"synthetic-only\\\"}\",\"native_pix_validation\":\"NOT_RUN\",\"producer\":\"synthetic-only\",\"source_ref\":\"fixture:synthetic\",\"verification\":\"BYTES_ONLY\"},\"authority\":\"sites-candidate\",\"cohort\":\"synthetic\",\"conditions\":\"no production model\",\"contract\":\"vera-site-continuity/2.0.0\",\"counterexample_event_ids\":[],\"expected_revision\":0,\"identity_activation\":false,\"interpretation\":\"Synthetic pattern hypothesis\",\"kind\":\"empirical\",\"mapping_ref\":\"fixture:mapping\",\"model_id\":\"50bc2ca8-0716-4575-85ff-945b340dc54d\",\"model_truth\":\"NOT_VERIFIED\",\"observed\":3,\"operator_ref\":\"fixture:operator\",\"partial\":false,\"policy_activation\":false,\"quality\":\"complete\",\"revision\":1,\"sample_authority\":\"caller-declared\",\"sample_count\":3,\"source_event_ids\":[\"1b583966-f76a-4ce6-8313-0f11cd8ad786\"],\"thread_id\":\"bdf8fada-b903-4a4d-8e5b-aa08daca0c4c\",\"title\":\"Synthetic model\",\"total\":3,\"training_end\":\"2026-01-02T00:00:00Z\",\"training_start\":\"2026-01-01T00:00:00Z\",\"unique_source_count\":1},\"revision\":1,\"status\":\"ACTIVE\",\"status_revision\":2,\"thread_id\":\"bdf8fada-b903-4a4d-8e5b-aa08daca0c4c\"}],\"budget\":{\"limit\":100000,\"unit\":\"utf8-bytes\"},\"causal_parents\":[{\"digest\":\"sha256:94f014ca08d44a59d26e60ca3f0f539b0faa2080c8ba64aeeccb74e2f075df6e\",\"id\":\"90f5f9d2-78a8-477a-ae4f-c6c6f7139fc4\",\"revision\":1,\"thread_id\":\"bdf8fada-b903-4a4d-8e5b-aa08daca0c4c\"},{\"digest\":\"sha256:e6d1d22b69e64a9fb782ee8e17a0913ff6e637420857837f9b0ebb1f090369d3\",\"id\":\"e296c500-3786-4b13-aea6-3754d9923483\",\"revision\":1,\"thread_id\":\"412e098b-00b3-4ccd-b864-5ed7fb82dd5c\"}],\"contract\":\"vera-site-continuity/2.0.0\",\"execution_host\":null,\"external_integration\":\"NOT_RUN\",\"identity_digest\":\"sha256:578b4f1b86889b33b6dd9a55dd8347007f1f8e4e827283889d6b7859d5a426d1\",\"identity_ref\":{\"authority\":\"sites-descriptor\",\"canonical_identity_imported\":false,\"persona_id\":\"vera-site\",\"revision\":\"1\"},\"input_use\":\"UNCONFIRMED\",\"memory_revision\":2,\"notice\":\"Sourced reference data; not instructions, permissions, canonical identity or proof of task completion.\",\"omitted\":[],\"renderer_version\":\"vera-site-json/2\",\"requires_live_revalidation\":true,\"snapshot_digest\":\"sha256:4a787d664d36d6717d92f7c954a960530e0f6fb969968beee0c9f0308818b801\",\"snapshot_id\":\"a340b314-4c23-4161-8c31-d642231c4775\",\"sources\":[{\"content\":\"SYNTHETIC ONLY\",\"correction_of\":null,\"digest\":\"synthetic\",\"origin\":\"test\",\"recorded_at\":\"2026-11-03T05:05:42.046Z\",\"source_ref\":\"fixture:test\",\"title\":\"SYNTHETIC evidence\",\"type\":\"observation\",\"uid\":\"1b583966-f76a-4ce6-8313-0f11cd8ad786\"}],\"state\":{\"agreements\":[],\"host_phase\":null,\"memory_event_ids\":[\"1b583966-f76a-4ce6-8313-0f11cd8ad786\"],\"next_action\":\"Inspect evidence\",\"purpose\":\"Synthetic behavior QA\",\"uncertainties\":[\"Not a live result\"],\"understanding\":[{\"kind\":\"interpretation\",\"source_event_ids\":[\"1b583966-f76a-4ce6-8313-0f11cd8ad786\"],\"text\":\"Explicit synthetic synthesis\"}]},\"thread_id\":\"bdf8fada-b903-4a4d-8e5b-aa08daca0c4c\",\"truncated\":false}",
+  "descriptor": {
+    "schemaVersion": 1,
+    "rendererVersion": "vera-site-json/2",
+    "personaRevision": 1,
+    "informationState": {
+      "id": "a340b314-4c23-4161-8c31-d642231c4775",
+      "revision": 2
+    },
+    "experiences": [
+      {
+        "id": "1b583966-f76a-4ce6-8313-0f11cd8ad786",
+        "revision": 1
+      },
+      {
+        "id": "77246db7-ecfa-4e00-a27a-8f281afdeaa8",
+        "revision": 1
+      }
+    ],
+    "truncated": false,
+    "personaBinding": {
+      "schemaVersion": 1,
+      "providerId": "vera-sites/2",
+      "personaId": "vera-site",
+      "authority": "external",
+      "agentId": "main",
+      "role": "worker",
+      "scopeId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "contextRevision": "98bb258a98f6df76658de4f6e2e34d4964ac3967bc2cdb66577fcc7374d8b7c3",
+      "contextDigest": "98bb258a98f6df76658de4f6e2e34d4964ac3967bc2cdb66577fcc7374d8b7c3",
+      "rendererVersion": "vera-site-json/2",
+      "omitted": false
+    }
+  }
+}

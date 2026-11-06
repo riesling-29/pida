@@ -1,0 +1,35 @@
+{
+  "version": "0.8.11",
+  "date_kst": "2026-11-05",
+  "build": {
+    "command": "npm run build",
+    "status": "PASS"
+  },
+  "tui_integration": {
+    "command": "node --test test/tui.test.mjs",
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "duration_ms": 2571.298208
+  },
+  "pty": {
+    "command": "python3 scripts/tui-terminal-check.py --color --output .pida-test-tui-0811-reviewed/report.json",
+    "passed": 14,
+    "report": "pty-report.json"
+  },
+  "manual_renderer_modes": {
+    "256color": "PASS",
+    "NO_COLOR": "PASS"
+  },
+  "limits": [
+    "Scripted mock model, actual Pi and HTTP; no live LLM.",
+    "Linux PTY, not Windows Terminal or native Korean IME.",
+    "Presentation-only patch; full regression suite not rerun."
+  ],
+  "source_sha256": {
+    "package.json": "2ff65b78d0fa9cc90197c1c85a9696ea43331f2c26ea3df53c6ee7e0b99eda7b",
+    "src/tui.ts": "9f3117cfa487df034a84510dc289807678ff7f4e821a5c3fcecc3cd9431e3117",
+    "src/tui-theme.ts": "d83c070c87d7176e8e241cbb808bf2fb39add02ba0809033f4c5eeef10ead5de",
+    "test/tui.test.mjs": "04d9e332d1cabddde43d262997590d18df501d28a6d63a42eb4e4cdaa1028809"
+  }
+}

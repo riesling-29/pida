@@ -1,0 +1,1561 @@
+{
+  "first": {
+    "schemaVersion": "pida.pi.profile-analysis/1",
+    "profile": "sequential-prefix/1",
+    "status": "partial",
+    "processJudgment": "pending",
+    "businessAcceptance": "UNKNOWN",
+    "automaticCorrection": false,
+    "empiricalDeviationIsViolation": false,
+    "applicability": "CURRENT",
+    "transition": "recomputed",
+    "selectionDigest": "7d94bf2d8826e8ed677fa6346a2f1380a6bd9a6f62049b2c1179646934711aeb",
+    "selection": {
+      "ownerId": "owner",
+      "agentId": "main",
+      "cutRef": "cut:fixture",
+      "modelRef": "model:fixture",
+      "cutRevision": "5d80b2f60ae850c713a23b28409d03512b321c42ddcf32440273eadf1cfdd38f",
+      "modelRevision": "843d3db1c45e6a4578d11f0283ebfd9017b9267e880994be8bd0e87e57fec64c",
+      "policyRevision": "77b7d4385722ef5b8c61580d015a32dc5516016b3652184ce718000c7fb7d8c4",
+      "scopeDigest": "47c670c4c5c47b43556f983ab9d35b50117d041ea803eb908d7c4d970daf768f",
+      "taskId": "task:fixture",
+      "generation": "fixture/generation-1",
+      "profile": "sequential-prefix/1",
+      "modelKind": "aspirational",
+      "modelProvenance": {
+        "sourceRef": "fixture:explicit-model",
+        "derivation": "independently-provided-no-DFG-conversion"
+      },
+      "artifactRefs": [],
+      "coverage": {
+        "complete": true,
+        "sourceEventCount": 2,
+        "exclusions": [],
+        "ordering": "source-sequence",
+        "evidenceRefs": [
+          "fixture:source-record"
+        ]
+      },
+      "model": {
+        "document_digest": "pix.model-document.v1:sha256:1d247e20b8c3a98e9ef5cd010d35b170b918c0424ddc17737fe2dbd3bd189b1a",
+        "format": "pix.model",
+        "kind": "petri-net",
+        "model": {
+          "arcs": [
+            {
+              "source": "p0",
+              "target": "t0",
+              "weight": 1
+            },
+            {
+              "source": "p1",
+              "target": "t1",
+              "weight": 1
+            },
+            {
+              "source": "p2",
+              "target": "t2",
+              "weight": 1
+            },
+            {
+              "source": "p3",
+              "target": "t3",
+              "weight": 1
+            },
+            {
+              "source": "t0",
+              "target": "p1",
+              "weight": 1
+            },
+            {
+              "source": "t1",
+              "target": "p2",
+              "weight": 1
+            },
+            {
+              "source": "t2",
+              "target": "p3",
+              "weight": 1
+            },
+            {
+              "source": "t3",
+              "target": "p4",
+              "weight": 1
+            }
+          ],
+          "final_marking": {
+            "tokens": [
+              [
+                "p4",
+                1
+              ]
+            ]
+          },
+          "initial_marking": {
+            "tokens": [
+              [
+                "p0",
+                1
+              ]
+            ]
+          },
+          "places": [
+            {
+              "id": "p0"
+            },
+            {
+              "id": "p1"
+            },
+            {
+              "id": "p2"
+            },
+            {
+              "id": "p3"
+            },
+            {
+              "id": "p4"
+            }
+          ],
+          "transitions": [
+            {
+              "activity": "request",
+              "id": "t0"
+            },
+            {
+              "activity": "edit",
+              "id": "t1"
+            },
+            {
+              "activity": "test",
+              "id": "t2"
+            },
+            {
+              "activity": "deliver",
+              "id": "t3"
+            }
+          ]
+        },
+        "model_digest": "pix.model.petri-net.v1:sha256:c2d073a2f9fc098fee019b2b4e1ccc7ea6b1cc031721cf6bc3a89b19d74d6d27",
+        "profile": "weighted-place-transition",
+        "provenance": {
+          "origin": "provided",
+          "source_computation_id": null
+        },
+        "version": "1.0.0"
+      },
+      "sequential": {
+        "caseId": "fixture-case",
+        "events": [
+          {
+            "id": "observed-0",
+            "sequence": 0,
+            "activity": "request"
+          },
+          {
+            "id": "observed-1",
+            "sequence": 1,
+            "activity": "edit"
+          }
+        ],
+        "closed": false
+      },
+      "proxyPaths": [
+        [
+          "t0",
+          "t1",
+          "t2",
+          "t3"
+        ]
+      ]
+    },
+    "request": {
+      "schemaVersion": "pida.pix.profiles/1",
+      "profile": "sequential-prefix/1",
+      "generation": "pida:97af9fa74c4a9ca5ceeb964a54d29a8b868cdce2a132d10e27f1d454fb24faa6",
+      "model": {
+        "document_digest": "pix.model-document.v1:sha256:1d247e20b8c3a98e9ef5cd010d35b170b918c0424ddc17737fe2dbd3bd189b1a",
+        "format": "pix.model",
+        "kind": "petri-net",
+        "model": {
+          "arcs": [
+            {
+              "source": "p0",
+              "target": "t0",
+              "weight": 1
+            },
+            {
+              "source": "p1",
+              "target": "t1",
+              "weight": 1
+            },
+            {
+              "source": "p2",
+              "target": "t2",
+              "weight": 1
+            },
+            {
+              "source": "p3",
+              "target": "t3",
+              "weight": 1
+            },
+            {
+              "source": "t0",
+              "target": "p1",
+              "weight": 1
+            },
+            {
+              "source": "t1",
+              "target": "p2",
+              "weight": 1
+            },
+            {
+              "source": "t2",
+              "target": "p3",
+              "weight": 1
+            },
+            {
+              "source": "t3",
+              "target": "p4",
+              "weight": 1
+            }
+          ],
+          "final_marking": {
+            "tokens": [
+              [
+                "p4",
+                1
+              ]
+            ]
+          },
+          "initial_marking": {
+            "tokens": [
+              [
+                "p0",
+                1
+              ]
+            ]
+          },
+          "places": [
+            {
+              "id": "p0"
+            },
+            {
+              "id": "p1"
+            },
+            {
+              "id": "p2"
+            },
+            {
+              "id": "p3"
+            },
+            {
+              "id": "p4"
+            }
+          ],
+          "transitions": [
+            {
+              "activity": "request",
+              "id": "t0"
+            },
+            {
+              "activity": "edit",
+              "id": "t1"
+            },
+            {
+              "activity": "test",
+              "id": "t2"
+            },
+            {
+              "activity": "deliver",
+              "id": "t3"
+            }
+          ]
+        },
+        "model_digest": "pix.model.petri-net.v1:sha256:c2d073a2f9fc098fee019b2b4e1ccc7ea6b1cc031721cf6bc3a89b19d74d6d27",
+        "profile": "weighted-place-transition",
+        "provenance": {
+          "origin": "provided",
+          "source_computation_id": null
+        },
+        "version": "1.0.0"
+      },
+      "sequential": {
+        "caseId": "fixture-case",
+        "events": [
+          {
+            "id": "observed-0",
+            "sequence": 0,
+            "activity": "request"
+          },
+          {
+            "id": "observed-1",
+            "sequence": 1,
+            "activity": "edit"
+          }
+        ],
+        "closed": false
+      },
+      "proxyPaths": [
+        [
+          "t0",
+          "t1",
+          "t2",
+          "t3"
+        ]
+      ]
+    },
+    "issues": [
+      "approximate_online_alignment",
+      "open_cases",
+      "final_cost_unresolved"
+    ],
+    "durationMs": 1544.0169060000007,
+    "limits": [
+      "HOST_SELECTED_SCOPE",
+      "REFERENCE_ONLY_NO_ADOPTION",
+      "NO_BUSINESS_ACCEPTANCE",
+      "NO_NORMALIZED_FITNESS",
+      "NO_CAUSAL_IMPROVEMENT_CLAIM",
+      "HOST_AUTHORIZED_SCOPE_ONLY",
+      "NO_MODEL_ACTIVATION"
+    ],
+    "native": {
+      "schemaVersion": "pida.pix.profiles/1",
+      "profile": "sequential-prefix/1",
+      "requestDigest": "e05f4e338f3e3601ab8367a5b0894b9d4fa12be0e87747e54d5ab9466b6d9fd5",
+      "status": "partial",
+      "issues": [
+        {
+          "code": "approximate_online_alignment",
+          "message": "Finite proxy, look-ahead, decay and beam selection do not establish minimum cost; valid witnesses supply upper bounds only"
+        },
+        {
+          "code": "open_cases",
+          "message": "Retained open cases have not been finalized; end counts include explicit closures only"
+        },
+        {
+          "code": "final_cost_unresolved",
+          "message": "Open-case costs bound prefix alignments only; final-marking completion cost has not been included"
+        }
+      ],
+      "nativeResults": [
+        {
+          "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:33bffff476d2ac98eb69dd9a1577c3dcb4af88beba45cc4b2eb60642b62337bf\",\"issues\":[{\"at\":[],\"code\":\"finite_model_proxy\",\"message\":\"Finite accepting paths do not certify coverage of the entire model language\"}],\"operator_id\":\"pix.case_centric.online_alignment.proxy\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.model.petri-net.v1:sha256:c2d073a2f9fc098fee019b2b4e1ccc7ea6b1cc031721cf6bc3a89b19d74d6d27\",\"spec\":{\"decay_time\":100.0,\"discount_factor\":1.0,\"ingestion\":{\"capacity_policy\":\"reject\",\"declare\":[],\"dedup_window\":4096,\"footprints\":null,\"max_activities\":256,\"max_cases\":1,\"order_policy\":\"sequence\",\"replay_model\":null,\"retirement_filter_bits\":16384,\"silent_max_states\":1000,\"stream_id\":\"pida:97af9fa74c4a9ca5ceeb964a54d29a8b868cdce2a132d10e27f1d454fb24faa6\",\"temporal\":[],\"temporal_history_limit\":1000},\"log_move_cost\":1,\"lookahead\":3,\"max_expansions_per_event\":10000,\"max_proxy_nodes\":10000,\"max_states_per_case\":20,\"model\":{\"arcs\":[{\"source\":\"p0\",\"target\":\"t0\",\"weight\":1},{\"source\":\"p1\",\"target\":\"t1\",\"weight\":1},{\"source\":\"p2\",\"target\":\"t2\",\"weight\":1},{\"source\":\"p3\",\"target\":\"t3\",\"weight\":1},{\"source\":\"t0\",\"target\":\"p1\",\"weight\":1},{\"source\":\"t1\",\"target\":\"p2\",\"weight\":1},{\"source\":\"t2\",\"target\":\"p3\",\"weight\":1},{\"source\":\"t3\",\"target\":\"p4\",\"weight\":1}],\"final_marking\":{\"tokens\":[[\"p4\",1]]},\"initial_marking\":{\"tokens\":[[\"p0\",1]]},\"places\":[{\"id\":\"p0\"},{\"id\":\"p1\"},{\"id\":\"p2\"},{\"id\":\"p3\"},{\"id\":\"p4\"}],\"transitions\":[{\"activity\":\"request\",\"id\":\"t0\"},{\"activity\":\"edit\",\"id\":\"t1\"},{\"activity\":\"test\",\"id\":\"t2\"},{\"activity\":\"deliver\",\"id\":\"t3\"}]},\"model_move_cost\":1,\"proxy_attempts\":1000,\"proxy_max_steps\":100,\"proxy_max_traces\":100,\"proxy_transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"random_seed\":0,\"silent_move_cost\":0,\"witness_history_limit\":200},\"status\":\"partial\",\"value\":{\"attempted_walks\":0,\"excluded_paths\":0,\"model_language_complete\":false,\"origin\":\"explicit_accepting_transition_paths\",\"transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"trie_nodes\":5,\"truncated_walks\":0}},\"document_digest\":\"pix.analysis-result.v1:sha256:b859c7ad33fe91b1f352fe3a3ba097e913e7e05b6d070db6f137f93549b4cbcf\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"online-alignment-proxy\",\"version\":\"1.3.0\"}",
+          "sha256": "513431da861fe5b35145a58fe4ba7a70a0233391d4e6a1ab108e5b1a42255df2"
+        },
+        {
+          "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:bac0cc716bdc2eed4b6c738dd6d7f0cd1d262c802681bd01b92122a33436979b\",\"issues\":[{\"at\":[],\"code\":\"approximate_online_alignment\",\"message\":\"Finite proxy, look-ahead, decay and beam selection do not establish minimum cost; valid witnesses supply upper bounds only\"},{\"at\":[],\"code\":\"open_cases\",\"message\":\"Retained open cases have not been finalized; end counts include explicit closures only\"},{\"at\":[],\"code\":\"final_cost_unresolved\",\"message\":\"Open-case costs bound prefix alignments only; final-marking completion cost has not been included\"}],\"operator_id\":\"pix.case_centric.online_alignment.snapshot\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.stream.prefix.v1:sha256:e58bcef9c6c8f99d239f34c7d244e9c44d9ff31f6d03b3aa04d65daf259a358a\",\"spec\":{\"decay_time\":100.0,\"discount_factor\":1.0,\"ingestion\":{\"capacity_policy\":\"reject\",\"declare\":[],\"dedup_window\":4096,\"footprints\":null,\"max_activities\":256,\"max_cases\":1,\"order_policy\":\"sequence\",\"replay_model\":null,\"retirement_filter_bits\":16384,\"silent_max_states\":1000,\"stream_id\":\"pida:97af9fa74c4a9ca5ceeb964a54d29a8b868cdce2a132d10e27f1d454fb24faa6\",\"temporal\":[],\"temporal_history_limit\":1000},\"log_move_cost\":1,\"lookahead\":3,\"max_expansions_per_event\":10000,\"max_proxy_nodes\":10000,\"max_states_per_case\":20,\"model\":{\"arcs\":[{\"source\":\"p0\",\"target\":\"t0\",\"weight\":1},{\"source\":\"p1\",\"target\":\"t1\",\"weight\":1},{\"source\":\"p2\",\"target\":\"t2\",\"weight\":1},{\"source\":\"p3\",\"target\":\"t3\",\"weight\":1},{\"source\":\"t0\",\"target\":\"p1\",\"weight\":1},{\"source\":\"t1\",\"target\":\"p2\",\"weight\":1},{\"source\":\"t2\",\"target\":\"p3\",\"weight\":1},{\"source\":\"t3\",\"target\":\"p4\",\"weight\":1}],\"final_marking\":{\"tokens\":[[\"p4\",1]]},\"initial_marking\":{\"tokens\":[[\"p0\",1]]},\"places\":[{\"id\":\"p0\"},{\"id\":\"p1\"},{\"id\":\"p2\"},{\"id\":\"p3\"},{\"id\":\"p4\"}],\"transitions\":[{\"activity\":\"request\",\"id\":\"t0\"},{\"activity\":\"edit\",\"id\":\"t1\"},{\"activity\":\"test\",\"id\":\"t2\"},{\"activity\":\"deliver\",\"id\":\"t3\"}]},\"model_move_cost\":1,\"proxy_attempts\":1000,\"proxy_max_steps\":100,\"proxy_max_traces\":100,\"proxy_transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"random_seed\":0,\"silent_move_cost\":0,\"witness_history_limit\":200},\"status\":\"partial\",\"value\":{\"cases\":[{\"beam_pruned_states\":0,\"bound_scope\":\"model_prefix_alignment_upper_bound\",\"case_id\":\"fixture-case\",\"closed\":false,\"deduplicated_states\":1,\"event_count\":2,\"expansion_limited_events\":0,\"expired_states\":0,\"fallback_resets\":0,\"final_cost_unresolved\":true,\"generated_states\":6,\"reported_cost\":0,\"states\":[{\"cost\":0,\"decay\":100.0,\"deviation_moves\":0,\"marking\":{\"tokens\":[[\"p2\",1]]},\"node_id\":2,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":0,\"event_id\":\"observed-0\",\"kind\":\"sync\",\"sequence\":0,\"timestamp\":null,\"transition_id\":\"t0\"},{\"activity\":\"edit\",\"cost\":0,\"event_id\":\"observed-1\",\"kind\":\"sync\",\"sequence\":1,\"timestamp\":null,\"transition_id\":\"t1\"}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}},{\"cost\":1,\"decay\":99.0,\"deviation_moves\":1,\"marking\":{\"tokens\":[[\"p1\",1]]},\"node_id\":1,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":0,\"event_id\":\"observed-0\",\"kind\":\"sync\",\"sequence\":0,\"timestamp\":null,\"transition_id\":\"t0\"},{\"activity\":\"edit\",\"cost\":1,\"event_id\":\"observed-1\",\"kind\":\"log\",\"sequence\":1,\"timestamp\":null,\"transition_id\":null}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}},{\"cost\":2,\"decay\":98.0,\"deviation_moves\":2,\"marking\":{\"tokens\":[[\"p0\",1]]},\"node_id\":0,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":1,\"event_id\":\"observed-0\",\"kind\":\"log\",\"sequence\":0,\"timestamp\":null,\"transition_id\":null},{\"activity\":\"edit\",\"cost\":1,\"event_id\":\"observed-1\",\"kind\":\"log\",\"sequence\":1,\"timestamp\":null,\"transition_id\":null}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}}],\"unavoidable_log_cost\":0}],\"ingestion_state\":{\"accepted_events\":2,\"accepted_operations\":2,\"cases\":[{\"case_id\":\"fixture-case\",\"closed\":false,\"declare\":[],\"event_count\":2,\"event_membership\":\"0x40000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"first_activity\":\"request\",\"footprint_state\":null,\"footprint_violations\":0,\"forgotten_event_ids\":0,\"last_activity\":\"edit\",\"last_sequence\":1,\"last_timestamp\":null,\"opened_operation\":0,\"replay\":null,\"seen\":[{\"digest\":\"pix.computation.v1:sha256:fa8ad5af45e1272e09b0e297e2ace719d1175c4882c7a322b43548bf822cd67a\",\"event_id\":\"observed-0\",\"sequence\":0},{\"digest\":\"pix.computation.v1:sha256:d205e4cfd65e5ebba0989d1a61251464fdbdc0cd0009f36d99b785661e61d4ed\",\"event_id\":\"observed-1\",\"sequence\":1}],\"temporal\":[]}],\"closed_cases\":0,\"created_cases\":1,\"dfg\":{\"activities\":[[\"edit\",1],[\"request\",1]],\"edges\":[[\"request\",\"edit\",1]],\"ends\":[],\"starts\":[[\"request\",1]]},\"evicted_cases\":0,\"evicted_open_cases\":0,\"prefix_digest\":\"pix.stream.prefix.v1:sha256:e58bcef9c6c8f99d239f34c7d244e9c44d9ff31f6d03b3aa04d65daf259a358a\",\"retirement_membership\":\"0x8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"},\"profile\":\"pix.proxy-trie-iws.v1\",\"proxy\":{\"attempted_walks\":0,\"excluded_paths\":0,\"model_language_complete\":false,\"origin\":\"explicit_accepting_transition_paths\",\"transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"trie_nodes\":5,\"truncated_walks\":0}}},\"document_digest\":\"pix.analysis-result.v1:sha256:478c56114597ba259c9e3f84f8aab0e914bf996429382901baaae689d639b961\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"online-alignment-snapshot\",\"version\":\"1.3.0\"}",
+          "sha256": "80a00ccbebeae4fea480be4a69546c399673b5ab37a7d9b9e48d603351505e22"
+        }
+      ],
+      "limits": [
+        "HOST_AUTHORIZED_SCOPE_ONLY",
+        "NO_BUSINESS_ACCEPTANCE",
+        "NO_MODEL_ACTIVATION",
+        "NO_CAUSAL_IMPROVEMENT_CLAIM"
+      ],
+      "engine": {
+        "repository": "Chanta-Research-Group/PIX",
+        "sourceCommit": "a0831bc0b34fd7feebfba928066b90b114ae531e",
+        "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+        "packageVersion": "0.5.0",
+        "pythonVersion": "3.12.14",
+        "sourceVerified": true
+      },
+      "checkpoint": {
+        "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:4f34f1660eaad4f4f9471d20935e31eb3685a192e2d702aa6989592de769dec7\",\"issues\":[{\"at\":[],\"code\":\"approximate_online_alignment\",\"message\":\"Finite proxy, look-ahead, decay and beam selection do not establish minimum cost; valid witnesses supply upper bounds only\"},{\"at\":[],\"code\":\"open_cases\",\"message\":\"Retained open cases have not been finalized; end counts include explicit closures only\"},{\"at\":[],\"code\":\"final_cost_unresolved\",\"message\":\"Open-case costs bound prefix alignments only; final-marking completion cost has not been included\"}],\"operator_id\":\"pix.case_centric.online_alignment.checkpoint\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.stream.prefix.v1:sha256:e58bcef9c6c8f99d239f34c7d244e9c44d9ff31f6d03b3aa04d65daf259a358a\",\"spec\":{\"decay_time\":100.0,\"discount_factor\":1.0,\"ingestion\":{\"capacity_policy\":\"reject\",\"declare\":[],\"dedup_window\":4096,\"footprints\":null,\"max_activities\":256,\"max_cases\":1,\"order_policy\":\"sequence\",\"replay_model\":null,\"retirement_filter_bits\":16384,\"silent_max_states\":1000,\"stream_id\":\"pida:97af9fa74c4a9ca5ceeb964a54d29a8b868cdce2a132d10e27f1d454fb24faa6\",\"temporal\":[],\"temporal_history_limit\":1000},\"log_move_cost\":1,\"lookahead\":3,\"max_expansions_per_event\":10000,\"max_proxy_nodes\":10000,\"max_states_per_case\":20,\"model\":{\"arcs\":[{\"source\":\"p0\",\"target\":\"t0\",\"weight\":1},{\"source\":\"p1\",\"target\":\"t1\",\"weight\":1},{\"source\":\"p2\",\"target\":\"t2\",\"weight\":1},{\"source\":\"p3\",\"target\":\"t3\",\"weight\":1},{\"source\":\"t0\",\"target\":\"p1\",\"weight\":1},{\"source\":\"t1\",\"target\":\"p2\",\"weight\":1},{\"source\":\"t2\",\"target\":\"p3\",\"weight\":1},{\"source\":\"t3\",\"target\":\"p4\",\"weight\":1}],\"final_marking\":{\"tokens\":[[\"p4\",1]]},\"initial_marking\":{\"tokens\":[[\"p0\",1]]},\"places\":[{\"id\":\"p0\"},{\"id\":\"p1\"},{\"id\":\"p2\"},{\"id\":\"p3\"},{\"id\":\"p4\"}],\"transitions\":[{\"activity\":\"request\",\"id\":\"t0\"},{\"activity\":\"edit\",\"id\":\"t1\"},{\"activity\":\"test\",\"id\":\"t2\"},{\"activity\":\"deliver\",\"id\":\"t3\"}]},\"model_move_cost\":1,\"proxy_attempts\":1000,\"proxy_max_steps\":100,\"proxy_max_traces\":100,\"proxy_transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"random_seed\":0,\"silent_move_cost\":0,\"witness_history_limit\":200},\"status\":\"partial\",\"value\":{\"snapshot\":{\"cases\":[{\"beam_pruned_states\":0,\"bound_scope\":\"model_prefix_alignment_upper_bound\",\"case_id\":\"fixture-case\",\"closed\":false,\"deduplicated_states\":1,\"event_count\":2,\"expansion_limited_events\":0,\"expired_states\":0,\"fallback_resets\":0,\"final_cost_unresolved\":true,\"generated_states\":6,\"reported_cost\":0,\"states\":[{\"cost\":0,\"decay\":100.0,\"deviation_moves\":0,\"marking\":{\"tokens\":[[\"p2\",1]]},\"node_id\":2,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":0,\"event_id\":\"observed-0\",\"kind\":\"sync\",\"sequence\":0,\"timestamp\":null,\"transition_id\":\"t0\"},{\"activity\":\"edit\",\"cost\":0,\"event_id\":\"observed-1\",\"kind\":\"sync\",\"sequence\":1,\"timestamp\":null,\"transition_id\":\"t1\"}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}},{\"cost\":1,\"decay\":99.0,\"deviation_moves\":1,\"marking\":{\"tokens\":[[\"p1\",1]]},\"node_id\":1,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":0,\"event_id\":\"observed-0\",\"kind\":\"sync\",\"sequence\":0,\"timestamp\":null,\"transition_id\":\"t0\"},{\"activity\":\"edit\",\"cost\":1,\"event_id\":\"observed-1\",\"kind\":\"log\",\"sequence\":1,\"timestamp\":null,\"transition_id\":null}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}},{\"cost\":2,\"decay\":98.0,\"deviation_moves\":2,\"marking\":{\"tokens\":[[\"p0\",1]]},\"node_id\":0,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":1,\"event_id\":\"observed-0\",\"kind\":\"log\",\"sequence\":0,\"timestamp\":null,\"transition_id\":null},{\"activity\":\"edit\",\"cost\":1,\"event_id\":\"observed-1\",\"kind\":\"log\",\"sequence\":1,\"timestamp\":null,\"transition_id\":null}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}}],\"unavoidable_log_cost\":0}],\"ingestion_state\":{\"accepted_events\":2,\"accepted_operations\":2,\"cases\":[{\"case_id\":\"fixture-case\",\"closed\":false,\"declare\":[],\"event_count\":2,\"event_membership\":\"0x40000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"first_activity\":\"request\",\"footprint_state\":null,\"footprint_violations\":0,\"forgotten_event_ids\":0,\"last_activity\":\"edit\",\"last_sequence\":1,\"last_timestamp\":null,\"opened_operation\":0,\"replay\":null,\"seen\":[{\"digest\":\"pix.computation.v1:sha256:fa8ad5af45e1272e09b0e297e2ace719d1175c4882c7a322b43548bf822cd67a\",\"event_id\":\"observed-0\",\"sequence\":0},{\"digest\":\"pix.computation.v1:sha256:d205e4cfd65e5ebba0989d1a61251464fdbdc0cd0009f36d99b785661e61d4ed\",\"event_id\":\"observed-1\",\"sequence\":1}],\"temporal\":[]}],\"closed_cases\":0,\"created_cases\":1,\"dfg\":{\"activities\":[[\"edit\",1],[\"request\",1]],\"edges\":[[\"request\",\"edit\",1]],\"ends\":[],\"starts\":[[\"request\",1]]},\"evicted_cases\":0,\"evicted_open_cases\":0,\"prefix_digest\":\"pix.stream.prefix.v1:sha256:e58bcef9c6c8f99d239f34c7d244e9c44d9ff31f6d03b3aa04d65daf259a358a\",\"retirement_membership\":\"0x8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"},\"profile\":\"pix.proxy-trie-iws.v1\",\"proxy\":{\"attempted_walks\":0,\"excluded_paths\":0,\"model_language_complete\":false,\"origin\":\"explicit_accepting_transition_paths\",\"transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"trie_nodes\":5,\"truncated_walks\":0}},\"state_digest\":\"pix.computation.v1:sha256:fbfdfad68b77b5a54d4eb296b5c927fa04e06cb6f1092ef355b02c91ec76295e\"}},\"document_digest\":\"pix.analysis-result.v1:sha256:b92f3cd474e6d8142bb7ef765d1ffe65b26d2d36ea321d36d7454a0924e9e11e\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"online-alignment-checkpoint\",\"version\":\"1.3.0\"}",
+        "sha256": "e6d6f8a9259f72227e7998ec1805103b027ad490ce5d26f6090a839a8ac44999"
+      },
+      "summary": {
+        "metric": "prefix-witness-upper-bound",
+        "cost": 0,
+        "eventCount": 2,
+        "closed": false,
+        "finalCostUnresolved": true,
+        "boundScope": "model_prefix_alignment_upper_bound",
+        "outcome": "approximate"
+      }
+    },
+    "resultRef": "pi-profile-result:cf8a458383dafb8f3bc29b54bd644aa80f243daf19ff4c536407476e483197d9",
+    "resultDigest": "7a877f8c0385ce876c86361c97ee5ecc774c71363d7187f6f55b8c846b0f52ec"
+  },
+  "resumed": {
+    "schemaVersion": "pida.pi.profile-analysis/1",
+    "profile": "sequential-prefix/1",
+    "status": "partial",
+    "processJudgment": "unknown",
+    "businessAcceptance": "UNKNOWN",
+    "automaticCorrection": false,
+    "empiricalDeviationIsViolation": false,
+    "applicability": "CURRENT",
+    "transition": "resumed",
+    "selectionDigest": "49d81b61690e7e6955cdfc300a07acfdd7786383e10fde10af4b6e7c1bd91a17",
+    "selection": {
+      "ownerId": "owner",
+      "agentId": "main",
+      "cutRef": "cut:fixture",
+      "modelRef": "model:fixture",
+      "cutRevision": "42061e9f185a06e22d7c5cd5e3cd9bda0ce9a9822aed9d34174ab461d7bb5291",
+      "modelRevision": "843d3db1c45e6a4578d11f0283ebfd9017b9267e880994be8bd0e87e57fec64c",
+      "policyRevision": "77b7d4385722ef5b8c61580d015a32dc5516016b3652184ce718000c7fb7d8c4",
+      "scopeDigest": "47c670c4c5c47b43556f983ab9d35b50117d041ea803eb908d7c4d970daf768f",
+      "taskId": "task:fixture",
+      "generation": "fixture/generation-1",
+      "profile": "sequential-prefix/1",
+      "modelKind": "aspirational",
+      "modelProvenance": {
+        "sourceRef": "fixture:explicit-model",
+        "derivation": "independently-provided-no-DFG-conversion"
+      },
+      "artifactRefs": [],
+      "coverage": {
+        "complete": true,
+        "sourceEventCount": 4,
+        "exclusions": [],
+        "ordering": "source-sequence",
+        "evidenceRefs": [
+          "fixture:source-record"
+        ]
+      },
+      "model": {
+        "document_digest": "pix.model-document.v1:sha256:1d247e20b8c3a98e9ef5cd010d35b170b918c0424ddc17737fe2dbd3bd189b1a",
+        "format": "pix.model",
+        "kind": "petri-net",
+        "model": {
+          "arcs": [
+            {
+              "source": "p0",
+              "target": "t0",
+              "weight": 1
+            },
+            {
+              "source": "p1",
+              "target": "t1",
+              "weight": 1
+            },
+            {
+              "source": "p2",
+              "target": "t2",
+              "weight": 1
+            },
+            {
+              "source": "p3",
+              "target": "t3",
+              "weight": 1
+            },
+            {
+              "source": "t0",
+              "target": "p1",
+              "weight": 1
+            },
+            {
+              "source": "t1",
+              "target": "p2",
+              "weight": 1
+            },
+            {
+              "source": "t2",
+              "target": "p3",
+              "weight": 1
+            },
+            {
+              "source": "t3",
+              "target": "p4",
+              "weight": 1
+            }
+          ],
+          "final_marking": {
+            "tokens": [
+              [
+                "p4",
+                1
+              ]
+            ]
+          },
+          "initial_marking": {
+            "tokens": [
+              [
+                "p0",
+                1
+              ]
+            ]
+          },
+          "places": [
+            {
+              "id": "p0"
+            },
+            {
+              "id": "p1"
+            },
+            {
+              "id": "p2"
+            },
+            {
+              "id": "p3"
+            },
+            {
+              "id": "p4"
+            }
+          ],
+          "transitions": [
+            {
+              "activity": "request",
+              "id": "t0"
+            },
+            {
+              "activity": "edit",
+              "id": "t1"
+            },
+            {
+              "activity": "test",
+              "id": "t2"
+            },
+            {
+              "activity": "deliver",
+              "id": "t3"
+            }
+          ]
+        },
+        "model_digest": "pix.model.petri-net.v1:sha256:c2d073a2f9fc098fee019b2b4e1ccc7ea6b1cc031721cf6bc3a89b19d74d6d27",
+        "profile": "weighted-place-transition",
+        "provenance": {
+          "origin": "provided",
+          "source_computation_id": null
+        },
+        "version": "1.0.0"
+      },
+      "sequential": {
+        "caseId": "fixture-case",
+        "events": [
+          {
+            "id": "observed-0",
+            "sequence": 0,
+            "activity": "request"
+          },
+          {
+            "id": "observed-1",
+            "sequence": 1,
+            "activity": "edit"
+          },
+          {
+            "id": "observed-2",
+            "sequence": 2,
+            "activity": "test"
+          },
+          {
+            "id": "observed-3",
+            "sequence": 3,
+            "activity": "deliver"
+          }
+        ],
+        "closed": true,
+        "closeId": "source-close"
+      },
+      "proxyPaths": [
+        [
+          "t0",
+          "t1",
+          "t2",
+          "t3"
+        ]
+      ]
+    },
+    "request": {
+      "schemaVersion": "pida.pix.profiles/1",
+      "profile": "sequential-prefix/1",
+      "generation": "pida:97af9fa74c4a9ca5ceeb964a54d29a8b868cdce2a132d10e27f1d454fb24faa6",
+      "model": {
+        "document_digest": "pix.model-document.v1:sha256:1d247e20b8c3a98e9ef5cd010d35b170b918c0424ddc17737fe2dbd3bd189b1a",
+        "format": "pix.model",
+        "kind": "petri-net",
+        "model": {
+          "arcs": [
+            {
+              "source": "p0",
+              "target": "t0",
+              "weight": 1
+            },
+            {
+              "source": "p1",
+              "target": "t1",
+              "weight": 1
+            },
+            {
+              "source": "p2",
+              "target": "t2",
+              "weight": 1
+            },
+            {
+              "source": "p3",
+              "target": "t3",
+              "weight": 1
+            },
+            {
+              "source": "t0",
+              "target": "p1",
+              "weight": 1
+            },
+            {
+              "source": "t1",
+              "target": "p2",
+              "weight": 1
+            },
+            {
+              "source": "t2",
+              "target": "p3",
+              "weight": 1
+            },
+            {
+              "source": "t3",
+              "target": "p4",
+              "weight": 1
+            }
+          ],
+          "final_marking": {
+            "tokens": [
+              [
+                "p4",
+                1
+              ]
+            ]
+          },
+          "initial_marking": {
+            "tokens": [
+              [
+                "p0",
+                1
+              ]
+            ]
+          },
+          "places": [
+            {
+              "id": "p0"
+            },
+            {
+              "id": "p1"
+            },
+            {
+              "id": "p2"
+            },
+            {
+              "id": "p3"
+            },
+            {
+              "id": "p4"
+            }
+          ],
+          "transitions": [
+            {
+              "activity": "request",
+              "id": "t0"
+            },
+            {
+              "activity": "edit",
+              "id": "t1"
+            },
+            {
+              "activity": "test",
+              "id": "t2"
+            },
+            {
+              "activity": "deliver",
+              "id": "t3"
+            }
+          ]
+        },
+        "model_digest": "pix.model.petri-net.v1:sha256:c2d073a2f9fc098fee019b2b4e1ccc7ea6b1cc031721cf6bc3a89b19d74d6d27",
+        "profile": "weighted-place-transition",
+        "provenance": {
+          "origin": "provided",
+          "source_computation_id": null
+        },
+        "version": "1.0.0"
+      },
+      "sequential": {
+        "caseId": "fixture-case",
+        "events": [
+          {
+            "id": "observed-0",
+            "sequence": 0,
+            "activity": "request"
+          },
+          {
+            "id": "observed-1",
+            "sequence": 1,
+            "activity": "edit"
+          },
+          {
+            "id": "observed-2",
+            "sequence": 2,
+            "activity": "test"
+          },
+          {
+            "id": "observed-3",
+            "sequence": 3,
+            "activity": "deliver"
+          }
+        ],
+        "closed": true,
+        "closeId": "source-close"
+      },
+      "proxyPaths": [
+        [
+          "t0",
+          "t1",
+          "t2",
+          "t3"
+        ]
+      ],
+      "resume": {
+        "checkpoint": {
+          "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:4f34f1660eaad4f4f9471d20935e31eb3685a192e2d702aa6989592de769dec7\",\"issues\":[{\"at\":[],\"code\":\"approximate_online_alignment\",\"message\":\"Finite proxy, look-ahead, decay and beam selection do not establish minimum cost; valid witnesses supply upper bounds only\"},{\"at\":[],\"code\":\"open_cases\",\"message\":\"Retained open cases have not been finalized; end counts include explicit closures only\"},{\"at\":[],\"code\":\"final_cost_unresolved\",\"message\":\"Open-case costs bound prefix alignments only; final-marking completion cost has not been included\"}],\"operator_id\":\"pix.case_centric.online_alignment.checkpoint\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.stream.prefix.v1:sha256:e58bcef9c6c8f99d239f34c7d244e9c44d9ff31f6d03b3aa04d65daf259a358a\",\"spec\":{\"decay_time\":100.0,\"discount_factor\":1.0,\"ingestion\":{\"capacity_policy\":\"reject\",\"declare\":[],\"dedup_window\":4096,\"footprints\":null,\"max_activities\":256,\"max_cases\":1,\"order_policy\":\"sequence\",\"replay_model\":null,\"retirement_filter_bits\":16384,\"silent_max_states\":1000,\"stream_id\":\"pida:97af9fa74c4a9ca5ceeb964a54d29a8b868cdce2a132d10e27f1d454fb24faa6\",\"temporal\":[],\"temporal_history_limit\":1000},\"log_move_cost\":1,\"lookahead\":3,\"max_expansions_per_event\":10000,\"max_proxy_nodes\":10000,\"max_states_per_case\":20,\"model\":{\"arcs\":[{\"source\":\"p0\",\"target\":\"t0\",\"weight\":1},{\"source\":\"p1\",\"target\":\"t1\",\"weight\":1},{\"source\":\"p2\",\"target\":\"t2\",\"weight\":1},{\"source\":\"p3\",\"target\":\"t3\",\"weight\":1},{\"source\":\"t0\",\"target\":\"p1\",\"weight\":1},{\"source\":\"t1\",\"target\":\"p2\",\"weight\":1},{\"source\":\"t2\",\"target\":\"p3\",\"weight\":1},{\"source\":\"t3\",\"target\":\"p4\",\"weight\":1}],\"final_marking\":{\"tokens\":[[\"p4\",1]]},\"initial_marking\":{\"tokens\":[[\"p0\",1]]},\"places\":[{\"id\":\"p0\"},{\"id\":\"p1\"},{\"id\":\"p2\"},{\"id\":\"p3\"},{\"id\":\"p4\"}],\"transitions\":[{\"activity\":\"request\",\"id\":\"t0\"},{\"activity\":\"edit\",\"id\":\"t1\"},{\"activity\":\"test\",\"id\":\"t2\"},{\"activity\":\"deliver\",\"id\":\"t3\"}]},\"model_move_cost\":1,\"proxy_attempts\":1000,\"proxy_max_steps\":100,\"proxy_max_traces\":100,\"proxy_transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"random_seed\":0,\"silent_move_cost\":0,\"witness_history_limit\":200},\"status\":\"partial\",\"value\":{\"snapshot\":{\"cases\":[{\"beam_pruned_states\":0,\"bound_scope\":\"model_prefix_alignment_upper_bound\",\"case_id\":\"fixture-case\",\"closed\":false,\"deduplicated_states\":1,\"event_count\":2,\"expansion_limited_events\":0,\"expired_states\":0,\"fallback_resets\":0,\"final_cost_unresolved\":true,\"generated_states\":6,\"reported_cost\":0,\"states\":[{\"cost\":0,\"decay\":100.0,\"deviation_moves\":0,\"marking\":{\"tokens\":[[\"p2\",1]]},\"node_id\":2,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":0,\"event_id\":\"observed-0\",\"kind\":\"sync\",\"sequence\":0,\"timestamp\":null,\"transition_id\":\"t0\"},{\"activity\":\"edit\",\"cost\":0,\"event_id\":\"observed-1\",\"kind\":\"sync\",\"sequence\":1,\"timestamp\":null,\"transition_id\":\"t1\"}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}},{\"cost\":1,\"decay\":99.0,\"deviation_moves\":1,\"marking\":{\"tokens\":[[\"p1\",1]]},\"node_id\":1,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":0,\"event_id\":\"observed-0\",\"kind\":\"sync\",\"sequence\":0,\"timestamp\":null,\"transition_id\":\"t0\"},{\"activity\":\"edit\",\"cost\":1,\"event_id\":\"observed-1\",\"kind\":\"log\",\"sequence\":1,\"timestamp\":null,\"transition_id\":null}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}},{\"cost\":2,\"decay\":98.0,\"deviation_moves\":2,\"marking\":{\"tokens\":[[\"p0\",1]]},\"node_id\":0,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":1,\"event_id\":\"observed-0\",\"kind\":\"log\",\"sequence\":0,\"timestamp\":null,\"transition_id\":null},{\"activity\":\"edit\",\"cost\":1,\"event_id\":\"observed-1\",\"kind\":\"log\",\"sequence\":1,\"timestamp\":null,\"transition_id\":null}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}}],\"unavoidable_log_cost\":0}],\"ingestion_state\":{\"accepted_events\":2,\"accepted_operations\":2,\"cases\":[{\"case_id\":\"fixture-case\",\"closed\":false,\"declare\":[],\"event_count\":2,\"event_membership\":\"0x40000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"first_activity\":\"request\",\"footprint_state\":null,\"footprint_violations\":0,\"forgotten_event_ids\":0,\"last_activity\":\"edit\",\"last_sequence\":1,\"last_timestamp\":null,\"opened_operation\":0,\"replay\":null,\"seen\":[{\"digest\":\"pix.computation.v1:sha256:fa8ad5af45e1272e09b0e297e2ace719d1175c4882c7a322b43548bf822cd67a\",\"event_id\":\"observed-0\",\"sequence\":0},{\"digest\":\"pix.computation.v1:sha256:d205e4cfd65e5ebba0989d1a61251464fdbdc0cd0009f36d99b785661e61d4ed\",\"event_id\":\"observed-1\",\"sequence\":1}],\"temporal\":[]}],\"closed_cases\":0,\"created_cases\":1,\"dfg\":{\"activities\":[[\"edit\",1],[\"request\",1]],\"edges\":[[\"request\",\"edit\",1]],\"ends\":[],\"starts\":[[\"request\",1]]},\"evicted_cases\":0,\"evicted_open_cases\":0,\"prefix_digest\":\"pix.stream.prefix.v1:sha256:e58bcef9c6c8f99d239f34c7d244e9c44d9ff31f6d03b3aa04d65daf259a358a\",\"retirement_membership\":\"0x8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"},\"profile\":\"pix.proxy-trie-iws.v1\",\"proxy\":{\"attempted_walks\":0,\"excluded_paths\":0,\"model_language_complete\":false,\"origin\":\"explicit_accepting_transition_paths\",\"transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"trie_nodes\":5,\"truncated_walks\":0}},\"state_digest\":\"pix.computation.v1:sha256:fbfdfad68b77b5a54d4eb296b5c927fa04e06cb6f1092ef355b02c91ec76295e\"}},\"document_digest\":\"pix.analysis-result.v1:sha256:b92f3cd474e6d8142bb7ef765d1ffe65b26d2d36ea321d36d7454a0924e9e11e\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"online-alignment-checkpoint\",\"version\":\"1.3.0\"}",
+          "sha256": "e6d6f8a9259f72227e7998ec1805103b027ad490ce5d26f6090a839a8ac44999"
+        },
+        "offset": 2
+      }
+    },
+    "issues": [
+      "approximate_online_alignment"
+    ],
+    "durationMs": 1665.5420110000014,
+    "limits": [
+      "HOST_SELECTED_SCOPE",
+      "REFERENCE_ONLY_NO_ADOPTION",
+      "NO_BUSINESS_ACCEPTANCE",
+      "NO_NORMALIZED_FITNESS",
+      "NO_CAUSAL_IMPROVEMENT_CLAIM",
+      "HOST_AUTHORIZED_SCOPE_ONLY",
+      "NO_MODEL_ACTIVATION"
+    ],
+    "native": {
+      "schemaVersion": "pida.pix.profiles/1",
+      "profile": "sequential-prefix/1",
+      "requestDigest": "e18a32d3c2d2fe1bbac1dc8a4ca9e765ca04db12efc9129a2d9c2d7ef1ba09a1",
+      "status": "partial",
+      "issues": [
+        {
+          "code": "approximate_online_alignment",
+          "message": "Finite proxy, look-ahead, decay and beam selection do not establish minimum cost; valid witnesses supply upper bounds only"
+        }
+      ],
+      "nativeResults": [
+        {
+          "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:33bffff476d2ac98eb69dd9a1577c3dcb4af88beba45cc4b2eb60642b62337bf\",\"issues\":[{\"at\":[],\"code\":\"finite_model_proxy\",\"message\":\"Finite accepting paths do not certify coverage of the entire model language\"}],\"operator_id\":\"pix.case_centric.online_alignment.proxy\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.model.petri-net.v1:sha256:c2d073a2f9fc098fee019b2b4e1ccc7ea6b1cc031721cf6bc3a89b19d74d6d27\",\"spec\":{\"decay_time\":100.0,\"discount_factor\":1.0,\"ingestion\":{\"capacity_policy\":\"reject\",\"declare\":[],\"dedup_window\":4096,\"footprints\":null,\"max_activities\":256,\"max_cases\":1,\"order_policy\":\"sequence\",\"replay_model\":null,\"retirement_filter_bits\":16384,\"silent_max_states\":1000,\"stream_id\":\"pida:97af9fa74c4a9ca5ceeb964a54d29a8b868cdce2a132d10e27f1d454fb24faa6\",\"temporal\":[],\"temporal_history_limit\":1000},\"log_move_cost\":1,\"lookahead\":3,\"max_expansions_per_event\":10000,\"max_proxy_nodes\":10000,\"max_states_per_case\":20,\"model\":{\"arcs\":[{\"source\":\"p0\",\"target\":\"t0\",\"weight\":1},{\"source\":\"p1\",\"target\":\"t1\",\"weight\":1},{\"source\":\"p2\",\"target\":\"t2\",\"weight\":1},{\"source\":\"p3\",\"target\":\"t3\",\"weight\":1},{\"source\":\"t0\",\"target\":\"p1\",\"weight\":1},{\"source\":\"t1\",\"target\":\"p2\",\"weight\":1},{\"source\":\"t2\",\"target\":\"p3\",\"weight\":1},{\"source\":\"t3\",\"target\":\"p4\",\"weight\":1}],\"final_marking\":{\"tokens\":[[\"p4\",1]]},\"initial_marking\":{\"tokens\":[[\"p0\",1]]},\"places\":[{\"id\":\"p0\"},{\"id\":\"p1\"},{\"id\":\"p2\"},{\"id\":\"p3\"},{\"id\":\"p4\"}],\"transitions\":[{\"activity\":\"request\",\"id\":\"t0\"},{\"activity\":\"edit\",\"id\":\"t1\"},{\"activity\":\"test\",\"id\":\"t2\"},{\"activity\":\"deliver\",\"id\":\"t3\"}]},\"model_move_cost\":1,\"proxy_attempts\":1000,\"proxy_max_steps\":100,\"proxy_max_traces\":100,\"proxy_transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"random_seed\":0,\"silent_move_cost\":0,\"witness_history_limit\":200},\"status\":\"partial\",\"value\":{\"attempted_walks\":0,\"excluded_paths\":0,\"model_language_complete\":false,\"origin\":\"explicit_accepting_transition_paths\",\"transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"trie_nodes\":5,\"truncated_walks\":0}},\"document_digest\":\"pix.analysis-result.v1:sha256:b859c7ad33fe91b1f352fe3a3ba097e913e7e05b6d070db6f137f93549b4cbcf\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"online-alignment-proxy\",\"version\":\"1.3.0\"}",
+          "sha256": "513431da861fe5b35145a58fe4ba7a70a0233391d4e6a1ab108e5b1a42255df2"
+        },
+        {
+          "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:378771b519d4c38464bf774b2fcfd7732e0db7d6ca7d22c36746925792f5ccd0\",\"issues\":[{\"at\":[],\"code\":\"approximate_online_alignment\",\"message\":\"Finite proxy, look-ahead, decay and beam selection do not establish minimum cost; valid witnesses supply upper bounds only\"}],\"operator_id\":\"pix.case_centric.online_alignment.snapshot\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.stream.prefix.v1:sha256:c487e59e312a4848dbc5eb388423603e68bc232a652b2f94687e1f6aa3c0ead2\",\"spec\":{\"decay_time\":100.0,\"discount_factor\":1.0,\"ingestion\":{\"capacity_policy\":\"reject\",\"declare\":[],\"dedup_window\":4096,\"footprints\":null,\"max_activities\":256,\"max_cases\":1,\"order_policy\":\"sequence\",\"replay_model\":null,\"retirement_filter_bits\":16384,\"silent_max_states\":1000,\"stream_id\":\"pida:97af9fa74c4a9ca5ceeb964a54d29a8b868cdce2a132d10e27f1d454fb24faa6\",\"temporal\":[],\"temporal_history_limit\":1000},\"log_move_cost\":1,\"lookahead\":3,\"max_expansions_per_event\":10000,\"max_proxy_nodes\":10000,\"max_states_per_case\":20,\"model\":{\"arcs\":[{\"source\":\"p0\",\"target\":\"t0\",\"weight\":1},{\"source\":\"p1\",\"target\":\"t1\",\"weight\":1},{\"source\":\"p2\",\"target\":\"t2\",\"weight\":1},{\"source\":\"p3\",\"target\":\"t3\",\"weight\":1},{\"source\":\"t0\",\"target\":\"p1\",\"weight\":1},{\"source\":\"t1\",\"target\":\"p2\",\"weight\":1},{\"source\":\"t2\",\"target\":\"p3\",\"weight\":1},{\"source\":\"t3\",\"target\":\"p4\",\"weight\":1}],\"final_marking\":{\"tokens\":[[\"p4\",1]]},\"initial_marking\":{\"tokens\":[[\"p0\",1]]},\"places\":[{\"id\":\"p0\"},{\"id\":\"p1\"},{\"id\":\"p2\"},{\"id\":\"p3\"},{\"id\":\"p4\"}],\"transitions\":[{\"activity\":\"request\",\"id\":\"t0\"},{\"activity\":\"edit\",\"id\":\"t1\"},{\"activity\":\"test\",\"id\":\"t2\"},{\"activity\":\"deliver\",\"id\":\"t3\"}]},\"model_move_cost\":1,\"proxy_attempts\":1000,\"proxy_max_steps\":100,\"proxy_max_traces\":100,\"proxy_transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"random_seed\":0,\"silent_move_cost\":0,\"witness_history_limit\":200},\"status\":\"partial\",\"value\":{\"cases\":[{\"beam_pruned_states\":0,\"bound_scope\":\"accepting_model_alignment_upper_bound\",\"case_id\":\"fixture-case\",\"closed\":true,\"deduplicated_states\":5,\"event_count\":4,\"expansion_limited_events\":0,\"expired_states\":0,\"fallback_resets\":0,\"final_cost_unresolved\":false,\"generated_states\":19,\"reported_cost\":0,\"states\":[{\"cost\":0,\"decay\":100.0,\"deviation_moves\":0,\"marking\":{\"tokens\":[[\"p4\",1]]},\"node_id\":4,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":0,\"event_id\":\"observed-0\",\"kind\":\"sync\",\"sequence\":0,\"timestamp\":null,\"transition_id\":\"t0\"},{\"activity\":\"edit\",\"cost\":0,\"event_id\":\"observed-1\",\"kind\":\"sync\",\"sequence\":1,\"timestamp\":null,\"transition_id\":\"t1\"},{\"activity\":\"test\",\"cost\":0,\"event_id\":\"observed-2\",\"kind\":\"sync\",\"sequence\":2,\"timestamp\":null,\"transition_id\":\"t2\"},{\"activity\":\"deliver\",\"cost\":0,\"event_id\":\"observed-3\",\"kind\":\"sync\",\"sequence\":3,\"timestamp\":null,\"transition_id\":\"t3\"}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}}],\"unavoidable_log_cost\":0}],\"ingestion_state\":{\"accepted_events\":4,\"accepted_operations\":5,\"cases\":[{\"case_id\":\"fixture-case\",\"closed\":true,\"declare\":[],\"event_count\":4,\"event_membership\":\"0x100000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"first_activity\":\"request\",\"footprint_state\":null,\"footprint_violations\":0,\"forgotten_event_ids\":0,\"last_activity\":\"deliver\",\"last_sequence\":4,\"last_timestamp\":null,\"opened_operation\":0,\"replay\":null,\"seen\":[{\"digest\":\"pix.computation.v1:sha256:fa8ad5af45e1272e09b0e297e2ace719d1175c4882c7a322b43548bf822cd67a\",\"event_id\":\"observed-0\",\"sequence\":0},{\"digest\":\"pix.computation.v1:sha256:d205e4cfd65e5ebba0989d1a61251464fdbdc0cd0009f36d99b785661e61d4ed\",\"event_id\":\"observed-1\",\"sequence\":1},{\"digest\":\"pix.computation.v1:sha256:8c431482932a114ba876cb4d3c2e7ba409b6d16e26e12f00ca0de077e00f5726\",\"event_id\":\"observed-2\",\"sequence\":2},{\"digest\":\"pix.computation.v1:sha256:83fbf21ebbc7339b02e0e845d2e1441817b6b1966c2b0d6ee956499c07af14cf\",\"event_id\":\"observed-3\",\"sequence\":3},{\"digest\":\"pix.computation.v1:sha256:8f4696a69110ce6eb44bf80d795cfd874697b49b905d43e55f9f81f9d49f13b9\",\"event_id\":\"source-close\",\"sequence\":4}],\"temporal\":[]}],\"closed_cases\":1,\"created_cases\":1,\"dfg\":{\"activities\":[[\"deliver\",1],[\"edit\",1],[\"request\",1],[\"test\",1]],\"edges\":[[\"edit\",\"test\",1],[\"request\",\"edit\",1],[\"test\",\"deliver\",1]],\"ends\":[[\"deliver\",1]],\"starts\":[[\"request\",1]]},\"evicted_cases\":0,\"evicted_open_cases\":0,\"prefix_digest\":\"pix.stream.prefix.v1:sha256:c487e59e312a4848dbc5eb388423603e68bc232a652b2f94687e1f6aa3c0ead2\",\"retirement_membership\":\"0x8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"},\"profile\":\"pix.proxy-trie-iws.v1\",\"proxy\":{\"attempted_walks\":0,\"excluded_paths\":0,\"model_language_complete\":false,\"origin\":\"explicit_accepting_transition_paths\",\"transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"trie_nodes\":5,\"truncated_walks\":0}}},\"document_digest\":\"pix.analysis-result.v1:sha256:3adfbf5982a5385d2e5626d7d69888a18ecb823f031716756097c0b3c5efe0e1\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"online-alignment-snapshot\",\"version\":\"1.3.0\"}",
+          "sha256": "dd6ea218f55baa6ed757e8079d62c674a205853738ca9c76d0da7c1065b57319"
+        }
+      ],
+      "limits": [
+        "HOST_AUTHORIZED_SCOPE_ONLY",
+        "NO_BUSINESS_ACCEPTANCE",
+        "NO_MODEL_ACTIVATION",
+        "NO_CAUSAL_IMPROVEMENT_CLAIM"
+      ],
+      "engine": {
+        "repository": "Chanta-Research-Group/PIX",
+        "sourceCommit": "a0831bc0b34fd7feebfba928066b90b114ae531e",
+        "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+        "packageVersion": "0.5.0",
+        "pythonVersion": "3.12.14",
+        "sourceVerified": true
+      },
+      "checkpoint": {
+        "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:5271f354b100c9328851a95101d37329dab526bb893bfe9ad41436708b91a1ef\",\"issues\":[{\"at\":[],\"code\":\"approximate_online_alignment\",\"message\":\"Finite proxy, look-ahead, decay and beam selection do not establish minimum cost; valid witnesses supply upper bounds only\"}],\"operator_id\":\"pix.case_centric.online_alignment.checkpoint\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.stream.prefix.v1:sha256:c487e59e312a4848dbc5eb388423603e68bc232a652b2f94687e1f6aa3c0ead2\",\"spec\":{\"decay_time\":100.0,\"discount_factor\":1.0,\"ingestion\":{\"capacity_policy\":\"reject\",\"declare\":[],\"dedup_window\":4096,\"footprints\":null,\"max_activities\":256,\"max_cases\":1,\"order_policy\":\"sequence\",\"replay_model\":null,\"retirement_filter_bits\":16384,\"silent_max_states\":1000,\"stream_id\":\"pida:97af9fa74c4a9ca5ceeb964a54d29a8b868cdce2a132d10e27f1d454fb24faa6\",\"temporal\":[],\"temporal_history_limit\":1000},\"log_move_cost\":1,\"lookahead\":3,\"max_expansions_per_event\":10000,\"max_proxy_nodes\":10000,\"max_states_per_case\":20,\"model\":{\"arcs\":[{\"source\":\"p0\",\"target\":\"t0\",\"weight\":1},{\"source\":\"p1\",\"target\":\"t1\",\"weight\":1},{\"source\":\"p2\",\"target\":\"t2\",\"weight\":1},{\"source\":\"p3\",\"target\":\"t3\",\"weight\":1},{\"source\":\"t0\",\"target\":\"p1\",\"weight\":1},{\"source\":\"t1\",\"target\":\"p2\",\"weight\":1},{\"source\":\"t2\",\"target\":\"p3\",\"weight\":1},{\"source\":\"t3\",\"target\":\"p4\",\"weight\":1}],\"final_marking\":{\"tokens\":[[\"p4\",1]]},\"initial_marking\":{\"tokens\":[[\"p0\",1]]},\"places\":[{\"id\":\"p0\"},{\"id\":\"p1\"},{\"id\":\"p2\"},{\"id\":\"p3\"},{\"id\":\"p4\"}],\"transitions\":[{\"activity\":\"request\",\"id\":\"t0\"},{\"activity\":\"edit\",\"id\":\"t1\"},{\"activity\":\"test\",\"id\":\"t2\"},{\"activity\":\"deliver\",\"id\":\"t3\"}]},\"model_move_cost\":1,\"proxy_attempts\":1000,\"proxy_max_steps\":100,\"proxy_max_traces\":100,\"proxy_transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"random_seed\":0,\"silent_move_cost\":0,\"witness_history_limit\":200},\"status\":\"partial\",\"value\":{\"snapshot\":{\"cases\":[{\"beam_pruned_states\":0,\"bound_scope\":\"accepting_model_alignment_upper_bound\",\"case_id\":\"fixture-case\",\"closed\":true,\"deduplicated_states\":5,\"event_count\":4,\"expansion_limited_events\":0,\"expired_states\":0,\"fallback_resets\":0,\"final_cost_unresolved\":false,\"generated_states\":19,\"reported_cost\":0,\"states\":[{\"cost\":0,\"decay\":100.0,\"deviation_moves\":0,\"marking\":{\"tokens\":[[\"p4\",1]]},\"node_id\":4,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":0,\"event_id\":\"observed-0\",\"kind\":\"sync\",\"sequence\":0,\"timestamp\":null,\"transition_id\":\"t0\"},{\"activity\":\"edit\",\"cost\":0,\"event_id\":\"observed-1\",\"kind\":\"sync\",\"sequence\":1,\"timestamp\":null,\"transition_id\":\"t1\"},{\"activity\":\"test\",\"cost\":0,\"event_id\":\"observed-2\",\"kind\":\"sync\",\"sequence\":2,\"timestamp\":null,\"transition_id\":\"t2\"},{\"activity\":\"deliver\",\"cost\":0,\"event_id\":\"observed-3\",\"kind\":\"sync\",\"sequence\":3,\"timestamp\":null,\"transition_id\":\"t3\"}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}}],\"unavoidable_log_cost\":0}],\"ingestion_state\":{\"accepted_events\":4,\"accepted_operations\":5,\"cases\":[{\"case_id\":\"fixture-case\",\"closed\":true,\"declare\":[],\"event_count\":4,\"event_membership\":\"0x100000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"first_activity\":\"request\",\"footprint_state\":null,\"footprint_violations\":0,\"forgotten_event_ids\":0,\"last_activity\":\"deliver\",\"last_sequence\":4,\"last_timestamp\":null,\"opened_operation\":0,\"replay\":null,\"seen\":[{\"digest\":\"pix.computation.v1:sha256:fa8ad5af45e1272e09b0e297e2ace719d1175c4882c7a322b43548bf822cd67a\",\"event_id\":\"observed-0\",\"sequence\":0},{\"digest\":\"pix.computation.v1:sha256:d205e4cfd65e5ebba0989d1a61251464fdbdc0cd0009f36d99b785661e61d4ed\",\"event_id\":\"observed-1\",\"sequence\":1},{\"digest\":\"pix.computation.v1:sha256:8c431482932a114ba876cb4d3c2e7ba409b6d16e26e12f00ca0de077e00f5726\",\"event_id\":\"observed-2\",\"sequence\":2},{\"digest\":\"pix.computation.v1:sha256:83fbf21ebbc7339b02e0e845d2e1441817b6b1966c2b0d6ee956499c07af14cf\",\"event_id\":\"observed-3\",\"sequence\":3},{\"digest\":\"pix.computation.v1:sha256:8f4696a69110ce6eb44bf80d795cfd874697b49b905d43e55f9f81f9d49f13b9\",\"event_id\":\"source-close\",\"sequence\":4}],\"temporal\":[]}],\"closed_cases\":1,\"created_cases\":1,\"dfg\":{\"activities\":[[\"deliver\",1],[\"edit\",1],[\"request\",1],[\"test\",1]],\"edges\":[[\"edit\",\"test\",1],[\"request\",\"edit\",1],[\"test\",\"deliver\",1]],\"ends\":[[\"deliver\",1]],\"starts\":[[\"request\",1]]},\"evicted_cases\":0,\"evicted_open_cases\":0,\"prefix_digest\":\"pix.stream.prefix.v1:sha256:c487e59e312a4848dbc5eb388423603e68bc232a652b2f94687e1f6aa3c0ead2\",\"retirement_membership\":\"0x8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"},\"profile\":\"pix.proxy-trie-iws.v1\",\"proxy\":{\"attempted_walks\":0,\"excluded_paths\":0,\"model_language_complete\":false,\"origin\":\"explicit_accepting_transition_paths\",\"transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"trie_nodes\":5,\"truncated_walks\":0}},\"state_digest\":\"pix.computation.v1:sha256:794adf50d344a42b50a51893b51eb61e409aec87ee59f56741818fdf2a9587c5\"}},\"document_digest\":\"pix.analysis-result.v1:sha256:49ca52294ecb26ed351770cfecf23766ea0d152d4b0433a5380fa65e65cd0e75\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"online-alignment-checkpoint\",\"version\":\"1.3.0\"}",
+        "sha256": "156c90f4b5744ab240c5c38261f8bee114cc2aa66507994e9c3559ad4f053a3e"
+      },
+      "summary": {
+        "metric": "terminal-witness-upper-bound",
+        "cost": 0,
+        "eventCount": 4,
+        "closed": true,
+        "finalCostUnresolved": false,
+        "boundScope": "accepting_model_alignment_upper_bound",
+        "outcome": "approximate"
+      }
+    },
+    "resultRef": "pi-profile-result:c7d187ec681ffa26ba971e1fb0e3ef947d455ed3647caa8437300997c5225df2",
+    "resultDigest": "a978f0e6f57c198c3505705eec793f58031d142f96b19958aa5f7ee72f58eab6"
+  },
+  "rebound": {
+    "schemaVersion": "pida.pi.profile-analysis/1",
+    "profile": "sequential-prefix/1",
+    "status": "partial",
+    "processJudgment": "unknown",
+    "businessAcceptance": "UNKNOWN",
+    "automaticCorrection": false,
+    "empiricalDeviationIsViolation": false,
+    "applicability": "CURRENT",
+    "transition": "recomputed",
+    "selectionDigest": "ac7df28bb6661d29cab1b9d55e591a1e13500a1fa76dece4946eea126ab71a69",
+    "selection": {
+      "ownerId": "owner",
+      "agentId": "main",
+      "cutRef": "cut:fixture",
+      "modelRef": "model:fixture",
+      "cutRevision": "42061e9f185a06e22d7c5cd5e3cd9bda0ce9a9822aed9d34174ab461d7bb5291",
+      "modelRevision": "843d3db1c45e6a4578d11f0283ebfd9017b9267e880994be8bd0e87e57fec64c",
+      "policyRevision": "77b7d4385722ef5b8c61580d015a32dc5516016b3652184ce718000c7fb7d8c4",
+      "scopeDigest": "47c670c4c5c47b43556f983ab9d35b50117d041ea803eb908d7c4d970daf768f",
+      "taskId": "task:replacement",
+      "generation": "fixture/generation-1",
+      "profile": "sequential-prefix/1",
+      "modelKind": "aspirational",
+      "modelProvenance": {
+        "sourceRef": "fixture:explicit-model",
+        "derivation": "independently-provided-no-DFG-conversion"
+      },
+      "artifactRefs": [
+        "artifact:replacement@r2"
+      ],
+      "coverage": {
+        "complete": true,
+        "sourceEventCount": 4,
+        "exclusions": [],
+        "ordering": "source-sequence",
+        "evidenceRefs": [
+          "fixture:source-record"
+        ]
+      },
+      "model": {
+        "document_digest": "pix.model-document.v1:sha256:1d247e20b8c3a98e9ef5cd010d35b170b918c0424ddc17737fe2dbd3bd189b1a",
+        "format": "pix.model",
+        "kind": "petri-net",
+        "model": {
+          "arcs": [
+            {
+              "source": "p0",
+              "target": "t0",
+              "weight": 1
+            },
+            {
+              "source": "p1",
+              "target": "t1",
+              "weight": 1
+            },
+            {
+              "source": "p2",
+              "target": "t2",
+              "weight": 1
+            },
+            {
+              "source": "p3",
+              "target": "t3",
+              "weight": 1
+            },
+            {
+              "source": "t0",
+              "target": "p1",
+              "weight": 1
+            },
+            {
+              "source": "t1",
+              "target": "p2",
+              "weight": 1
+            },
+            {
+              "source": "t2",
+              "target": "p3",
+              "weight": 1
+            },
+            {
+              "source": "t3",
+              "target": "p4",
+              "weight": 1
+            }
+          ],
+          "final_marking": {
+            "tokens": [
+              [
+                "p4",
+                1
+              ]
+            ]
+          },
+          "initial_marking": {
+            "tokens": [
+              [
+                "p0",
+                1
+              ]
+            ]
+          },
+          "places": [
+            {
+              "id": "p0"
+            },
+            {
+              "id": "p1"
+            },
+            {
+              "id": "p2"
+            },
+            {
+              "id": "p3"
+            },
+            {
+              "id": "p4"
+            }
+          ],
+          "transitions": [
+            {
+              "activity": "request",
+              "id": "t0"
+            },
+            {
+              "activity": "edit",
+              "id": "t1"
+            },
+            {
+              "activity": "test",
+              "id": "t2"
+            },
+            {
+              "activity": "deliver",
+              "id": "t3"
+            }
+          ]
+        },
+        "model_digest": "pix.model.petri-net.v1:sha256:c2d073a2f9fc098fee019b2b4e1ccc7ea6b1cc031721cf6bc3a89b19d74d6d27",
+        "profile": "weighted-place-transition",
+        "provenance": {
+          "origin": "provided",
+          "source_computation_id": null
+        },
+        "version": "1.0.0"
+      },
+      "sequential": {
+        "caseId": "fixture-case",
+        "events": [
+          {
+            "id": "observed-0",
+            "sequence": 0,
+            "activity": "request"
+          },
+          {
+            "id": "observed-1",
+            "sequence": 1,
+            "activity": "edit"
+          },
+          {
+            "id": "observed-2",
+            "sequence": 2,
+            "activity": "test"
+          },
+          {
+            "id": "observed-3",
+            "sequence": 3,
+            "activity": "deliver"
+          }
+        ],
+        "closed": true,
+        "closeId": "source-close"
+      },
+      "proxyPaths": [
+        [
+          "t0",
+          "t1",
+          "t2",
+          "t3"
+        ]
+      ]
+    },
+    "request": {
+      "schemaVersion": "pida.pix.profiles/1",
+      "profile": "sequential-prefix/1",
+      "generation": "pida:5af91617fa061c8d7de453453ac2757b3cb68dc1a88b29bfe6df0eae59a6ae99",
+      "model": {
+        "document_digest": "pix.model-document.v1:sha256:1d247e20b8c3a98e9ef5cd010d35b170b918c0424ddc17737fe2dbd3bd189b1a",
+        "format": "pix.model",
+        "kind": "petri-net",
+        "model": {
+          "arcs": [
+            {
+              "source": "p0",
+              "target": "t0",
+              "weight": 1
+            },
+            {
+              "source": "p1",
+              "target": "t1",
+              "weight": 1
+            },
+            {
+              "source": "p2",
+              "target": "t2",
+              "weight": 1
+            },
+            {
+              "source": "p3",
+              "target": "t3",
+              "weight": 1
+            },
+            {
+              "source": "t0",
+              "target": "p1",
+              "weight": 1
+            },
+            {
+              "source": "t1",
+              "target": "p2",
+              "weight": 1
+            },
+            {
+              "source": "t2",
+              "target": "p3",
+              "weight": 1
+            },
+            {
+              "source": "t3",
+              "target": "p4",
+              "weight": 1
+            }
+          ],
+          "final_marking": {
+            "tokens": [
+              [
+                "p4",
+                1
+              ]
+            ]
+          },
+          "initial_marking": {
+            "tokens": [
+              [
+                "p0",
+                1
+              ]
+            ]
+          },
+          "places": [
+            {
+              "id": "p0"
+            },
+            {
+              "id": "p1"
+            },
+            {
+              "id": "p2"
+            },
+            {
+              "id": "p3"
+            },
+            {
+              "id": "p4"
+            }
+          ],
+          "transitions": [
+            {
+              "activity": "request",
+              "id": "t0"
+            },
+            {
+              "activity": "edit",
+              "id": "t1"
+            },
+            {
+              "activity": "test",
+              "id": "t2"
+            },
+            {
+              "activity": "deliver",
+              "id": "t3"
+            }
+          ]
+        },
+        "model_digest": "pix.model.petri-net.v1:sha256:c2d073a2f9fc098fee019b2b4e1ccc7ea6b1cc031721cf6bc3a89b19d74d6d27",
+        "profile": "weighted-place-transition",
+        "provenance": {
+          "origin": "provided",
+          "source_computation_id": null
+        },
+        "version": "1.0.0"
+      },
+      "sequential": {
+        "caseId": "fixture-case",
+        "events": [
+          {
+            "id": "observed-0",
+            "sequence": 0,
+            "activity": "request"
+          },
+          {
+            "id": "observed-1",
+            "sequence": 1,
+            "activity": "edit"
+          },
+          {
+            "id": "observed-2",
+            "sequence": 2,
+            "activity": "test"
+          },
+          {
+            "id": "observed-3",
+            "sequence": 3,
+            "activity": "deliver"
+          }
+        ],
+        "closed": true,
+        "closeId": "source-close"
+      },
+      "proxyPaths": [
+        [
+          "t0",
+          "t1",
+          "t2",
+          "t3"
+        ]
+      ]
+    },
+    "issues": [
+      "approximate_online_alignment"
+    ],
+    "durationMs": 1656.937371,
+    "limits": [
+      "HOST_SELECTED_SCOPE",
+      "REFERENCE_ONLY_NO_ADOPTION",
+      "NO_BUSINESS_ACCEPTANCE",
+      "NO_NORMALIZED_FITNESS",
+      "NO_CAUSAL_IMPROVEMENT_CLAIM",
+      "CHECKPOINT_IDENTITY_CHANGED_RECOMPUTED",
+      "HOST_AUTHORIZED_SCOPE_ONLY",
+      "NO_MODEL_ACTIVATION"
+    ],
+    "native": {
+      "schemaVersion": "pida.pix.profiles/1",
+      "profile": "sequential-prefix/1",
+      "requestDigest": "c47893f83c23ae546592b0f26d736acfcd2cb145a1f327ad99f3e806ae6ff1ca",
+      "status": "partial",
+      "issues": [
+        {
+          "code": "approximate_online_alignment",
+          "message": "Finite proxy, look-ahead, decay and beam selection do not establish minimum cost; valid witnesses supply upper bounds only"
+        }
+      ],
+      "nativeResults": [
+        {
+          "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:2ba39fbcb5f245c33b92db82163a60e52728f6010d5ea49a1ff24866941c643a\",\"issues\":[{\"at\":[],\"code\":\"finite_model_proxy\",\"message\":\"Finite accepting paths do not certify coverage of the entire model language\"}],\"operator_id\":\"pix.case_centric.online_alignment.proxy\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.model.petri-net.v1:sha256:c2d073a2f9fc098fee019b2b4e1ccc7ea6b1cc031721cf6bc3a89b19d74d6d27\",\"spec\":{\"decay_time\":100.0,\"discount_factor\":1.0,\"ingestion\":{\"capacity_policy\":\"reject\",\"declare\":[],\"dedup_window\":4096,\"footprints\":null,\"max_activities\":256,\"max_cases\":1,\"order_policy\":\"sequence\",\"replay_model\":null,\"retirement_filter_bits\":16384,\"silent_max_states\":1000,\"stream_id\":\"pida:5af91617fa061c8d7de453453ac2757b3cb68dc1a88b29bfe6df0eae59a6ae99\",\"temporal\":[],\"temporal_history_limit\":1000},\"log_move_cost\":1,\"lookahead\":3,\"max_expansions_per_event\":10000,\"max_proxy_nodes\":10000,\"max_states_per_case\":20,\"model\":{\"arcs\":[{\"source\":\"p0\",\"target\":\"t0\",\"weight\":1},{\"source\":\"p1\",\"target\":\"t1\",\"weight\":1},{\"source\":\"p2\",\"target\":\"t2\",\"weight\":1},{\"source\":\"p3\",\"target\":\"t3\",\"weight\":1},{\"source\":\"t0\",\"target\":\"p1\",\"weight\":1},{\"source\":\"t1\",\"target\":\"p2\",\"weight\":1},{\"source\":\"t2\",\"target\":\"p3\",\"weight\":1},{\"source\":\"t3\",\"target\":\"p4\",\"weight\":1}],\"final_marking\":{\"tokens\":[[\"p4\",1]]},\"initial_marking\":{\"tokens\":[[\"p0\",1]]},\"places\":[{\"id\":\"p0\"},{\"id\":\"p1\"},{\"id\":\"p2\"},{\"id\":\"p3\"},{\"id\":\"p4\"}],\"transitions\":[{\"activity\":\"request\",\"id\":\"t0\"},{\"activity\":\"edit\",\"id\":\"t1\"},{\"activity\":\"test\",\"id\":\"t2\"},{\"activity\":\"deliver\",\"id\":\"t3\"}]},\"model_move_cost\":1,\"proxy_attempts\":1000,\"proxy_max_steps\":100,\"proxy_max_traces\":100,\"proxy_transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"random_seed\":0,\"silent_move_cost\":0,\"witness_history_limit\":200},\"status\":\"partial\",\"value\":{\"attempted_walks\":0,\"excluded_paths\":0,\"model_language_complete\":false,\"origin\":\"explicit_accepting_transition_paths\",\"transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"trie_nodes\":5,\"truncated_walks\":0}},\"document_digest\":\"pix.analysis-result.v1:sha256:8bef506ea6661e05ac4c71a5f31fc7ccb1c0bbec25d22d8c11cbc44b5b1715c8\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"online-alignment-proxy\",\"version\":\"1.3.0\"}",
+          "sha256": "5bcf78c85c6d97f9c3a5649de0f5d91abacee2f1c651bc097bc0477e34f91b4b"
+        },
+        {
+          "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:8f074dfa0fb2d2bd1a80c948527035dce44257c5ef924b3b7f88642fe7cde58d\",\"issues\":[{\"at\":[],\"code\":\"approximate_online_alignment\",\"message\":\"Finite proxy, look-ahead, decay and beam selection do not establish minimum cost; valid witnesses supply upper bounds only\"}],\"operator_id\":\"pix.case_centric.online_alignment.snapshot\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.stream.prefix.v1:sha256:4d818757faa67aa233dc4d7945cc87ea1bec409de172d548139e13cd8efb101a\",\"spec\":{\"decay_time\":100.0,\"discount_factor\":1.0,\"ingestion\":{\"capacity_policy\":\"reject\",\"declare\":[],\"dedup_window\":4096,\"footprints\":null,\"max_activities\":256,\"max_cases\":1,\"order_policy\":\"sequence\",\"replay_model\":null,\"retirement_filter_bits\":16384,\"silent_max_states\":1000,\"stream_id\":\"pida:5af91617fa061c8d7de453453ac2757b3cb68dc1a88b29bfe6df0eae59a6ae99\",\"temporal\":[],\"temporal_history_limit\":1000},\"log_move_cost\":1,\"lookahead\":3,\"max_expansions_per_event\":10000,\"max_proxy_nodes\":10000,\"max_states_per_case\":20,\"model\":{\"arcs\":[{\"source\":\"p0\",\"target\":\"t0\",\"weight\":1},{\"source\":\"p1\",\"target\":\"t1\",\"weight\":1},{\"source\":\"p2\",\"target\":\"t2\",\"weight\":1},{\"source\":\"p3\",\"target\":\"t3\",\"weight\":1},{\"source\":\"t0\",\"target\":\"p1\",\"weight\":1},{\"source\":\"t1\",\"target\":\"p2\",\"weight\":1},{\"source\":\"t2\",\"target\":\"p3\",\"weight\":1},{\"source\":\"t3\",\"target\":\"p4\",\"weight\":1}],\"final_marking\":{\"tokens\":[[\"p4\",1]]},\"initial_marking\":{\"tokens\":[[\"p0\",1]]},\"places\":[{\"id\":\"p0\"},{\"id\":\"p1\"},{\"id\":\"p2\"},{\"id\":\"p3\"},{\"id\":\"p4\"}],\"transitions\":[{\"activity\":\"request\",\"id\":\"t0\"},{\"activity\":\"edit\",\"id\":\"t1\"},{\"activity\":\"test\",\"id\":\"t2\"},{\"activity\":\"deliver\",\"id\":\"t3\"}]},\"model_move_cost\":1,\"proxy_attempts\":1000,\"proxy_max_steps\":100,\"proxy_max_traces\":100,\"proxy_transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"random_seed\":0,\"silent_move_cost\":0,\"witness_history_limit\":200},\"status\":\"partial\",\"value\":{\"cases\":[{\"beam_pruned_states\":0,\"bound_scope\":\"accepting_model_alignment_upper_bound\",\"case_id\":\"fixture-case\",\"closed\":true,\"deduplicated_states\":5,\"event_count\":4,\"expansion_limited_events\":0,\"expired_states\":0,\"fallback_resets\":0,\"final_cost_unresolved\":false,\"generated_states\":19,\"reported_cost\":0,\"states\":[{\"cost\":0,\"decay\":100.0,\"deviation_moves\":0,\"marking\":{\"tokens\":[[\"p4\",1]]},\"node_id\":4,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":0,\"event_id\":\"observed-0\",\"kind\":\"sync\",\"sequence\":0,\"timestamp\":null,\"transition_id\":\"t0\"},{\"activity\":\"edit\",\"cost\":0,\"event_id\":\"observed-1\",\"kind\":\"sync\",\"sequence\":1,\"timestamp\":null,\"transition_id\":\"t1\"},{\"activity\":\"test\",\"cost\":0,\"event_id\":\"observed-2\",\"kind\":\"sync\",\"sequence\":2,\"timestamp\":null,\"transition_id\":\"t2\"},{\"activity\":\"deliver\",\"cost\":0,\"event_id\":\"observed-3\",\"kind\":\"sync\",\"sequence\":3,\"timestamp\":null,\"transition_id\":\"t3\"}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}}],\"unavoidable_log_cost\":0}],\"ingestion_state\":{\"accepted_events\":4,\"accepted_operations\":5,\"cases\":[{\"case_id\":\"fixture-case\",\"closed\":true,\"declare\":[],\"event_count\":4,\"event_membership\":\"0x100000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"first_activity\":\"request\",\"footprint_state\":null,\"footprint_violations\":0,\"forgotten_event_ids\":0,\"last_activity\":\"deliver\",\"last_sequence\":4,\"last_timestamp\":null,\"opened_operation\":0,\"replay\":null,\"seen\":[{\"digest\":\"pix.computation.v1:sha256:fa8ad5af45e1272e09b0e297e2ace719d1175c4882c7a322b43548bf822cd67a\",\"event_id\":\"observed-0\",\"sequence\":0},{\"digest\":\"pix.computation.v1:sha256:d205e4cfd65e5ebba0989d1a61251464fdbdc0cd0009f36d99b785661e61d4ed\",\"event_id\":\"observed-1\",\"sequence\":1},{\"digest\":\"pix.computation.v1:sha256:8c431482932a114ba876cb4d3c2e7ba409b6d16e26e12f00ca0de077e00f5726\",\"event_id\":\"observed-2\",\"sequence\":2},{\"digest\":\"pix.computation.v1:sha256:83fbf21ebbc7339b02e0e845d2e1441817b6b1966c2b0d6ee956499c07af14cf\",\"event_id\":\"observed-3\",\"sequence\":3},{\"digest\":\"pix.computation.v1:sha256:8f4696a69110ce6eb44bf80d795cfd874697b49b905d43e55f9f81f9d49f13b9\",\"event_id\":\"source-close\",\"sequence\":4}],\"temporal\":[]}],\"closed_cases\":1,\"created_cases\":1,\"dfg\":{\"activities\":[[\"deliver\",1],[\"edit\",1],[\"request\",1],[\"test\",1]],\"edges\":[[\"edit\",\"test\",1],[\"request\",\"edit\",1],[\"test\",\"deliver\",1]],\"ends\":[[\"deliver\",1]],\"starts\":[[\"request\",1]]},\"evicted_cases\":0,\"evicted_open_cases\":0,\"prefix_digest\":\"pix.stream.prefix.v1:sha256:4d818757faa67aa233dc4d7945cc87ea1bec409de172d548139e13cd8efb101a\",\"retirement_membership\":\"0x8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"},\"profile\":\"pix.proxy-trie-iws.v1\",\"proxy\":{\"attempted_walks\":0,\"excluded_paths\":0,\"model_language_complete\":false,\"origin\":\"explicit_accepting_transition_paths\",\"transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"trie_nodes\":5,\"truncated_walks\":0}}},\"document_digest\":\"pix.analysis-result.v1:sha256:e90161bec1b86641c104b8d909ab333dc730486c87844a214273a1c7985388c1\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"online-alignment-snapshot\",\"version\":\"1.3.0\"}",
+          "sha256": "1fc969111e4694e4626b6fa17352ffdf2dda218b574078d157df1679c994a138"
+        }
+      ],
+      "limits": [
+        "HOST_AUTHORIZED_SCOPE_ONLY",
+        "NO_BUSINESS_ACCEPTANCE",
+        "NO_MODEL_ACTIVATION",
+        "NO_CAUSAL_IMPROVEMENT_CLAIM"
+      ],
+      "engine": {
+        "repository": "Chanta-Research-Group/PIX",
+        "sourceCommit": "a0831bc0b34fd7feebfba928066b90b114ae531e",
+        "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+        "packageVersion": "0.5.0",
+        "pythonVersion": "3.12.14",
+        "sourceVerified": true
+      },
+      "checkpoint": {
+        "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:74b54d6efd63063a7c3c24cd4d4808fcafa03cc5c9b9c9e3d4e536b87b513d0b\",\"issues\":[{\"at\":[],\"code\":\"approximate_online_alignment\",\"message\":\"Finite proxy, look-ahead, decay and beam selection do not establish minimum cost; valid witnesses supply upper bounds only\"}],\"operator_id\":\"pix.case_centric.online_alignment.checkpoint\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.stream.prefix.v1:sha256:4d818757faa67aa233dc4d7945cc87ea1bec409de172d548139e13cd8efb101a\",\"spec\":{\"decay_time\":100.0,\"discount_factor\":1.0,\"ingestion\":{\"capacity_policy\":\"reject\",\"declare\":[],\"dedup_window\":4096,\"footprints\":null,\"max_activities\":256,\"max_cases\":1,\"order_policy\":\"sequence\",\"replay_model\":null,\"retirement_filter_bits\":16384,\"silent_max_states\":1000,\"stream_id\":\"pida:5af91617fa061c8d7de453453ac2757b3cb68dc1a88b29bfe6df0eae59a6ae99\",\"temporal\":[],\"temporal_history_limit\":1000},\"log_move_cost\":1,\"lookahead\":3,\"max_expansions_per_event\":10000,\"max_proxy_nodes\":10000,\"max_states_per_case\":20,\"model\":{\"arcs\":[{\"source\":\"p0\",\"target\":\"t0\",\"weight\":1},{\"source\":\"p1\",\"target\":\"t1\",\"weight\":1},{\"source\":\"p2\",\"target\":\"t2\",\"weight\":1},{\"source\":\"p3\",\"target\":\"t3\",\"weight\":1},{\"source\":\"t0\",\"target\":\"p1\",\"weight\":1},{\"source\":\"t1\",\"target\":\"p2\",\"weight\":1},{\"source\":\"t2\",\"target\":\"p3\",\"weight\":1},{\"source\":\"t3\",\"target\":\"p4\",\"weight\":1}],\"final_marking\":{\"tokens\":[[\"p4\",1]]},\"initial_marking\":{\"tokens\":[[\"p0\",1]]},\"places\":[{\"id\":\"p0\"},{\"id\":\"p1\"},{\"id\":\"p2\"},{\"id\":\"p3\"},{\"id\":\"p4\"}],\"transitions\":[{\"activity\":\"request\",\"id\":\"t0\"},{\"activity\":\"edit\",\"id\":\"t1\"},{\"activity\":\"test\",\"id\":\"t2\"},{\"activity\":\"deliver\",\"id\":\"t3\"}]},\"model_move_cost\":1,\"proxy_attempts\":1000,\"proxy_max_steps\":100,\"proxy_max_traces\":100,\"proxy_transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"random_seed\":0,\"silent_move_cost\":0,\"witness_history_limit\":200},\"status\":\"partial\",\"value\":{\"snapshot\":{\"cases\":[{\"beam_pruned_states\":0,\"bound_scope\":\"accepting_model_alignment_upper_bound\",\"case_id\":\"fixture-case\",\"closed\":true,\"deduplicated_states\":5,\"event_count\":4,\"expansion_limited_events\":0,\"expired_states\":0,\"fallback_resets\":0,\"final_cost_unresolved\":false,\"generated_states\":19,\"reported_cost\":0,\"states\":[{\"cost\":0,\"decay\":100.0,\"deviation_moves\":0,\"marking\":{\"tokens\":[[\"p4\",1]]},\"node_id\":4,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":0,\"event_id\":\"observed-0\",\"kind\":\"sync\",\"sequence\":0,\"timestamp\":null,\"transition_id\":\"t0\"},{\"activity\":\"edit\",\"cost\":0,\"event_id\":\"observed-1\",\"kind\":\"sync\",\"sequence\":1,\"timestamp\":null,\"transition_id\":\"t1\"},{\"activity\":\"test\",\"cost\":0,\"event_id\":\"observed-2\",\"kind\":\"sync\",\"sequence\":2,\"timestamp\":null,\"transition_id\":\"t2\"},{\"activity\":\"deliver\",\"cost\":0,\"event_id\":\"observed-3\",\"kind\":\"sync\",\"sequence\":3,\"timestamp\":null,\"transition_id\":\"t3\"}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}}],\"unavoidable_log_cost\":0}],\"ingestion_state\":{\"accepted_events\":4,\"accepted_operations\":5,\"cases\":[{\"case_id\":\"fixture-case\",\"closed\":true,\"declare\":[],\"event_count\":4,\"event_membership\":\"0x100000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"first_activity\":\"request\",\"footprint_state\":null,\"footprint_violations\":0,\"forgotten_event_ids\":0,\"last_activity\":\"deliver\",\"last_sequence\":4,\"last_timestamp\":null,\"opened_operation\":0,\"replay\":null,\"seen\":[{\"digest\":\"pix.computation.v1:sha256:fa8ad5af45e1272e09b0e297e2ace719d1175c4882c7a322b43548bf822cd67a\",\"event_id\":\"observed-0\",\"sequence\":0},{\"digest\":\"pix.computation.v1:sha256:d205e4cfd65e5ebba0989d1a61251464fdbdc0cd0009f36d99b785661e61d4ed\",\"event_id\":\"observed-1\",\"sequence\":1},{\"digest\":\"pix.computation.v1:sha256:8c431482932a114ba876cb4d3c2e7ba409b6d16e26e12f00ca0de077e00f5726\",\"event_id\":\"observed-2\",\"sequence\":2},{\"digest\":\"pix.computation.v1:sha256:83fbf21ebbc7339b02e0e845d2e1441817b6b1966c2b0d6ee956499c07af14cf\",\"event_id\":\"observed-3\",\"sequence\":3},{\"digest\":\"pix.computation.v1:sha256:8f4696a69110ce6eb44bf80d795cfd874697b49b905d43e55f9f81f9d49f13b9\",\"event_id\":\"source-close\",\"sequence\":4}],\"temporal\":[]}],\"closed_cases\":1,\"created_cases\":1,\"dfg\":{\"activities\":[[\"deliver\",1],[\"edit\",1],[\"request\",1],[\"test\",1]],\"edges\":[[\"edit\",\"test\",1],[\"request\",\"edit\",1],[\"test\",\"deliver\",1]],\"ends\":[[\"deliver\",1]],\"starts\":[[\"request\",1]]},\"evicted_cases\":0,\"evicted_open_cases\":0,\"prefix_digest\":\"pix.stream.prefix.v1:sha256:4d818757faa67aa233dc4d7945cc87ea1bec409de172d548139e13cd8efb101a\",\"retirement_membership\":\"0x8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"},\"profile\":\"pix.proxy-trie-iws.v1\",\"proxy\":{\"attempted_walks\":0,\"excluded_paths\":0,\"model_language_complete\":false,\"origin\":\"explicit_accepting_transition_paths\",\"transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"trie_nodes\":5,\"truncated_walks\":0}},\"state_digest\":\"pix.computation.v1:sha256:b9f172d3dc912805ffb55c10af930bd202f97b2e1723d88c6c524004ba2f4ce3\"}},\"document_digest\":\"pix.analysis-result.v1:sha256:13a83d88d7e5a2bd110bac39fff3891b0cbae08c3053b13078b49718078a7c7f\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"online-alignment-checkpoint\",\"version\":\"1.3.0\"}",
+        "sha256": "92db8a8a8444ec759d47d5b43ca3a6fd4efdc92c57cdd40dd26440ee8dc136f1"
+      },
+      "summary": {
+        "metric": "terminal-witness-upper-bound",
+        "cost": 0,
+        "eventCount": 4,
+        "closed": true,
+        "finalCostUnresolved": false,
+        "boundScope": "accepting_model_alignment_upper_bound",
+        "outcome": "approximate"
+      }
+    },
+    "resultRef": "pi-profile-result:125012570d8ac69dd7191940e40f57e667094a3bec942f08eaff6a1d0c8b0a83",
+    "resultDigest": "3d371a844daf926381302edf5a552af2bb6675923fb1701a3083a1280c00281e"
+  },
+  "corrected": {
+    "schemaVersion": "pida.pi.profile-analysis/1",
+    "profile": "sequential-prefix/1",
+    "status": "partial",
+    "processJudgment": "pending",
+    "businessAcceptance": "UNKNOWN",
+    "automaticCorrection": false,
+    "empiricalDeviationIsViolation": false,
+    "applicability": "CURRENT",
+    "transition": "recomputed",
+    "selectionDigest": "dd1a7b810bb48e9fbeaa63ee0b8bf14b0f53ac592feb6abda97fd99092abf350",
+    "selection": {
+      "ownerId": "owner",
+      "agentId": "main",
+      "cutRef": "cut:fixture",
+      "modelRef": "model:fixture",
+      "cutRevision": "bec1396bdf9396549627b40b21f4842160cd9544fbd869e16b8b5ed9c8425a26",
+      "modelRevision": "843d3db1c45e6a4578d11f0283ebfd9017b9267e880994be8bd0e87e57fec64c",
+      "policyRevision": "77b7d4385722ef5b8c61580d015a32dc5516016b3652184ce718000c7fb7d8c4",
+      "scopeDigest": "47c670c4c5c47b43556f983ab9d35b50117d041ea803eb908d7c4d970daf768f",
+      "taskId": "task:fixture",
+      "generation": "fixture/generation-2",
+      "profile": "sequential-prefix/1",
+      "modelKind": "aspirational",
+      "modelProvenance": {
+        "sourceRef": "fixture:explicit-model",
+        "derivation": "independently-provided-no-DFG-conversion"
+      },
+      "artifactRefs": [],
+      "coverage": {
+        "complete": true,
+        "sourceEventCount": 2,
+        "exclusions": [],
+        "ordering": "source-sequence",
+        "evidenceRefs": [
+          "fixture:source-record"
+        ]
+      },
+      "model": {
+        "document_digest": "pix.model-document.v1:sha256:1d247e20b8c3a98e9ef5cd010d35b170b918c0424ddc17737fe2dbd3bd189b1a",
+        "format": "pix.model",
+        "kind": "petri-net",
+        "model": {
+          "arcs": [
+            {
+              "source": "p0",
+              "target": "t0",
+              "weight": 1
+            },
+            {
+              "source": "p1",
+              "target": "t1",
+              "weight": 1
+            },
+            {
+              "source": "p2",
+              "target": "t2",
+              "weight": 1
+            },
+            {
+              "source": "p3",
+              "target": "t3",
+              "weight": 1
+            },
+            {
+              "source": "t0",
+              "target": "p1",
+              "weight": 1
+            },
+            {
+              "source": "t1",
+              "target": "p2",
+              "weight": 1
+            },
+            {
+              "source": "t2",
+              "target": "p3",
+              "weight": 1
+            },
+            {
+              "source": "t3",
+              "target": "p4",
+              "weight": 1
+            }
+          ],
+          "final_marking": {
+            "tokens": [
+              [
+                "p4",
+                1
+              ]
+            ]
+          },
+          "initial_marking": {
+            "tokens": [
+              [
+                "p0",
+                1
+              ]
+            ]
+          },
+          "places": [
+            {
+              "id": "p0"
+            },
+            {
+              "id": "p1"
+            },
+            {
+              "id": "p2"
+            },
+            {
+              "id": "p3"
+            },
+            {
+              "id": "p4"
+            }
+          ],
+          "transitions": [
+            {
+              "activity": "request",
+              "id": "t0"
+            },
+            {
+              "activity": "edit",
+              "id": "t1"
+            },
+            {
+              "activity": "test",
+              "id": "t2"
+            },
+            {
+              "activity": "deliver",
+              "id": "t3"
+            }
+          ]
+        },
+        "model_digest": "pix.model.petri-net.v1:sha256:c2d073a2f9fc098fee019b2b4e1ccc7ea6b1cc031721cf6bc3a89b19d74d6d27",
+        "profile": "weighted-place-transition",
+        "provenance": {
+          "origin": "provided",
+          "source_computation_id": null
+        },
+        "version": "1.0.0"
+      },
+      "sequential": {
+        "caseId": "fixture-case",
+        "events": [
+          {
+            "id": "observed-0",
+            "sequence": 0,
+            "activity": "request"
+          },
+          {
+            "id": "observed-1",
+            "sequence": 1,
+            "activity": "review"
+          }
+        ],
+        "closed": false
+      },
+      "proxyPaths": [
+        [
+          "t0",
+          "t1",
+          "t2",
+          "t3"
+        ]
+      ]
+    },
+    "request": {
+      "schemaVersion": "pida.pix.profiles/1",
+      "profile": "sequential-prefix/1",
+      "generation": "pida:dab27f550e7b2feb3926ec06dc975efc0a42d38d0fb5d2011ae4ab553eecc48d",
+      "model": {
+        "document_digest": "pix.model-document.v1:sha256:1d247e20b8c3a98e9ef5cd010d35b170b918c0424ddc17737fe2dbd3bd189b1a",
+        "format": "pix.model",
+        "kind": "petri-net",
+        "model": {
+          "arcs": [
+            {
+              "source": "p0",
+              "target": "t0",
+              "weight": 1
+            },
+            {
+              "source": "p1",
+              "target": "t1",
+              "weight": 1
+            },
+            {
+              "source": "p2",
+              "target": "t2",
+              "weight": 1
+            },
+            {
+              "source": "p3",
+              "target": "t3",
+              "weight": 1
+            },
+            {
+              "source": "t0",
+              "target": "p1",
+              "weight": 1
+            },
+            {
+              "source": "t1",
+              "target": "p2",
+              "weight": 1
+            },
+            {
+              "source": "t2",
+              "target": "p3",
+              "weight": 1
+            },
+            {
+              "source": "t3",
+              "target": "p4",
+              "weight": 1
+            }
+          ],
+          "final_marking": {
+            "tokens": [
+              [
+                "p4",
+                1
+              ]
+            ]
+          },
+          "initial_marking": {
+            "tokens": [
+              [
+                "p0",
+                1
+              ]
+            ]
+          },
+          "places": [
+            {
+              "id": "p0"
+            },
+            {
+              "id": "p1"
+            },
+            {
+              "id": "p2"
+            },
+            {
+              "id": "p3"
+            },
+            {
+              "id": "p4"
+            }
+          ],
+          "transitions": [
+            {
+              "activity": "request",
+              "id": "t0"
+            },
+            {
+              "activity": "edit",
+              "id": "t1"
+            },
+            {
+              "activity": "test",
+              "id": "t2"
+            },
+            {
+              "activity": "deliver",
+              "id": "t3"
+            }
+          ]
+        },
+        "model_digest": "pix.model.petri-net.v1:sha256:c2d073a2f9fc098fee019b2b4e1ccc7ea6b1cc031721cf6bc3a89b19d74d6d27",
+        "profile": "weighted-place-transition",
+        "provenance": {
+          "origin": "provided",
+          "source_computation_id": null
+        },
+        "version": "1.0.0"
+      },
+      "sequential": {
+        "caseId": "fixture-case",
+        "events": [
+          {
+            "id": "observed-0",
+            "sequence": 0,
+            "activity": "request"
+          },
+          {
+            "id": "observed-1",
+            "sequence": 1,
+            "activity": "review"
+          }
+        ],
+        "closed": false
+      },
+      "proxyPaths": [
+        [
+          "t0",
+          "t1",
+          "t2",
+          "t3"
+        ]
+      ]
+    },
+    "issues": [
+      "approximate_online_alignment",
+      "open_cases",
+      "final_cost_unresolved"
+    ],
+    "durationMs": 1663.7598809999981,
+    "limits": [
+      "HOST_SELECTED_SCOPE",
+      "REFERENCE_ONLY_NO_ADOPTION",
+      "NO_BUSINESS_ACCEPTANCE",
+      "NO_NORMALIZED_FITNESS",
+      "NO_CAUSAL_IMPROVEMENT_CLAIM",
+      "CHECKPOINT_IDENTITY_CHANGED_RECOMPUTED",
+      "HOST_AUTHORIZED_SCOPE_ONLY",
+      "NO_MODEL_ACTIVATION"
+    ],
+    "native": {
+      "schemaVersion": "pida.pix.profiles/1",
+      "profile": "sequential-prefix/1",
+      "requestDigest": "d012abb1c4dd40b5918edc1727dc24f11a0e3c4b935818a04f92ab6b4d408544",
+      "status": "partial",
+      "issues": [
+        {
+          "code": "approximate_online_alignment",
+          "message": "Finite proxy, look-ahead, decay and beam selection do not establish minimum cost; valid witnesses supply upper bounds only"
+        },
+        {
+          "code": "open_cases",
+          "message": "Retained open cases have not been finalized; end counts include explicit closures only"
+        },
+        {
+          "code": "final_cost_unresolved",
+          "message": "Open-case costs bound prefix alignments only; final-marking completion cost has not been included"
+        }
+      ],
+      "nativeResults": [
+        {
+          "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:9f673729a096a8b91acfc175e5fe3b73c3ee9e4d49af722d303f372792eeaff1\",\"issues\":[{\"at\":[],\"code\":\"finite_model_proxy\",\"message\":\"Finite accepting paths do not certify coverage of the entire model language\"}],\"operator_id\":\"pix.case_centric.online_alignment.proxy\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.model.petri-net.v1:sha256:c2d073a2f9fc098fee019b2b4e1ccc7ea6b1cc031721cf6bc3a89b19d74d6d27\",\"spec\":{\"decay_time\":100.0,\"discount_factor\":1.0,\"ingestion\":{\"capacity_policy\":\"reject\",\"declare\":[],\"dedup_window\":4096,\"footprints\":null,\"max_activities\":256,\"max_cases\":1,\"order_policy\":\"sequence\",\"replay_model\":null,\"retirement_filter_bits\":16384,\"silent_max_states\":1000,\"stream_id\":\"pida:dab27f550e7b2feb3926ec06dc975efc0a42d38d0fb5d2011ae4ab553eecc48d\",\"temporal\":[],\"temporal_history_limit\":1000},\"log_move_cost\":1,\"lookahead\":3,\"max_expansions_per_event\":10000,\"max_proxy_nodes\":10000,\"max_states_per_case\":20,\"model\":{\"arcs\":[{\"source\":\"p0\",\"target\":\"t0\",\"weight\":1},{\"source\":\"p1\",\"target\":\"t1\",\"weight\":1},{\"source\":\"p2\",\"target\":\"t2\",\"weight\":1},{\"source\":\"p3\",\"target\":\"t3\",\"weight\":1},{\"source\":\"t0\",\"target\":\"p1\",\"weight\":1},{\"source\":\"t1\",\"target\":\"p2\",\"weight\":1},{\"source\":\"t2\",\"target\":\"p3\",\"weight\":1},{\"source\":\"t3\",\"target\":\"p4\",\"weight\":1}],\"final_marking\":{\"tokens\":[[\"p4\",1]]},\"initial_marking\":{\"tokens\":[[\"p0\",1]]},\"places\":[{\"id\":\"p0\"},{\"id\":\"p1\"},{\"id\":\"p2\"},{\"id\":\"p3\"},{\"id\":\"p4\"}],\"transitions\":[{\"activity\":\"request\",\"id\":\"t0\"},{\"activity\":\"edit\",\"id\":\"t1\"},{\"activity\":\"test\",\"id\":\"t2\"},{\"activity\":\"deliver\",\"id\":\"t3\"}]},\"model_move_cost\":1,\"proxy_attempts\":1000,\"proxy_max_steps\":100,\"proxy_max_traces\":100,\"proxy_transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"random_seed\":0,\"silent_move_cost\":0,\"witness_history_limit\":200},\"status\":\"partial\",\"value\":{\"attempted_walks\":0,\"excluded_paths\":0,\"model_language_complete\":false,\"origin\":\"explicit_accepting_transition_paths\",\"transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"trie_nodes\":5,\"truncated_walks\":0}},\"document_digest\":\"pix.analysis-result.v1:sha256:f7c24a9ad8e9d923c896bf7fec13d26bd716ec35021e053dec1c918447ecf986\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"online-alignment-proxy\",\"version\":\"1.3.0\"}",
+          "sha256": "dcccd70c9581fcf6a2129d6dc5e7cacf653b7f1927debe63a5bb3dd5d9ab15ca"
+        },
+        {
+          "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:640c32b429b69961257b3f02ee6aea7b2a56a306a92096e6461cdcda66f32f9e\",\"issues\":[{\"at\":[],\"code\":\"approximate_online_alignment\",\"message\":\"Finite proxy, look-ahead, decay and beam selection do not establish minimum cost; valid witnesses supply upper bounds only\"},{\"at\":[],\"code\":\"open_cases\",\"message\":\"Retained open cases have not been finalized; end counts include explicit closures only\"},{\"at\":[],\"code\":\"final_cost_unresolved\",\"message\":\"Open-case costs bound prefix alignments only; final-marking completion cost has not been included\"}],\"operator_id\":\"pix.case_centric.online_alignment.snapshot\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.stream.prefix.v1:sha256:6b6b99a9e17a0ed15f7aaace27ba77f780ae97a311c430af2875f4c892fe022a\",\"spec\":{\"decay_time\":100.0,\"discount_factor\":1.0,\"ingestion\":{\"capacity_policy\":\"reject\",\"declare\":[],\"dedup_window\":4096,\"footprints\":null,\"max_activities\":256,\"max_cases\":1,\"order_policy\":\"sequence\",\"replay_model\":null,\"retirement_filter_bits\":16384,\"silent_max_states\":1000,\"stream_id\":\"pida:dab27f550e7b2feb3926ec06dc975efc0a42d38d0fb5d2011ae4ab553eecc48d\",\"temporal\":[],\"temporal_history_limit\":1000},\"log_move_cost\":1,\"lookahead\":3,\"max_expansions_per_event\":10000,\"max_proxy_nodes\":10000,\"max_states_per_case\":20,\"model\":{\"arcs\":[{\"source\":\"p0\",\"target\":\"t0\",\"weight\":1},{\"source\":\"p1\",\"target\":\"t1\",\"weight\":1},{\"source\":\"p2\",\"target\":\"t2\",\"weight\":1},{\"source\":\"p3\",\"target\":\"t3\",\"weight\":1},{\"source\":\"t0\",\"target\":\"p1\",\"weight\":1},{\"source\":\"t1\",\"target\":\"p2\",\"weight\":1},{\"source\":\"t2\",\"target\":\"p3\",\"weight\":1},{\"source\":\"t3\",\"target\":\"p4\",\"weight\":1}],\"final_marking\":{\"tokens\":[[\"p4\",1]]},\"initial_marking\":{\"tokens\":[[\"p0\",1]]},\"places\":[{\"id\":\"p0\"},{\"id\":\"p1\"},{\"id\":\"p2\"},{\"id\":\"p3\"},{\"id\":\"p4\"}],\"transitions\":[{\"activity\":\"request\",\"id\":\"t0\"},{\"activity\":\"edit\",\"id\":\"t1\"},{\"activity\":\"test\",\"id\":\"t2\"},{\"activity\":\"deliver\",\"id\":\"t3\"}]},\"model_move_cost\":1,\"proxy_attempts\":1000,\"proxy_max_steps\":100,\"proxy_max_traces\":100,\"proxy_transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"random_seed\":0,\"silent_move_cost\":0,\"witness_history_limit\":200},\"status\":\"partial\",\"value\":{\"cases\":[{\"beam_pruned_states\":0,\"bound_scope\":\"model_prefix_alignment_upper_bound\",\"case_id\":\"fixture-case\",\"closed\":false,\"deduplicated_states\":0,\"event_count\":2,\"expansion_limited_events\":0,\"expired_states\":0,\"fallback_resets\":0,\"final_cost_unresolved\":true,\"generated_states\":4,\"reported_cost\":1,\"states\":[{\"cost\":1,\"decay\":99.0,\"deviation_moves\":1,\"marking\":{\"tokens\":[[\"p1\",1]]},\"node_id\":1,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":0,\"event_id\":\"observed-0\",\"kind\":\"sync\",\"sequence\":0,\"timestamp\":null,\"transition_id\":\"t0\"},{\"activity\":\"review\",\"cost\":1,\"event_id\":\"observed-1\",\"kind\":\"log\",\"sequence\":1,\"timestamp\":null,\"transition_id\":null}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}},{\"cost\":2,\"decay\":98.0,\"deviation_moves\":2,\"marking\":{\"tokens\":[[\"p0\",1]]},\"node_id\":0,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":1,\"event_id\":\"observed-0\",\"kind\":\"log\",\"sequence\":0,\"timestamp\":null,\"transition_id\":null},{\"activity\":\"review\",\"cost\":1,\"event_id\":\"observed-1\",\"kind\":\"log\",\"sequence\":1,\"timestamp\":null,\"transition_id\":null}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}}],\"unavoidable_log_cost\":1}],\"ingestion_state\":{\"accepted_events\":2,\"accepted_operations\":2,\"cases\":[{\"case_id\":\"fixture-case\",\"closed\":false,\"declare\":[],\"event_count\":2,\"event_membership\":\"0x40000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"first_activity\":\"request\",\"footprint_state\":null,\"footprint_violations\":0,\"forgotten_event_ids\":0,\"last_activity\":\"review\",\"last_sequence\":1,\"last_timestamp\":null,\"opened_operation\":0,\"replay\":null,\"seen\":[{\"digest\":\"pix.computation.v1:sha256:fa8ad5af45e1272e09b0e297e2ace719d1175c4882c7a322b43548bf822cd67a\",\"event_id\":\"observed-0\",\"sequence\":0},{\"digest\":\"pix.computation.v1:sha256:3e58c5c9c890aed3fcd63a4d283f747360b879c8e4f2410da638adc271bb4de3\",\"event_id\":\"observed-1\",\"sequence\":1}],\"temporal\":[]}],\"closed_cases\":0,\"created_cases\":1,\"dfg\":{\"activities\":[[\"request\",1],[\"review\",1]],\"edges\":[[\"request\",\"review\",1]],\"ends\":[],\"starts\":[[\"request\",1]]},\"evicted_cases\":0,\"evicted_open_cases\":0,\"prefix_digest\":\"pix.stream.prefix.v1:sha256:6b6b99a9e17a0ed15f7aaace27ba77f780ae97a311c430af2875f4c892fe022a\",\"retirement_membership\":\"0x8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"},\"profile\":\"pix.proxy-trie-iws.v1\",\"proxy\":{\"attempted_walks\":0,\"excluded_paths\":0,\"model_language_complete\":false,\"origin\":\"explicit_accepting_transition_paths\",\"transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"trie_nodes\":5,\"truncated_walks\":0}}},\"document_digest\":\"pix.analysis-result.v1:sha256:76c6fe323d5bfa5faddffbe2eafe612b58b8941f8c96cc223136a849067b1ac0\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"online-alignment-snapshot\",\"version\":\"1.3.0\"}",
+          "sha256": "e428fae0dc9ad4a88fb741e035ec55909f5e458ed9f6c53d5f26ebdc39cbe1f0"
+        }
+      ],
+      "limits": [
+        "HOST_AUTHORIZED_SCOPE_ONLY",
+        "NO_BUSINESS_ACCEPTANCE",
+        "NO_MODEL_ACTIVATION",
+        "NO_CAUSAL_IMPROVEMENT_CLAIM"
+      ],
+      "engine": {
+        "repository": "Chanta-Research-Group/PIX",
+        "sourceCommit": "a0831bc0b34fd7feebfba928066b90b114ae531e",
+        "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+        "packageVersion": "0.5.0",
+        "pythonVersion": "3.12.14",
+        "sourceVerified": true
+      },
+      "checkpoint": {
+        "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:1aaae054937cc9821dccd59765584c7340298cae52a0d072a81fdeb5ade1b03e\",\"issues\":[{\"at\":[],\"code\":\"approximate_online_alignment\",\"message\":\"Finite proxy, look-ahead, decay and beam selection do not establish minimum cost; valid witnesses supply upper bounds only\"},{\"at\":[],\"code\":\"open_cases\",\"message\":\"Retained open cases have not been finalized; end counts include explicit closures only\"},{\"at\":[],\"code\":\"final_cost_unresolved\",\"message\":\"Open-case costs bound prefix alignments only; final-marking completion cost has not been included\"}],\"operator_id\":\"pix.case_centric.online_alignment.checkpoint\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.stream.prefix.v1:sha256:6b6b99a9e17a0ed15f7aaace27ba77f780ae97a311c430af2875f4c892fe022a\",\"spec\":{\"decay_time\":100.0,\"discount_factor\":1.0,\"ingestion\":{\"capacity_policy\":\"reject\",\"declare\":[],\"dedup_window\":4096,\"footprints\":null,\"max_activities\":256,\"max_cases\":1,\"order_policy\":\"sequence\",\"replay_model\":null,\"retirement_filter_bits\":16384,\"silent_max_states\":1000,\"stream_id\":\"pida:dab27f550e7b2feb3926ec06dc975efc0a42d38d0fb5d2011ae4ab553eecc48d\",\"temporal\":[],\"temporal_history_limit\":1000},\"log_move_cost\":1,\"lookahead\":3,\"max_expansions_per_event\":10000,\"max_proxy_nodes\":10000,\"max_states_per_case\":20,\"model\":{\"arcs\":[{\"source\":\"p0\",\"target\":\"t0\",\"weight\":1},{\"source\":\"p1\",\"target\":\"t1\",\"weight\":1},{\"source\":\"p2\",\"target\":\"t2\",\"weight\":1},{\"source\":\"p3\",\"target\":\"t3\",\"weight\":1},{\"source\":\"t0\",\"target\":\"p1\",\"weight\":1},{\"source\":\"t1\",\"target\":\"p2\",\"weight\":1},{\"source\":\"t2\",\"target\":\"p3\",\"weight\":1},{\"source\":\"t3\",\"target\":\"p4\",\"weight\":1}],\"final_marking\":{\"tokens\":[[\"p4\",1]]},\"initial_marking\":{\"tokens\":[[\"p0\",1]]},\"places\":[{\"id\":\"p0\"},{\"id\":\"p1\"},{\"id\":\"p2\"},{\"id\":\"p3\"},{\"id\":\"p4\"}],\"transitions\":[{\"activity\":\"request\",\"id\":\"t0\"},{\"activity\":\"edit\",\"id\":\"t1\"},{\"activity\":\"test\",\"id\":\"t2\"},{\"activity\":\"deliver\",\"id\":\"t3\"}]},\"model_move_cost\":1,\"proxy_attempts\":1000,\"proxy_max_steps\":100,\"proxy_max_traces\":100,\"proxy_transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"random_seed\":0,\"silent_move_cost\":0,\"witness_history_limit\":200},\"status\":\"partial\",\"value\":{\"snapshot\":{\"cases\":[{\"beam_pruned_states\":0,\"bound_scope\":\"model_prefix_alignment_upper_bound\",\"case_id\":\"fixture-case\",\"closed\":false,\"deduplicated_states\":0,\"event_count\":2,\"expansion_limited_events\":0,\"expired_states\":0,\"fallback_resets\":0,\"final_cost_unresolved\":true,\"generated_states\":4,\"reported_cost\":1,\"states\":[{\"cost\":1,\"decay\":99.0,\"deviation_moves\":1,\"marking\":{\"tokens\":[[\"p1\",1]]},\"node_id\":1,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":0,\"event_id\":\"observed-0\",\"kind\":\"sync\",\"sequence\":0,\"timestamp\":null,\"transition_id\":\"t0\"},{\"activity\":\"review\",\"cost\":1,\"event_id\":\"observed-1\",\"kind\":\"log\",\"sequence\":1,\"timestamp\":null,\"transition_id\":null}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}},{\"cost\":2,\"decay\":98.0,\"deviation_moves\":2,\"marking\":{\"tokens\":[[\"p0\",1]]},\"node_id\":0,\"omitted_cost\":0,\"omitted_log_events\":0,\"omitted_steps\":0,\"omitted_witness_digest\":\"pix.online-alignment.empty-witness.v1\",\"steps\":[{\"activity\":\"request\",\"cost\":1,\"event_id\":\"observed-0\",\"kind\":\"log\",\"sequence\":0,\"timestamp\":null,\"transition_id\":null},{\"activity\":\"review\",\"cost\":1,\"event_id\":\"observed-1\",\"kind\":\"log\",\"sequence\":1,\"timestamp\":null,\"transition_id\":null}],\"witness_initial_marking\":{\"tokens\":[[\"p0\",1]]}}],\"unavoidable_log_cost\":1}],\"ingestion_state\":{\"accepted_events\":2,\"accepted_operations\":2,\"cases\":[{\"case_id\":\"fixture-case\",\"closed\":false,\"declare\":[],\"event_count\":2,\"event_membership\":\"0x40000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\"first_activity\":\"request\",\"footprint_state\":null,\"footprint_violations\":0,\"forgotten_event_ids\":0,\"last_activity\":\"review\",\"last_sequence\":1,\"last_timestamp\":null,\"opened_operation\":0,\"replay\":null,\"seen\":[{\"digest\":\"pix.computation.v1:sha256:fa8ad5af45e1272e09b0e297e2ace719d1175c4882c7a322b43548bf822cd67a\",\"event_id\":\"observed-0\",\"sequence\":0},{\"digest\":\"pix.computation.v1:sha256:3e58c5c9c890aed3fcd63a4d283f747360b879c8e4f2410da638adc271bb4de3\",\"event_id\":\"observed-1\",\"sequence\":1}],\"temporal\":[]}],\"closed_cases\":0,\"created_cases\":1,\"dfg\":{\"activities\":[[\"request\",1],[\"review\",1]],\"edges\":[[\"request\",\"review\",1]],\"ends\":[],\"starts\":[[\"request\",1]]},\"evicted_cases\":0,\"evicted_open_cases\":0,\"prefix_digest\":\"pix.stream.prefix.v1:sha256:6b6b99a9e17a0ed15f7aaace27ba77f780ae97a311c430af2875f4c892fe022a\",\"retirement_membership\":\"0x8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\"},\"profile\":\"pix.proxy-trie-iws.v1\",\"proxy\":{\"attempted_walks\":0,\"excluded_paths\":0,\"model_language_complete\":false,\"origin\":\"explicit_accepting_transition_paths\",\"transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"trie_nodes\":5,\"truncated_walks\":0}},\"state_digest\":\"pix.computation.v1:sha256:998e8aa24236ea92df5549a997bda5397e33cd5c622984c77b84a367df4dc8c7\"}},\"document_digest\":\"pix.analysis-result.v1:sha256:fd01ed62dc8e69b691757a0e7e01527df020d2f0a986b7e89f43b6bfbe4a3396\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"online-alignment-checkpoint\",\"version\":\"1.3.0\"}",
+        "sha256": "78126b548216b565279e5f0e14d0eb54c9dbaa5feb5cba68fa7fbff60eb8037d"
+      },
+      "summary": {
+        "metric": "prefix-witness-upper-bound",
+        "cost": 1,
+        "eventCount": 2,
+        "closed": false,
+        "finalCostUnresolved": true,
+        "boundScope": "model_prefix_alignment_upper_bound",
+        "outcome": "approximate"
+      }
+    },
+    "resultRef": "pi-profile-result:c1343d7cd8cffecd8f5ae89b8422b4cc008cddddd17725a79847a7167029a698",
+    "resultDigest": "60fdc558ab0174cfda7ae5f52691ee35244a0abc50315f9a2e60698326e18ed0"
+  }
+}

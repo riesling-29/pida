@@ -4,6 +4,7 @@ import { defineBusinessTool } from "./runtime.js";
 /** Synthetic fixtures only; replace with a permission-scoped business data service. */
 export const lotStatusTool = defineBusinessTool({
   name: "get_lot_status",
+  effect: "read",
   description:
     "Look up synthetic production lot status. This is demo data, not live manufacturing data.",
   permission: "lots:read",

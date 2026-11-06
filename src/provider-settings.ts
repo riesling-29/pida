@@ -1,4 +1,5 @@
 import { nativeProvider, nativeProviderCatalog, nativeProviderDefaults } from "./provider-catalog.js";
+import { ChatGPTAuth } from "./chatgpt-auth.js";
 import {
   existsSync,
   mkdirSync,
@@ -10,7 +11,7 @@ import {
 import { join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { PidaRuntime, PidaError } from "./runtime.js";
-import { endpointProvider, mockProvider } from "./providers.js";
+import { endpointProvider, endpointHeaders, mockProvider } from "./providers.js";
 import {
   readConfig,
   validateConfig,
@@ -55,6 +56,7 @@ export function providerEnvironment(
   directory: string,
   config: WorkspaceConfig,
 ): NodeJS.ProcessEnv {
+  if (config.provider.kind === "native" && config.provider.authMode === "chatgpt") return workspaceEnvironment(directory);
   const env = workspaceEnvironment(directory),
     secret = savedKey(directory, config),
     provider = config.provider, destination = target(provider);
@@ -71,7 +73,7 @@ export function providerEnvironment(
 export function providerLabel(provider: ProviderConfig) {
   return provider.kind === "mock"
     ? { mode: "mock", model: "Deterministic demo" }
-    : { mode: provider.kind === "native" ? provider.providerId : "endpoint", model: provider.modelId };
+    : { mode: provider.kind === "native" ? provider.authMode === "chatgpt" ? "ChatGPT" : provider.providerId : "endpoint", model: provider.modelId };
 }
 function atomicWrite(path: string, content: string, mode = 0o600) {
   const temp = `${path}.${randomUUID()}.tmp`;
@@ -92,15 +94,23 @@ function sameTarget(a: ProviderConfig, b: ProviderConfig) {
 }
 export class ProviderSettings {
   private busy = false;
+  private chatgpt: ChatGPTAuth;
   constructor(
     private directory: string,
     private runtime: PidaRuntime,
-  ) {}
+  ) { this.chatgpt = new ChatGPTAuth(directory, readConfig(directory).stateDir, runtime); }
+  startChatGPT(owner: string) { if (this.busy) throw new PidaError("SETUP_BUSY", 409); return this.chatgpt.start(owner); }
+  getChatGPTLogin(id: string, owner: string) { return this.chatgpt.get(id, owner); }
+  inputChatGPT(id: string, owner: string, value: string) { return this.chatgpt.input(id, owner, value); }
+  cancelChatGPT(id: string, owner: string) { return this.chatgpt.cancel(id, owner); }
+  logoutChatGPT() { return this.exclusive(() => this.chatgpt.logout()); }
+  close() { return this.chatgpt.close(); }
   get() {
     const config = readConfig(this.directory),
       provider = config.provider;
     return {
       provider,
+      chatgpt: this.chatgpt.store.status(),
       catalog: nativeProviderCatalog().map(p => {
         const apiKeyEnv = provider.kind === "native" && provider.providerId === p.id
           ? provider.apiKeyEnv : p.apiKeyEnv;
@@ -111,7 +121,7 @@ export class ProviderSettings {
           keyConfigured: !!providerEnvironment(this.directory, candidate)[apiKeyEnv] };
       }),
       keyConfigured:
-        provider.kind !== "mock" &&
+        provider.kind !== "mock" && provider.authMode !== "chatgpt" &&
         (provider.kind === "native" || provider.authMode !== "none") &&
         !!providerEnvironment(this.directory, config)[provider.apiKeyEnv],
     };
@@ -128,6 +138,8 @@ export class ProviderSettings {
       "allowInsecureHttp",
       "contextWindow",
       "maxTokens",
+      "compat",
+      "reasoning", "input", "thinkingLevelMap", "thinkingLevel",
     ];
     if (Object.keys(input).some((k) => !allowed.includes(k)))
       throw new PidaError("UNKNOWN_FIELD", 400);
@@ -148,17 +160,26 @@ export class ProviderSettings {
         apiKey: "",
       };
     if (input.kind === "native") {
-      if (Object.keys(input).some(k => !["kind", "providerId", "modelId", "apiKey"].includes(k)))
+      if (Object.keys(input).some(k => !["kind", "providerId", "modelId", "apiKey", "authMode", "thinkingLevel"].includes(k)))
         throw new PidaError("UNKNOWN_FIELD", 400);
       try {
         if (typeof input.providerId !== "string") throw new Error();
+        if (input.authMode !== undefined && input.authMode !== "api-key" && input.authMode !== "chatgpt") throw new Error();
+        if (input.authMode === "chatgpt" && (input.providerId !== "openai" || apiKey)) throw new Error();
         const defaults = nativeProviderDefaults(input.providerId);
         const provider = { kind: "native" as const, providerId: input.providerId,
+          ...(input.authMode === "chatgpt" ? { authMode: "chatgpt" as const } : {}),
           modelId: input.modelId || (requireModel ? "" : defaults.provider.getModels()[0]?.id),
+          ...(input.thinkingLevel !== undefined ? { thinkingLevel: input.thinkingLevel }
+            : current.kind === "native" && current.providerId === input.providerId && current.modelId === input.modelId && current.thinkingLevel !== undefined ? { thinkingLevel: current.thinkingLevel } : {}),
           apiKeyEnv: current.kind === "native" && current.providerId === input.providerId
             ? current.apiKeyEnv : defaults.apiKeyEnv };
         const next = validateConfig({ ...config, provider }, this.directory);
         const env: NodeJS.ProcessEnv = {};
+        if (provider.authMode === "chatgpt") {
+          if (!this.chatgpt.store.status().connected) throw new PidaError("CHATGPT_LOGIN_REQUIRED", 400);
+          return { config: next, env, apiKey: "" };
+        }
         env[provider.apiKeyEnv] = apiKey || providerEnvironment(this.directory, next)[provider.apiKeyEnv];
         if (requireModel && !env[provider.apiKeyEnv]) throw new PidaError("PROVIDER_KEY_REQUIRED", 400);
         return { config: next, env, apiKey };
@@ -180,6 +201,14 @@ export class ProviderSettings {
     } catch {
       throw new PidaError("INVALID_PROVIDER_URL", 400);
     }
+    const sameEndpoint = current.kind === "endpoint" && current.baseUrl === baseUrl && current.api === (input.api ?? "openai-completions");
+    const sameModel = sameEndpoint && current.kind === "endpoint" && current.modelId === input.modelId;
+    const capabilities = Object.fromEntries(["reasoning", "input", "thinkingLevelMap", "thinkingLevel"].flatMap(key => {
+      if (input[key] === undefined && input.reasoning === false && key === "thinkingLevelMap") return [];
+      if (input[key] === undefined && input.reasoning === false && key === "thinkingLevel") return [[key, "off"]];
+      const value = input[key] !== undefined ? input[key] : (sameModel ? (current as unknown as Record<string, unknown>)[key] : undefined);
+      return value === undefined ? [] : [[key, value]];
+    }));
     const provider = {
       kind: "endpoint",
       baseUrl,
@@ -190,7 +219,11 @@ export class ProviderSettings {
       authMode: input.authMode ?? "api-key",
       contextWindow: input.contextWindow ?? 8192,
       maxTokens: input.maxTokens ?? 1024,
+      ...capabilities,
       allowInsecureHttp: input.allowInsecureHttp ?? false,
+      ...(sameEndpoint && current.headersEnv ? { headersEnv: current.headersEnv } : {}),
+      ...(input.compat !== undefined ? { compat: input.compat }
+        : sameEndpoint && current.compat ? { compat: current.compat } : {}),
     };
     let next: WorkspaceConfig;
     try {
@@ -206,12 +239,20 @@ export class ProviderSettings {
       (sameTarget(current, next.provider)
         ? providerEnvironment(this.directory, config)[provider.apiKeyEnv]
         : undefined);
+    // Header references are host-configured only; HTTP callers cannot select arbitrary
+    // server environment variables. A changed URL/protocol loses all old references.
+    if (sameEndpoint && current.headersEnv) {
+      const hostEnv = workspaceEnvironment(this.directory);
+      for (const variable of Object.values(current.headersEnv)) env[variable] ??= hostEnv[variable];
+    }
     if (provider.authMode !== "none" && !env[provider.apiKeyEnv])
       throw new PidaError("PROVIDER_KEY_REQUIRED", 400);
+    try { endpointHeaders({ id: "workspace", ...(next.provider as Extract<ProviderConfig, { kind: "endpoint" }>) }, env); }
+    catch { throw new PidaError("PROVIDER_HEADERS_UNAVAILABLE", 400); }
     return { config: next, env, apiKey };
   }
   private async exclusive<T>(operation: () => Promise<T>): Promise<T> {
-    if (this.busy) throw new PidaError("SETUP_BUSY", 409);
+    if (this.busy || this.chatgpt.active()) throw new PidaError("SETUP_BUSY", 409);
     this.busy = true;
     try {
       return await operation();
@@ -224,18 +265,12 @@ export class ProviderSettings {
       const { config, env } = this.draft(input, false),
         p = config.provider;
       if (p.kind === "mock") return { models: [] };
+      if (p.kind === "native" && p.authMode === "chatgpt") return this.chatgpt.models();
       if (p.kind === "native") return {
         models: nativeProviderDefaults(p.providerId).provider.getModels().map(m => m.id),
         source: "bundled-pi-catalog",
       };
-      const headers: Record<string, string> = {};
-      if (p.api === "anthropic-messages")
-        headers["anthropic-version"] = "2023-06-01";
-      if (p.authMode !== "none") {
-        if (p.api === "anthropic-messages")
-          headers["x-api-key"] = env[p.apiKeyEnv]!;
-        else headers.Authorization = `Bearer ${env[p.apiKeyEnv]}`;
-      }
+      const headers = endpointHeaders({ id: "workspace", ...p }, env);
       try {
         const response = await fetch(`${p.baseUrl}/models`, {
           headers,
@@ -284,8 +319,10 @@ export class ProviderSettings {
   private async probe(draft: ReturnType<ProviderSettings["draft"]>) {
     const p = draft.config.provider;
     if (p.kind === "mock") return { ok: true, scope: "mock" };
+    if (p.kind === "native" && p.authMode === "chatgpt" && !(await this.chatgpt.models()).models.includes(p.modelId))
+      throw new PidaError("CHATGPT_MODEL_UNAVAILABLE", 400);
     const probe = new PidaRuntime({
-      provider: p.kind === "native" ? nativeProvider(p, draft.env, 1024) : endpointProvider(
+      provider: p.kind === "native" ? nativeProvider(p, draft.env, 1024, this.chatgpt.store) : endpointProvider(
         { id: "setup-probe", ...p, maxTokens: Math.min(1024, p.maxTokens) },
         draft.env,
       ),
@@ -326,7 +363,7 @@ export class ProviderSettings {
       const provider =
         p.kind === "mock"
           ? mockProvider
-          : p.kind === "native" ? nativeProvider(p, draft.env) : endpointProvider({ id: "workspace", ...p }, draft.env);
+          : p.kind === "native" ? nativeProvider(p, draft.env, undefined, this.chatgpt.store) : endpointProvider({ id: "workspace", ...p }, draft.env);
       const file = keyPath(this.directory, draft.config),
         oldKey = existsSync(file) ? readFileSync(file, "utf8") : undefined;
       if (draft.apiKey && p.kind !== "mock" && (p.kind === "native" || p.authMode !== "none")) {
@@ -358,7 +395,7 @@ export class ProviderSettings {
         applied: true,
         provider: p,
         keyConfigured:
-          p.kind !== "mock" &&
+          p.kind !== "mock" && p.authMode !== "chatgpt" &&
           (p.kind === "native" || p.authMode !== "none") &&
           !!draft.env[p.apiKeyEnv],
       };

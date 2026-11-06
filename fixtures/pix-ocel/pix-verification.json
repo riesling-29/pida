@@ -1,0 +1,832 @@
+{
+  "schemaVersion": "pida.pi.ocel-evidence/1",
+  "input": {
+    "sessionId": "01a1a6fe-8ec9-7492-ac5a-76ae87c3b17f",
+    "runId": "78c82c66-dcfd-495e-8f21-dba4aea6df63",
+    "digest": "70fe0956610e6e8faf7600d6e624848fc1340b3aa81f7742de87540d7e739b91"
+  },
+  "ocelDigest": "1713017741b68e3521f7cefe349eb24543b9ac4b380de5d8abc07aea45081057",
+  "mapping": "pida.ocel20/1",
+  "complete": true,
+  "artifactSnapshotDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "artifactVerification": "UNKNOWN",
+  "knownLimits": [
+    "RUNTIME_OBSERVED_EVENTS_ONLY",
+    "SEQUENCE_IS_OBSERVATION_ORDER_NOT_CAUSAL_ORDER",
+    "PROCESS_CONFORMANCE_IS_NOT_ARTIFACT_CORRECTNESS"
+  ],
+  "native": {
+    "schemaVersion": "pida.pix.ocel-verification/1",
+    "requestDigest": "a1f6850c9625ee7c8f2fd4c321a31267b8320bba9164962e3bcf08246796c42b",
+    "policy": "pida.runtime-lifecycle/1",
+    "status": "computed",
+    "structure": "PASSED",
+    "processJudgment": "conforms",
+    "businessAcceptance": "UNKNOWN",
+    "issues": [
+      "source_sequence",
+      "unknown_timestamp"
+    ],
+    "nativeResults": [
+      {
+        "format": "pix.analysis-result",
+        "version": "1.3.0",
+        "payload_kind": "case-traces",
+        "computation": {
+          "operator_id": "pix.case_traces",
+          "operator_version": "1.0.0",
+          "source_digest": "pix.case-log.v1:sha256:3181ba021463df83cbbde9d3eac11d09007d40f3128440f0931e30d6cd098f3c",
+          "spec": {
+            "activity_key": "concept:name",
+            "timestamp_key": "time:timestamp",
+            "classifier": null,
+            "object_type": "case"
+          },
+          "status": "computed",
+          "value": {
+            "object_type": "case",
+            "traces": [
+              {
+                "object_id": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+                "object_type": "case",
+                "events": [
+                  {
+                    "event_id": "pida:Event:257d62f347dbcd2e91b9d24be57ee075984a29b7596441adda6696d0cc6d77a0",
+                    "activity": "run_started",
+                    "time": null,
+                    "relations": [
+                      {
+                        "event": "pida:Event:257d62f347dbcd2e91b9d24be57ee075984a29b7596441adda6696d0cc6d77a0",
+                        "object": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+                        "qualifier": "case"
+                      }
+                    ],
+                    "order_group": null,
+                    "time_lower": null,
+                    "time_upper": null
+                  },
+                  {
+                    "event_id": "pida:Event:347272a522a2f390f6d3d114d93eb1af35286ba65dae34f0943c3be14efa9125",
+                    "activity": "run_finished",
+                    "time": null,
+                    "relations": [
+                      {
+                        "event": "pida:Event:347272a522a2f390f6d3d114d93eb1af35286ba65dae34f0943c3be14efa9125",
+                        "object": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+                        "qualifier": "case"
+                      }
+                    ],
+                    "order_group": null,
+                    "time_lower": null,
+                    "time_upper": null
+                  }
+                ]
+              }
+            ]
+          },
+          "issues": [
+            {
+              "code": "source_sequence",
+              "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order",
+              "at": []
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+                "event",
+                "pida:Event:257d62f347dbcd2e91b9d24be57ee075984a29b7596441adda6696d0cc6d77a0"
+              ]
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+                "event",
+                "pida:Event:347272a522a2f390f6d3d114d93eb1af35286ba65dae34f0943c3be14efa9125"
+              ]
+            }
+          ],
+          "computation_id": "pix.computation.v1:sha256:e20dda52bebc82207bc70c4d8e2de5126a00a940d15a95c680d7f4c4026116bc",
+          "parent_computation_ids": []
+        },
+        "document_digest": "pix.analysis-result.v1:sha256:6533487970e0d43c47d6d0e77a19839012a9984b880bad1870576ece140a5f30"
+      },
+      {
+        "format": "pix.analysis-result",
+        "version": "1.3.0",
+        "payload_kind": "case_dfg_alignment_set",
+        "computation": {
+          "operator_id": "pix.case_centric.align_dfg",
+          "operator_version": "1.0.0",
+          "source_digest": "pix.case-log.v1:sha256:3181ba021463df83cbbde9d3eac11d09007d40f3128440f0931e30d6cd098f3c",
+          "spec": {
+            "model": {
+              "activities": [
+                "run_finished",
+                "run_started"
+              ],
+              "edges": [
+                [
+                  "run_started",
+                  "run_finished"
+                ]
+              ],
+              "starts": [
+                "run_started"
+              ],
+              "ends": [
+                "run_finished"
+              ],
+              "accepts_empty": false
+            },
+            "parameters": {
+              "log_move_cost": 1,
+              "model_move_cost": 1,
+              "max_states": 10000
+            }
+          },
+          "status": "computed",
+          "value": {
+            "traces": [
+              {
+                "case_id": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+                "status": "optimal",
+                "cost": 0,
+                "moves": [
+                  {
+                    "kind": "synchronous",
+                    "log_event_id": "pida:Event:257d62f347dbcd2e91b9d24be57ee075984a29b7596441adda6696d0cc6d77a0",
+                    "log_activity": "run_started",
+                    "model_activity": "run_started",
+                    "reference_event_id": null,
+                    "cost": 0
+                  },
+                  {
+                    "kind": "synchronous",
+                    "log_event_id": "pida:Event:347272a522a2f390f6d3d114d93eb1af35286ba65dae34f0943c3be14efa9125",
+                    "log_activity": "run_finished",
+                    "model_activity": "run_finished",
+                    "reference_event_id": null,
+                    "cost": 0
+                  }
+                ],
+                "settled_states": 3,
+                "discovered_states": 7,
+                "lower_bound_cost": 0
+              }
+            ],
+            "optimal_count": 1,
+            "unreachable_count": 0,
+            "limited_count": 0
+          },
+          "issues": [
+            {
+              "code": "source_sequence",
+              "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order",
+              "at": []
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+                "event",
+                "pida:Event:257d62f347dbcd2e91b9d24be57ee075984a29b7596441adda6696d0cc6d77a0"
+              ]
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+                "event",
+                "pida:Event:347272a522a2f390f6d3d114d93eb1af35286ba65dae34f0943c3be14efa9125"
+              ]
+            }
+          ],
+          "computation_id": "pix.computation.v1:sha256:f717a5de1eda1c76436ce59cf0dfac19a034cb736b4fcff2fdafddd5ddf54dc6",
+          "parent_computation_ids": [
+            "pix.computation.v1:sha256:e20dda52bebc82207bc70c4d8e2de5126a00a940d15a95c680d7f4c4026116bc"
+          ]
+        },
+        "document_digest": "pix.analysis-result.v1:sha256:4af2b59dae1ab67ba70a21cb9bc307f658593f8928b619124277d37552c59f8e"
+      },
+      {
+        "format": "pix.analysis-result",
+        "version": "1.3.0",
+        "payload_kind": "case-traces",
+        "computation": {
+          "operator_id": "pix.case_traces",
+          "operator_version": "1.0.0",
+          "source_digest": "pix.case-log.v1:sha256:48245de79f795a30f49547d127ae5d0b3792a62a4c0710f762d3bca2fe581f96",
+          "spec": {
+            "activity_key": "concept:name",
+            "timestamp_key": "time:timestamp",
+            "classifier": null,
+            "object_type": "case"
+          },
+          "status": "computed",
+          "value": {
+            "object_type": "case",
+            "traces": [
+              {
+                "object_id": "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+                "object_type": "case",
+                "events": [
+                  {
+                    "event_id": "pida:Event:bc8664c54a86a4f6203ed29b9ab3db69ea500cfc870bd14d046c473ad2bcb919",
+                    "activity": "turn_started",
+                    "time": null,
+                    "relations": [
+                      {
+                        "event": "pida:Event:bc8664c54a86a4f6203ed29b9ab3db69ea500cfc870bd14d046c473ad2bcb919",
+                        "object": "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+                        "qualifier": "case"
+                      }
+                    ],
+                    "order_group": null,
+                    "time_lower": null,
+                    "time_upper": null
+                  },
+                  {
+                    "event_id": "pida:Event:93a48185cd3ae408843b18700d4998a48750165bf8b82b12c7eefee0c8563f47",
+                    "activity": "turn_finished",
+                    "time": null,
+                    "relations": [
+                      {
+                        "event": "pida:Event:93a48185cd3ae408843b18700d4998a48750165bf8b82b12c7eefee0c8563f47",
+                        "object": "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+                        "qualifier": "case"
+                      }
+                    ],
+                    "order_group": null,
+                    "time_lower": null,
+                    "time_upper": null
+                  }
+                ]
+              },
+              {
+                "object_id": "pida:Turn:bf8b640673d65dc7ec6e9a1b1536a67f96e9495a7ee69b6da8b3a72d686d73b0",
+                "object_type": "case",
+                "events": [
+                  {
+                    "event_id": "pida:Event:4052461988c1340533cb984fc0720972870a76db4e71532b02d51fc6429ca6c0",
+                    "activity": "turn_started",
+                    "time": null,
+                    "relations": [
+                      {
+                        "event": "pida:Event:4052461988c1340533cb984fc0720972870a76db4e71532b02d51fc6429ca6c0",
+                        "object": "pida:Turn:bf8b640673d65dc7ec6e9a1b1536a67f96e9495a7ee69b6da8b3a72d686d73b0",
+                        "qualifier": "case"
+                      }
+                    ],
+                    "order_group": null,
+                    "time_lower": null,
+                    "time_upper": null
+                  },
+                  {
+                    "event_id": "pida:Event:6850efb5fda1c8c347b387b4e90ae403e524f308992efc3cd4cbd3200cd4bec5",
+                    "activity": "turn_finished",
+                    "time": null,
+                    "relations": [
+                      {
+                        "event": "pida:Event:6850efb5fda1c8c347b387b4e90ae403e524f308992efc3cd4cbd3200cd4bec5",
+                        "object": "pida:Turn:bf8b640673d65dc7ec6e9a1b1536a67f96e9495a7ee69b6da8b3a72d686d73b0",
+                        "qualifier": "case"
+                      }
+                    ],
+                    "order_group": null,
+                    "time_lower": null,
+                    "time_upper": null
+                  }
+                ]
+              }
+            ]
+          },
+          "issues": [
+            {
+              "code": "source_sequence",
+              "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order",
+              "at": []
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+                "event",
+                "pida:Event:bc8664c54a86a4f6203ed29b9ab3db69ea500cfc870bd14d046c473ad2bcb919"
+              ]
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+                "event",
+                "pida:Event:93a48185cd3ae408843b18700d4998a48750165bf8b82b12c7eefee0c8563f47"
+              ]
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:Turn:bf8b640673d65dc7ec6e9a1b1536a67f96e9495a7ee69b6da8b3a72d686d73b0",
+                "event",
+                "pida:Event:4052461988c1340533cb984fc0720972870a76db4e71532b02d51fc6429ca6c0"
+              ]
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:Turn:bf8b640673d65dc7ec6e9a1b1536a67f96e9495a7ee69b6da8b3a72d686d73b0",
+                "event",
+                "pida:Event:6850efb5fda1c8c347b387b4e90ae403e524f308992efc3cd4cbd3200cd4bec5"
+              ]
+            }
+          ],
+          "computation_id": "pix.computation.v1:sha256:2c6f208a6d70132afdb41d51e10d862324d27db129e09f50c251f083749a2c6a",
+          "parent_computation_ids": []
+        },
+        "document_digest": "pix.analysis-result.v1:sha256:439d0a47c4f46400b2753a49fd9fce3ea016e0d472d7163ce8316a8cd148d737"
+      },
+      {
+        "format": "pix.analysis-result",
+        "version": "1.3.0",
+        "payload_kind": "case_dfg_alignment_set",
+        "computation": {
+          "operator_id": "pix.case_centric.align_dfg",
+          "operator_version": "1.0.0",
+          "source_digest": "pix.case-log.v1:sha256:48245de79f795a30f49547d127ae5d0b3792a62a4c0710f762d3bca2fe581f96",
+          "spec": {
+            "model": {
+              "activities": [
+                "turn_finished",
+                "turn_started"
+              ],
+              "edges": [
+                [
+                  "turn_started",
+                  "turn_finished"
+                ]
+              ],
+              "starts": [
+                "turn_started"
+              ],
+              "ends": [
+                "turn_finished"
+              ],
+              "accepts_empty": false
+            },
+            "parameters": {
+              "log_move_cost": 1,
+              "model_move_cost": 1,
+              "max_states": 10000
+            }
+          },
+          "status": "computed",
+          "value": {
+            "traces": [
+              {
+                "case_id": "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+                "status": "optimal",
+                "cost": 0,
+                "moves": [
+                  {
+                    "kind": "synchronous",
+                    "log_event_id": "pida:Event:bc8664c54a86a4f6203ed29b9ab3db69ea500cfc870bd14d046c473ad2bcb919",
+                    "log_activity": "turn_started",
+                    "model_activity": "turn_started",
+                    "reference_event_id": null,
+                    "cost": 0
+                  },
+                  {
+                    "kind": "synchronous",
+                    "log_event_id": "pida:Event:93a48185cd3ae408843b18700d4998a48750165bf8b82b12c7eefee0c8563f47",
+                    "log_activity": "turn_finished",
+                    "model_activity": "turn_finished",
+                    "reference_event_id": null,
+                    "cost": 0
+                  }
+                ],
+                "settled_states": 3,
+                "discovered_states": 7,
+                "lower_bound_cost": 0
+              },
+              {
+                "case_id": "pida:Turn:bf8b640673d65dc7ec6e9a1b1536a67f96e9495a7ee69b6da8b3a72d686d73b0",
+                "status": "optimal",
+                "cost": 0,
+                "moves": [
+                  {
+                    "kind": "synchronous",
+                    "log_event_id": "pida:Event:4052461988c1340533cb984fc0720972870a76db4e71532b02d51fc6429ca6c0",
+                    "log_activity": "turn_started",
+                    "model_activity": "turn_started",
+                    "reference_event_id": null,
+                    "cost": 0
+                  },
+                  {
+                    "kind": "synchronous",
+                    "log_event_id": "pida:Event:6850efb5fda1c8c347b387b4e90ae403e524f308992efc3cd4cbd3200cd4bec5",
+                    "log_activity": "turn_finished",
+                    "model_activity": "turn_finished",
+                    "reference_event_id": null,
+                    "cost": 0
+                  }
+                ],
+                "settled_states": 3,
+                "discovered_states": 7,
+                "lower_bound_cost": 0
+              }
+            ],
+            "optimal_count": 2,
+            "unreachable_count": 0,
+            "limited_count": 0
+          },
+          "issues": [
+            {
+              "code": "source_sequence",
+              "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order",
+              "at": []
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+                "event",
+                "pida:Event:bc8664c54a86a4f6203ed29b9ab3db69ea500cfc870bd14d046c473ad2bcb919"
+              ]
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+                "event",
+                "pida:Event:93a48185cd3ae408843b18700d4998a48750165bf8b82b12c7eefee0c8563f47"
+              ]
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:Turn:bf8b640673d65dc7ec6e9a1b1536a67f96e9495a7ee69b6da8b3a72d686d73b0",
+                "event",
+                "pida:Event:4052461988c1340533cb984fc0720972870a76db4e71532b02d51fc6429ca6c0"
+              ]
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:Turn:bf8b640673d65dc7ec6e9a1b1536a67f96e9495a7ee69b6da8b3a72d686d73b0",
+                "event",
+                "pida:Event:6850efb5fda1c8c347b387b4e90ae403e524f308992efc3cd4cbd3200cd4bec5"
+              ]
+            }
+          ],
+          "computation_id": "pix.computation.v1:sha256:86c57fb226d8d16b1418497d62b346321c6427c7db2739354aa0a41da4d149ad",
+          "parent_computation_ids": [
+            "pix.computation.v1:sha256:2c6f208a6d70132afdb41d51e10d862324d27db129e09f50c251f083749a2c6a"
+          ]
+        },
+        "document_digest": "pix.analysis-result.v1:sha256:1bf99ba8354ad4cf046ca0deaf5c66080039cf2f57acdcc48587f60b674c0baa"
+      },
+      {
+        "format": "pix.analysis-result",
+        "version": "1.3.0",
+        "payload_kind": "case-traces",
+        "computation": {
+          "operator_id": "pix.case_traces",
+          "operator_version": "1.0.0",
+          "source_digest": "pix.case-log.v1:sha256:94444c9958a4082ad7a653e93413c02e806cd7d759a3624b3a24d0c64776a701",
+          "spec": {
+            "activity_key": "concept:name",
+            "timestamp_key": "time:timestamp",
+            "classifier": null,
+            "object_type": "case"
+          },
+          "status": "computed",
+          "value": {
+            "object_type": "case",
+            "traces": [
+              {
+                "object_id": "pida:ToolCall:03aed1743b25368af946985af52d1e2d996a6efe91f62036f197ec838c0b5862",
+                "object_type": "case",
+                "events": [
+                  {
+                    "event_id": "pida:Event:d2a62ca139a52aa4c798ca966f7f9a73403cc982dec8152a47ac323d87603f18",
+                    "activity": "tool_started",
+                    "time": null,
+                    "relations": [
+                      {
+                        "event": "pida:Event:d2a62ca139a52aa4c798ca966f7f9a73403cc982dec8152a47ac323d87603f18",
+                        "object": "pida:ToolCall:03aed1743b25368af946985af52d1e2d996a6efe91f62036f197ec838c0b5862",
+                        "qualifier": "case"
+                      }
+                    ],
+                    "order_group": null,
+                    "time_lower": null,
+                    "time_upper": null
+                  },
+                  {
+                    "event_id": "pida:Event:fd6adb73fc6813a4269d129732abc384ea6f4b10aab6ab8de6c1ee11b2363d10",
+                    "activity": "tool_completed",
+                    "time": null,
+                    "relations": [
+                      {
+                        "event": "pida:Event:fd6adb73fc6813a4269d129732abc384ea6f4b10aab6ab8de6c1ee11b2363d10",
+                        "object": "pida:ToolCall:03aed1743b25368af946985af52d1e2d996a6efe91f62036f197ec838c0b5862",
+                        "qualifier": "case"
+                      }
+                    ],
+                    "order_group": null,
+                    "time_lower": null,
+                    "time_upper": null
+                  }
+                ]
+              }
+            ]
+          },
+          "issues": [
+            {
+              "code": "source_sequence",
+              "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order",
+              "at": []
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:ToolCall:03aed1743b25368af946985af52d1e2d996a6efe91f62036f197ec838c0b5862",
+                "event",
+                "pida:Event:d2a62ca139a52aa4c798ca966f7f9a73403cc982dec8152a47ac323d87603f18"
+              ]
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:ToolCall:03aed1743b25368af946985af52d1e2d996a6efe91f62036f197ec838c0b5862",
+                "event",
+                "pida:Event:fd6adb73fc6813a4269d129732abc384ea6f4b10aab6ab8de6c1ee11b2363d10"
+              ]
+            }
+          ],
+          "computation_id": "pix.computation.v1:sha256:23a7f5206c96ea8490135dc39e13cd4cc24f49dfa329635ba9c8e956333db678",
+          "parent_computation_ids": []
+        },
+        "document_digest": "pix.analysis-result.v1:sha256:377488807071333d4ce2f70be831b641c128eb84d1dce3c635a95fffe2ab7290"
+      },
+      {
+        "format": "pix.analysis-result",
+        "version": "1.3.0",
+        "payload_kind": "case_dfg_alignment_set",
+        "computation": {
+          "operator_id": "pix.case_centric.align_dfg",
+          "operator_version": "1.0.0",
+          "source_digest": "pix.case-log.v1:sha256:94444c9958a4082ad7a653e93413c02e806cd7d759a3624b3a24d0c64776a701",
+          "spec": {
+            "model": {
+              "activities": [
+                "tool_completed",
+                "tool_failed",
+                "tool_started"
+              ],
+              "edges": [
+                [
+                  "tool_started",
+                  "tool_completed"
+                ],
+                [
+                  "tool_started",
+                  "tool_failed"
+                ]
+              ],
+              "starts": [
+                "tool_started"
+              ],
+              "ends": [
+                "tool_completed",
+                "tool_failed"
+              ],
+              "accepts_empty": false
+            },
+            "parameters": {
+              "log_move_cost": 1,
+              "model_move_cost": 1,
+              "max_states": 10000
+            }
+          },
+          "status": "computed",
+          "value": {
+            "traces": [
+              {
+                "case_id": "pida:ToolCall:03aed1743b25368af946985af52d1e2d996a6efe91f62036f197ec838c0b5862",
+                "status": "optimal",
+                "cost": 0,
+                "moves": [
+                  {
+                    "kind": "synchronous",
+                    "log_event_id": "pida:Event:d2a62ca139a52aa4c798ca966f7f9a73403cc982dec8152a47ac323d87603f18",
+                    "log_activity": "tool_started",
+                    "model_activity": "tool_started",
+                    "reference_event_id": null,
+                    "cost": 0
+                  },
+                  {
+                    "kind": "synchronous",
+                    "log_event_id": "pida:Event:fd6adb73fc6813a4269d129732abc384ea6f4b10aab6ab8de6c1ee11b2363d10",
+                    "log_activity": "tool_completed",
+                    "model_activity": "tool_completed",
+                    "reference_event_id": null,
+                    "cost": 0
+                  }
+                ],
+                "settled_states": 3,
+                "discovered_states": 8,
+                "lower_bound_cost": 0
+              }
+            ],
+            "optimal_count": 1,
+            "unreachable_count": 0,
+            "limited_count": 0
+          },
+          "issues": [
+            {
+              "code": "source_sequence",
+              "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order",
+              "at": []
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:ToolCall:03aed1743b25368af946985af52d1e2d996a6efe91f62036f197ec838c0b5862",
+                "event",
+                "pida:Event:d2a62ca139a52aa4c798ca966f7f9a73403cc982dec8152a47ac323d87603f18"
+              ]
+            },
+            {
+              "code": "unknown_timestamp",
+              "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+              "at": [
+                "trace",
+                "pida:ToolCall:03aed1743b25368af946985af52d1e2d996a6efe91f62036f197ec838c0b5862",
+                "event",
+                "pida:Event:fd6adb73fc6813a4269d129732abc384ea6f4b10aab6ab8de6c1ee11b2363d10"
+              ]
+            }
+          ],
+          "computation_id": "pix.computation.v1:sha256:724987799e3c7606f2b3a18fd5b7083c5904f3548f7ae43f4ef6748b7e077a45",
+          "parent_computation_ids": [
+            "pix.computation.v1:sha256:23a7f5206c96ea8490135dc39e13cd4cc24f49dfa329635ba9c8e956333db678"
+          ]
+        },
+        "document_digest": "pix.analysis-result.v1:sha256:916ed19210f6851edf599778924018868ca43cbe4da59958242bfb63d29ffe50"
+      }
+    ],
+    "models": {
+      "Run": {
+        "activities": [
+          "run_started",
+          "run_finished"
+        ],
+        "edges": [
+          [
+            "run_started",
+            "run_finished"
+          ]
+        ],
+        "starts": [
+          "run_started"
+        ],
+        "ends": [
+          "run_finished"
+        ],
+        "acceptsEmpty": false
+      },
+      "Turn": {
+        "activities": [
+          "turn_started",
+          "turn_finished"
+        ],
+        "edges": [
+          [
+            "turn_started",
+            "turn_finished"
+          ]
+        ],
+        "starts": [
+          "turn_started"
+        ],
+        "ends": [
+          "turn_finished"
+        ],
+        "acceptsEmpty": false
+      },
+      "ToolCall": {
+        "activities": [
+          "tool_started",
+          "tool_completed",
+          "tool_failed"
+        ],
+        "edges": [
+          [
+            "tool_started",
+            "tool_completed"
+          ],
+          [
+            "tool_started",
+            "tool_failed"
+          ]
+        ],
+        "starts": [
+          "tool_started"
+        ],
+        "ends": [
+          "tool_completed",
+          "tool_failed"
+        ],
+        "acceptsEmpty": false
+      }
+    },
+    "checkedObjects": [
+      {
+        "objectId": "pida:Run:c8f37c35893046cdc023f1a5851715db15a92ba12330fc84c45ff13ea9c8292d",
+        "type": "Run",
+        "status": "optimal",
+        "cost": 0
+      },
+      {
+        "objectId": "pida:Turn:863a73f8cd08f0638ac24eef19e58c943814eb6b86e90b835a85db251c0dd842",
+        "type": "Turn",
+        "status": "optimal",
+        "cost": 0
+      },
+      {
+        "objectId": "pida:Turn:bf8b640673d65dc7ec6e9a1b1536a67f96e9495a7ee69b6da8b3a72d686d73b0",
+        "type": "Turn",
+        "status": "optimal",
+        "cost": 0
+      },
+      {
+        "objectId": "pida:ToolCall:03aed1743b25368af946985af52d1e2d996a6efe91f62036f197ec838c0b5862",
+        "type": "ToolCall",
+        "status": "optimal",
+        "cost": 0
+      }
+    ],
+    "coverage": {
+      "events": 12,
+      "objects": 9,
+      "e2o": 64,
+      "o2o": 11,
+      "uncoveredTypes": [
+        "Agent",
+        "ModelRequest",
+        "Session",
+        "Task"
+      ]
+    },
+    "limits": [
+      "RUNTIME_LIFECYCLES_ONLY",
+      "OBJECT_PROJECTION_NOT_OC_PETRI_NET_CONFORMANCE",
+      "SOURCE_SEQUENCE_NOT_CAUSAL_ORDER",
+      "NO_ARTIFACT_CORRECTNESS_OR_BUSINESS_ACCEPTANCE",
+      "MODEL_REQUEST_AND_CROSS_OBJECT_DEPENDENCIES_NOT_CHECKED"
+    ],
+    "engine": {
+      "repository": "Chanta-Research-Group/PIX",
+      "sourceCommit": "3205d832d5dcdc6901f916b35496a0c60b657e7a",
+      "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+      "packageVersion": "0.5.0",
+      "pythonVersion": "3.12.14",
+      "sourceVerified": true
+    }
+  },
+  "modelDigest": "b43e8a6b280f8418c77a9f42e93b49ed4cdfff6f95463f6b51211a0bb13c695a",
+  "resultRef": "pi-result:718ab9e17732277682c169840682a913e937f5b936a3840adc2e82b5e6668823",
+  "resultDigest": "52ee5b8979c1d6c45de54c508731835be341d8f3151f3f8948da30b7f3798bfc"
+}

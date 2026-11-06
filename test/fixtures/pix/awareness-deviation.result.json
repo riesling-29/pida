@@ -1,0 +1,482 @@
+{
+  "schemaVersion": "pida.pix.worker.v1",
+  "operation": "awareness",
+  "status": "computed",
+  "issues": [
+    {
+      "code": "source_sequence",
+      "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order"
+    },
+    {
+      "code": "unknown_timestamp",
+      "message": "No timezone-aware timestamp is available; source facts remain in CaseLog"
+    }
+  ],
+  "nativeResults": [
+    {
+      "format": "pix.analysis-result",
+      "version": "1.3.0",
+      "payload_kind": "case-traces",
+      "computation": {
+        "operator_id": "pix.case_traces",
+        "operator_version": "1.0.0",
+        "source_digest": "pix.case-log.v1:sha256:ab9ad85181ff042c1eb558c51855815efd2f89a593da63fa3ddec17f3159c804",
+        "spec": {
+          "activity_key": "concept:name",
+          "timestamp_key": "time:timestamp",
+          "classifier": null,
+          "object_type": "case"
+        },
+        "status": "computed",
+        "value": {
+          "object_type": "case",
+          "traces": [
+            {
+              "object_id": "heldout-extra-review",
+              "object_type": "case",
+              "events": [
+                {
+                  "event_id": "heldout-extra-review:0",
+                  "activity": "request",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "heldout-extra-review:0",
+                      "object": "heldout-extra-review",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "heldout-extra-review:1",
+                  "activity": "reproduce",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "heldout-extra-review:1",
+                      "object": "heldout-extra-review",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "heldout-extra-review:2",
+                  "activity": "edit",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "heldout-extra-review:2",
+                      "object": "heldout-extra-review",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "heldout-extra-review:3",
+                  "activity": "test",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "heldout-extra-review:3",
+                      "object": "heldout-extra-review",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "heldout-extra-review:4",
+                  "activity": "review",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "heldout-extra-review:4",
+                      "object": "heldout-extra-review",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                },
+                {
+                  "event_id": "heldout-extra-review:5",
+                  "activity": "deliver",
+                  "time": null,
+                  "relations": [
+                    {
+                      "event": "heldout-extra-review:5",
+                      "object": "heldout-extra-review",
+                      "qualifier": "case"
+                    }
+                  ],
+                  "order_group": null,
+                  "time_lower": null,
+                  "time_upper": null
+                }
+              ]
+            }
+          ]
+        },
+        "issues": [
+          {
+            "code": "source_sequence",
+            "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order",
+            "at": []
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-extra-review",
+              "event",
+              "heldout-extra-review:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-extra-review",
+              "event",
+              "heldout-extra-review:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-extra-review",
+              "event",
+              "heldout-extra-review:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-extra-review",
+              "event",
+              "heldout-extra-review:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-extra-review",
+              "event",
+              "heldout-extra-review:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-extra-review",
+              "event",
+              "heldout-extra-review:5"
+            ]
+          }
+        ],
+        "computation_id": "pix.computation.v1:sha256:35c37ec899cd12941acf34c04fe03713ba9c44fd3b8c9431d46f25a4ea9c2f5e",
+        "parent_computation_ids": []
+      },
+      "document_digest": "pix.analysis-result.v1:sha256:f2cdc1f2a48b0a7b4b22026b020e80634bddf7d0b86072f0f3fdef91d3e38c90"
+    },
+    {
+      "format": "pix.analysis-result",
+      "version": "1.3.0",
+      "payload_kind": "case_dfg_alignment_set",
+      "computation": {
+        "operator_id": "pix.case_centric.align_dfg",
+        "operator_version": "1.0.0",
+        "source_digest": "pix.case-log.v1:sha256:ab9ad85181ff042c1eb558c51855815efd2f89a593da63fa3ddec17f3159c804",
+        "spec": {
+          "model": {
+            "activities": [
+              "abort",
+              "deliver",
+              "edit",
+              "reproduce",
+              "request",
+              "test",
+              "tool_error"
+            ],
+            "edges": [
+              [
+                "edit",
+                "test"
+              ],
+              [
+                "reproduce",
+                "edit"
+              ],
+              [
+                "request",
+                "edit"
+              ],
+              [
+                "request",
+                "reproduce"
+              ],
+              [
+                "request",
+                "tool_error"
+              ],
+              [
+                "test",
+                "deliver"
+              ],
+              [
+                "tool_error",
+                "abort"
+              ]
+            ],
+            "starts": [
+              "request"
+            ],
+            "ends": [
+              "abort",
+              "deliver"
+            ],
+            "accepts_empty": false
+          },
+          "parameters": {
+            "log_move_cost": 1,
+            "model_move_cost": 1,
+            "max_states": 100000
+          }
+        },
+        "status": "computed",
+        "value": {
+          "traces": [
+            {
+              "case_id": "heldout-extra-review",
+              "status": "optimal",
+              "cost": 1,
+              "moves": [
+                {
+                  "kind": "synchronous",
+                  "log_event_id": "heldout-extra-review:0",
+                  "log_activity": "request",
+                  "model_activity": "request",
+                  "reference_event_id": null,
+                  "cost": 0
+                },
+                {
+                  "kind": "synchronous",
+                  "log_event_id": "heldout-extra-review:1",
+                  "log_activity": "reproduce",
+                  "model_activity": "reproduce",
+                  "reference_event_id": null,
+                  "cost": 0
+                },
+                {
+                  "kind": "synchronous",
+                  "log_event_id": "heldout-extra-review:2",
+                  "log_activity": "edit",
+                  "model_activity": "edit",
+                  "reference_event_id": null,
+                  "cost": 0
+                },
+                {
+                  "kind": "synchronous",
+                  "log_event_id": "heldout-extra-review:3",
+                  "log_activity": "test",
+                  "model_activity": "test",
+                  "reference_event_id": null,
+                  "cost": 0
+                },
+                {
+                  "kind": "log",
+                  "log_event_id": "heldout-extra-review:4",
+                  "log_activity": "review",
+                  "model_activity": null,
+                  "reference_event_id": null,
+                  "cost": 1
+                },
+                {
+                  "kind": "synchronous",
+                  "log_event_id": "heldout-extra-review:5",
+                  "log_activity": "deliver",
+                  "model_activity": "deliver",
+                  "reference_event_id": null,
+                  "cost": 0
+                }
+              ],
+              "settled_states": 18,
+              "discovered_states": 32,
+              "lower_bound_cost": 1
+            }
+          ],
+          "optimal_count": 1,
+          "unreachable_count": 0,
+          "limited_count": 0
+        },
+        "issues": [
+          {
+            "code": "source_sequence",
+            "message": "Trace/event order is the source sequence; it is not a claim of timestamp or causal order",
+            "at": []
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-extra-review",
+              "event",
+              "heldout-extra-review:0"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-extra-review",
+              "event",
+              "heldout-extra-review:1"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-extra-review",
+              "event",
+              "heldout-extra-review:2"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-extra-review",
+              "event",
+              "heldout-extra-review:3"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-extra-review",
+              "event",
+              "heldout-extra-review:4"
+            ]
+          },
+          {
+            "code": "unknown_timestamp",
+            "message": "No timezone-aware timestamp is available; source facts remain in CaseLog",
+            "at": [
+              "trace",
+              "heldout-extra-review",
+              "event",
+              "heldout-extra-review:5"
+            ]
+          }
+        ],
+        "computation_id": "pix.computation.v1:sha256:77d885e092e10538cf8d4c3bc865ebe5a9368a580fad099dcf1672658bc4374d",
+        "parent_computation_ids": [
+          "pix.computation.v1:sha256:35c37ec899cd12941acf34c04fe03713ba9c44fd3b8c9431d46f25a4ea9c2f5e"
+        ]
+      },
+      "document_digest": "pix.analysis-result.v1:sha256:64866e0d4de8f5c6134a7247bdb8ecdb458daa21eb6c1bc4996da65072b77a0f"
+    }
+  ],
+  "limits": [
+    "Completed source-sequence runs only; no live-current-cut or concurrent semantics.",
+    "DFG accepting-language conformance reports edit cost, not normalized fitness or business acceptance.",
+    "Discovery may generalize recombinations; zero cost does not prove an exact previously observed trace.",
+    "Empirical deviation does not authorize correction, identity change or tool execution."
+  ],
+  "engine": {
+    "repository": "Chanta-Research-Group/PIX",
+    "sourceCommit": "3205d832d5dcdc6901f916b35496a0c60b657e7a",
+    "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+    "packageVersion": "0.5.0",
+    "pythonVersion": "3.12.14",
+    "sourceVerified": true
+  },
+  "sampleCount": 1,
+  "alignments": [
+    {
+      "caseId": "heldout-extra-review",
+      "status": "optimal",
+      "cost": 1,
+      "moves": [
+        {
+          "kind": "synchronous",
+          "log_event_id": "heldout-extra-review:0",
+          "log_activity": "request",
+          "model_activity": "request",
+          "reference_event_id": null,
+          "cost": 0
+        },
+        {
+          "kind": "synchronous",
+          "log_event_id": "heldout-extra-review:1",
+          "log_activity": "reproduce",
+          "model_activity": "reproduce",
+          "reference_event_id": null,
+          "cost": 0
+        },
+        {
+          "kind": "synchronous",
+          "log_event_id": "heldout-extra-review:2",
+          "log_activity": "edit",
+          "model_activity": "edit",
+          "reference_event_id": null,
+          "cost": 0
+        },
+        {
+          "kind": "synchronous",
+          "log_event_id": "heldout-extra-review:3",
+          "log_activity": "test",
+          "model_activity": "test",
+          "reference_event_id": null,
+          "cost": 0
+        },
+        {
+          "kind": "log",
+          "log_event_id": "heldout-extra-review:4",
+          "log_activity": "review",
+          "model_activity": null,
+          "reference_event_id": null,
+          "cost": 1
+        },
+        {
+          "kind": "synchronous",
+          "log_event_id": "heldout-extra-review:5",
+          "log_activity": "deliver",
+          "model_activity": "deliver",
+          "reference_event_id": null,
+          "cost": 0
+        }
+      ],
+      "lowerBoundCost": 1
+    }
+  ]
+}

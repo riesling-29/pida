@@ -1,0 +1,24 @@
+{
+  "version": "0.8.7",
+  "command": "npm test",
+  "environment": {
+    "platform": "linux x64",
+    "node": "24.22.1",
+    "npm": "11.9.0",
+    "python": "3.12.14",
+    "pi": "1.2.0"
+  },
+  "counts": {
+    "tests": 353,
+    "pass": 353,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "duration_ms": 27971.949198,
+  "transcript_sha256": "368205ac8de76674a0a92a6c937d77f4fd512008e234f6e1745bbf2b75a8c37f",
+  "includes_build": true,
+  "model_decisions": "synthetic/scripted",
+  "browser": "DOM fixtures; no browser executable",
+  "pty": "separate pty-report.json"
+}

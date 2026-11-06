@@ -1,0 +1,117 @@
+{
+  "current": {
+    "accepted": false,
+    "error": "PIDA_FORBIDDEN_PAYLOAD_FIELD"
+  },
+  "control": {
+    "accepted": true,
+    "result": {
+      "schema_version": "0.1",
+      "scope": "synthetic-test",
+      "ingest": {
+        "schema_version": "0.1",
+        "bundle_digest": "18ab5b9e2b776c41735824f191e929b31441b1385dd948d50e35d3eaecf08a85",
+        "data_scope": "synthetic-test",
+        "counts": {
+          "ACCEPTED": 5,
+          "DUPLICATE": 0,
+          "CONFLICT": 0,
+          "QUARANTINED": 0,
+          "REJECTED": 0
+        },
+        "entries": [
+          {
+            "event": "0198ccff-47c9-4796-a5d8-e97b9650d735/46bfa634-08a4-4bbd-8e87-8f4b4ca35159",
+            "status": "ACCEPTED",
+            "record_digest": "05f6bdaccbdf61cb141bc04f855009bb2cba11e9596e22089eb6c40280dc1ea5",
+            "mapping_losses": []
+          },
+          {
+            "event": "0198ccff-47c9-4796-a5d8-e97b9650d735/f35deda1-a724-40ef-99d3-bb95847918f6",
+            "status": "ACCEPTED",
+            "record_digest": "390d936f431d0c99a99822eb4246862a2522f524a082cfcfe2c20cd6218a0fa8",
+            "mapping_losses": []
+          },
+          {
+            "event": "0198ccff-47c9-4796-a5d8-e97b9650d735/a17417a2-f64c-4b65-b031-156e85617b12",
+            "status": "ACCEPTED",
+            "record_digest": "0c4d4ecd2d49e326539fd892bce95c59fc4a079e8a1e086b7b6221080c9105a8",
+            "mapping_losses": []
+          },
+          {
+            "event": "0198ccff-47c9-4796-a5d8-e97b9650d735/0169fef6-e2d9-442b-9e00-b79bb5686a10",
+            "status": "ACCEPTED",
+            "record_digest": "80c587db6e4c2de5820f929a30f2c67942d185748c9b8e82877aa0a61383df5e",
+            "mapping_losses": []
+          },
+          {
+            "event": "0198ccff-47c9-4796-a5d8-e97b9650d735/9f222164-4607-4e0d-b4ab-bdb57f3f5a90",
+            "status": "ACCEPTED",
+            "record_digest": "b8c1e3d44512ecbf776d3cbc89177f1ce80730db446d76185451e1bac52c711e",
+            "mapping_losses": []
+          }
+        ],
+        "manifest_received": true,
+        "manifest_verified": false,
+        "source_coverage": {
+          "adapter_version": "pida-native-adapter/0.1.0",
+          "native_bundle_sha256": "sha256:ec001a21767fc2496d24b7d576c02e290362be914ae8922cff88385fdd0a3df6",
+          "native_semantic_digest": "sha256:804ffe1045fbaa644f6553c3fc993fbcb266313efba3237986fbdd2394bc24be",
+          "producer_schema_version": "pida.bundle/0.1-draft",
+          "source_id": "0198ccff-47c9-4796-a5d8-e97b9650d735",
+          "agent_id": "c3f327c9-781e-4f18-8cf3-8d2ee593aa7c",
+          "task_id": "457e6749-e347-418b-9f1a-1ef638108602",
+          "session_id": "01a170ce-cfed-7431-aeb2-31b7ace412ed",
+          "run_id": "20c4a88a-3a49-424a-b0c1-7da889b23be8",
+          "producer_complete": true,
+          "known_limits": [],
+          "event_count": 5,
+          "duplicate_count": 0,
+          "last_sequence": 5,
+          "source_capture_policy": "metadata-only",
+          "authorization_scope": "synthetic-test",
+          "mapping_losses": [
+            "native_payload_metadata_not_retained; original SHA preserved",
+            "opaque_object_refs_retained; only authoritative identities create typed E2O",
+            "producer_artifact_and_evidence_ids_referenced_via_manifest"
+          ],
+          "covered_source_event_refs": [
+            {
+              "source_id": "0198ccff-47c9-4796-a5d8-e97b9650d735",
+              "source_event_id": "0169fef6-e2d9-442b-9e00-b79bb5686a10"
+            },
+            {
+              "source_id": "0198ccff-47c9-4796-a5d8-e97b9650d735",
+              "source_event_id": "46bfa634-08a4-4bbd-8e87-8f4b4ca35159"
+            },
+            {
+              "source_id": "0198ccff-47c9-4796-a5d8-e97b9650d735",
+              "source_event_id": "9f222164-4607-4e0d-b4ab-bdb57f3f5a90"
+            },
+            {
+              "source_id": "0198ccff-47c9-4796-a5d8-e97b9650d735",
+              "source_event_id": "a17417a2-f64c-4b65-b031-156e85617b12"
+            },
+            {
+              "source_id": "0198ccff-47c9-4796-a5d8-e97b9650d735",
+              "source_event_id": "f35deda1-a724-40ef-99d3-bb95847918f6"
+            }
+          ],
+          "covered_event_count": 5,
+          "ingest_issues": [],
+          "accepted_or_duplicate_events": 5,
+          "integration_complete": true
+        }
+      },
+      "producer": {
+        "schema_version": "pida.bundle/0.1-draft",
+        "raw_file_sha256": "sha256:ec001a21767fc2496d24b7d576c02e290362be914ae8922cff88385fdd0a3df6",
+        "duplicates": 0,
+        "complete": true,
+        "known_limits": []
+      }
+    }
+  },
+  "status": "BLOCKED_CONSUMER_CONTRACT",
+  "producerBytesAltered": false
+}
