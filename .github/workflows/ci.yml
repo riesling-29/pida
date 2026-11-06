@@ -1,0 +1,62 @@
+name: contract-and-integration
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  work-surface-browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/work-surface-browser-check.mjs
+      - run: node scripts/multi-agent-browser-check.mjs
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [22.19.0, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: npm pack --dry-run
+
+  package-managers:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - manager: npm
+            install: npm ci --ignore-scripts
+            test: npm test
+          - manager: pnpm
+            install: pnpm install --frozen-lockfile --ignore-scripts
+            test: pnpm run test
+          - manager: bun
+            install: bun install --frozen-lockfile --ignore-scripts
+            test: bun run test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - if: matrix.manager == 'pnpm'
+        run: npm install --global pnpm@12.11.2
+      - if: matrix.manager == 'bun'
+        run: npm install --global bun@1.4.3
+      - run: ${{ matrix.install }}
+      - run: ${{ matrix.test }}
+      - run: npm pack
+      - run: node scripts/install-check.mjs ${{ matrix.manager }} pida-core-*.tgz

@@ -1,0 +1,9 @@
+{
+  "objects": [["artifact-a@r1", "artifact_revision"], ["artifact-b@r7", "artifact_revision"], ["agent-shared", "agent"]],
+  "events": [
+    {"id": "start", "activity": "start", "time": "2026-01-01T00:00:00+00:00", "relations": [["artifact-a@r1", "uses"], ["artifact-b@r7", "uses"], ["agent-shared", "actor"]]},
+    {"id": "read-a", "activity": "read_a", "time": "2026-01-01T00:00:01+00:00", "relations": [["artifact-a@r1", "uses"], ["agent-shared", "actor"]]},
+    {"id": "read-b", "activity": "read_b", "time": "2026-01-01T00:00:01+00:00", "relations": [["artifact-b@r7", "uses"], ["agent-shared", "actor"]]},
+    {"id": "verify", "activity": "verify", "time": "2026-01-01T00:00:02+00:00", "relations": [["artifact-a@r1", "uses"], ["artifact-b@r7", "uses"], ["agent-shared", "actor"]]}
+  ]
+}

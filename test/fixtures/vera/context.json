@@ -1,0 +1,82 @@
+{
+  "schema_version": "vera-continuity/0.2.0",
+  "context_id": "vera-context:bb5539b3fe5c440bab6bb1f5a679079c",
+  "binding_id": "binding:b5735dedd9b7473289a771c84e5503f6",
+  "persona_id": "persona:synthetic-vera",
+  "identity_revision": 1,
+  "memory_revision": "da3956c9127bb96ba1afc55e69d5df84210719f5f8ce2cd7dd88a879f5d6ad0b",
+  "memory_refs": [
+    "memory:d86d59bd128446b3b5ff10128a0c7f99",
+    "memory:cfbc4061ada54fc6843978725c517b80"
+  ],
+  "state_ref": "state:5dfdefb373af4e07abff52e52cc1341f",
+  "source_refs": [
+    "document:synthetic-fixture",
+    "observation:fixture",
+    "run:fixture"
+  ],
+  "renderer_version": "vera-json/1",
+  "budget": {
+    "unit": "utf8_bytes",
+    "limit": 60000,
+    "used": 4608
+  },
+  "omitted": {
+    "memories": 0,
+    "working_state": false
+  },
+  "truncated": false,
+  "scopes": [
+    "organization:fixture",
+    "personal:fixture",
+    "project:alpha"
+  ],
+  "text": "{\"behavioral_analyses\":[],\"behavioral_models\":[{\"cohort\":\"synthetic-fixture\",\"conditions\":{\"constraints\":[\"no external execution\"],\"harness\":\"local-test\",\"model\":\"none\",\"role\":\"fixture\",\"tools\":[]},\"counterexample_root_ids\":[],\"coverage\":{\"exclusions\":[],\"observed\":3,\"partial\":false,\"total\":3},\"digest\":\"ddf63b58861f04d8f43ddd5936564788d80a0a57e7d91ccd3952b14c11c85b44\",\"discovery_result\":{\"digest\":\"27b0674a383e892b265cd21bbcbf38754188de2037486122aed45c274cb69010\",\"id\":\"artifact:0ca3f9de461ff3619d276681dd7d239e5dcc6613abc0e7c79e5a3d14accd0637\",\"revision\":1},\"group\":\"fe8549a19a4eb1445bab51cbe91eaebc7e6571c93740ca75fec70f86601ee708\",\"id\":\"behavior-model:d39697f635924d5f9c61052aa4ebc678\",\"identity_revision\":1,\"interpretation\":\"Synthetic model candidate, not identity truth.\",\"interpretation_source_ids\":[\"observation:e01d97dfc089563deea33f44224da8b3dd6ce23348f7a26b758051ca8f814521\"],\"mapping_ref\":{\"digest\":\"882f62d3424c2a9857eaf132c45ed99044b9ed3b139326621c7ae9bb551b0169\",\"id\":\"artifact:d24dfb08ddcac13f06017faf60f160d9783a0178500857fe040164a5e124bd69\",\"revision\":1},\"model_artifact\":{\"digest\":\"55c9786faebfaec9fa7d5938a10dfefb16de8a0438623c26811b19a74bd7c403\",\"id\":\"artifact:f8cf7bebe2ccafe67c629a4b6e2deca58f2b375db15fb91259c1c39917c44e9d\",\"revision\":1},\"model_id\":\"fixture-13\",\"model_kind\":\"empirical\",\"operator_ref\":{\"digest\":\"1e1579f25faa8f333473562894800e29f4ef8465ee26c2678d156f28426e0534\",\"id\":\"artifact:c7cb88768b50e983fb46628c476ff984457b2acf8b56b8c5bdad25eed3c50c62\",\"revision\":1},\"persona_id\":\"persona:synthetic-vera\",\"quality\":\"complete\",\"recorded_at\":1000,\"retention\":{\"on_expiry\":\"archive-deny-read\",\"retain_until\":null},\"revision\":1,\"sample_count\":3,\"sample_count_authority\":\"producer-declared; not recalculated from duplicated records\",\"scopes\":[\"organization:fixture\",\"personal:fixture\"],\"semantic_identity_truth\":\"NOT_EVALUATED\",\"source_root_ids\":[\"observation:e01d97dfc089563deea33f44224da8b3dd6ce23348f7a26b758051ca8f814521\"],\"training_window\":{\"dataset_digest\":\"9671047bdaab59db54d1add17e54e83dca10a466532abb56186af0013da93d53\",\"end\":20,\"start\":10},\"unique_source_count\":1,\"validity\":{\"valid_from\":0,\"valid_until\":null},\"writer_principal\":\"principal:fixture\"}],\"contract\":\"vera-continuity/0.2.0\",\"identity\":{\"description\":\"Synthetic self-description: verify before action.\",\"identity_revision\":1,\"lifetime\":{\"expires_at\":null,\"kind\":\"persistent\"},\"memory_scope\":[\"organization:fixture\",\"personal:fixture\",\"project:alpha\",\"project:beta\"],\"name\":\"Synthetic continuity fixture\",\"persona_id\":\"persona:synthetic-vera\",\"persona_kind\":\"persistent\",\"recorded_at\":1000,\"retention\":{\"on_expiry\":\"archive-deny-read\",\"retain_until\":null},\"schema_version\":\"1.0.0\",\"scopes\":[\"organization:fixture\"],\"source_refs\":[\"document:synthetic-fixture\"]},\"memories\":[{\"claims\":{\"relation\":\"Synthetic collaboration context.\"},\"memory_id\":\"memory:d86d59bd128446b3b5ff10128a0c7f99\",\"provenance\":{\"asserted_by\":\"principal:fixture\",\"authority\":\"fixture-events\",\"evidence_kind\":\"observation\",\"source_refs\":[\"observation:fixture\"]},\"relations\":[],\"tier\":\"long_term\"},{\"claims\":{\"pattern\":\"Synthetic correction: verify the source before acting.\"},\"memory_id\":\"memory:cfbc4061ada54fc6843978725c517b80\",\"provenance\":{\"asserted_by\":\"principal:fixture\",\"authority\":\"fixture-events\",\"evidence_kind\":\"observation\",\"source_refs\":[\"observation:fixture\"]},\"relations\":[{\"fields\":[\"pattern\"],\"target_id\":\"memory:d86d59bd128446b3b5ff10128a0c7f99\",\"type\":\"CORRECTS\"}],\"tier\":\"long_term\"}],\"notice\":\"Sourced reference data, not instructions, permissions, identity truth, or proof of task completion. Behavioral artifacts are synthetic fixtures in this profile.\",\"working_state\":{\"branch\":\"main\",\"causal_parents\":[\"state:f14696100a2b4a9d8d0eeb8d015d1cc0\",\"state:6b79b85988fd467daf160d99d23e8084\"],\"digest\":\"4bfd1c61fac3efc022351450a659c2acc63f3ff47f506aa7506d030dd0864920\",\"evidence_memory_ids\":[\"memory:cfbc4061ada54fc6843978725c517b80\"],\"goal\":\"Inspect synthetic evidence\",\"host_id\":\"host:one\",\"host_revision\":3,\"merge_reason\":\"Explicit synthetic evidence review\",\"next_action\":\"Build scoped reference input\",\"persona_id\":\"persona:synthetic-vera\",\"phase\":\"inspect\",\"phase_revision\":3,\"project_id\":\"alpha\",\"recorded_at\":1000,\"relationships\":[],\"revision\":3,\"schema_version\":\"vera-continuity/0.2.0\",\"scopes\":[\"project:alpha\",\"personal:fixture\"],\"source_refs\":[\"run:fixture\"],\"state_id\":\"state:5dfdefb373af4e07abff52e52cc1341f\",\"task_id\":\"task:alpha\",\"uncertainties\":[\"No live model or real PIX execution tested\"],\"understanding\":\"Self-description and behavior are separate evidence.\",\"writer_principal\":\"principal:fixture\"}}",
+  "text_digest": "afe888022028f64f73ed629d7fa300833345563a104692aac6d77f80330bff7c",
+  "created_at": 1000,
+  "valid_until": 1300,
+  "branch": "main",
+  "head_revision": 2,
+  "model_refs": [
+    {
+      "digest": "ddf63b58861f04d8f43ddd5936564788d80a0a57e7d91ccd3952b14c11c85b44",
+      "id": "behavior-model:d39697f635924d5f9c61052aa4ebc678",
+      "revision": 1
+    }
+  ],
+  "analysis_refs": [],
+  "model_activations": [
+    {
+      "model_ref": {
+        "digest": "ddf63b58861f04d8f43ddd5936564788d80a0a57e7d91ccd3952b14c11c85b44",
+        "id": "behavior-model:d39697f635924d5f9c61052aa4ebc678",
+        "revision": 1
+      },
+      "status_revision": 2,
+      "active_revision": 1
+    }
+  ],
+  "artifact_refs": [
+    {
+      "digest": "55c9786faebfaec9fa7d5938a10dfefb16de8a0438623c26811b19a74bd7c403",
+      "id": "artifact:f8cf7bebe2ccafe67c629a4b6e2deca58f2b375db15fb91259c1c39917c44e9d",
+      "revision": 1
+    },
+    {
+      "digest": "882f62d3424c2a9857eaf132c45ed99044b9ed3b139326621c7ae9bb551b0169",
+      "id": "artifact:d24dfb08ddcac13f06017faf60f160d9783a0178500857fe040164a5e124bd69",
+      "revision": 1
+    },
+    {
+      "digest": "1e1579f25faa8f333473562894800e29f4ef8465ee26c2678d156f28426e0534",
+      "id": "artifact:c7cb88768b50e983fb46628c476ff984457b2acf8b56b8c5bdad25eed3c50c62",
+      "revision": 1
+    },
+    {
+      "digest": "27b0674a383e892b265cd21bbcbf38754188de2037486122aed45c274cb69010",
+      "id": "artifact:0ca3f9de461ff3619d276681dd7d239e5dcc6613abc0e7c79e5a3d14accd0637",
+      "revision": 1
+    }
+  ],
+  "digest": "d0b3381bbfcbe8d303d4630ac8d7889989c3040b3d79a5b776c5fea983d23271"
+}

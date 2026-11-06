@@ -1,0 +1,11 @@
+{
+  "mapping": "pida.ocel20/1",
+  "sourceDigest": "70fe0956610e6e8faf7600d6e624848fc1340b3aa81f7742de87540d7e739b91",
+  "digest": "1713017741b68e3521f7cefe349eb24543b9ac4b380de5d8abc07aea45081057",
+  "complete": true,
+  "knownLimits": [
+    "RUNTIME_OBSERVED_EVENTS_ONLY",
+    "SEQUENCE_IS_OBSERVATION_ORDER_NOT_CAUSAL_ORDER",
+    "PROCESS_CONFORMANCE_IS_NOT_ARTIFACT_CORRECTNESS"
+  ]
+}

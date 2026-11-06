@@ -1,0 +1,287 @@
+{
+  "schemaVersion": "pida.pi-integration-evidence/1",
+  "status": "PASS",
+  "createdAt": "2026-11-03T04:15:40.888Z",
+  "profile": "synthetic-input+real-Pi+real-PIX+pida-local-Persona",
+  "liveLlm": "NOT_RUN",
+  "externalPersonaSubstrate": "NOT_RUN",
+  "schumpeter": "NOT_REQUIRED_OR_USED",
+  "businessAcceptance": "UNKNOWN",
+  "improvementEffect": "NOT_MEASURED",
+  "environment": {
+    "node": "v24.22.1",
+    "platform": "linux",
+    "arch": "x64",
+    "runtimeVersion": "0.8.4",
+    "piVersion": "1.2.0",
+    "producerContractRevision": "pida.export-validation/0.2",
+    "pix": {
+      "repository": "Chanta-Research-Group/PIX",
+      "sourceCommit": "3205d832d5dcdc6901f916b35496a0c60b657e7a",
+      "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+      "packageVersion": "0.5.0",
+      "pythonVersion": "3.12.14",
+      "sourceVerified": true
+    }
+  },
+  "sourceDigests": [
+    {
+      "path": "src/runtime.ts",
+      "sha256": "d96a708398e3e279c00c45a3e79b1f0fe544dbeb9894aaf61f8ff2275d2334d4"
+    },
+    {
+      "path": "src/process-intelligence.ts",
+      "sha256": "c50a26b95a11415a54429ebd457c5a72abee3db9baeb0b8d187797b1640f8885"
+    },
+    {
+      "path": "src/persona-provider.ts",
+      "sha256": "a4407d025c95a050557f368212717caa8dd84254dac5483128ac729967d21e39"
+    },
+    {
+      "path": "src/agent-memory.ts",
+      "sha256": "f83fbe91b17efe41c55124153f6250e069a087e0b1619ad89b61d5a746a13088"
+    },
+    {
+      "path": "src/run-context.ts",
+      "sha256": "a69adee13fdb6ae88a3bc87b0b7a2984d1bd9b2dc9cd4c905d49e594edcd9ee3"
+    },
+    {
+      "path": "src/integration-contract.ts",
+      "sha256": "c9e3849cfd23c26892548784b112d408b613c61acba6dcb247d0de338d01452d"
+    },
+    {
+      "path": "src/execution-contract.ts",
+      "sha256": "1eeae847cdcea88424274b976ae736abe70af77c590718fd876f8eb2ca91d211"
+    },
+    {
+      "path": "src/pix-port.ts",
+      "sha256": "1cd4fbd80e9fd738af8e32ac646194842b91963e448e263434a6d49b33b74f32"
+    },
+    {
+      "path": "scripts/pix-worker.py",
+      "sha256": "f04be8198c42965eb2eb73490e3e99e873eca963bf2abca6fef34fcbf480ea7b"
+    },
+    {
+      "path": "scripts/pi-native-integration-check.mjs",
+      "sha256": "1e341e5a9cc31defc42a91e78b8b551424180733a242a323eb3c5de3f205fe34"
+    }
+  ],
+  "sourcePatchDigest": "e5741d20ef7b755afdf417b49baebf17aff6c4bb18c332ba667527cfca1dc571",
+  "executedDistDigests": [
+    {
+      "path": "dist/runtime.js",
+      "sha256": "b2724bcf9399c4a6f73d07f261ae4ba5874a59c6c4600ab1e8c69a1523cd8b2e"
+    },
+    {
+      "path": "dist/process-intelligence.js",
+      "sha256": "4351d195e01d53ebbe9106be938a57a64975f757a698a14520e155fd7958a209"
+    },
+    {
+      "path": "dist/persona-provider.js",
+      "sha256": "50c12ee8c94fd6e9428180122c2df0a75587fedad0b3be267d124f0594cc461d"
+    },
+    {
+      "path": "dist/agent-memory.js",
+      "sha256": "892b5b7c527e978dddebff7e036fe05837e1bea5150d51abb5a976c169713a7b"
+    },
+    {
+      "path": "dist/run-context.js",
+      "sha256": "2a614206b10203771e42e4f428fd1ae7d932c55cf45dab0c42bd2251c6280183"
+    },
+    {
+      "path": "dist/integration-contract.js",
+      "sha256": "60b181a968f0b29d695d91792b807a85ea1b43f039e15fe68b4f8b99ca772431"
+    },
+    {
+      "path": "dist/execution-contract.js",
+      "sha256": "ce482264a1666008553b7f47c279e0e4620f6cbaaf2153ae1b40219e48348e39"
+    },
+    {
+      "path": "dist/pix-port.js",
+      "sha256": "beea3f5511278dc5b3399eba1bbe30b0f7d7ab61fb63c41d77025e77440a1f31"
+    }
+  ],
+  "executedBuildDigest": "0b70113ba84bbf0fbf296c578b73483cbf496aae75c4c0c4bd2496caff4d1c7a",
+  "durationMs": 4257.629379,
+  "expectedOracle": {
+    "cases": 20,
+    "common": 12,
+    "reproduce": 6,
+    "failed": 2,
+    "topTwoCoverage": 0.9
+  },
+  "model": {
+    "ref": "pi-model:4a17c79aec88276bf2fd182257945c34d976cb1a5d88cac5b26313276896f474",
+    "digest": "e004f6d0b8a7e59a33748e5c3834671e21e91e6833f9074211deb9daa8b5124d"
+  },
+  "reflection": {
+    "ref": "pi-result:97681dd6c86a1b5999c605d7a794fa19848e31b50075583ed9c5a3ea1f69ae6e",
+    "digest": "1051e07302271f0ccf2aa5f6260bda3e88e2e5a27bb33fb5b625a220962723b5",
+    "inputDigest": "1b6d47c48ded3ea5d871660e6894118cca3a7b7abeefc8734840e4e8e77b5c23"
+  },
+  "awareness": {
+    "ref": "pi-result:731da995ada594da3712a4bc057ef4b48d105904f10289a10fdc0b86baa40870",
+    "digest": "7c07f17211b3519d42dec1a8f69503fbee847dff35c33d52e379213826a6a440",
+    "inputDigest": "e433de419f757f4cae715fc62f6aa626a84482e39fe628cf716e9697b3796f98",
+    "processJudgment": "deviates",
+    "costs": [
+      2
+    ]
+  },
+  "context": {
+    "before": "0548c0e09cb9470b10b4da1134752bf530514160bef4a078d8e69007f0df4d3d",
+    "after": "26526f53dd128f47cc96e85839dd173b9196a2b79871db589f98eac8fc017129",
+    "receipt": {
+      "status": "appended",
+      "recordId": "0abb48c8-dc7a-4823-8a02-6e62a8dd3c79",
+      "revision": 1,
+      "contextRevision": "26526f53dd128f47cc96e85839dd173b9196a2b79871db589f98eac8fc017129"
+    },
+    "includedRequestId": "5076e22b-6882-4fd2-a1b9-e1ff17c1db2c"
+  },
+  "nativeComputationIds": {
+    "reflection": [
+      "pix.computation.v1:sha256:fdbf9e28ef0a574eae80bea3a58938ba5d44ed41ea9f383e8d6d9778147e476e",
+      "pix.computation.v1:sha256:85ceab19bbfecc69aaf37dc431fe39b2a67871d7ce34f8d5af7fbb3117691c27",
+      "pix.computation.v1:sha256:ba84a600cbb52cd29296654dd96972d6e7c52828674da7a0c3a09dbc9da11fae"
+    ],
+    "awareness": [
+      "pix.computation.v1:sha256:80fb212689b2e2a281effa0433fcf0bcbb87ccbd61c368ad5040e654a13b54c3",
+      "pix.computation.v1:sha256:7e72920480ab8cc9c37f2868e9c8fe5a786900db4dd245a7e0a7b4dc0c6ce084"
+    ]
+  },
+  "checks": [
+    {
+      "name": "20 current run bundles validate with actual context inclusion receipts",
+      "status": "PASS"
+    },
+    {
+      "name": "actual Pi pi_reflect route invokes actual PIX",
+      "status": "PASS"
+    },
+    {
+      "name": "20-case denominator preserves two failures; top two variants cover 18/20",
+      "status": "PASS"
+    },
+    {
+      "name": "computed results retain native PIX lineage and unknown business acceptance",
+      "status": "PASS"
+    },
+    {
+      "name": "holdout is a separate task after the reference model was frozen",
+      "status": "PASS"
+    },
+    {
+      "name": "actual Pi pi_awareness aligns the separate trace against the same frozen model",
+      "status": "PASS"
+    },
+    {
+      "name": "intended-good empirical deviation is not promoted to mandatory failure or correction",
+      "status": "PASS"
+    },
+    {
+      "name": "actual Pi remember tool persists into the existing canonical local memory",
+      "status": "PASS"
+    },
+    {
+      "name": "next actual model dispatch includes the appended reference and host receipt",
+      "status": "PASS"
+    },
+    {
+      "name": "same immutable reflection request after service restart reuses exact evidence",
+      "status": "PASS"
+    },
+    {
+      "name": "unconfigured PIX returns unavailable without a fabricated analysis",
+      "status": "PASS"
+    },
+    {
+      "name": "training trace cannot be represented as held-out evaluation",
+      "status": "PASS"
+    },
+    {
+      "name": "source and executed build identities remained fixed during the integration run",
+      "status": "PASS"
+    }
+  ],
+  "files": [
+    {
+      "path": "evidence/training-bundles.json",
+      "sha256": "c2338b5e6971af62585aa82827f89816ddbdd28a15197761c2c655d70180df73",
+      "bytes": 593943
+    },
+    {
+      "path": "evidence/reflection-run.json",
+      "sha256": "de60499a856dd11eaa2d15736ddfeeb7e80aa7c523c899f682c0da098187c62a",
+      "bytes": 19094
+    },
+    {
+      "path": "evidence/reflection-result.json",
+      "sha256": "96aa6ec1d364228aa23bfd29488375b2f3efa19733e9ba3fdb86c6a82c61f46b",
+      "bytes": 300164
+    },
+    {
+      "path": "evidence/holdout-bundle.json",
+      "sha256": "065d30d22280254f697f04d7297ea85d2f6abfb21b469b45319dcd3d7d1743cd",
+      "bytes": 42483
+    },
+    {
+      "path": "evidence/awareness-run.json",
+      "sha256": "d210a886a2f81ae9686e103f4f114390da409a1193ae285a5a57eba36658d488",
+      "bytes": 19095
+    },
+    {
+      "path": "evidence/awareness-result.json",
+      "sha256": "f59d5d599a55d43e62d4b8407d1fc5f84fc11d7410df071cc7003f29dea98d36",
+      "bytes": 35793
+    },
+    {
+      "path": "evidence/remember-run.json",
+      "sha256": "39f47c31ed26e58af739ef0be80031db0bd60bd0f900718fa4a0750c8fed2eac",
+      "bytes": 19110
+    },
+    {
+      "path": "evidence/remember-receipt.json",
+      "sha256": "35483c6d41f84682f53c20698028ab6d6f8e25bfe4cec593ddb1cb0cbdc447db",
+      "bytes": 362
+    },
+    {
+      "path": "evidence/next-context-run.json",
+      "sha256": "b2d9f1907f287f076c94b0eab07704585bc4830c02125daf79ce1aaebcdae4c9",
+      "bytes": 11424
+    },
+    {
+      "path": "evidence/pix-unconfigured-result.json",
+      "sha256": "c50f79e18c0fc5254fb5b50ede339fb9c743ec74770f22928cf1de9adcf94e18",
+      "bytes": 5406
+    },
+    {
+      "path": "evidence/overlap-result.json",
+      "sha256": "8c4638d099b2649dce4524c79ce5de060bcb02b360e5eddbbdec62b8393ffcf4",
+      "bytes": 1682
+    },
+    {
+      "path": "evidence/model-4a17c79aec88276bf2fd182257945c34d976cb1a5d88cac5b26313276896f474.json",
+      "sha256": "01c7032dc1d7f8e3a36e5187f82559b77e1fa4f44bcd7cfe1500b87da5b7ece9",
+      "bytes": 43472
+    },
+    {
+      "path": "evidence/result-731da995ada594da3712a4bc057ef4b48d105904f10289a10fdc0b86baa40870.json",
+      "sha256": "3578e06acc57b71ce2621bb624fe99867169f74ffdd8fc8f8fc87482af8e4fd6",
+      "bytes": 37513
+    },
+    {
+      "path": "evidence/result-97681dd6c86a1b5999c605d7a794fa19848e31b50075583ed9c5a3ea1f69ae6e.json",
+      "sha256": "7fa5f026527ae65c22c989f94e01693180924b32d0f8131499cfe1d3c795427a",
+      "bytes": 313478
+    }
+  ],
+  "limits": [
+    "All task inputs, persona and action tools are explicitly synthetic.",
+    "Faux model scripts decisions; no live LLM quality claim.",
+    "Actual PIX computes discovery and alignment; no substitute statistics engine.",
+    "Input receipt proves Pi logical context inclusion, not model understanding or raw network bytes.",
+    "Local memory adapter is not actual external PersonaSubstrate integration.",
+    "Batch only; TUI, Windows, live-current-cut and organization join not exercised."
+  ]
+}

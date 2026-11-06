@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "effectState": "applied",
+  "receipt": {
+    "status": "appended",
+    "recordId": "0abb48c8-dc7a-4823-8a02-6e62a8dd3c79",
+    "revision": 1,
+    "contextRevision": "26526f53dd128f47cc96e85839dd173b9196a2b79871db589f98eac8fc017129"
+  },
+  "identityChanged": false,
+  "activation": "reference-only",
+  "actualPersonaIntegration": "pida-local"
+}

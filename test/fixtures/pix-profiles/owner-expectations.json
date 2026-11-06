@@ -1,0 +1,16 @@
+{
+  "batch_prefix": {"status": "computed", "outcome": "optimal", "cost": 2},
+  "batch_complete": {"status": "computed", "outcome": "optimal", "cost": 0},
+  "batch_review": {"status": "computed", "outcome": "optimal", "cost": 1},
+  "batch_limited": {"status": "partial", "outcome": "search_limit", "cost": null},
+  "online_proxy": {"status": "partial"},
+  "online_open": {"status": "partial", "cost": 0, "closed": false, "final_cost_unresolved": true, "bound_scope": "model_prefix_alignment_upper_bound"},
+  "online_closed_early": {"status": "partial", "cost": 2, "closed": true, "final_cost_unresolved": false, "bound_scope": "accepting_model_alignment_upper_bound"},
+  "online_complete": {"status": "partial", "cost": 0, "closed": true, "final_cost_unresolved": false, "bound_scope": "accepting_model_alignment_upper_bound"},
+  "proxy_unavailable": {"status": "unavailable"},
+  "objects_complete": {"status": "computed", "outcome": "optimal", "cost": 0, "moves": {"synchronous": 4, "log": 0, "model": 0, "silent": 0}},
+  "objects_limited": {"status": "partial", "outcome": "search_limit", "cost": null},
+  "objects_same_object_tie": {"status": "unavailable", "outcome": null, "cost": null},
+  "objects_open_as_terminal": {"status": "computed", "outcome": "optimal", "cost": 1, "moves": {"synchronous": 3, "log": 0, "model": 1, "silent": 0}},
+  "object_context_cut": {"status": "computed", "terminal_prefix_count": 1, "final_cut_scored": false}
+}

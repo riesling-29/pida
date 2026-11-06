@@ -1,0 +1,223 @@
+{
+  "changedGeneration": {
+    "schemaVersion": "pida.pix.profiles/1",
+    "profile": "sequential-prefix/1",
+    "requestDigest": "c161176184903829d4888be50c6aac6dbc7c4e2bcc3a44590e67937870a65704",
+    "status": "invalid_input",
+    "issues": [
+      {
+        "code": "checkpoint_mismatch",
+        "message": "The checkpoint does not match this model, spec, generation, case or prefix offset."
+      }
+    ],
+    "nativeResults": [],
+    "limits": [
+      "HOST_AUTHORIZED_SCOPE_ONLY",
+      "NO_BUSINESS_ACCEPTANCE",
+      "NO_MODEL_ACTIVATION",
+      "NO_CAUSAL_IMPROVEMENT_CLAIM"
+    ],
+    "engine": {
+      "repository": "Chanta-Research-Group/PIX",
+      "sourceCommit": "a0831bc0b34fd7feebfba928066b90b114ae531e",
+      "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+      "packageVersion": "0.5.0",
+      "pythonVersion": "3.12.14",
+      "sourceVerified": true
+    }
+  },
+  "roundtrip": {
+    "schemaVersion": "pida.pix.profiles/1",
+    "profile": "sequential-prefix/1",
+    "requestDigest": "436bc7001e28e77b6fc293102f32f7bb42c436b0fae643d7a7e47e82accd9360",
+    "status": "invalid_input",
+    "issues": [
+      {
+        "code": "checkpoint_mismatch",
+        "message": "The checkpoint does not match this model, spec, generation, case or prefix offset."
+      }
+    ],
+    "nativeResults": [],
+    "limits": [
+      "HOST_AUTHORIZED_SCOPE_ONLY",
+      "NO_BUSINESS_ACCEPTANCE",
+      "NO_MODEL_ACTIVATION",
+      "NO_CAUSAL_IMPROVEMENT_CLAIM"
+    ],
+    "engine": {
+      "repository": "Chanta-Research-Group/PIX",
+      "sourceCommit": "a0831bc0b34fd7feebfba928066b90b114ae531e",
+      "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+      "packageVersion": "0.5.0",
+      "pythonVersion": "3.12.14",
+      "sourceVerified": true
+    }
+  },
+  "proxyLimited": {
+    "schemaVersion": "pida.pix.profiles/1",
+    "profile": "sequential-prefix/1",
+    "requestDigest": "240d0b462bfb5a7ac4ea50b5a0e31a160e9c4806987d1a909df6189504c19d73",
+    "status": "unavailable",
+    "issues": [
+      {
+        "code": "proxy_unavailable",
+        "message": "No accepting proxy path retained within walk/trace/node limits; model reachability remains unknown"
+      }
+    ],
+    "nativeResults": [
+      {
+        "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:59381716fdfef74b816a34a983f880e381fb531b1d85b205dd278f5ee7eb220a\",\"issues\":[{\"at\":[],\"code\":\"proxy_unavailable\",\"message\":\"No accepting proxy path retained within walk/trace/node limits; model reachability remains unknown\"}],\"operator_id\":\"pix.case_centric.online_alignment.proxy\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.model.petri-net.v1:sha256:c2d073a2f9fc098fee019b2b4e1ccc7ea6b1cc031721cf6bc3a89b19d74d6d27\",\"spec\":{\"decay_time\":100.0,\"discount_factor\":1.0,\"ingestion\":{\"capacity_policy\":\"reject\",\"declare\":[],\"dedup_window\":4096,\"footprints\":null,\"max_activities\":256,\"max_cases\":1,\"order_policy\":\"sequence\",\"replay_model\":null,\"retirement_filter_bits\":16384,\"silent_max_states\":1000,\"stream_id\":\"fixture/generation-1\",\"temporal\":[],\"temporal_history_limit\":1000},\"log_move_cost\":1,\"lookahead\":3,\"max_expansions_per_event\":10000,\"max_proxy_nodes\":1,\"max_states_per_case\":20,\"model\":{\"arcs\":[{\"source\":\"p0\",\"target\":\"t0\",\"weight\":1},{\"source\":\"p1\",\"target\":\"t1\",\"weight\":1},{\"source\":\"p2\",\"target\":\"t2\",\"weight\":1},{\"source\":\"p3\",\"target\":\"t3\",\"weight\":1},{\"source\":\"t0\",\"target\":\"p1\",\"weight\":1},{\"source\":\"t1\",\"target\":\"p2\",\"weight\":1},{\"source\":\"t2\",\"target\":\"p3\",\"weight\":1},{\"source\":\"t3\",\"target\":\"p4\",\"weight\":1}],\"final_marking\":{\"tokens\":[[\"p4\",1]]},\"initial_marking\":{\"tokens\":[[\"p0\",1]]},\"places\":[{\"id\":\"p0\"},{\"id\":\"p1\"},{\"id\":\"p2\"},{\"id\":\"p3\"},{\"id\":\"p4\"}],\"transitions\":[{\"activity\":\"request\",\"id\":\"t0\"},{\"activity\":\"edit\",\"id\":\"t1\"},{\"activity\":\"test\",\"id\":\"t2\"},{\"activity\":\"deliver\",\"id\":\"t3\"}]},\"model_move_cost\":1,\"proxy_attempts\":1000,\"proxy_max_steps\":100,\"proxy_max_traces\":100,\"proxy_transition_sequences\":[[\"t0\",\"t1\",\"t2\",\"t3\"]],\"random_seed\":0,\"silent_move_cost\":0,\"witness_history_limit\":200},\"status\":\"unavailable\",\"value\":null},\"document_digest\":\"pix.analysis-result.v1:sha256:ea9218d422186dc3ad8cee8d62cbb917009400d34c74c393aff03f981e363459\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"online-alignment-proxy\",\"version\":\"1.3.0\"}",
+        "sha256": "c88487ff5ebcc896c4661d056cb02f813bb9e84db00875820a7755ab86ce4bec"
+      }
+    ],
+    "limits": [
+      "HOST_AUTHORIZED_SCOPE_ONLY",
+      "NO_BUSINESS_ACCEPTANCE",
+      "NO_MODEL_ACTIVATION",
+      "NO_CAUSAL_IMPROVEMENT_CLAIM"
+    ],
+    "engine": {
+      "repository": "Chanta-Research-Group/PIX",
+      "sourceCommit": "a0831bc0b34fd7feebfba928066b90b114ae531e",
+      "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+      "packageVersion": "0.5.0",
+      "pythonVersion": "3.12.14",
+      "sourceVerified": true
+    }
+  },
+  "wrongModel": {
+    "schemaVersion": "pida.pix.profiles/1",
+    "profile": "sequential-prefix/1",
+    "requestDigest": "9d93f8e53ed2058b451dfa9e21f6498929d26c088f26301bd6076b06afb01cba",
+    "status": "invalid_input",
+    "issues": [
+      {
+        "code": "unsupported_model",
+        "message": "The prefix profile requires an explicitly selected Petri net, not a DFG or object model."
+      }
+    ],
+    "nativeResults": [],
+    "limits": [
+      "HOST_AUTHORIZED_SCOPE_ONLY",
+      "NO_BUSINESS_ACCEPTANCE",
+      "NO_MODEL_ACTIVATION",
+      "NO_CAUSAL_IMPROVEMENT_CLAIM"
+    ],
+    "engine": {
+      "repository": "Chanta-Research-Group/PIX",
+      "sourceCommit": "a0831bc0b34fd7feebfba928066b90b114ae531e",
+      "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+      "packageVersion": "0.5.0",
+      "pythonVersion": "3.12.14",
+      "sourceVerified": true
+    }
+  },
+  "tie": {
+    "schemaVersion": "pida.pix.profiles/1",
+    "profile": "object-terminal/1",
+    "requestDigest": "d2607bf39e9124f13e16696d0c430c95bfe0174ff95e716c07c201910ede500f",
+    "status": "unavailable",
+    "issues": [
+      {
+        "code": "ambiguous_event_order",
+        "message": "Equal timestamps on a shared selected object require an explicit tie policy"
+      },
+      {
+        "code": "ambiguous_event_order",
+        "message": "Equal timestamps on a shared selected object require an explicit tie policy"
+      }
+    ],
+    "nativeResults": [
+      {
+        "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:65658f2a954cc7a8eb99cc3d0a0a764b677452e855de28f2da479862cf2fe023\",\"issues\":[{\"at\":[\"object\",\"artifact-a@r1\",\"events\",\"read-a\",\"verify\"],\"code\":\"ambiguous_event_order\",\"message\":\"Equal timestamps on a shared selected object require an explicit tie policy\"},{\"at\":[\"object\",\"artifact-b@r7\",\"events\",\"read-b\",\"verify\"],\"code\":\"ambiguous_event_order\",\"message\":\"Equal timestamps on a shared selected object require an explicit tie policy\"}],\"operator_id\":\"pix.align_object_log\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.ocel.canonical.v1:sha256:1353af0c7d9a5e114606fb1d906ad2d538ced311f3f7a6906f5048f9ad152a66\",\"spec\":{\"model_digest\":\"pix.model.ocpn.v1:sha256:a712156a78bc1a243bee8f69627b32bf9d6f103b5fdadeacd5a8a527b447bb38\",\"parameters\":{\"cost_mode\":\"event\",\"log_move_cost\":1,\"max_bindings\":10000,\"max_states\":10000,\"model_move_cost\":1,\"object_types\":[\"artifact_revision\"],\"qualifiers\":[\"uses\"],\"scope\":\"whole_log\",\"silent_move_cost\":0,\"synchronous_move_cost\":0,\"tie_policy\":\"reject\"}},\"status\":\"unavailable\",\"value\":null},\"document_digest\":\"pix.analysis-result.v1:sha256:57871e24c9300e825c50298c255ede8ed8c394c57854e4690dbd0c89b3f61dfa\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"object-alignments\",\"version\":\"1.3.0\"}",
+        "sha256": "ba141796d8126a4e30cecc7278906f40ed68f77a3b801565361eae5eb704956a"
+      }
+    ],
+    "limits": [
+      "HOST_AUTHORIZED_SCOPE_ONLY",
+      "NO_BUSINESS_ACCEPTANCE",
+      "NO_MODEL_ACTIVATION",
+      "NO_CAUSAL_IMPROVEMENT_CLAIM"
+    ],
+    "engine": {
+      "repository": "Chanta-Research-Group/PIX",
+      "sourceCommit": "a0831bc0b34fd7feebfba928066b90b114ae531e",
+      "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+      "packageVersion": "0.5.0",
+      "pythonVersion": "3.12.14",
+      "sourceVerified": true
+    }
+  },
+  "limited": {
+    "schemaVersion": "pida.pix.profiles/1",
+    "profile": "object-terminal/1",
+    "requestDigest": "51278cbb8da69de79de29630d2a47d7e80581b7ae8889902996598cd530303c3",
+    "status": "partial",
+    "issues": [
+      {
+        "code": "object_alignment_search_limit",
+        "message": "Joint search is incomplete; minimum alignment cost is unknown"
+      }
+    ],
+    "nativeResults": [
+      {
+        "json": "{\"computation\":{\"computation_id\":\"pix.computation.v1:sha256:47e8c6826bf1ddb8ff433ce2be3d08ef28629a5a7c4854cc68d99f1c8bd5c9be\",\"issues\":[{\"at\":[\"scope\",\"whole_log\"],\"code\":\"object_alignment_search_limit\",\"message\":\"Joint search is incomplete; minimum alignment cost is unknown\"}],\"operator_id\":\"pix.align_object_log\",\"operator_version\":\"1.0.0\",\"parent_computation_ids\":[],\"source_digest\":\"pix.ocel.canonical.v1:sha256:577b0dc83aa501c26bffd24d3f655f67afca40bd4170495cca8d85b15c7c7669\",\"spec\":{\"model_digest\":\"pix.model.ocpn.v1:sha256:a712156a78bc1a243bee8f69627b32bf9d6f103b5fdadeacd5a8a527b447bb38\",\"parameters\":{\"cost_mode\":\"event\",\"log_move_cost\":1,\"max_bindings\":10000,\"max_states\":1,\"model_move_cost\":1,\"object_types\":[\"artifact_revision\"],\"qualifiers\":[\"uses\"],\"scope\":\"whole_log\",\"silent_move_cost\":0,\"synchronous_move_cost\":0,\"tie_policy\":\"reject\"}},\"status\":\"partial\",\"value\":{\"cost\":null,\"cost_unit\":\"event_weighted_integer_cost\",\"coverage\":{\"excluded_scopes\":0,\"input_events\":4,\"limited_scopes\":1,\"optimal_scopes\":0,\"requested_scopes\":1,\"selected_objects\":2,\"unreachable_scopes\":0},\"discovered_states\":4,\"lower_bound_cost\":0,\"max_enabled_binding_count\":1,\"model_digest\":\"pix.model.ocpn.v1:sha256:a712156a78bc1a243bee8f69627b32bf9d6f103b5fdadeacd5a8a527b447bb38\",\"move_counts\":null,\"moves\":[],\"scope\":{\"events\":[{\"activity\":\"read_a\",\"event_id\":\"read-a\",\"objects\":[[\"artifact_revision\",[\"artifact-a@r1\"]]],\"relations\":[[\"read-a\",\"artifact-a@r1\",\"uses\"]]},{\"activity\":\"read_b\",\"event_id\":\"read-b\",\"objects\":[[\"artifact_revision\",[\"artifact-b@r7\"]]],\"relations\":[[\"read-b\",\"artifact-b@r7\",\"uses\"]]},{\"activity\":\"start\",\"event_id\":\"start\",\"objects\":[[\"artifact_revision\",[\"artifact-a@r1\",\"artifact-b@r7\"]]],\"relations\":[[\"start\",\"artifact-a@r1\",\"uses\"],[\"start\",\"artifact-b@r7\",\"uses\"]]},{\"activity\":\"verify\",\"event_id\":\"verify\",\"objects\":[[\"artifact_revision\",[\"artifact-a@r1\",\"artifact-b@r7\"]]],\"relations\":[[\"verify\",\"artifact-a@r1\",\"uses\"],[\"verify\",\"artifact-b@r7\",\"uses\"]]}],\"excluded_object_count\":1,\"excluded_relation_count\":4,\"precedence\":[{\"object_id\":\"artifact-a@r1\",\"predecessor_event_id\":\"start\",\"successor_event_id\":\"read-a\"},{\"object_id\":\"artifact-a@r1\",\"predecessor_event_id\":\"read-a\",\"successor_event_id\":\"verify\"},{\"object_id\":\"artifact-b@r7\",\"predecessor_event_id\":\"start\",\"successor_event_id\":\"read-b\"},{\"object_id\":\"artifact-b@r7\",\"predecessor_event_id\":\"read-b\",\"successor_event_id\":\"verify\"}],\"scope\":\"whole_log\",\"selected_objects\":[[\"artifact-a@r1\",\"artifact_revision\"],[\"artifact-b@r7\",\"artifact_revision\"]]},\"settled_states\":1,\"status\":\"search_limit\"}},\"document_digest\":\"pix.analysis-result.v1:sha256:eb0e46b74aaaecca7333aee2b50f04e8bf51f99b977d092cd41bfd05536cb2a3\",\"format\":\"pix.analysis-result\",\"payload_kind\":\"object-alignments\",\"version\":\"1.3.0\"}",
+        "sha256": "e48c60e1d2ab793f36c2e2f1e835459ebbb730c8d22b2a50a5988dfabfc57161"
+      }
+    ],
+    "limits": [
+      "HOST_AUTHORIZED_SCOPE_ONLY",
+      "NO_BUSINESS_ACCEPTANCE",
+      "NO_MODEL_ACTIVATION",
+      "NO_CAUSAL_IMPROVEMENT_CLAIM"
+    ],
+    "engine": {
+      "repository": "Chanta-Research-Group/PIX",
+      "sourceCommit": "a0831bc0b34fd7feebfba928066b90b114ae531e",
+      "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+      "packageVersion": "0.5.0",
+      "pythonVersion": "3.12.14",
+      "sourceVerified": true
+    },
+    "summary": {
+      "metric": "terminal-event-edit-cost",
+      "cost": null,
+      "eventCount": 4,
+      "closed": true,
+      "finalCostUnresolved": false,
+      "boundScope": "whole_log_terminal",
+      "outcome": "search_limit",
+      "lowerBoundCost": 0,
+      "selectedObjectCount": 2,
+      "excludedObjectCount": 1,
+      "excludedRelationCount": 4
+    }
+  },
+  "notClosed": {
+    "schemaVersion": "pida.pix.profiles/1",
+    "profile": "object-terminal/1",
+    "requestDigest": "b41d8f42efef749b92edcb15fa0f91cfca13bf02f1bb4eca383972c1bf017618",
+    "status": "unavailable",
+    "issues": [
+      {
+        "code": "nonterminal_object_cut",
+        "message": "This terminal operator does not evaluate an open object cut."
+      }
+    ],
+    "nativeResults": [],
+    "limits": [
+      "HOST_AUTHORIZED_SCOPE_ONLY",
+      "NO_BUSINESS_ACCEPTANCE",
+      "NO_MODEL_ACTIVATION",
+      "NO_CAUSAL_IMPROVEMENT_CLAIM"
+    ],
+    "engine": {
+      "repository": "Chanta-Research-Group/PIX",
+      "sourceCommit": "a0831bc0b34fd7feebfba928066b90b114ae531e",
+      "sourceDigest": "b4fef3bce21c49dd4ab700b6188bdef16f9813810718932b23029522609c7510",
+      "packageVersion": "0.5.0",
+      "pythonVersion": "3.12.14",
+      "sourceVerified": true
+    }
+  }
+}

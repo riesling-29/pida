@@ -1,0 +1,40 @@
+{
+  "version": "0.8.17",
+  "environment": "Linux PTY / v24.22.1",
+  "model": "mock; actual Pi/HTTP/CLI",
+  "checks": [
+    "default CLI opens two framed green panes",
+    "opening workspace does not create unrelated main session",
+    "Korean paste remains an unsent draft",
+    "two actual panel editors submit to different agents",
+    "tab switch preserves jobs",
+    "TUI cancel targets only displayed job",
+    "clean exit and terminal buffer restoration",
+    "terminal canonical input and echo restored",
+    "no application token rendered",
+    "host and queued job survive detach",
+    "layout persisted without instructions or credentials",
+    "new terminal restores tabs and bindings without replay",
+    "separate HTTP client and TUI observe same real Pi mock-model result",
+    "TUI creates host-approved ordinary agent",
+    "narrow terminal stays interactive",
+    "clean exit and terminal buffer restoration",
+    "terminal canonical input and echo restored",
+    "no application token rendered"
+  ],
+  "source_sha256": {
+    "src/agent-tui.ts": "15322071d4b94eb82f3c53ef755d8e390a5ef3009c0a403edeb7b6c8f879ae52",
+    "src/agent-workspace-controller.ts": "8a68f53180663786aea6e4f6bd8144e0b46160bb3ad5fe8fc0ed9d6999dc26c3",
+    "src/workspace-layout.ts": "5f68c3b7a7f396a58ed2b1079b7910103e1f494a20e48f2a2d0bec260e42415b",
+    "src/cli.ts": "66a3dd072f7a9c008c9efe6cd7e1b4fdc7f20263d148ff6ce307f63a0652ac9f",
+    "src/agent-supervisor.ts": "3d4e5925bb129221e9dff451affcb662ef9e128644fcb21d6760ef9209e6af0b",
+    "src/http.ts": "b183bec239b87f4fb6560829b176d3e2344d4d965416ffaf6ccb12a920ec964c",
+    "scripts/multi-agent-terminal-check.py": "99297c737375be67196c5b7068d15524601fadb8ea12e2d40fefdf96c6615f94"
+  },
+  "unverified": [
+    "Windows Terminal / PowerShell / IME",
+    "live LLM",
+    "company gateway",
+    "browser interaction"
+  ]
+}

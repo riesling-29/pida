@@ -1,0 +1,27 @@
+{
+  "profile": "synthetic-pix-owner-fixture",
+  "commit": "a0831bc0b34fd7feebfba928066b90b114ae531e",
+  "repository": "Chanta-Research-Group/PIX",
+  "files": [
+    {
+      "source": "input.json",
+      "file": "objects.input.json",
+      "sha256": "e0529cadaae6bb8a2d97a789563e66925eaf3421d081d3a087c9470b45c594a5"
+    },
+    {
+      "source": "expected.json",
+      "file": "owner-expectations.json",
+      "sha256": "8e344d55d9de58703284296e83c45c4e64663746bf1e99253c72e894167e2a34"
+    },
+    {
+      "source": "reference/sequential.model.json",
+      "file": "sequential.model.json",
+      "sha256": "843d3db1c45e6a4578d11f0283ebfd9017b9267e880994be8bd0e87e57fec64c"
+    },
+    {
+      "source": "reference/objects.model.json",
+      "file": "objects.model.json",
+      "sha256": "c06c51e39de6f046ff3a758fa797cdcc3b43517b350e141be42e9de06e35fee1"
+    }
+  ]
+}

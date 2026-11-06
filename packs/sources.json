@@ -1,0 +1,14 @@
+{
+  "debugging": {
+    "repository": "obra/superpowers",
+    "commit": "b739a8af570e10a95898f2bdf6cec97467fa6c12",
+    "path": "skills/systematic-debugging/SKILL.md",
+    "license": "MIT"
+  },
+  "verification": {
+    "repository": "obra/superpowers",
+    "commit": "b739a8af570e10a95898f2bdf6cec97467fa6c12",
+    "path": "skills/verification-before-completion/SKILL.md",
+    "license": "MIT"
+  }
+}

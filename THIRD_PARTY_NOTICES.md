@@ -1,0 +1,161 @@
+# Third-party notices and provenance
+
+Pida consumes the official Pi packages as dependencies, without vendoring or forking their source. The SDK/resource-loader integration follows the official release v1.2.0 full-control example. Pi retains the following notice. npm dependency packages retain their own license files; include their notices when redistributing bundled dependencies. This file is not a complete legal review of the transitive dependency graph.
+
+Source: https://github.com/earendil-works/pi/blob/v1.2.0/LICENSE
+Inspected: 2026-10-14. Package provenance/integrities are recorded in npm-shrinkwrap.json.
+
+The 0.8.7 terminal client directly consumes `@earendil-works/pi-tui` 1.2.0 (already pinned in the dependency graph): its renderer, editor, layout, scrolling, terminal lifecycle and selector are reused without source copying. Pida owns only its host-client adapter and screen composition.
+
+## Pi
+
+MIT License
+
+Copyright (c) 2025 Mario Zechner
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+## Other dependencies
+
+- TypeBox: JSON Schema/type construction; see node_modules/typebox/license.
+- TypeScript and @types/node: development-only compiler/type dependencies; retain their supplied license notices if redistributing those packages.
+- All remaining transitive dependencies: see the original license files included in each installed package. Pida does not relicense them.
+
+Pida's own package is marked UNLICENSED pending an explicit project-owner licensing decision; this does not alter any third-party license.
+
+## QuickJS / quickjs-emscripten
+
+Pinned package: quickjs-emscripten 0.32.0. Upstream: https://github.com/justjake/quickjs-emscripten. Inspected 2026-10-17. The following notices are copied from the installed WASM package LICENSE (which includes the engine notice). Dependencies retain their original notices.
+
+```text
+quickjs-emscripten:
+The MIT License
+
+quickjs-emscripten copyright (c) 2019-2024 Jake Teton-Landis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+quickjs:
+QuickJS Javascript Engine
+
+Copyright (c) 2017-2021 Fabrice Bellard
+Copyright (c) 2017-2021 Charlie Gordon
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+```
+
+## Git
+
+The workbench invokes the host-installed Git executable; Git is not vendored or bundled in the Pida tarball. Git upstream: https://git-scm.com/ (GPL-2.0). Install and redistribute Git under its own supplied license terms.
+
+
+## Selected Superpowers guidance
+
+Unmodified `systematic-debugging` and `verification-before-completion` skill texts from `obra/superpowers`, commit `b739a8af570e10a95898f2bdf6cec97467fa6c12`. MIT license included at `packs/licenses/superpowers.txt`; provenance at `packs/sources.json`. No Superpowers executable extension or subagent runner is loaded.
+
+## Optional browser verification
+
+Playwright and playwright-core 1.64.1 are optional dependencies under Apache-2.0. Their packages retain LICENSE/NOTICE. Browser binaries are installed separately by the deployment administrator.
+
+## PersonaSubstrate / Vera continuity contracts
+
+`src/vera-contract.ts` reuses the owner's closed `Binding` and `VeraContext` JSON Schema definitions from the authorized cross-app development source snapshot. Source paths and exact SHA-256 pins are in that generated file; the executable consumer source lock is in `fixtures/cr-integration/consumer-lock.json`. Synthetic context provenance is in `test/fixtures/vera/source.json`. No Persona runtime, canonical database, credentials or service code is bundled in Pida. The opt-in integration probe imports verified temporary copies of a separately supplied checkout.
+
+
+## DeepSeek Harness output collector
+
+Pida vendors `src/vendor/deepseek-output.ts` from the following exact source:
+
+- Repository: https://github.com/deepseek-ai/deepseek-harness
+- Commit: `ce7073d51254c26cd63b22a60835b8f948deb447`
+- Source: `packages/subprocess/subprocess-local/src/output.ts`
+- License: https://github.com/deepseek-ai/deepseek-harness/blob/ce7073d51254c26cd63b22a60835b8f948deb447/LICENSE
+- Local modification: replace the type-only `CollectedOutput` import with the same structural interface and add provenance comments. Collection, spill, and finalization implementation is retained.
+- Regression scenarios (tail retention, spill caps, failed spill recovery) were adapted from upstream `packages/subprocess/subprocess-local/tests/spawn.spec.ts` to Node's test runner. Upstream's test suite was inspected, not executed here.
+- Pida's wrapper adds head previews, UTF-8 window boundaries, owner/session-scoped artifact references, hash checks, and bounded retention. No DeepSeek agent runtime, Cordis service container, native process runner, or sandbox is bundled.
+
+```text
+MIT License
+
+Copyright (c) 2026 DeepSeek
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+# PIX profile reference fixtures (0.8.6)
+
+Synthetic native model/input fixtures under `test/fixtures/pix-profiles` originate
+from `Chanta-Research-Group/PIX` PR14, commit
+`a0831bc0b34fd7feebfba928066b90b114ae531e`. Their original byte hashes and paths
+are recorded in `source.json`. Pida calls the separately supplied unmodified PIX
+source; no PIX engine implementation is included in this package. Native result
+and checkpoint evidence retains PIX's format/version/identity and exact bytes.
+
+The synthetic Site descriptor fixture under `test/fixtures/vera-site` originates
+from the Persona Site's `c506e321c685573481648ecf120e8f2d1214bb83` owner response;
+its source pin/hash and deliberately limited contract-check scope are preserved.
