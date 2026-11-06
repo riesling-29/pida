@@ -12,6 +12,7 @@ import type { ArtifactSnapshot, ToolEvidence, VerificationResult, ObservationBun
 const runtimeVersion: string = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
 import { basename, join, resolve } from "node:path";
 import { SessionStore, type SavedSession } from "./storage.js";
+import { canonical, sha256 } from "./private-state.js";
 import { validateWorkRequest, type WorkSurface } from "./work-surface.js";
 import { AgentResources, AgentResourceError } from "./agent-resources.js";
 import { projectToolDetails } from "./tool-details.js";
@@ -169,6 +170,7 @@ export interface RunContextRequest {
 }
 export interface QueuedInputResult {
   runId: string;
+  requestId?: string;
   mode: "steer" | "followUp";
   disposition: "queued" | "handled";
   /** Accepted into the live Pi queue, not a durable queue across process restarts. */
@@ -223,6 +225,7 @@ interface SessionRecord {
   saved: SavedSession;
   finished?: Promise<void>;
   deleting?: boolean;
+  inputReceipts?: Map<string, { runId: string; digest: string; receipt: Promise<QueuedInputResult> }>;
 }
 function positive(value: number | undefined, fallback: number): number {
   const n = value ?? fallback;
@@ -844,11 +847,13 @@ export class PidaRuntime {
   getInfo(principal: Principal): RuntimeInfo {
     const p = principalCopy(principal);
     return {
+      version: runtimeVersion,
       persistence: !!this.store,
       workSurface: !!this.options.workSurface,
       ...(this.store ? { instanceId: this.store.instanceId } : {}),
       provider: this.options.providerInfo,
-      capabilities: { steering: true, followUp: true, queuedInputDurable: false, ...this.resources.info() },
+      capabilities: { steering: true, followUp: true, queuedInputDurable: false, queuedInputDeduplication: "current-run", cancellation: "cooperative", tokenBudgetScope: "observed-model-responses", ...this.resources.info() },
+      knownLimits: [...(this.options.evidenceLimits ?? []), "PI_INTERNAL_REQUEST_USAGE_NOT_EXPORTED"],
       tools: this.options.tools!.map((t) => ({
         name: t.name,
         description: t.description,
@@ -959,11 +964,18 @@ export class PidaRuntime {
   }
 
   /** Queue input only for the expected live run. It cannot start a new run or grant permissions. */
-  private async queueInput(id: string, principal: Principal, text: string, expectedRunId: string, mode: "steer" | "followUp"): Promise<QueuedInputResult> {
+  private async queueInput(id: string, principal: Principal, text: string, expectedRunId: string, mode: "steer" | "followUp", requestId?: string): Promise<QueuedInputResult> {
     const record = this.owned(id, principal);
     if (this.closed) throw new PidaError("RUNTIME_CLOSED", 503);
     if (typeof text !== "string" || !text.trim() || text.length > 16_000) throw new PidaError("INVALID_PROMPT", 400);
     if (typeof expectedRunId !== "string" || !expectedRunId) throw new PidaError("EXPECTED_RUN_ID_REQUIRED", 400);
+    if (requestId !== undefined && (typeof requestId !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(requestId))) throw new PidaError("INVALID_REQUEST_ID", 400);
+    const digest = sha256(canonical({ mode, text }));
+    const previous = requestId && record.inputReceipts?.get(requestId);
+    if (previous) {
+      if (previous.runId !== expectedRunId || previous.digest !== digest) throw new PidaError("INPUT_REQUEST_CONFLICT", 409);
+      return previous.receipt;
+    }
     const run = record.active;
     if (!run || run.id !== expectedRunId) throw new PidaError("RUN_ID_MISMATCH", 409);
     if (!run.acceptingInput || run.abort.signal.aborted || !record.pi.isStreaming) throw new PidaError("RUN_NOT_ACCEPTING_INPUT", 409);
@@ -971,7 +983,8 @@ export class PidaRuntime {
     // must use the bounded host-selected agent_skill tool and its resources:read permission.
     if (text.startsWith("/skill:")) throw new PidaError("INPUT_COMMAND_UNSUPPORTED", 400);
     if (record.pi.pendingMessageCount + (run.inputRequests?.size ?? 0) >= 32) throw new PidaError("INPUT_QUEUE_LIMIT", 429);
-    const request = (async (): Promise<QueuedInputResult> => {
+    if (requestId && (record.inputReceipts?.size ?? 0) >= 256) throw new PidaError("INPUT_RECEIPT_LIMIT", 429);
+    const request = Promise.resolve().then(async (): Promise<QueuedInputResult> => {
       try {
         const disposition = await record.pi[mode](text);
         if (record.active !== run || run.abort.signal.aborted || !run.acceptingInput || (!record.pi.isStreaming && record.pi.pendingMessageCount > 0)) {
@@ -979,22 +992,27 @@ export class PidaRuntime {
           throw new PidaError("RUN_NOT_ACCEPTING_INPUT", 409);
         }
         run.traceInput?.(mode === "steer" ? "steering_queued" : "follow_up_queued");
-        return { runId: run.id, mode, disposition, durable: false };
+        return { runId: run.id, ...(requestId ? { requestId } : {}), mode, disposition, durable: false };
       } catch (error) {
         if (error instanceof PidaError) throw error;
         throw new PidaError("INPUT_QUEUE_FAILED", 400);
       }
-    })();
+    });
+    if (requestId) {
+      record.inputReceipts ??= new Map();
+      // Keep failed receipts too: an ambiguous Pi failure must not enqueue twice.
+      record.inputReceipts.set(requestId, { runId: run.id, digest, receipt: request });
+    }
     run.inputRequests ??= new Set();
     run.inputRequests.add(request);
     try { return await request; }
     finally { run.inputRequests.delete(request); }
   }
-  steer(id: string, principal: Principal, text: string, expectedRunId: string): Promise<QueuedInputResult> {
-    return this.queueInput(id, principal, text, expectedRunId, "steer");
+  steer(id: string, principal: Principal, text: string, expectedRunId: string, requestId?: string): Promise<QueuedInputResult> {
+    return this.queueInput(id, principal, text, expectedRunId, "steer", requestId);
   }
-  followUp(id: string, principal: Principal, text: string, expectedRunId: string): Promise<QueuedInputResult> {
-    return this.queueInput(id, principal, text, expectedRunId, "followUp");
+  followUp(id: string, principal: Principal, text: string, expectedRunId: string, requestId?: string): Promise<QueuedInputResult> {
+    return this.queueInput(id, principal, text, expectedRunId, "followUp", requestId);
   }
 
   async run(
@@ -1037,6 +1055,7 @@ export class PidaRuntime {
     try {
     let lastAssistant: Extract<(typeof record.pi.messages)[number], { role: "assistant" }> | undefined;
     record.active = run;
+    record.inputReceipts = new Map();
     let finish!: () => void;
     record.finished = new Promise<void>(resolve => { finish = resolve; });
     let workContext = "";

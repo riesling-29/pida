@@ -173,12 +173,12 @@ export function createPidaServer(options: HttpOptions) {
       if (
         options.serveDemo &&
         req.method === "GET" &&
-        ["/", "/app.js", "/studio.js", "/agents.js", "/fleet.js", "/workspace-layout.js", "/agent-workspace-controller.js", "/client.js", "/run-state.js", "/run-input.js", "/run-details.js", "/commands.js", "/composition.js", "/style.css", "/pida-client.js"].includes(path)
+        ["/", "/app.js", "/studio.js", "/agents.js", "/fleet.js", "/workspace-layout.js", "/agent-workspace-controller.js", "/display.js", "/client.js", "/run-state.js", "/run-input.js", "/run-details.js", "/commands.js", "/composition.js", "/style.css", "/pida-client.js"].includes(path)
       ) {
         const file = path === "/" ? "index.html" : path.slice(1);
         const contents = await readFile(
           new URL(
-            ["/pida-client.js", "/client.js", "/workspace-layout.js", "/agent-workspace-controller.js"].includes(path)
+            ["/pida-client.js", "/client.js", "/workspace-layout.js", "/agent-workspace-controller.js", "/display.js"].includes(path)
               ? `./${path === "/pida-client.js" ? "client.js" : file}`
               : `../examples/web/${file}`,
             import.meta.url,
@@ -294,10 +294,11 @@ export function createPidaServer(options: HttpOptions) {
           }
           if (jobRoute[2] === "cancel" && req.method === "POST") { keys(await body(req), []); await agents.cancel(job.id, principal); json(res, 200, agents.getJob(job.id, principal)); return; }
           if ((jobRoute[2] === "steer" || jobRoute[2] === "follow-up") && req.method === "POST") {
-            const input = await body(req); keys(input, ["text", "expectedRunId"]);
+            const input = await body(req); keys(input, ["text", "expectedRunId", "requestId"]);
+        if (input.requestId !== undefined && typeof input.requestId !== "string") throw new PidaError("INVALID_REQUEST_ID", 400);
             if (typeof input.text !== "string" || typeof input.expectedRunId !== "string" || !job.sessionId || job.status !== "running") throw new PidaError("RUN_NOT_ACTIVE", 409);
             const target = await agents.getRuntime(agentId, principal);
-            json(res, 200, await (jobRoute[2] === "steer" ? target.steer(job.sessionId, principal, input.text, input.expectedRunId) : target.followUp(job.sessionId, principal, input.text, input.expectedRunId))); return;
+            json(res, 200, await (jobRoute[2] === "steer" ? target.steer(job.sessionId, principal, input.text, input.expectedRunId, input.requestId as string | undefined) : target.followUp(job.sessionId, principal, input.text, input.expectedRunId, input.requestId as string | undefined))); return;
           }
           if (jobRoute[2] === "export" && req.method === "GET") {
             if (!job.sessionId || !job.runId) throw new PidaError("RUN_NOT_FOUND", 404);
@@ -473,9 +474,10 @@ export function createPidaServer(options: HttpOptions) {
       const id = match[1]!,
         action = match[2];
       if ((action === "steer" || action === "follow-up") && req.method === "POST") {
-        const input = await body(req); keys(input, ["text", "expectedRunId"]);
+        const input = await body(req); keys(input, ["text", "expectedRunId", "requestId"]);
+        if (input.requestId !== undefined && typeof input.requestId !== "string") throw new PidaError("INVALID_REQUEST_ID", 400);
         if (typeof input.text !== "string" || typeof input.expectedRunId !== "string") throw new PidaError("INVALID_BODY", 400);
-        json(res, 200, await (action === "steer" ? runtime.steer(id, principal, input.text, input.expectedRunId) : runtime.followUp(id, principal, input.text, input.expectedRunId))); return;
+        json(res, 200, await (action === "steer" ? runtime.steer(id, principal, input.text, input.expectedRunId, input.requestId as string | undefined) : runtime.followUp(id, principal, input.text, input.expectedRunId, input.requestId as string | undefined))); return;
       }
       if (action === "runs" && req.method === "GET") { json(res, 200, { runs: runtime.listRuns(id, principal) }); return; }
       if (action === "recovery" && req.method === "POST") {

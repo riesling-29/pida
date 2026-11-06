@@ -1,4 +1,5 @@
-/** Explicit, owner-authorized command output. These reads do not consume the model's output cursor. */
+import * as display from "/display.js";
+
 export function createCommands({ container, list, read, cancel, recover, explain = code => code }) {
   const node = (tag, text = "", action) => {
     const element = document.createElement(tag); element.textContent = text;
@@ -6,7 +7,7 @@ export function createCommands({ container, list, read, cancel, recover, explain
     return element;
   };
   const button = (text, action) => { const element = node("button", text, action); element.type = "button"; return element; };
-  const labels = { running: "실행 중", stopping: "중단 요청 중", completed: "명령 종료", failed: "명령 실패", cancelled: "취소됨", timed_out: "실행 시간 초과", interrupted: "서버 실행 소유권 상실", unknown: "종료 상태 미확인" };
+  const labels = display.commandStatusLabels;
   const active = command => command && ["running", "stopping"].includes(command.status);
   const summary = node("summary", "실행 명령"), refresh = button("상태 새로고침", "refresh");
   const status = node("p"), capability = node("p"), selector = node("select", "", "select"), detail = node("section"), metadata = node("p"), commandText = node("pre"), output = node("pre"), outputInfo = node("p");
@@ -20,7 +21,7 @@ export function createCommands({ container, list, read, cancel, recover, explain
   container.classList.add("command-panel"); container.replaceChildren(summary, refresh, status, capability, selector, detail);
   let identity, enabled = true, halted = false, generation = 0, requestSequence = 0, timer, loading = false, mutating = false, commands = [], permissions = {}, selectedId, offset = 0, text = "", displayTrimmed = false, gap = false, hasMore = false;
   const current = () => commands.find(command => command.id === selectedId);
-  const stamp = value => value ? new Date(value).toLocaleTimeString("ko-KR", { hour12: false }) : "미기록";
+  const stamp = value => display.formatClockKst(value, { empty: "미기록" });
   function resetOutput() { offset = 0; text = ""; gap = displayTrimmed = hasMore = false; commandText.textContent = ""; metadata.textContent = ""; output.textContent = ""; outputInfo.textContent = ""; inspected.checked = false; receipt.textContent = ""; }
   function controls() {
     const command = current(); detail.hidden = !command; selector.hidden = commands.length === 0;
@@ -50,7 +51,7 @@ export function createCommands({ container, list, read, cancel, recover, explain
     selector.value = selectedId ?? "";
     summary.textContent = `실행 명령 · ${commands.length}건${commands.some(active) ? " · 진행 중 " + commands.filter(active).length : ""}`;
     const caps = data.capabilities;
-    capability.textContent = caps ? `${caps.backend} · 출력: stdout/stderr 합본 · PTY ${caps.pty ? "지원" : "미지원"} · 입력 ${caps.stdin ? "지원" : "미지원"} · 서버 재시작 후 프로세스 재개 ${caps.restartExecution ? "지원" : "미지원"}\n명령 시작은 모델 도구를 통해 요청합니다. 명령 종료는 작업 검증 완료와 별개입니다.` : "실행 기능 정보를 확인하지 못했습니다.";
+    capability.textContent = caps ? `${caps.backend} · 격리: ${caps.sandboxModes?.length === 1 && caps.sandboxModes[0] === "none" ? "OS 격리 없음" : caps.sandboxModes?.join(", ") ?? "미확인"} · 출력: stdout/stderr 합본 · PTY ${caps.pty ? "지원" : "미지원"} · 입력 ${caps.stdin ? "지원" : "미지원"} · 서버 재시작 후 프로세스 재개 ${caps.restartExecution ? "지원" : "미지원"}\n명령 시작은 모델 도구를 통해 요청합니다. 명령 종료는 작업 검증 완료와 별개입니다.` : "실행 기능 정보를 확인하지 못했습니다.";
     status.textContent = commands.length ? `서버 상태 확인 · ${stamp(new Date().toISOString())}` : "이 범위에서 시작된 명령이 없습니다. 명령을 실행하면 이곳에서 상태와 출력을 조회할 수 있습니다.";
   }
   async function refreshState() {

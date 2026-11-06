@@ -223,6 +223,7 @@ test('HTTP timeout/cancel retires the generation and closes ignored POSTs withou
   const result = await running; assert.equal(result.status, 'cancelled');
   assert.equal(runtime.getRecovery(sessionId, principal).pendingEffects.length, 1, 'A dispatched cancelled write must stay unknown');
   await until(() => pending.size === 0, 'Cancelled tools/call POST remained open');
+  await until(() => activation.inventory()[0].state === 'failed', 'Retired transport did not exhaust its reconnect budget');
   assert.equal(activation.inventory()[0].state, 'failed');
   assert.equal(activation.inventory()[0].code, 'MCP_RECONNECT_EXHAUSTED');
   assert.equal(initializations, 5); assert.equal(calls, 5);

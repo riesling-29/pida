@@ -8,8 +8,8 @@ export function canonical(value: unknown): string {
 }
 export const sha256 = (value: string) => createHash("sha256").update(value).digest("hex");
 /** Atomic file replacement, with file fsync. No cross-file/power-loss transaction guarantee. */
-export function savePrivate(path: string, value: unknown): void {
-  mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
+export function savePrivate(path: string, value: unknown, options: { createDirectory?: boolean } = {}): void {
+  if (options.createDirectory !== false) mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
   const temp = `${path}.${randomUUID()}.tmp`;
   try {
     writeFileSync(temp, JSON.stringify(value), { flag: "wx", mode: 0o600 });

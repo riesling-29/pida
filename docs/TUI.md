@@ -1,6 +1,6 @@
 # Terminal and Web on the same Pida host
 
-Available from 0.8.7; current work surface 0.8.14. The terminal uses the existing Pi TUI 1.2.0 components and
+Available from 0.8.7; current work surface 0.8.18. The terminal uses the existing Pi TUI 1.2.0 components and
 Pida HTTP client. One separately running host owns sessions, Pi execution,
 provider/OAuth configuration, tools, permissions, persistence and workspace
 locks. Web and TUI are views of that same host.
@@ -24,7 +24,7 @@ npm run tui -- .\my-agent
 
 `npm start` opens the **server log**, not the terminal interface. The new startup
 message states this and prints the exact attach command. In the TUI, the header
-must say `pida 0.8.14 · MULTI TUI`, with visible function-key menus and a prompt editor.
+must say `pida 0.8.18 · 멀티 · 에이전트 N · 패널 a/4` (with `· 1개 표시` when the empty home screen shows a single panel). Visible function-key menus and a prompt editor.
 If the header shows an older version, update the PR branch and rebuild the same
 checkout before relaunching. No second workspace server is needed.
 
@@ -155,3 +155,5 @@ Actual Linux PTY, Pi/HTTP cross-client and DOM-handler evidence is recorded in
 Korean IME require user-environment validation; synthetic Korean paste and width
 checks are not a claim of native IME testing. Live LLM, company gateway and actual
 browser rendering were not executed for this patch.
+
+In 0.8.18 the single-session controller displays SSE text immediately and reads traces with `afterSequence`. KST dates and execution labels share `src/display.ts` with Web. Overflow controls open the displayed F1 menu or F2 tab menu. See [audit fixes](AUDIT-FIXES-0.8.18.md).

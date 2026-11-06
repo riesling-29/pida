@@ -1,3 +1,4 @@
+import * as display from "../dist/display.js";
 // DOM handler/projection regression checks. No browser engine or live model is used here.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -34,7 +35,7 @@ function environment() {
   const modeTabs=['studio','workspace','service','agents','fleet'].map(mode=>{const n=new Node('button');n.dataset.mode=mode;return n;});
   const doc={getElementById:$,createElement:t=>new Node(t),createTextNode:t=>({textContent:t}),body:new Node('body'),hidden:false,addEventListener(){},querySelector:selector=>modeTabs.find(n=>selector.includes(`data-mode="${n.dataset.mode}"`))??new Node(),querySelectorAll:selector=>selector.includes('#mode-tabs')?modeTabs:[]};
   const storage=new Map(), timers=new Map();let timer=0;
-  const context={document:doc,RunState,submitQueuedInput,Date,Map,Set,URL,URLSearchParams,TextEncoder,Blob,crypto:webcrypto,console,explainError:x=>x??'',ResizeObserver:class{observe(){}},requestAnimationFrame:()=>{},setInterval:()=>1,clearInterval(){},setTimeout:fn=>{timers.set(++timer,fn);return timer;},clearTimeout:id=>timers.delete(id),window:{addEventListener(){}},location:{origin:'http://fixture.invalid',hash:'',pathname:'/',search:''},history:{replaceState(){}},sessionStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)}};
+  const context={display,document:doc,RunState,submitQueuedInput,Date,Map,Set,URL,URLSearchParams,TextEncoder,Blob,crypto:webcrypto,console,explainError:x=>x??'',ResizeObserver:class{observe(){}},requestAnimationFrame:()=>{},setInterval:()=>1,clearInterval(){},setTimeout:fn=>{timers.set(++timer,fn);return timer;},clearTimeout:id=>timers.delete(id),window:{addEventListener(){}},location:{origin:'http://fixture.invalid',hash:'',pathname:'/',search:''},history:{replaceState(){}},sessionStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)}};
   context.sessionDisplayMessages = sessionDisplayMessages; context.formatWorkReview = formatWorkReview; context.structuredClone = structuredClone;
   for(const [path,name] of [['run-input.js','createRunInput'],['run-details.js','createRunDetails'],['commands.js','createCommands'],['composition.js','createComposition']]) runInNewContext(read('examples/web/'+path).replace(/^import .*\n/gm,'').replace(/export function /g,'function ')+`\nthis.${name}=${name};`,context);
   return {context,$,storage,timers,doc};
@@ -180,7 +181,7 @@ test('tool details are lazy, use recorded failure/exit code, and discard a late 
   const details=env.context.createRunDetails({container,load:()=>{reads++;return wait.promise;},explain:x=>x});details.select('s1','r1');assert.equal(reads,0);
   container.open=true;container.ontoggle();assert.equal(reads,1);details.select('s1','r2');wait.resolve({items:[{runId:'r1',toolName:'old',status:'completed',output:'stale private text'}]});await flush();assert.doesNotMatch(container.textContent,/stale private text/);
   const actual=env.context.createRunDetails({container,load:async()=>({items:[{runId:'r2',toolName:'project_shell',status:'completed',command:'npm test',exitCode:1,output:'<script>not markup</script>',truncated:true},{runId:'other',toolName:'other',status:'completed',output:'unrelated'}],truncated:false}),explain:x=>x});actual.select('s1','r2');container.open=true;container.ontoggle();await flush();
-  assert.match(container.textContent,/도구 실패 · 종료 코드 1/);assert.match(container.textContent,/<script>not markup<\/script>/);assert.doesNotMatch(container.textContent,/unrelated/);assert.match(container.textContent,/일부 출력/);assert.match(container.textContent,/검증 완료를 뜻하지/);
+  assert.match(container.textContent,/도구 실행 실패 · 종료 코드 1/);assert.match(container.textContent,/<script>not markup<\/script>/);assert.doesNotMatch(container.textContent,/unrelated/);assert.match(container.textContent,/일부 출력/);assert.match(container.textContent,/검증 완료를 뜻하지/);
 });
 
 test('workspace actual submit handler steers/follows the active run and preserves a draft at completion', async()=>{

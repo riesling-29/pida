@@ -1,3 +1,4 @@
+import * as display from "../dist/display.js";
 // Real HTTP/SDK + CommandManager + owned Pi sessions. Process timing is deterministic; no live LLM/browser is used.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -185,9 +186,9 @@ const outputChunk=(command,{text='',offset=0,nextOffset=offset,totalBytes=nextOf
 async function uiFixture(callbacks={}) {
   const document={hidden:false,createElement:tag=>new Element(tag),addEventListener(){}};
   const timers=new Map();let timerId=0;
-  const context={document,Date,Map,Set,console,setTimeout:fn=>{timers.set(++timerId,fn);return timerId;},clearTimeout:id=>timers.delete(id)};
+  const context={display,document,Date,Map,Set,console,setTimeout:fn=>{timers.set(++timerId,fn);return timerId;},clearTimeout:id=>timers.delete(id)};
   const source=await readFile(new URL('../examples/web/commands.js',import.meta.url),'utf8');
-  runInNewContext(source.replace('export function createCommands','function createCommands')+'\nthis.createCommands=createCommands;',context);
+  runInNewContext(source.replace(/^import .*\n/gm,'').replace('export function createCommands','function createCommands')+'\nthis.createCommands=createCommands;',context);
   const container=new Element('details');
   const panel=context.createCommands({container,list:async()=>listing(commandView()),read:async(_identity,id)=>outputChunk(commandView(id)),cancel:async()=>{throw new Error('unexpected cancel');},recover:async()=>{throw new Error('unexpected recovery');},...callbacks});
   const action=name=>{const element=container.descendants().find(node=>node.dataset.commandAction===name);assert.ok(element,'missing action '+name);return element;};
@@ -227,7 +228,7 @@ test('command panel distinguishes requested cancellation from exit and requires 
   command={...command,status:'cancelled',directExited:true,requiresRecovery:true};ui.action('refresh').onclick();await flush();
   assert.equal(ui.action('recover').disabled,true);ui.action('recover').onclick();await flush();assert.equal(recovered.length,0);
   ui.action('inspected').checked=true;ui.action('inspected').onchange();assert.equal(ui.action('recover').disabled,false);
-  ui.action('recover').onclick();await flush();assert.deepEqual(recovered,[['session','command-cancel',true]]);assert.equal(ui.action('inspected').checked,false);assert.match(ui.container.textContent,/취소됨/);assert.match(ui.container.textContent,/사용자 상태 확인 기록됨/);assert.match(ui.container.textContent,/명령 결과는 변경하지/);
+  ui.action('recover').onclick();await flush();assert.deepEqual(recovered,[['session','command-cancel',true]]);assert.equal(ui.action('inspected').checked,false);assert.match(ui.container.textContent,/요청으로 중단됨/);assert.match(ui.container.textContent,/사용자 상태 확인 기록됨/);assert.match(ui.container.textContent,/명령 결과는 변경하지/);
 });
 
 test('command panel honors denied capabilities, stops forbidden polling, and rejects mismatched output',async()=>{

@@ -92,7 +92,7 @@ test('default workspace retains intent, execution and unknown judgment in wide a
   c.state.session={sessionId:'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',title:'검토 작업',messages:[{role:'user',text:'검색 필터 추가 및 테스트. '+ '기존 동작 유지. '.repeat(20)}],running:false,runs:0,tools:[],autoCompaction:true};
   const view=createTuiView(c,{terminal,workspace:'D:/pida/my-agent',color:false});view.start();await delay(30);
   let screen=view.getScreenLines().map(stripTerminalSequences).join('\n');
-  for(const label of ['TUI','F1 메뉴','INTENT','STRUCTURE','EXECUTION','JUDGMENT','독립 검증 미확인','변경 미조회'])assert.ok(screen.includes(label),label);
+  for(const label of ['단일 대화','F1 메뉴','목표','구조','실행','판단','독립 검증 미확인 · UNKNOWN','변경 미조회'])assert.ok(screen.includes(label),label);
   terminal.input('\x1b[19~');await delay(20);assert.match(view.getScreenLines().map(stripTerminalSequences).join('\n'),/간결/);
   terminal.columns=64;terminal.rows=24;terminal.resize();await delay(30);screen=view.getScreenLines().map(stripTerminalSequences).join('\n');
   assert.match(screen,/목표 검색 필터/);assert.match(screen,/독립 검증 미확인/);assert.ok(view.getScreenLines().every(l=>visibleWidth(l)<=64));
@@ -108,6 +108,22 @@ test('peer snapshot exposes bounded assistant text, never thinking, and final me
   let seen=false,capped=false;
   await until(async()=>{const s=await f.peer.getSession(id);if(s.activeResponse?.text){seen=true;assert.equal(s.activeResponse.runId,s.activeRunId);assert.ok(s.activeResponse.text.length<=32768);assert.doesNotMatch(JSON.stringify(s),/private-thinking-marker/);capped ||= s.activeResponse.truncated;}return seen&&capped;});
   await execution;const s=await f.peer.getSession(id);assert.equal(s.activeResponse,undefined);assert.equal(sessionDisplayMessages(s).filter(m=>m.role==='assistant').length,1);assert.equal(s.messages.at(-1).text,visible);
+});
+
+test('single TUI displays SSE deltas before polling and requests only new trace events', async t => {
+  const id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', runId='11111111-1111-1111-1111-111111111111', release=Promise.withResolvers(), cursors=[];
+  let live=false;
+  const rows=[{sequence:1,sessionId:id,runId,timestamp:new Date().toISOString(),type:'run_started'}];
+  const client={getInfo:async()=>({tools:[]}),listSessions:async()=>({sessions:[{sessionId:id}]}),
+    getSession:async()=>({sessionId:id,title:'test',messages:[],running:live,activeRunId:live?runId:undefined,runs:0,tools:[],autoCompaction:true}),
+    getTrace:async(_id,after)=>{cursors.push(after);return {events:live?rows.filter(r=>r.sequence>(after??0)):[],nextSequence:live?2:1,truncated:false};},
+    async *stream(){live=true;yield {type:'trace',trace:rows[0]};yield {type:'text_delta',delta:'즉시 표시'};await release.promise;live=false;},getManifest:async()=>{throw new PidaClientError('RUN_NOT_FOUND',404);}};
+  const controller=new TuiController(client,{pollMs:60000});t.after(()=>controller.close());
+  await controller.start();await controller.submit('test');await until(()=>controller.state.session.activeResponse?.text==='즉시 표시');
+  assert.equal(cursors.length,1,'streaming text must not wait for an HTTP snapshot');
+  await controller.refresh();assert.equal(controller.state.session.activeResponse.text,'즉시 표시');
+  await controller.refresh();assert.deepEqual(cursors,[undefined,0,1]);assert.equal(controller.state.trace.length,1);
+  release.resolve();await controller.settled();
 });
 
 test('failed selection preserves current session and delayed old reads cannot overwrite new selection',async()=>{

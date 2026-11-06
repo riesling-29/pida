@@ -4,7 +4,7 @@
 
 파일·행 범위를 요청에 고정하고 같은 실행을 Web/TUI에서 이어 보려면 [0.8.16 작업 대상 가이드](WORK-SURFACE-0.8.16.md)를 참고합니다.
 
-**문서 기준:** Pida **0.8.17** · 2026년 11월 5일
+**문서 기준:** Pida **0.8.18** · 2026년 11월 5일
 **대상:** 자신의 컴퓨터에서 Pida를 실행하는 사용자
 **명령 예시:** Windows PowerShell. macOS·Linux에서는 `.\my-agent`를 `./my-agent`로 바꿉니다.
 
@@ -44,7 +44,7 @@
 터미널에서 저장소를 둘 폴더로 이동한 뒤 실행합니다.
 
 ```powershell
-git clone --branch fix/runtime-stabilization-00-02 https://github.com/riesling-29/pida.git
+git clone --branch ux/templeos-display-compare https://github.com/riesling-29/pida.git
 cd pida
 npm ci --ignore-scripts
 npm run pida -- setup .\my-agent
@@ -52,7 +52,7 @@ npm run pida -- setup .\my-agent
 
 마지막 명령은 빌드 후 `my-agent` 작업공간을 만들고, 서버를 시작하고, 브라우저의 모델 설정을 엽니다. **이 터미널은 서버 창이므로 그대로 둡니다.**
 
-> 0.8.14 코드는 `fix/runtime-stabilization-00-02` 브랜치에 있습니다. `main`에는 아직 병합되지 않았습니다. 이미 저장소가 있다면 다시 복제하지 말고 [업데이트 절차](#8-업데이트와-데이터-보관)를 따릅니다.
+> 0.8.18 감사 수정과 WMC 화면 변경은 `ux/templeos-display-compare` 브랜치에 있습니다. `main`에는 아직 병합되지 않았습니다. 이미 저장소가 있다면 다시 복제하지 말고 [업데이트 절차](#8-업데이트와-데이터-보관)를 따릅니다.
 
 ### 두 폴더의 차이
 
@@ -116,7 +116,7 @@ npm start -- .\my-agent --open
 npm run tui -- .\my-agent
 ```
 
-화면 위에 **`pida 0.8.17 · MULTI TUI`**가 표시되는지 확인합니다. Web만 사용할 때는 두 번째 터미널이 필요 없습니다.
+화면 위에 **`pida 0.8.18 · 멀티`**가 표시되는지 확인합니다. Web만 사용할 때는 두 번째 터미널이 필요 없습니다.
 
 ### 서버가 이미 켜져 있을 때
 
@@ -143,11 +143,13 @@ node dist/cli.js open .\my-agent
 
 ## 4. 멀티 에이전트 TUI
 
-![0.8.17의 외곽선이 있는 두 패널 TUI](../fixtures/workspace/0.8.17/two-frames.png)
+아래는 두 에이전트의 대화·활동·검증을 네 패널로 나눈 0.8.18의 실제 Pi 렌더러 예시입니다. 테스트 모델의 응답이므로 실제 LLM 품질을 보여 주는 자료는 아닙니다.
+
+![0.8.18의 외곽선이 있는 네 패널 TUI](../fixtures/workspace/0.8.18/multi-agent-tui.png)
 
 *실제 Pi TUI 렌더러에서 얻은 화면 버퍼를 이미지로 만든 예시입니다. 합성 예시 데이터를 사용했으며, Windows 화면 캡처나 실제 LLM 실행 결과는 아닙니다.*
 
-저장된 배치가 없는 새 TUI는 **대화·활동 두 패널**로 시작합니다. 기존 배치는 그대로 복원합니다. 예전 배치가 한 패널이라면 **F6 → 좌우 분할**로 나눕니다. 0.8.14의 대괄호 메뉴와 달리 0.8.17은 각 패널의 제목과 외곽선을 표시합니다. [화면 변경과 검증 기록](TUI-0.8.17.md)
+저장된 배치가 없는 새 TUI는 대화·활동 두 패널 배치를 준비합니다. 에이전트가 아직 없으면 **생성 안내 한 패널**을 표시하고, 에이전트를 만든 뒤 두 패널을 사용합니다. 기존 배치는 그대로 복원합니다. 예전 배치가 한 패널이라면 **F6 → 좌우 분할**로 나눕니다. 0.8.14의 대괄호 메뉴와 달리 0.8.17은 각 패널의 제목과 외곽선을 표시합니다. [화면 변경과 검증 기록](TUI-0.8.17.md)
 
 ### 에이전트 두 개로 시작하기
 
@@ -213,6 +215,8 @@ Web 상단에서 목적에 맞는 화면을 고릅니다.
 5. 실행 중인 작업에 지시를 더하려면 **실행 중 추가 지시**를 사용합니다.
 
 **관리 · 기억 · 복구**는 상주 에이전트 화면으로 이동합니다. 탭 이름은 더블클릭해 바꾸고, 패널은 확대하거나 다른 패널과 자리를 바꿀 수 있습니다.
+
+0.8.18에서는 추가 지시의 응답이 끊겼을 때 **같은 창에서 같은 내용을 다시 전송**하면 기존 요청 ID로 접수 여부를 확인합니다. 응답을 정상 수신한 뒤의 새 전송은 새 요청입니다. 새로고침·재시작으로 입력이나 접수 확인이 사라지면 실행 기록부터 확인합니다. 추가 지시는 재시작 후 자동 재생하지 않습니다.
 
 새 작업과 추가 지시는 구분됩니다. 새 작업은 대기열에 접수하고, 추가 지시는 현재 실행 중인 해당 작업에 전달합니다. 과거 작업을 선택하는 것은 조회이며 재실행이 아닙니다.
 
@@ -292,8 +296,8 @@ node dist/cli.js project disable .\my-agent
 ```powershell
 git status --short
 git fetch origin
-git switch fix/runtime-stabilization-00-02
-git pull --ff-only origin fix/runtime-stabilization-00-02
+git switch ux/templeos-display-compare
+git pull --ff-only origin ux/templeos-display-compare
 npm ci --ignore-scripts
 npm run build
 node -p "require('./package.json').version"
@@ -431,9 +435,9 @@ PIX의 절차 검증이 통과해도 파일 내용이나 업무 결과의 정답
 
 ## 12. 지원 범위와 더 읽을 문서
 
-이 문서는 0.8.17 소스의 명령·화면·단축키를 기준으로 작성했습니다. PowerShell 명령 예시가 있다고 해서 모든 Windows 동작을 실기기에서 검증했다는 뜻은 아닙니다.
+이 문서는 0.8.18 소스의 명령·화면·단축키를 기준으로 작성했습니다. PowerShell 명령 예시가 있다고 해서 모든 Windows 동작을 실기기에서 검증했다는 뜻은 아닙니다.
 
-| 구분 | 0.8.17 기준 |
+| 구분 | 0.8.18 기준 |
 | --- | --- |
 | 멀티 에이전트 Web·TUI | 구현됨 |
 | Linux 실제 CLI·HTTP·Pi·PTY 연동 | mock 모델로 검증 기록 있음 |
@@ -444,6 +448,7 @@ PIX의 절차 검증이 통과해도 파일 내용이나 업무 결과의 정답
 | 실제 LLM·회사 게이트웨이·배포된 Persona | 연결 대상별 검증 필요 |
 | 자동 worktree 생성·임의 외부 터미널 내장·Web/TUI 배치 동기화 | 제공하지 않음 |
 
+- [0.8.18 감사 수정과 시험 범위](AUDIT-FIXES-0.8.18.md)
 - [0.8.17 TUI 화면과 조작](TUI-0.8.17.md) · [조직 실행과 검사 설정](ORGANIZATION-0.8.17.md)
 - [멀티 에이전트 0.8.14 조작과 시험 기록](MULTI-AGENT-0.8.14.md)
 - [TUI 상세 안내](TUI.md)
@@ -454,4 +459,4 @@ PIX의 절차 검증이 통과해도 파일 내용이나 업무 결과의 정답
 - [외부 Persona 연결](PERSONA-PROVIDER.md) · [PIX·OCEL](PIX-OCEL-0.8.10.md)
 - [초기 0.8.14 구현 커밋](https://github.com/riesling-29/pida/commit/add744a5b3880445bc8a181ce25b8a55577bf395) · [최신 순차 개발 기록](ORDERED-DEVELOPMENT-20261105.md) · [개발 PR](https://github.com/riesling-29/pida/pull/1)
 
-세부 문서에는 이전 버전의 명령·설계 기록도 남아 있습니다. 현재 실행 브랜치와 기본 멀티 에이전트 조작은 이 가이드 및 0.8.17 문서를 우선 확인합니다.
+세부 문서에는 이전 버전의 명령·설계 기록도 남아 있습니다. 현재 실행 브랜치와 기본 멀티 에이전트 조작은 이 가이드 및 [0.8.18 감사 수정 기록](AUDIT-FIXES-0.8.18.md)을 우선 확인합니다.

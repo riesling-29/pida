@@ -7,11 +7,13 @@ An embedded, reusable **Pi-based agent harness** for applications. Bring the pac
 
 **Product goals (2026-11-02):** a reusable core for different agent forms, plus a ready-to-use home harness for coding and personal-assistant work that can replace the user's Codex/OpenClaw workflows. Tools, channels and private provider connectors must be attachable without editing the core. These are delivery requirements, not claims of current feature parity. See [core and home-harness requirements, missing capabilities and acceptance gates](docs/CORE-AND-HOME-HARNESS.md).
 
-**Workspace 0.8.17:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+**Workspace 0.8.18:** Pi `AgentSession`, agent loop, schema validation, tool dispatch, streaming, cancellation and `SessionManager` are reused. Standalone workspaces persist Pi sessions, while embedded runtimes remain in-memory unless a storage directory is supplied. Pida adds authenticated HTTP access, session ownership, per-call authorization, bounded execution and metadata traces. It does not invoke an external coding-agent CLI, OpenCode or Codex. Pi remains an exact-version upstream dependency, not a fork.
+
+New in 0.8.18: **WMC display design plus audit corrections**: shared KST/status labels, visible menu hit targets, flushed session/observation writes, persistent loss diagnostics, request-ID steering retries, validated join receipts, and immediate single-TUI streaming. See [audit corrections and verification boundaries](docs/AUDIT-FIXES-0.8.18.md).
 
 New in 0.8.17: **visible TUI pane frames and a two-pane starting layout**, plus durable child-batch joins, parent continuation, host-selected exact-workbench checks and bounded repair. Existing layouts remain intact. See [terminal frames and controls](docs/TUI-0.8.17.md), [organization API and verification scope](docs/ORGANIZATION-0.8.17.md), and [ordered implementation/testing record](docs/ORDERED-DEVELOPMENT-20261105.md).
 
-New in 0.8.14: **actual multi-agent tabs and nested split panes in both Web and Pi TUI**. Run `npm run tui -- ./my-agent`; the header says `MULTI TUI`. Up to eight tabs/four panels, independent drafts, owned job controls, saved layout and detach without cancellation reuse the existing supervisor. Single-session mode remains `--main`. See [home setup, controls, actual PTY evidence and browser/Windows limitations](docs/MULTI-AGENT-0.8.14.md).
+New in 0.8.14: **actual multi-agent tabs and nested split panes in both Web and Pi TUI**. Run `npm run tui -- ./my-agent`; the header says `멀티`. Up to eight tabs/four panels, independent drafts, owned job controls, saved layout and detach without cancellation reuse the existing supervisor. Single-session mode remains `--main`. See [home setup, controls, actual PTY evidence and browser/Windows limitations](docs/MULTI-AGENT-0.8.14.md).
 
 New in 0.8: **persistent agents with independent sessions/workbenches, a durable job queue, three-tier sourced memory, bounded asynchronous delegation, real project instructions/skills, guarded steering, host private-provider connectors and project files/Git changes in the UI**. Restart recovery does not replay interrupted work. See the [patch plan](docs/PERSISTENT-CORE-PATCH-PLAN.md), [usage and boundaries](docs/PERSISTENT-AGENTS.md), [private connectors](docs/PRIVATE-CONNECTORS.md) and [validation record](docs/PERSISTENT-CORE-VALIDATION.md). Repository program discovery and callable Node/npm/native program proxies are also included; see [program proxy usage](docs/PROGRAM-PROXIES.md). These are foundations for the home harness; PTY/sandbox executors, messaging/schedules and full Codex/OpenClaw parity are not claimed.
 
@@ -87,7 +89,7 @@ The package has **not** been published to npm. Create and install a local packag
 ```sh
 npm pack
 # Run from your host application directory:
-npm install /absolute/path/to/pida-core-0.8.14.tgz
+npm install /absolute/path/to/pida-core-0.8.18.tgz
 ```
 
 Entry points separate standalone configuration, server code and browser code:

@@ -333,6 +333,22 @@ export class AgentSupervisor {
         || new Set([...join.required, ...join.optional]).size !== join.required.length + join.optional.length
         || [...join.required, ...join.optional].some(id => !this.state.jobs.some(j => j.id === id && j.parentJobId === parent.id && j.owner === org.owner))
         || (join.continuationJobId && !this.state.jobs.some(j => j.id === join.continuationJobId && j.joinId === join.id))) denied("ORG_STATE_INVALID", 500);
+      if (join.status === "ready" && (!join.results || !join.continuationJobId)) denied("ORG_STATE_INVALID", 500);
+      if (join.results !== undefined) {
+        const assignments = [...join.required, ...join.optional];
+        if (!Array.isArray(join.results) || join.results.length !== assignments.length
+          || new Set(join.results.map(r => r?.assignmentJobId)).size !== assignments.length) denied("ORG_STATE_INVALID", 500);
+        for (const result of join.results) {
+          const assignment = this.state.jobs.find(j => j.id === result?.assignmentJobId);
+          const attempt = state.attempts.find(a => a.id === result?.attemptId);
+          const job = this.state.jobs.find(j => j.id === result?.jobId);
+          if (!result || !assignments.includes(result.assignmentJobId) || !assignment || !attempt || !job
+            || attempt.taskId !== assignment.organizationTaskId || attempt.jobId !== job.id || job.owner !== org!.owner
+            || !["completed", "failed", "limited", "cancelled", "interrupted"].includes(result.status)
+            || result.status !== job.status || result.runId !== job.runId
+            || result.inputDigest !== sha256(job.input) || result.resultDigest !== sha256(canonical({ result: job.result, status: job.status }))) denied("ORG_STATE_INVALID", 500);
+        }
+      }
     }
     for (const job of this.state.jobs) if (job.organizationTaskId && !state.attempts.some(a => a.id === job.attemptId && a.jobId === job.id && a.taskId === job.organizationTaskId)) denied("ORG_STATE_INVALID", 500);
     for (const org of state.sessions) if (org.status === "accepted" && state.tasks.find(t => t.id === org.rootTaskId)?.receipts.at(-1)?.status !== "PASS") denied("ORG_STATE_INVALID", 500);

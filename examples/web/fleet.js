@@ -1,5 +1,7 @@
+import * as display from "/display.js";
 import { AgentWorkspaceController, admissionLabels, viewLabels, detailText } from "/agent-workspace-controller.js";
 import { paneList, fitsLayout } from "/workspace-layout.js";
+const { executionStatusLabels: states, traceEventLabels } = display ?? { executionStatusLabels: {}, traceEventLabels: {}, formatClockKst: value => String(value ?? "") };
 
 const el = (tag, text, cls) => { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (cls) n.className = cls; return n; };
 const button = (label, action) => { const b = el("button", label); b.type = "button"; b.onclick = action; return b; };
@@ -9,11 +11,10 @@ function choices(node, items, selected) {
   if (node.dataset.options !== signature) { node.replaceChildren(...items.map(([value, label]) => { const o = el("option", label); o.value = value; return o; })); node.dataset.options = signature; }
   node.value = selected ?? "";
 }
-const states = { queued: "대기", running: "실행 중", completed: "실행 완료", failed: "실패", cancelled: "취소됨", interrupted: "중단 · 확인 필요", limited: "한도 도달" };
 
 export function createFleet({ client }) {
   const root = document.getElementById("fleet-view");
-  let controller, signature = "", dragging = false, generation = 0;
+  let controller, signature = "", tabSignature = "", dragging = false, generation = 0;
   const panels = new Map();
   const tabs = el("nav", undefined, "fleet-tabs"); tabs.setAttribute("aria-label", "작업 탭");
   const toolbar = el("div", undefined, "fleet-toolbar");
@@ -87,7 +88,7 @@ export function createFleet({ client }) {
     n.status.textContent = entry ? `${entry.profile.name} · ${entry.profile.personaSourceId ?? "호스트 기본"} · ${admissionLabels[entry.admission]}${job ? ` | ${states[job.status]} · ${job.currentTool ?? ""} · 작업 ${job.id.slice(0,8)}${age !== undefined && job.status === "running" ? ` · 마지막 신호 ${age}초 전` : ""}` : " · 작업 없음"}` : "에이전트를 선택하거나 생성하세요.";
     let text = "";
     if (p.binding.view === "chat") text = job ? `요청\n${job.input}\n\n응답\n${job.result?.text || job.latestText || "응답 대기 중"}` : "이 패널에서 지시한 작업과 응답을 표시합니다.";
-    else if (p.binding.view === "activity") text = job?.activity.map(e => `${e.timestamp}  ${e.type}${e.toolName ? " · " + e.toolName : ""}`).join("\n") || "관측된 실행 기록 없음";
+    else if (p.binding.view === "activity") text = job?.activity.map(e => `${display?.formatClockKst?.(e.timestamp) ?? e.timestamp}  ${traceEventLabels[e.type] ?? e.type}${e.toolName ? " · " + e.toolName : ""}`).join("\n") || "관측된 실행 기록 없음 · KST";
     else text = detailText(controller.detail(p.id), p.binding.view) ?? `${viewLabels[p.binding.view]} · 조회 버튼을 누르세요.\n검증 완료는 실제 근거를 확인한 경우에만 표시합니다.`;
     if (n.transcript.textContent !== text) { const bottom = n.transcript.scrollHeight - n.transcript.scrollTop - n.transcript.clientHeight < 70; n.transcript.textContent = text; if (bottom) n.transcript.scrollTop = n.transcript.scrollHeight; }
     if (p.binding.view === "files") { try { const d = JSON.parse(controller.detail(p.id) ?? "null"); if (d?.files) choices(n.files, [["", "파일 내용 보기"], ...d.files.map(f => [f.path, f.path])], ""); } catch { /* Text/error content is not a file inventory. */ } }
@@ -118,17 +119,27 @@ export function createFleet({ client }) {
     };
     box.append(tree(node.first), divider, tree(node.second)); size(); return box;
   }
+  // Focus/binding changes only update existing controls. Reattaching their pane
+  // during focusin can cancel the browser's pending pointer click or text input.
+  function shape(node) {
+    return node.kind === "pane" ? [node.id] : [node.id, node.axis, node.ratio, shape(node.first), shape(node.second)];
+  }
   function render() {
     if (!controller?.overview) return;
     const c = controller, active = document.activeElement, selection = active?.tagName === "TEXTAREA" ? [active.selectionStart, active.selectionEnd] : undefined;
     for (const p of c.layout.allPanes()) { if (!panels.has(p.id)) panels.set(p.id,newPanel(p)); updatePanel(p,panels.get(p.id)); }
     for (const id of panels.keys()) if (!c.layout.allPanes().some(p=>p.id===id)) panels.delete(id);
     const narrow = !fitsLayout(c.layout.active.root, stage.clientWidth, stage.clientHeight, 340, 245);
-    const next = c.layout.serialize() + narrow;
+    const focusedOnly = c.layout.active.zoom || narrow;
+    const next = JSON.stringify([c.layout.active.id, focusedOnly ? [current()] : shape(c.layout.active.root)]);
+    const nextTabs = JSON.stringify(c.layout.data.tabs.map(t => [t.id, t.title, t.id === c.layout.active.id]));
+    if (nextTabs !== tabSignature) {
+      tabSignature = nextTabs;
+      tabs.replaceChildren(...c.layout.data.tabs.map(t => { const group=el("span",undefined,"fleet-tab"); const b=button(t.title,()=>c.layout.selectTab(t.id)); b.setAttribute("aria-pressed",String(t.id===c.layout.active.id)); b.ondblclick=()=>{const name=window.prompt("탭 이름",t.title);if(name!==null)c.layout.renameTab(t.id,name);}; const close=button("×",()=>c.layout.closeTab(t.id));close.setAttribute("aria-label",`${t.title} 탭 닫기 · 작업 유지`);group.append(b,close);return group;}));
+    }
     if (next !== signature && !dragging) {
       signature = next;
-      tabs.replaceChildren(...c.layout.data.tabs.map(t => { const group=el("span",undefined,"fleet-tab"); const b=button(t.title,()=>c.layout.selectTab(t.id)); b.setAttribute("aria-pressed",String(t.id===c.layout.active.id)); b.ondblclick=()=>{const name=window.prompt("탭 이름",t.title);if(name!==null)c.layout.renameTab(t.id,name);}; const close=button("×",()=>c.layout.closeTab(t.id));close.setAttribute("aria-label",`${t.title} 탭 닫기 · 작업 유지`);group.append(b,close);return group;}));
-      stage.replaceChildren(c.layout.active.zoom || narrow ? panels.get(current()).box : tree(c.layout.active.root));
+      stage.replaceChildren(focusedOnly ? panels.get(current()).box : tree(c.layout.active.root));
       if (active?.isConnected) { active.focus({preventScroll:true}); if (selection) active.setSelectionRange(...selection); }
     }
     choices(panelPicker,c.layout.panes.map((p,i)=>[p.id,`${i+1} · ${c.entry(p.id)?.profile.name ?? "미연결"} · ${viewLabels[p.binding.view]}`]),current());
@@ -144,11 +155,11 @@ export function createFleet({ client }) {
   root.addEventListener("keydown",e=>{ if (!controller) return; if(e.altKey && e.key==="z"){e.preventDefault();controller.layout.zoom();} if(e.altKey && e.key==="]"){e.preventDefault();controller.layout.nextFocus();panels.get(current())?.draft.focus();} });
   return {
     async connect() {
-      controller?.close(); panels.clear(); signature=""; ++generation;
+      controller?.close(); panels.clear(); signature=tabSignature=""; ++generation;
       controller = new AgentWorkspaceController(client, {loadLayout:scope=>localStorage.getItem(`pida-fleet:${scope}`) ?? undefined,saveLayout:(scope,json)=>localStorage.setItem(`pida-fleet:${scope}`,json)});
       controller.onChange = render;
       try { await controller.start(); render(); } catch(e) { warning.textContent=e.message; throw e; }
     },
-    reset() { ++generation; controller?.close(); controller=undefined; panels.clear(); stage.replaceChildren(); tabs.replaceChildren(); signature=""; createDialog.close(); name.value=role.value=createError.textContent=""; },
+    reset() { ++generation; controller?.close(); controller=undefined; panels.clear(); stage.replaceChildren(); tabs.replaceChildren(); signature=tabSignature=""; createDialog.close(); name.value=role.value=createError.textContent=""; },
   };
 }

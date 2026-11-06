@@ -1,12 +1,12 @@
+import * as display from "/display.js";
 import { RunState } from "/run-state.js";
 import { createRunInput } from "/run-input.js";
 import { createRunDetails } from "/run-details.js";
 import { createCommands } from "/commands.js";
 import { explainError, formatWorkReview } from "/pida-client.js";
+const { executionStatusLabels: outcomes, traceEventLabels: activityLabels } = display;
 const $ = id => document.getElementById(id);
-const outcomes = { completed: "실행 완료", failed: "실행 실패", cancelled: "중단됨", limited: "실행 한도 도달", interrupted: "서버 종료로 중단됨" };
 const cleanPrompt = text => text.replace(/^\[PIDA (?:UI|CODE) STUDIO\][\s\S]*?\nUSER REQUEST:\n/, "");
-const activityLabels = { retry_scheduled: "모델 재시도 대기", retry_finished: "재시도 결과", summarization_retry_attempt_start: "압축 재시도", summarization_retry_finished: "압축 재시도 결과", run_started: "요청 시작", turn_started: "모델 응답 대기", tool_started: "도구 실행", tool_completed: "도구 완료", tool_failed: "도구 실패", compaction_started: "컨텍스트 압축 시작", compaction_completed: "컨텍스트 압축 완료", compaction_failed: "컨텍스트 압축 실패", output_retry: "출력 한도 후 재시도", model_request: "모델 응답 대기", model_response: "모델 응답 수신", run_finished: "실행 종료" };
 const duration = ms => { const seconds = Math.max(0, Math.floor(ms / 1000)); return seconds < 60 ? `${seconds}초` : `${Math.floor(seconds / 60)}분 ${seconds % 60}초`; };
 
 export function createStudio({ client, request, changed, disconnected }) {
@@ -71,7 +71,7 @@ export function createStudio({ client, request, changed, disconnected }) {
     const label = activityLabels[event.type];
     if (label) {
       const li = document.createElement("li"), stamp = document.createElement("time"), text = document.createElement("span");
-      stamp.textContent = new Date(Number.isFinite(time) ? time : Date.now()).toLocaleTimeString([], { hour12: false });
+      stamp.textContent = display.formatClockKst(Number.isFinite(time) ? time : Date.now());
       text.textContent = `${event.type === "run_finished" ? outcomes[event.status] ?? label : label}${event.toolName ? " · " + event.toolName.slice(0, 100) : ""}${event.code ? " · " + event.code.slice(0, 100) : ""}`;
       li.dataset.activity = event.type; li.append(stamp, text);
       const list = $("studio-activity-list"), atEnd = list.scrollHeight - list.scrollTop - list.clientHeight < 24;
@@ -306,7 +306,7 @@ export function createStudio({ client, request, changed, disconnected }) {
     for (const check of manifest?.verification_results ?? []) {
       const current = check.current_at_run_end && check.artifact_snapshot_digest === workspace.revision;
       const li = document.createElement("li");
-      li.textContent = `${check.scope === "isolated-browser" ? "브라우저" : "JavaScript"} 검사: ${check.status === "PASSED" ? "통과" : check.status === "FAILED" ? "실패" : "실행 환경 없음"} · ${current ? "현재 파일과 일치" : "현재 파일에 유효한 검증으로 볼 수 없음"}${check.assertions !== undefined ? ` · ${check.assertions}개 단언` : ""}`;
+      li.textContent = `${check.scope === "isolated-browser" ? "브라우저" : "JavaScript"} 검사: ${check.status === "PASSED" ? "검증 통과" : check.status === "FAILED" ? "검증 실패" : "실행 환경 없음"} · ${current ? "현재 파일과 일치" : "현재 파일에 유효한 검증으로 볼 수 없음"}${check.assertions !== undefined ? ` · ${check.assertions}개 단언` : ""}`;
       li.dataset.result = current && check.status === "PASSED" ? "passed" : check.status === "FAILED" ? "failed" : "unknown";
       $("studio-verification").append(li);
     }
@@ -369,7 +369,7 @@ export function createStudio({ client, request, changed, disconnected }) {
   function message(role, text) {
     $("studio-messages").querySelector(".studio-chat-empty")?.remove();
     const article = document.createElement("article"), label = document.createElement("strong"), body = document.createElement("p");
-    article.className = role; label.textContent = role === "user" ? "YOU" : "PIDA"; body.textContent = text;
+    article.className = role; label.textContent = role === "user" ? "요청" : "응답"; body.textContent = text;
     article.append(label, body); $("studio-messages").append(article); return body;
   }
   function contextLabel(data) {

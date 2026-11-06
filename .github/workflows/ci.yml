@@ -16,6 +16,7 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: node scripts/work-surface-browser-check.mjs
+      - run: node scripts/multi-agent-browser-check.mjs
   test:
     runs-on: ubuntu-latest
     strategy:
