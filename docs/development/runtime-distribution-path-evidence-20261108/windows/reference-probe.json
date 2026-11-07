@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "platform": "win32",
+  "node": "v24.18.0",
+  "git": "git version 2.56.0.windows.4",
+  "isolated_runtime": "C:\\Users\\migeo\\AppData\\Local\\Temp\\pdr-jE8ByR\\runtime",
+  "source_checkout_required": false,
+  "developer_node_modules_required": false,
+  "credentials_used": false,
+  "provider": "mock",
+  "persona": "vera-local-reference/0.1.0",
+  "organization_id": "da8290b9-0e60-4041-8c28-2f3f95660ebf",
+  "job_id": "1940f065-82a5-47c9-a405-4d8756d71a20",
+  "attempt_id": "07612671-8937-49a1-a7c2-3d0798db0ede",
+  "events": 16,
+  "terminal_event": true,
+  "resume_same_job": true,
+  "transport_token_rotated": true,
+  "limits": [
+    "No live model, desktop UI, remote Git or general Linux ABI acceptance.",
+    "Explicit external Python reference export; parent frozen Python assembly not tested."
+  ]
+}

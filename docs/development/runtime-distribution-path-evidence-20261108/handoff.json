@@ -1,0 +1,64 @@
+{
+  "source_commit": "b7f7d523c6fede56d508575a6bb78afa343e5566",
+  "status": "Authorverified; independent package delta review pending",
+  "scope": "Private modified build; only workbench.js code delta; old2b/BB caches and realcase failures unchanged",
+  "platforms": {
+    "windows": {
+      "source_commit": "b7f7d523c6fede56d508575a6bb78afa343e5566",
+      "platform": "win32-x64",
+      "runtime": "D:\\ChantaResearchGroup\\pida\\.pida-test-runtime-distribution-path-20261108\\windows\\runtime",
+      "archive": "D:\\ChantaResearchGroup\\pida\\.pida-test-runtime-distribution-path-20261108\\windows\\pida-runtime-b7f7d52-win32-x64.tar.gz",
+      "archive_sha256": "b8761c8d363311228d8b808f76546720673694165277d14178662af0a38ef3f0",
+      "archive_bytes": 107449720,
+      "manifest_sha256": "36388ea34cbe9011c1554b389cbdc55dd7789914f862ab744b6587b6e4fcf88f",
+      "tree_sha256": "477957bd53328529a4ff810d90d2b3f98bf44298fc356067b926c9c31d51973a",
+      "file_count": 16049,
+      "dependencies": 125,
+      "node_binary_sha256": "9a4eb5f1c29c6a2e93852ead46b999e284a6a5ca8bab4d4e241d587d025a52de",
+      "package_sha256": "f9fe665c89617342840657d89f04a6d68fe49455461ab3a115c12208d5ddad63",
+      "delivery_archive": "D:\\ChantaResearchGroup\\pida\\.pida-test-runtime-distribution-path-20261108\\windows\\pida-runtime-b7f7d52-win32-x64.tar.gz",
+      "checks": {
+        "normal_extraction": "PASS",
+        "stock_base_fresh_resume": "PASS",
+        "stock_reference_fresh_resume": "PASS",
+        "packaged_path_cases": 6,
+        "post_probe_tree": "PASS",
+        "vendor_delta": [],
+        "built_code_delta": [
+          "dist/workbench.js"
+        ]
+      }
+    },
+    "linux": {
+      "source_commit": "b7f7d523c6fede56d508575a6bb78afa343e5566",
+      "platform": "linux-x64",
+      "runtime": "/var/tmp/pida-b7f7d52-20261108/runtime",
+      "archive": "/var/tmp/pida-b7f7d52-20261108/pida-runtime-b7f7d52-linux-x64.tar.gz",
+      "archive_sha256": "e9090be1cf9cd632aa214ae56399358ca83488129cd56d6c467ee373592f0d67",
+      "archive_bytes": 79427625,
+      "manifest_sha256": "b9dca96fab95f1e1e5e4a628c7f03ba821e9a3441675fd269a663876f0238559",
+      "tree_sha256": "df3a4fdc1f974874396d17d320389929c32a3b8777376929b68e4555b65989f7",
+      "file_count": 15723,
+      "dependencies": 125,
+      "node_binary_sha256": "41a74efb34cbde5c7632cdac0cf8bd1a14d0b8d73dc1e82755014d9a9ce70f5c",
+      "package_sha256": "f9fe665c89617342840657d89f04a6d68fe49455461ab3a115c12208d5ddad63",
+      "delivery_archive": "D:\\ChantaResearchGroup\\pida\\.pida-test-runtime-distribution-path-20261108\\linux\\pida-runtime-b7f7d52-linux-x64.tar.gz",
+      "checks": {
+        "normal_extraction": "PASS",
+        "stock_base_fresh_resume": "PASS",
+        "stock_reference_fresh_resume": "PASS",
+        "packaged_path_cases": 6,
+        "post_probe_tree": "PASS",
+        "vendor_delta": [],
+        "built_code_delta": [
+          "dist/workbench.js"
+        ]
+      }
+    }
+  },
+  "persona_source": "f6edd022d4389237fcee5d6c0a4db8a0d0b13399",
+  "persona_runtime_digest": "0f85831175f24aea7237a6a003bdb14972a32cf13a7e76394c3fa9898b3763d6",
+  "native_join_prior_evidence": "Exact other dist modules byte-identical to independently accepted2b, retained not rerun",
+  "provider_calls": 0,
+  "fresh_verification_workspace": true
+}
