@@ -1,0 +1,41 @@
+{
+  "schema_version": "pida.real-case-preparation/2",
+  "state": "PREPARATION_ONLY_MODEL_HOLD",
+  "case_id": "4db965ff-29cd-440b-ada0-e8b5b36a9579",
+  "source_commit": "2b787fd4c234747da22726ec03a3e4c6619ae95f",
+  "helper_source": "56236d289dbf98aa0119d3228ef68bcfeb15c72f",
+  "new_native_identities": null,
+  "provider_config_directory": "D:/pida/my-agent",
+  "provider_connection_checked": false,
+  "prior_validation_case": {
+    "case_id": "0227453a-4ceb-4edf-a27b-6ad701d4a9be",
+    "actual_requests": 5,
+    "attempts": 2,
+    "accepted": false,
+    "records": [
+      "two-org-a-original-negative-20261108.json",
+      "two-org-a-user-retry-negative-20261108.json"
+    ]
+  },
+  "historical_single_model_smoke": "Separate historical evidence, not included in this two-org validation subtotal.",
+  "request_counts": {
+    "new_case": 0,
+    "two_org_validation_lifetime": 5
+  },
+  "bounds": {
+    "new_case_observed_stop_threshold": 12,
+    "active_case_wall_ms": 180000,
+    "run_ms": 20000,
+    "organization_ms": 60000,
+    "provider_retries": 0,
+    "output_retries": 0,
+    "max_repair_attempts": 0
+  },
+  "release": {
+    "A": false,
+    "B": false,
+    "sole_submitter": "/root/schumpeter_owner/desktop_shell"
+  },
+  "provisioning": "After package/GUI gates, native UI selects exact private persona-description.txt into a fresh app-owned reference store and creates three actual profiles and two persistent organizations. No old workspace/runtime identity rewrite.",
+  "private_values_in_public_record": false
+}
