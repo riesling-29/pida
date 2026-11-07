@@ -40,6 +40,12 @@ The existing ProjectView read returns actual selected-file bytes/revision at cap
 
 ## Remaining gates and withdrawal conditions
 
-Independent source review is pending. Sch consumer approvals/registry/reservation/capture integration, runtime sidecar/distribution, packaged/frozen bridge, GUI and any actual model use are separate future gates. No genuine user repository has been selected or executed here.
+Independent source review passed exact b5252fba: build +25 focused tests +8 additional probes +35 source/evidence comparisons; [immutable review archive](repository-profile-independent-20261108/archive-index.json). Sch consumer approvals/registry/reservation/capture integration, runtime sidecar/distribution, packaged/frozen bridge, GUI and any actual model use are separate future gates. No genuine user repository has been selected or executed here.
 
 The current claim is limited to the pinned source and recorded offline synthetic paths. Withdraw it if an independent test can change approved root/program or configured shell/tool authority while retaining the same accepted binding, mutate an existing workspace during a preflight mismatch refusal, expose unmanaged command selection, bypass the current cancellation/replay/budget guards, or mislabel a live file as an immutable native result. Revalidate when the source, program proxy, policy, capability schema or parent approval protocol changes. The do-nothing alternative remains to retain the accepted mode2 runtime until these later gates pass.
+
+## Independent review clarifications
+
+The helper normalizes lexical dot/dot-dot path spellings with `resolve` before canonical realpath and directory-identity comparison; the original spelling remains part of the private profile digest. This is not a symlink/junction or root-identity bypass. The earlier canonical-path wording describes the resolved identity, not a requirement that all input spellings are already normalized.
+
+The ProgramProxy allowlist above is the explicit forwarded environment, not an exhaustive list of names present in the final child. Independent Windows observation found HOMEDRIVE, HOMEPATH, LOGONSERVER, SYSTEMDRIVE, USERDOMAIN and USERNAME added by process/OS startup; a direct Node child control with only SystemRoot supplied reproduced them. Only names were recorded. Synthetic PIDA/provider/loader variables remained absent. No environment sandbox or broad credential-isolation claim follows from that test.

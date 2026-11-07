@@ -1,0 +1,75 @@
+{
+  "source_commit": "b5252fba5a66c2c40dca49017a4a4b929a47170a",
+  "original_index_sha256": "8a555596ffa0e929c70752f2a366604e3b23976d0205682f68dd7d6d94284884",
+  "archive_sha256": "ff4fa121770786eb44e6f8bcc45664ca3074b9988e716f16878c4c97090a61fc",
+  "original_files": [
+    {
+      "name": "INDEPENDENT-REPOSITORY-PROFILE-REVIEW.md",
+      "sha256": "3aeb226f22b943e232bce4ba3407563ee3bfb30e2a013a6f9198633371949596",
+      "bytes": 10476
+    },
+    {
+      "name": "adversarial.test.mjs",
+      "sha256": "d91f829b5d6e7877048ecef14fe3acc11edb38ebd86247243839284c8d36c7e6",
+      "bytes": 10762
+    },
+    {
+      "name": "adversarial.log",
+      "sha256": "eec56daf1a687f5db1adb77b5275cddbe084bd0b19b64dfdf0806bab14b4202d",
+      "bytes": 1910
+    },
+    {
+      "name": "adversarial-initial-observations.log",
+      "sha256": "03a781ed67d8a289fc39127551430d139a3c5f0146077fe677d519351dfd5a4c",
+      "bytes": 4838
+    },
+    {
+      "name": "probe.log",
+      "sha256": "1b09f5ca3a4cb0ee4bd4a014cfbeccdb209280e86870d560258962aa4c6105ba",
+      "bytes": 2610
+    },
+    {
+      "name": "environment-control.mjs",
+      "sha256": "635fd4a9302c6837a506e9d2109f028df1a710fd9929d85f0914329ebe782c79",
+      "bytes": 909
+    },
+    {
+      "name": "environment-control.json",
+      "sha256": "1a759501538abdaa0942da1bd4d97509fd3c7b673680eaa02d2168bd79cf2c1d",
+      "bytes": 621
+    },
+    {
+      "name": "child-environment-observation.json",
+      "sha256": "40af12b339100ff65d4a655325ddcfba305fa983e83c93501b72c0329f6541a8",
+      "bytes": 676
+    },
+    {
+      "name": "lexical-path-observation.json",
+      "sha256": "6f0888bdfd8af58c2958969f731f797287b0c675d934fc0b5c9ce3f835601607",
+      "bytes": 194
+    },
+    {
+      "name": "audit-source.py",
+      "sha256": "11876f310d919aab521fd4951a3f71afa8f149c6efe59750b1cbee6b94d818d7",
+      "bytes": 2502
+    },
+    {
+      "name": "source-audit.json",
+      "sha256": "86a145c4dc9a279f4d2f974769ae76a3a994bc88affb49153604356979bc9c81",
+      "bytes": 5136
+    },
+    {
+      "name": "build.log",
+      "sha256": "6d3803c3d83c3545712565477cdcbf4759bfe23f04c1c98ee2063daf998b069b",
+      "bytes": 124
+    },
+    {
+      "name": "focused.log",
+      "sha256": "6de7316625f25ca3091eda0355fcbada4e5671bf76e989b989f21b163da55abc",
+      "bytes": 5314
+    }
+  ],
+  "original_index_in_archive": "evidence-hashes.json",
+  "readable_report": "INDEPENDENT-REPOSITORY-PROFILE-REVIEW.md",
+  "verdict": "Independent bounded source PASS; distributions/consumer/GUI/real use separate"
+}
