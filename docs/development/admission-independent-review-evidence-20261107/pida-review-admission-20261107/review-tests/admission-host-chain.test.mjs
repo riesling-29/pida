@@ -1,0 +1,49 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { createInterface } from 'node:readline';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { setTimeout as delay } from 'node:timers/promises';
+import { randomUUID } from 'node:crypto';
+import { createCollaborationPolicyClient } from '../dist/collaboration-policy-client.js';
+import { collaborationDigest } from '../dist/collaboration.js';
+import { organizationDefinitionDigest, organizationAdmissionDigest } from '../dist/organization-admission.js';
+import { PidaClient } from '../dist/client.js';
+const root = fileURLToPath(new URL('../', import.meta.url)), token = 'synthetic-policy-token-'.repeat(3);
+const golden = JSON.parse(await readFile(join(root, 'fixtures/collaboration/envelope-v1.json'), 'utf8'));
+function pipe(child, readyType) {
+  let readyResolve, readyReject, seq = 0, exited = false; const pending = new Map();
+  const ready = new Promise((resolve, reject) => { readyResolve = resolve; readyReject = reject; });
+  const timer = setTimeout(() => { readyReject(Error('ready timeout')); child.kill(); }, 10000);
+  let stderr = ''; child.stderr.on('data', data => { stderr = (stderr + data).slice(-2000); });
+  child.once('error', readyReject);
+  const closed = new Promise(resolve => child.once('close', code => { exited = true; clearTimeout(timer); readyReject(Error('child exit: ' + code + ':' + stderr)); for (const p of pending.values()) p.reject(Error('child closed')); pending.clear(); resolve(code); }));
+  createInterface({ input: child.stdout }).on('line', line => { const message = JSON.parse(line); if (message.type === readyType) { clearTimeout(timer); readyResolve(message); } else { const p = pending.get(message.id); if (p) { pending.delete(message.id); p.resolve(message); } } });
+  return { ready, child, closed, command(value) { return new Promise((resolve, reject) => { if (exited) return reject(Error('closed')); const id = ++seq; pending.set(id, { resolve, reject }); child.stdin.write(JSON.stringify({ id, ...value }) + '\n'); }); }, async close() { child.stdin.end(); const timer = setTimeout(() => child.kill(), 3000); try { return await closed; } finally { clearTimeout(timer); } } };
+}
+async function policyServer(t) {
+  const p = pipe(spawn(process.env.PYTHON ?? 'python', ['-I', '-B', join(root, 'test/fixtures/collaboration-policy-server.py')], { env: { ...process.env, POLICY_FIXTURE_TOKEN: token }, stdio: ['pipe', 'pipe', 'pipe'] }), 'ready');
+  const info = await p.ready; t.after(() => p.close());
+  return { ...p, url: `http://127.0.0.1:${info.port}/v1/pida-authorization` };
+}
+const grantFor = e => ({ host_id: e.recipient.host_id, principal_id: 'local-user', recipient: e.recipient, sender_binding_id: e.sender_binding_id, room_id: e.room_id, room_revision: e.room_revision, contract_id: e.contract_id, contract_revision: e.contract_revision });
+
+test('review: actual Node host and Python reserved policy execute root child continuation without parked coordinator',async t=>{
+ const server=await policyServer(t),directory=await mkdtemp(join(tmpdir(),'pida-review-chain-'));
+ const args=['--import',pathToFileURL(join(root,'review-scripted-host.mjs')).href,join(root,'examples/schumpeter-host.mjs'),'--workspace',directory,'--host-id','host-1'];
+ const env={...process.env,PIDA_SCHUMPETER_AUTH_URL:server.url,PIDA_SCHUMPETER_AUTH_TOKEN:token};let host=pipe(spawn(process.execPath,args,{env,stdio:['pipe','pipe','pipe'],windowsHide:true}),'pida-host-ready');
+ t.after(async()=>{await host.close();await rm(directory,{recursive:true,force:true});});let ready=await host.ready,client=new PidaClient({baseUrl:ready.base_url,token:()=>ready.api_token});
+ const parent=await client.createAgent({name:'review-root'}),child=await client.createAgent({name:'review-child'}),cap=await client.getOrganizationAdmissionCapabilities();
+ const a=JSON.parse(await readFile(join(root,'fixtures/organization-admission/admission-v1.json'),'utf8'));a.envelope.recipient.org_session_id=randomUUID();a.envelope.recipient.agent_id=parent.id;a.definition={...a.definition,root_agent_id:parent.id,participants:[parent.id,child.id],criterion_ids:cap.acceptance.criterion_ids,criteria_digest:cap.acceptance.criteria_digest,environment_revision:cap.acceptance.environment_revision};a.envelope.payload_digest=collaborationDigest(a.envelope);a.definition_digest=organizationDefinitionDigest(a.definition);a.admission_digest=organizationAdmissionDigest(a);
+ await server.command({grant:grantFor(a.envelope),reservation:a,reservation_state:'reserved'});const receipt=await client.admitOrganization(a);let view;
+ for(let i=0;i<600;i++){view=await client.getOrganization(a.envelope.recipient.org_session_id);if(view.organization.status!=='active')break;await delay(10);}
+ const rootJobs=(await client.listAgentJobs(parent.id)).jobs,childJobs=(await client.listAgentJobs(child.id)).jobs;
+ assert.equal(rootJobs.length,2,JSON.stringify(rootJobs.map(j=>({status:j.status,code:j.code}))));assert.equal(childJobs.length,1);assert.ok([...rootJobs,...childJobs].every(j=>j.status==='completed'&&j.runId));assert.equal(view.joins.length,1);assert.equal(view.joins[0].status,'ready');assert.equal(view.organization.status,'unknown','empty host criteria cannot imply PASS');
+ const calls=await server.command({});assert.equal(calls.calls.filter(p=>p==='dispatch').length,3);assert.deepEqual(await client.getOrganizationAdmissionReceipt(receipt.receipt_id),receipt);
+ const before=JSON.stringify({rootJobs,childJobs,view});await host.close();host=pipe(spawn(process.execPath,[...args,'--workspace-mode','resume'],{env,stdio:['pipe','pipe','pipe'],windowsHide:true}),'pida-host-ready');ready=await host.ready;client=new PidaClient({baseUrl:ready.base_url,token:()=>ready.api_token});
+ assert.deepEqual(await client.admitOrganization(a),receipt);assert.equal(JSON.stringify({rootJobs:(await client.listAgentJobs(parent.id)).jobs,childJobs:(await client.listAgentJobs(child.id)).jobs,view:await client.getOrganization(a.envelope.recipient.org_session_id)}),before);
+ console.log(JSON.stringify({case:'actual-host-reserved-root-child-continuation',rootJobs:2,childJobs:1,dispatchChecks:3,coordinatorPaused:false,acceptance:'unknown',restartSameNativeState:true}));
+});

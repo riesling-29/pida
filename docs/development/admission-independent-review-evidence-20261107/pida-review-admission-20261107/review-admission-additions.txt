@@ -1,0 +1,45 @@
+const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return{promise,resolve};};
+
+test('review: historical foreign native session and legacy delivery carrier cannot be adopted',async t=>{
+ const path=directory(t),s=await AgentSupervisor.open(options(path));t.after(()=>s.close());const root=s.register(owner,{name:'root'}),foreign=s.register(other,{name:'foreign'});
+ const historical=s.createOrganization(other,{requestId:'foreign-history',goal:'foreign goal',agentId:foreign.id,participants:[foreign.id],criterionIds:[]});
+ const a=admission(s,root);a.envelope.recipient.org_session_id=historical.id;sign(a);const before=readFileSync(join(path,'supervisor.json'),'utf8');await assert.rejects(s.admitOrganization(owner,a),{code:'ORGANIZATION_ADMISSION_CONFLICT'});assert.equal(readFileSync(join(path,'supervisor.json'),'utf8'),before);assert.equal(s.jobs(root.id,owner).length,0);
+ const local=s.createOrganization(owner,{requestId:'local-history',goal:'local goal',agentId:root.id,participants:[root.id],criterionIds:[]}),delivery=structuredClone(a.envelope);delivery.recipient.org_session_id=local.id;delivery.payload_digest=collaborationDigest(delivery);const oldReceipt=await s.receiveCollaboration(owner,delivery);
+ const b=admission(s,root),beforeCarrier=readFileSync(join(path,'supervisor.json'),'utf8');await assert.rejects(s.admitOrganization(owner,b),{code:'ORGANIZATION_ADMISSION_CONFLICT'});assert.equal(readFileSync(join(path,'supervisor.json'),'utf8'),beforeCarrier);assert.deepEqual(await s.getCollaborationReceipt(oldReceipt.receipt_id,owner),oldReceipt);
+ b.envelope.request_id+='-distinct';b.reservation_id+='-distinct';sign(b);await s.admitOrganization(owner,b);const count=s.jobs(root.id,owner).length;await assert.rejects(s.receiveCollaboration(owner,b.envelope),{code:'COLLABORATION_REQUEST_CONFLICT'});assert.equal(s.jobs(root.id,owner).length,count);
+ console.log(JSON.stringify({case:'historical-native-and-carrier-collision',foreignSessionAdopted:false,legacyReceiptPreserved:true,bidirectionalCarrierConflict:true}));
+});
+
+test('review: concurrent admissions wait for authority then atomically deduplicate full definition',async t=>{
+ const path=directory(t),gates=[],s=await AgentSupervisor.open(options(path,[],{collaboration:{hostId:'host-1',authorize:()=>true,authorizeAdmission:()=>{const gate=deferred();gates.push(gate);return gate.promise;}}}));t.after(()=>s.close());
+ const root=s.register(owner,{name:'root'}),a=admission(s,root),before=readFileSync(join(path,'supervisor.json'),'utf8');
+ const p1=s.admitOrganization(owner,a),p2=s.admitOrganization(owner,a);await until(()=>gates.length===2);assert.equal(readFileSync(join(path,'supervisor.json'),'utf8'),before);assert.equal(s.jobs(root.id,owner).length,0);
+ gates[1].resolve(true);const r2=await p2;gates[0].resolve(true);const r1=await p1;assert.deepEqual(r1,r2);assert.equal(s.listOrganizations(owner).length,1);assert.equal(s.jobs(root.id,owner).length,1);
+ const b=structuredClone(a);b.definition.timeout_ms++;sign(b);const p3=s.admitOrganization(owner,b);await until(()=>gates.length===3);gates[2].resolve(true);await assert.rejects(p3,{code:'ORGANIZATION_ADMISSION_CONFLICT'});
+ console.log(JSON.stringify({case:'concurrent-full-definition-admission',pendingPublished:0,committedOrganizations:1,committedJobs:1,sameReceipt:true,changedDefinition:'conflict'}));
+});
+
+test('review: cancellation while dispatch policy pending prevents late true from invoking root',async t=>{
+ const path=directory(t),calls=[],gate=deferred();let dispatch=false;
+ const s=await AgentSupervisor.open(options(path,calls,{collaboration:{hostId:'host-1',authorize:()=>true,authorizeAdmission:({phase})=>{if(phase==='dispatch'){dispatch=true;return gate.promise;}return true;}}}));t.after(()=>s.close());
+ const root=s.register(owner,{name:'root'}),a=admission(s,root),r=await s.admitOrganization(owner,a);s.start();await until(()=>dispatch);
+ await s.cancelOrganization(a.envelope.recipient.org_session_id,owner);gate.resolve(true);await delay(50);const job=s.getJob(r.job_id,owner);assert.equal(job.status,'cancelled');assert.equal(job.runId,undefined);assert.deepEqual(calls,[]);assert.deepEqual(await s.admitOrganization(owner,a),r);assert.equal(s.jobs(root.id,owner).length,1);
+ console.log(JSON.stringify({case:'pending-dispatch-cancellation',status:job.status,modelCalls:0,lateTrueCannotReplay:true}));
+});
+
+test('review: policy ignoring abort times out without publishing admission',async t=>{
+ const path=directory(t),s=await AgentSupervisor.open(options(path,[],{collaboration:{hostId:'host-1',authorize:()=>true,authorizeAdmission:()=>new Promise(()=>{})}}));t.after(()=>s.close());
+ const root=s.register(owner,{name:'root'}),a=admission(s,root),before=readFileSync(join(path,'supervisor.json'),'utf8');const started=Date.now();await assert.rejects(s.admitOrganization(owner,a),{code:'ORGANIZATION_ADMISSION_FORBIDDEN'});assert.ok(Date.now()-started<6500);assert.equal(readFileSync(join(path,'supervisor.json'),'utf8'),before);assert.equal(s.listOrganizations(owner).length,0);assert.equal(s.jobs(root.id,owner).length,0);
+ console.log(JSON.stringify({case:'uncooperative-policy-timeout',persistedStateUnchanged:true,jobs:0}));
+});
+
+test('review: grant revoked only after child completion blocks native join continuation',async t=>{
+ const path=directory(t),calls=[];let s,root,child,allowed=true;
+ const createRuntime=p=>{const f=fauxProvider({tokensPerSecond:100000});f.setResponses(p.id===root.id?[
+ ()=>{calls.push('root');return answer(call('agent_delegate',{agentId:child.id,input:'child'}),{stopReason:'toolUse'});},
+ ()=>answer(call('agent_join',{required:[s.jobs(child.id,owner)[0].id]}),{stopReason:'toolUse'}),()=>answer('initial complete'),()=>{calls.push('continuation');return answer('combined');}]
+ :[()=>{calls.push('child');allowed=false;return answer('child complete');}]);return new PidaRuntime({storageDir:join(path,p.id),tools:createAgentTools(s,p.id),provider:()=>({provider:f.provider,modelId:f.getModel().id}),maxRunMs:5000});};
+ s=await AgentSupervisor.open(options(path,[],{createRuntime,maxConcurrent:1,collaboration:{hostId:'host-1',authorize:()=>true,authorizeAdmission:()=>allowed}}));t.after(()=>s.close());root=s.register(owner,{name:'root'});child=s.register(owner,{name:'child'});
+ const a=admission(s,root,{participants:[root.id,child.id]}),receipt=await s.admitOrganization(owner,a);s.start();const continuation=await until(()=>s.jobs(root.id,owner).find(j=>j.id!==receipt.job_id));assert.equal((await done(s,continuation.id)).code,'ORGANIZATION_ADMISSION_FORBIDDEN');assert.deepEqual(calls,['root','child']);assert.equal(continuation.runId,undefined);
+ console.log(JSON.stringify({case:'post-child-revocation',calls,continuation:'ORGANIZATION_ADMISSION_FORBIDDEN'}));
+});
