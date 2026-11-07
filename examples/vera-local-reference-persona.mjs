@@ -5,9 +5,12 @@ import { resolve, isAbsolute, join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { createVeraDispatchPersonaProvider, veraDispatchCapabilities, validVeraDispatchDescription } from '../dist/vera-dispatch-provider.js';
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
-async function settings(host) {
-  const executable = process.env.PIDA_PERSONA_BRIDGE_EXECUTABLE, configPath = process.env.PIDA_PERSONA_BRIDGE_CONFIG, store = process.env.PIDA_PERSONA_BRIDGE_STORE;
-  let prefix; try { prefix = JSON.parse(process.env.PIDA_PERSONA_BRIDGE_PREFIX_ARGS ?? '[]'); } catch { throw Error('HOST_PERSONA_CONFIG_INVALID'); }
+export async function referenceHostSettings(host, selected) {
+  if (selected !== undefined && (!selected || Object.keys(selected).length !== 4 || !['executable', 'prefix_args', 'config', 'store'].every(k => Object.hasOwn(selected, k)))) throw Error('HOST_PERSONA_CONFIG_INVALID');
+  const executable = selected === undefined ? process.env.PIDA_PERSONA_BRIDGE_EXECUTABLE : selected.executable,
+    configPath = selected === undefined ? process.env.PIDA_PERSONA_BRIDGE_CONFIG : selected.config,
+    store = selected === undefined ? process.env.PIDA_PERSONA_BRIDGE_STORE : selected.store;
+  let prefix; try { prefix = selected === undefined ? JSON.parse(process.env.PIDA_PERSONA_BRIDGE_PREFIX_ARGS ?? '[]') : selected.prefix_args; } catch { throw Error('HOST_PERSONA_CONFIG_INVALID'); }
   if (![executable, configPath, store].every(p => typeof p === 'string' && isAbsolute(p)) || !Array.isArray(prefix)
     || prefix.length > 16 || !prefix.every(s => typeof s === 'string' && s.length < 4096 && !/[\x00\r\n]/.test(s))) throw Error('HOST_PERSONA_CONFIG_INVALID');
   const bytes = await readFile(configPath); if (bytes.length > 65536) throw Error('HOST_PERSONA_CONFIG_INVALID');
@@ -24,12 +27,12 @@ async function settings(host) {
   for (const argument of [executable, ...prefix]) if (isAbsolute(argument)) {
     const entry = await stat(argument); if (entry.isFile()) commandFiles.push([resolve(argument), hash(await readFile(argument))]);
   }
-  return { executable, prefix, configPath, store, config, storeIdentity,
+  return { executable, prefix, configPath, store, config, configSha256: hash(bytes), storeIdentity,
     identity: hash(JSON.stringify({ executable, prefix, commandFiles, config: hash(bytes), store, storeIdentity })) };
 }
-export async function hostPersonaIdentity(host) { return (await settings(host)).identity; }
-export async function createHostPersona(host) {
-  const s = await settings(host);
+export async function hostPersonaIdentity(host, selected) { return (await referenceHostSettings(host, selected)).identity; }
+export async function createHostPersona(host, selected) {
+  const s = await referenceHostSettings(host, selected);
   if (host.personaIdentity !== undefined && host.personaIdentity !== s.identity) throw Error('HOST_PERSONA_IDENTITY_CHANGED');
   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => /^(PATH|SystemRoot|WINDIR|TEMP|TMP|HOME|USERPROFILE|LANG|LC_ALL)$/i.test(key)));
   const child = spawn(s.executable, [...s.prefix, 'serve', '--config', s.configPath, '--store', s.store], { env, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });

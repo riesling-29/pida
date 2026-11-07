@@ -108,14 +108,15 @@ try {
       }
       throw Error('HOST_PERSONA_ORGANIZATION_REQUIRED');
     } });
-    if (typeof persona?.personaProvider !== 'function' || typeof persona?.close !== 'function' || !/^[A-Za-z0-9._/-]{1,100}$/.test(persona.mode ?? '')) throw Error('HOST_PERSONA_MODULE_INVALID');
+    const globalProvider = typeof persona?.personaProvider === 'function', catalogue = Array.isArray(persona?.personaSources);
+    if (globalProvider === catalogue || typeof persona?.close !== 'function' || !/^[A-Za-z0-9._/-]{1,100}$/.test(persona.mode ?? '')) throw Error('HOST_PERSONA_MODULE_INVALID');
   }
   if (workspaceMode === 'fresh' && config.provider.kind === 'mock') {
     config.permissions.push('lots:read'); await writeFile(join(directory, 'pida.config.json'), JSON.stringify(config, null, 2) + '\n');
   }
   app = await createWorkspace(directory, { executionPolicy, collaboration: policy, nativeCredentials,
     ...(config.provider.kind === 'mock' ? { extensions: [{ id: 'host-synthetic-lot', scope: 'workspace', activate: () => ({ tools: [lotStatusTool] }) }] } : {}),
-    ...(persona ? { personaProvider: persona.personaProvider } : {}) });
+    ...(persona ? (persona.personaSources ? { personaSources: persona.personaSources } : { personaProvider: persona.personaProvider }) : {}) });
   if (workspaceMode === 'fresh') saveHostFile(join(directory, '.pida-host.json'), JSON.stringify(expectedManifest(digest(await readFile(join(directory, 'pida.config.json')))), null, 2) + '\n');
   saveHostFile(join(directory, '.env'), 'PIDA_API_TOKEN=' + apiToken + '\n');
   app.server.listen(0, '127.0.0.1'); await once(app.server, 'listening');

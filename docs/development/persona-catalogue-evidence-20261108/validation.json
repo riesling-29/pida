@@ -1,0 +1,30 @@
+{
+  "schema_version": "pida.owner-source-validation/1",
+  "base_policy_commit": "9cbecfd2111d78addeef1e3e696d9c22a03a061e",
+  "producer_commit": "f6edd022d4389237fcee5d6c0a4db8a0d0b13399",
+  "producer_runtime_digest": "0f85831175f24aea7237a6a003bdb14972a32cf13a7e76394c3fa9898b3763d6",
+  "command": "node --test --test-timeout=30000 test/vera-local-reference-catalogue.test.mjs test/vera-local-reference-host.test.mjs test/workspace-persona-pi.test.mjs test/execution-policy.test.mjs test/vera-dispatch-provider.test.mjs",
+  "environment": {
+    "PIDA_TEST_LOCAL_REFERENCE": "D:/ChantaResearchGroup/pida/.pida-test-local-reference-f6edd02",
+    "platform": "win32",
+    "node": "24.18.0"
+  },
+  "tests": {
+    "total": 34,
+    "passed": 34,
+    "failed": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "duration_ms": 9481.9121
+  },
+  "actual_provider_calls": 0,
+  "independent_review": "pending",
+  "files": {
+    "examples/schumpeter-host.mjs": "bfc568a186bc452c34988c49fe8db72a6a906a60958e0cf5f474a844e15ecc39",
+    "examples/vera-local-reference-persona.mjs": "120012a80cdc118057f8e2f07f2fd5da68f9553a29c104d25ad755f454ad6e93",
+    "examples/vera-local-reference-catalogue.mjs": "7d74f82ee5465d124cd181236a03b2355b8cba64ab71a46300b1b29ecf890ccb",
+    "test/vera-local-reference-catalogue.test.mjs": "47c9e8275a99c3caaa6105f1fe91396972cc90c2fc8e2c13ab7591415a82f8fe",
+    "docs/PERSONA-CATALOGUE-1.md": "58db5de62a60c2758ee3d186ad4fa4d51d20325c95f36bc1e84880f652ff2d3b",
+    "docs/development/PIDA-PERSONA-CATALOGUE-20261108.md": "027eb21939312e22799e89b6c83b09aa1e3d04b4ca33749b61bd99f3abb3da92"
+  }
+}
