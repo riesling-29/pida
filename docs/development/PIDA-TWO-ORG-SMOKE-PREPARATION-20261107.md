@@ -1,4 +1,4 @@
-# Two-organization real-case preparation — not executed
+# Two-organization real-case preparation - not executed
 
 This is a bounded plan and evidence helper, not approval to make another paid
 call. Root must first confirm the final joined desktop/provider/package is ready.
@@ -63,7 +63,7 @@ before a provider-side operation completes.
 
 ## Operator ordering and Persona challenge
 
-Schumpeter records operator question → provider clarification → requester
+Schumpeter records operator question  ->  provider clarification  ->  requester
 re-ask/detail before admitting A. These are explicit operator/imported-result
 messages, not fabricated agent-send tool calls. Then:
 
@@ -98,7 +98,7 @@ messages, not fabricated agent-send tool calls. Then:
 
 Cross-organization correlation is Schumpeter room/contract/message/artifact
 identity. B's envelope must not use A's job as `reply_to_job_id`: that optional
-native field requires the same recipient agent. A→B is neither a native parent
+native field requires the same recipient agent. A -> B is neither a native parent
 edge nor a resumed waiting parent. The B goal/definition digest includes the
 forwarded source artifact digest, while Schumpeter retains its own logical
 artifact revision independently from pida's file-byte revision.
@@ -108,7 +108,7 @@ artifact revision independently from pida's file-byte revision.
 The [helper](../../test/helpers/two-org-smoke.mjs) contains no goal submission or
 provider call. Its public capture reads may reconcile already admitted work; run
 the final capture after the native goal has settled. `captureLinkedOrganization`
-reads the OrgTask→OrgAttempt→job mapping and exports each actual run separately.
+reads the OrgTask -> OrgAttempt -> job mapping and exports each actual run separately.
 It preserves initial admission root job ID even when the root task's latest
 attempt is a continuation. BatchJoin.required/optional are assignment job IDs;
 BatchJoin.results identifies selected final child attempts/jobs. Do not conflate
@@ -151,7 +151,7 @@ capture or a proof of internal model causality.
 
 [Three preparation checks](two-org-smoke-preparation-tests-20261107.txt) pass:
 oracle isolation/derived-output distinction; captured-path/exact-byte artifact
-selection with stale rejection; actual scripted Pi root→child→continuation with
+selection with stale rejection; actual scripted Pi root -> child -> continuation with
 three separately valid complete native bundle/OCEL exports and explicit handling
 of an injected missing child export. The scripted chain has five model requests,
 two executing agents, two tasks and three attempts; it does not exercise real
@@ -165,3 +165,25 @@ Persona-use claim if the private oracle entered independent inputs; withdraw
 linked-run completeness if exports/mappings are missing; never promote native
 UNKNOWN to PASS from a model's completion text. This preparation is valid only
 for the recorded APIs/profiles and does not promise the real scenario will pass.
+
+## Optional synthetic capture handoff
+
+Set `PIDA_SMOKE_PREPARATION_CAPTURE_DIRECTORY` to an absolute, nonexistent
+output directory when running `node --test test/two-org-smoke-preparation.test.mjs`.
+The test exclusively creates that directory and writes `capture.json` plus
+`provenance.json` with the actual native admission, before/after views, three
+jobs, their bundle/OCEL exports and source hashes. It never overwrites an
+existing evidence set. These are public SDK executions with scripted Pi, not
+managed-host HTTP execution or a real provider call. The accepted mock host has
+no supported CLI trigger for this particular scripted delegate/join sequence.
+
+The raw capture contains synthetic job text and must stay outside the
+metadata-only input. Local analysis must apply its closed projection and retain
+per-run identity and coverage limits. This capture does not exercise actual
+artifact generation; the artifact selector remains separately unit-tested.
+
+[Capture handoff](two-org-smoke-capture-handoff-20261107.json) records the fresh
+successful fixture hashes and all 151 source inventory entries verified. The
+three preparation tests passed again with this optional output enabled. The
+earlier incomplete export attempt is explicitly retained as failed inventory
+setup, not accepted runtime evidence. Runtime distribution bytes are unchanged.
