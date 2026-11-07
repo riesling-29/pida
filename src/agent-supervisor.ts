@@ -172,6 +172,7 @@ export class AgentSupervisor {
       const p = s.profiles.find(p => p.id === j.agentId), key = `${j.agentId}:${j.requestId}`;
       if (!j || !isId(j.id) || jobs.has(j.id) || !p || p.owner !== j.owner || !validText(j.requestId, 128) || requests.has(key)
         || !validText(j.input, 12000) || !statuses.has(j.status) || !Number.isSafeInteger(j.depth) || j.depth < 0 || j.depth > 8
+        || (j.depth === 0) !== (j.parentJobId === undefined)
         || !Array.isArray(j.activity) || j.activity.length > 60 || !validText(j.latestText, 16000, true)
         || (j.sessionId !== undefined && !isId(j.sessionId)) || (j.runId !== undefined && !isId(j.runId))) denied("AGENT_STATE_INVALID", 500);
       jobs.add(j.id); requests.add(key);

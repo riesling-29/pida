@@ -18,6 +18,18 @@ const done = (s, id) => until(() => { const j = s.getJob(id, owner); return !['r
 function envelope(agent, org, changes = {}) { const e = { schema_version: 'pida.collaboration.envelope/1', producer_id: 'schumpeter', request_id: 'external', room_id: 'room', room_revision: 1, contract_id: 'contract', contract_revision: 1, sender_binding_id: 'sender', recipient: { organization_id: 'external-org', host_id: 'host-1', org_session_id: org.id, agent_id: agent.id }, input: 'external work', ...changes }; return { ...e, payload_digest: collaborationDigest(e) }; }
 function runtimeFactory(path, calls) { return p => { const f = fauxProvider({ tokensPerSecond: 100000 }); f.setResponses(Array.from({ length: 6 }, () => () => { calls.push(p.name); return answer('done'); })); return new PidaRuntime({ storageDir: join(path, p.id), provider: () => ({ provider: f.provider, modelId: f.getModel().id }) }); }; }
 
+test('corrupt persisted delegated depth without parent cannot erase collaboration ancestry', async t => {
+  const path = directory(t), file = join(path, 'supervisor.json'), o = { directory: path, resolvePrincipal: () => owner, createRuntime: () => { throw Error('must not dispatch'); }, collaboration: { hostId: 'host-1', authorize: () => true } };
+  const s = await AgentSupervisor.open(o), root = s.register(owner, { name: 'root' }), child = s.register(owner, { name: 'child' });
+  const org = s.createOrganization(owner, { requestId: 'org', goal: 'root', agentId: root.id, participants: [root.id, child.id], criterionIds: [] });
+  const receipt = await s.receiveCollaboration(owner, envelope(root, org));
+  const delegated = s.enqueue(child.id, owner, { requestId: 'child', input: 'child', parentJobId: receipt.job_id }); await s.close();
+  const state = JSON.parse(readFileSync(file, 'utf8')); delete state.jobs.find(j => j.id === delegated.id).parentJobId;
+  const corrupt = JSON.stringify(state); writeFileSync(file, corrupt);
+  await assert.rejects(AgentSupervisor.open({ ...o, collaboration: { hostId: 'host-1', authorize: () => false } }), { code: 'AGENT_STATE_INVALID' });
+  assert.equal(readFileSync(file, 'utf8'), corrupt, 'preserve malformed evidence without loading or dispatching');
+});
+
 for (const mode of ['child', 'continuation']) test(`persisted ${mode} derives current external grant from native lineage after restart`, async t => {
   const path = directory(t), calls = [], phases = []; let allowed = true;
   const o = { directory: path, resolvePrincipal: () => owner, createRuntime: runtimeFactory(path, calls), collaboration: { hostId: 'host-1', authorize: ({ phase }) => { phases.push({ phase, allowed }); return allowed; } } };
