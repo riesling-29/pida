@@ -1,0 +1,36 @@
+{
+  "source": "D:\\ChantaResearchGroup\\pida-real-case-d-review-evidence-20261108",
+  "archive_sha256": "1819aef1dcd31f9884df3d82888bb698afd02ceae3d63b50f55db537ea8784c8",
+  "original_files": [
+    {
+      "name": "audit.mjs",
+      "sha256": "5cfd27698d21b0f838e14412dc15b66f05f1e262f863eac97609b383c46e446f",
+      "bytes": 19131
+    },
+    {
+      "name": "actual-case-d-audit.json",
+      "sha256": "27bb555a2acdc3a618409fdbd58bf22bcb3d0dec7bf8d0a8017b07139b039433",
+      "bytes": 26267
+    },
+    {
+      "name": "frozen-record-audit.mjs",
+      "sha256": "520804ee69c769678418aa16c48368d2cf3238fc9dd4a5b1ad59d776aa4c118b",
+      "bytes": 4408
+    },
+    {
+      "name": "frozen-record-audit.json",
+      "sha256": "161ff55e73e915bfed0c4b3e882e36951f627360e0a7f96462d50007f2f2ee07",
+      "bytes": 6828
+    },
+    {
+      "name": "INDEPENDENT-ACTUAL-CASE-D-REVIEW.md",
+      "sha256": "1c34e97a69149a81514c7bc195404c9af291e95aa91ce280837efd92dbef12a7",
+      "bytes": 8201
+    },
+    {
+      "name": "evidence-hashes.json",
+      "sha256": "0c4cd6b6151fdc6f862355ecd6f3fa2e5dcc978b2bfca1fd3457cd6c07ae9180"
+    }
+  ],
+  "scope": "Exact reviewer-listed files only; original bytes archived, readable report normalized LF. No private inputs or inspect-shapes helper copied."
+}
