@@ -1,0 +1,12 @@
+{
+  "sourceRelease": "https://github.com/git-for-windows/git/releases/tag/v2.56.0.windows.4",
+  "sourceArchive": "https://github.com/git-for-windows/git/releases/download/v2.56.0.windows.4/MinGit-2.56.0.4-64-bit.zip",
+  "sourceGitTag": "https://github.com/git-for-windows/git/tree/v2.56.0.windows.4",
+  "archiveSHA256": "e3bf78351fe777fba47ddee5950082f8a98bb0f02604fdc7ba3ee2cb68ffa877",
+  "archiveBytes": 39846926,
+  "verifiedExtractedEntries": 375,
+  "additionalFiles": 0,
+  "gitExecutableAuthenticode": "Valid",
+  "sourcePackageInventory": "git-windows/etc/package-versions.txt",
+  "closureVerifiedAgainstArchive": true
+}
