@@ -1,0 +1,114 @@
+{
+  "protocol": "vera-dispatch/0.1.0",
+  "producerSourceDigest": "7dd9aa5ea22afaab033b62d54864d6849ac038e414ea7cc93fd341828cd731cb",
+  "consumerFiles": {
+    "src/vera-dispatch-provider.ts": "5a6cf0968e69fa2c24630813756a2d49f63a091c63a2e8033057ee308dc849de",
+    "src/vera-persona-provider.ts": "46b007094f107459a7685e578bf32432a6da9fd3a9695e1f4e76a3575adb7610",
+    "src/runtime.ts": "5924418e5e30406830da233df9116cbea9f3c1ed597330a0fd7103284756b7ed",
+    "dist/vera-dispatch-provider.js": "8ca84fc750111b8cb8452a743d1f4dc9b6693202a6e27b62eeb523d464799cf1",
+    "dist/vera-persona-provider.js": "60aef85bc7283fe59013cf89a2f79a1a11382910fe20cc22b69a0c292f546dea",
+    "dist/runtime.js": "8b59feaf5357bf5f3f3acb3928f24acd6d779541a46a3dbf59d8ddf7b5d684e3",
+    "scripts/vera-dispatch-check.mjs": "11e2f32eef2d734051aa483a1159ea6b6847bd98f5fe209f2d925c867d48877d"
+  },
+  "scenarios": [
+    {
+      "scenario": "normal",
+      "status": "PASS",
+      "resultStatus": "completed",
+      "code": null,
+      "modelCalls": 2,
+      "inputReceipts": 2,
+      "authorizationRequests": 2
+    },
+    {
+      "scenario": "reference-renderer",
+      "status": "PASS",
+      "resultStatus": "completed",
+      "code": null,
+      "modelCalls": 2,
+      "inputReceipts": 2,
+      "authorizationRequests": 2
+    },
+    {
+      "scenario": "revoke",
+      "status": "PASS",
+      "resultStatus": "failed",
+      "code": "PERSONA_INPUT_NOT_AUTHORIZED",
+      "modelCalls": 1,
+      "inputReceipts": 1,
+      "authorizationRequests": 2
+    },
+    {
+      "scenario": "expire",
+      "status": "PASS",
+      "resultStatus": "failed",
+      "code": "PERSONA_INPUT_NOT_AUTHORIZED",
+      "modelCalls": 1,
+      "inputReceipts": 1,
+      "authorizationRequests": 2
+    },
+    {
+      "scenario": "revise_identity",
+      "status": "PASS",
+      "resultStatus": "failed",
+      "code": "PERSONA_INPUT_NOT_AUTHORIZED",
+      "modelCalls": 1,
+      "inputReceipts": 1,
+      "authorizationRequests": 2
+    },
+    {
+      "scenario": "append_memory",
+      "status": "PASS",
+      "resultStatus": "failed",
+      "code": "PERSONA_INPUT_NOT_AUTHORIZED",
+      "modelCalls": 1,
+      "inputReceipts": 1,
+      "authorizationRequests": 2
+    },
+    {
+      "scenario": "advance_state",
+      "status": "PASS",
+      "resultStatus": "failed",
+      "code": "PERSONA_INPUT_NOT_AUTHORIZED",
+      "modelCalls": 1,
+      "inputReceipts": 1,
+      "authorizationRequests": 2
+    }
+  ],
+  "files": [
+    {
+      "path": "normal-bundle.json",
+      "sha256": "005583cb85196f468280cff0b4a41463a0111d72a4c7d5fc5e0eaa87c7cd5578"
+    },
+    {
+      "path": "reference-renderer-bundle.json",
+      "sha256": "946edd1ebc58052e97e164a2e6e706b9a6100d0721feaea307749aba51f2d690"
+    },
+    {
+      "path": "revoke-bundle.json",
+      "sha256": "1c2de26cce6bd1049c417c88f46594841b8f21f105450ea8c8901a65d24a7640"
+    },
+    {
+      "path": "expire-bundle.json",
+      "sha256": "c8ec5fff20f09d03c9bc6b47f5eda8e2a2fc4f33ebce7324f62bfd2e9ea9e4fd"
+    },
+    {
+      "path": "revise_identity-bundle.json",
+      "sha256": "a4eb195df8e546f038cc9f6d5bfae370b76df57449dda782f33d50b4647ad3c8"
+    },
+    {
+      "path": "append_memory-bundle.json",
+      "sha256": "993fde58d0334c0c451db087e2dfe85fdeb35576b430762c9ba198c4d80c698f"
+    },
+    {
+      "path": "advance_state-bundle.json",
+      "sha256": "288cec49423c85985ca103359a2e406da351acc7d82629f8238013b095ee1932"
+    }
+  ],
+  "limitations": [
+    "synthetic local data and scripted Pi model",
+    "public local producer methods; not a remote transport acceptance",
+    "linear-state subset; no graph, behavior models, canonical provider receipt writeback or task acceptance",
+    "historical continuity source remains unavailable; old lock unchanged"
+  ]
+}

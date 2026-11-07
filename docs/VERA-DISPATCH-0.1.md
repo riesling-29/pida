@@ -27,6 +27,6 @@ The first working-tree probe correctly rejected a source-lock mismatch. A subseq
 
 ## Remaining gates
 
-Independent consumer review is pending. Public local-method compatibility and scripted Pi dispatch do not establish remote transport, actual configured model behavior, desktop acceptance, unsupported graph semantics or canonical writeback. Delivery corrections and full-suite Windows failures remain separate records; these passes do not waive them.
+Independent consumer review subsequently reproduced the 16 focused tests and seven public-producer scenarios with no material finding for this restricted profile. [Review and one bounded actual configured-model smoke](development/PIDA-VERA-LIVE-SMOKE-20261107.md) record their separate evidence. The live smoke completed one marker task; it does not establish desktop acceptance, general remote transport behavior, unsupported graph semantics or canonical writeback. Delivery corrections and full-suite Windows failures remain separate records; these passes do not waive them.
 
 Withdraw compatibility if the pinned producer cannot satisfy the explicit subset or any rejected authorization permits the next dispatch. Recheck after source, schema, capability, freshness or transport changes. Actual model costs and deployment performance are unknown until measured.
