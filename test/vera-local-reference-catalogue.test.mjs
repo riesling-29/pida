@@ -6,7 +6,7 @@ import { createServer } from 'node:http';
 import { once } from 'node:events';
 import { mkdtempSync, readFileSync, writeFileSync, renameSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { tmpdir } from 'node:os';
+import { tmpdir, hostname } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createHash, randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -112,7 +112,7 @@ test('catalogue: closed shape, unique identities, semantic order, pins and snaps
   const initial=await hostPersonaIdentity(host);
   f.catalogue.sources.reverse();f.save();assert.equal(await hostPersonaIdentity(host),initial);
   for(const mutate of [v=>v.extra=true,v=>v.host_id='other',v=>v.sources[0].extra=true,v=>v.sources[0].principal_ids.push('local-user'),
-    v=>v.sources[0].profile_id=v.sources[1].profile_id,v=>v.sources[0].persona_id=v.sources[1].persona_id,v=>v.sources[0].store_instance_id=v.sources[1].store_instance_id,
+    v=>v.sources[0].profile_id=v.sources[1].profile_id,v=>v.sources[0].profile_id=[v.sources[1].profile_id],v=>v.sources[0].profile_id+='\n',v=>v.sources[0].persona_id=v.sources[1].persona_id,v=>v.sources[0].store_instance_id=v.sources[1].store_instance_id,
     v=>v.sources[0].id='local',v=>v.sources[0].bridge.config=v.sources[1].bridge.config,v=>v.sources[0].bridge.store=v.sources[1].bridge.store,
     v=>v.sources[0].bridge_identity='a'.repeat(64),v=>v.sources[0].config_sha256='a'.repeat(64),v=>v.sources[0].principal_ids=[]]){
     const bad=structuredClone(original);mutate(bad);writeFileSync(f.path,JSON.stringify(bad));await assert.rejects(hostPersonaIdentity(host),/HOST_PERSONA_CATALOGUE_INVALID/);
@@ -170,5 +170,13 @@ test('catalogue launcher: closed ready2, actual fresh/resume, reorder stability 
   renameSync(target.bridge.store,target.bridge.store+'-original');python(f.executable,['-I','-B',f.entry,'init','--config',target.bridge.config,'--store',target.bridge.store]);
   h=await launch('resume');await assert.rejects(h.ready,/HOST_PERSONA_CATALOGUE_INVALID/);assert.equal(await h.close(),1);active=null;assert.deepEqual(tree(workspace),before);
   renameSync(target.bridge.store,target.bridge.store+'-replacement');renameSync(target.bridge.store+'-original',target.bridge.store);
+  // Producer handshake must precede both runtime-lock deletion and stale host-lock archival.
+  const dead=spawnSync(process.execPath,['-e','process.exit(0)']);assert.equal(dead.status,0);assert.throws(()=>process.kill(dead.pid,0),{code:'ESRCH'});
+  const stale=JSON.stringify({pid:dead.pid,host:hostname(),nonce:'synthetic-dead-owner'});
+  writeFileSync(join(workspace,'.pida/runtime.lock'),stale);writeFileSync(join(workspace,'.pida-host.lock'),stale);
+  const database=join(target.bridge.store,'reference.sqlite3'),databaseBytes=readFileSync(database);
+  writeFileSync(database,'synthetic-corrupt-database');const beforeFailedRecovery=tree(workspace);
+  h=await launch('resume');await assert.rejects(h.ready,/HOST_PERSONA_PROCESS_CLOSED/);assert.equal(await h.close(),1);active=null;assert.deepEqual(tree(workspace),beforeFailedRecovery);
+  writeFileSync(database,databaseBytes);
   h=await launch('resume');ready=await h.ready;client=new PidaClient({baseUrl:ready.base_url,token:()=>ready.api_token});assert.equal((await client.getAgentJob(b.id,job.id)).id,job.id);assert.equal(await h.close(),0);active=null;
 });

@@ -82,17 +82,7 @@ try {
   if (typeof personaIdentity !== 'string' || personaIdentity.length > 256) throw Error('HOST_PERSONA_MODULE_INVALID');
   const personaModuleDigest = args['persona-module'] ? digest(Buffer.concat([await readFile(resolve(args['persona-module'])), Buffer.from(personaIdentity)])) : '';
   if (workspaceMode === 'resume') validateHostManifest(directory, expectedManifest(digest(await readFile(join(directory, 'pida.config.json')))));
-  await mkdir(directory, { recursive: true }); releaseHostLock = acquireHostLock(directory);
-  // Repeat validation under exclusive ownership; never rewrite mismatched profiles or their runtime state.
-  if (workspaceMode === 'resume') {
-    validateHostManifest(directory, expectedManifest(digest(await readFile(join(directory, 'pida.config.json')))));
-    try { unlockWorkspaceState(join(directory, '.pida')); } catch { throw Error('HOST_RUNTIME_LOCK_UNVERIFIED'); }
-  } else initWorkspace(directory);
-  const apiToken = randomBytes(32).toString('hex'); process.env.PIDA_API_TOKEN = apiToken;
-  const config = workspaceMode === 'resume' ? readConfig(directory) : { ...readConfig(directory), preset: 'headless', provider: selectedProvider, tools: { directory: 'tools', enabled: [] }, codingPacks: [],
-    agents: { enabled: true, maxConcurrent: 2 }, workbench: { enabled: true }, permissions: ['pida:collaborate', 'workbench:read', 'workbench:write', 'workbench:history'],
-    runtime: { maxRunMs: executionPolicy.run_timeout_ms, maxProviderRetries: 0, maxOutputRetries: 0, autoCompaction: false, maxTotalTokens: 16384 } };
-  if (workspaceMode === 'fresh') await writeFile(join(directory, 'pida.config.json'), JSON.stringify(config, null, 2) + '\n');
+  // Stage every required producer handshake before stale-lock recovery can mutate host state.
   if (args['persona-module']) {
     const module = personaModule;
     if (typeof module.createHostPersona !== 'function') throw Error('HOST_PERSONA_MODULE_INVALID');
@@ -111,6 +101,17 @@ try {
     const globalProvider = typeof persona?.personaProvider === 'function', catalogue = Array.isArray(persona?.personaSources);
     if (globalProvider === catalogue || typeof persona?.close !== 'function' || !/^[A-Za-z0-9._/-]{1,100}$/.test(persona.mode ?? '')) throw Error('HOST_PERSONA_MODULE_INVALID');
   }
+  await mkdir(directory, { recursive: true }); releaseHostLock = acquireHostLock(directory);
+  // Repeat validation under exclusive ownership; never rewrite mismatched profiles or their runtime state.
+  if (workspaceMode === 'resume') {
+    validateHostManifest(directory, expectedManifest(digest(await readFile(join(directory, 'pida.config.json')))));
+    try { unlockWorkspaceState(join(directory, '.pida')); } catch { throw Error('HOST_RUNTIME_LOCK_UNVERIFIED'); }
+  } else initWorkspace(directory);
+  const apiToken = randomBytes(32).toString('hex'); process.env.PIDA_API_TOKEN = apiToken;
+  const config = workspaceMode === 'resume' ? readConfig(directory) : { ...readConfig(directory), preset: 'headless', provider: selectedProvider, tools: { directory: 'tools', enabled: [] }, codingPacks: [],
+    agents: { enabled: true, maxConcurrent: 2 }, workbench: { enabled: true }, permissions: ['pida:collaborate', 'workbench:read', 'workbench:write', 'workbench:history'],
+    runtime: { maxRunMs: executionPolicy.run_timeout_ms, maxProviderRetries: 0, maxOutputRetries: 0, autoCompaction: false, maxTotalTokens: 16384 } };
+  if (workspaceMode === 'fresh') await writeFile(join(directory, 'pida.config.json'), JSON.stringify(config, null, 2) + '\n');
   if (workspaceMode === 'fresh' && config.provider.kind === 'mock') {
     config.permissions.push('lots:read'); await writeFile(join(directory, 'pida.config.json'), JSON.stringify(config, null, 2) + '\n');
   }

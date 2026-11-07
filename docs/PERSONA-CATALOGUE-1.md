@@ -38,7 +38,7 @@ Ready remains exact11-key `pida.local-host/2`, with `persona_mode: vera-local-re
 
 Unselected agents use the explicitly advertised local default, never an inferred external profile. An explicit unknown/inaccessible external source fails. Each external source owns one serial bridge process; per-agent provider snapshots are separately held. Cross-source/cross-agent snapshot authorization fails. B expiry/revocation or producer failure does not route to A or local memory. Context uses actual native job/OrgAttempt/session identities; task_id continues to mean job.id, not OrgTask.id. Restricted reference profiles remain organization-only and do not gain auto-learning or canonical imports.
 
-Shutdown attempts every owned bridge close; partial startup closes already opened children. Existing bounded helper IPC/error behavior remains. This is executable trusted module configuration, not a new model-selected plugin surface.
+All required producer identity/description handshakes complete before managed workspace initialization or stale host/runtime lock recovery. Runtime ownership remains exclusive and manifest validation is repeated under that ownership. Shutdown attempts every owned bridge close; partial startup and losing ownership attempts close already opened children. Existing bounded helper IPC/error behavior remains. This is executable trusted module configuration, not a new model-selected plugin surface.
 
 ## Verification and withdrawal
 

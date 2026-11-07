@@ -1,0 +1,12 @@
+{
+  "source_commit": "8aa225ea8c5a63143f253fc13cbb84c788b9657f",
+  "scope": "Initial independent review; 2 findings, not acceptance. No synthetic state copied.",
+  "archive_sha256": "9aa996a7b7a260528baeef34405c352ef68053b5ce4d2a1a9de59fdaf0b4412d",
+  "files": {
+    "INITIAL-REVIEW.md": "05244a0fee62defb2aebf75e4557da0db797350bd940792bbfbbbcd4a8ef7a10",
+    "initial-manifest.json": "615315d86d636d2d17024d571c8498cdb1cac7fa77216c42b376e2f002584fbb",
+    "adversarial-tail.mjs": "881526b9b3444cdb37cca1c5d27f84872bed4929ed5d1cf7dfa481804647fe29",
+    "independent-catalogue-review.test.mjs": "6707b8275c79e24e05dcd635175823ac5ba8e8e86e641a4aa09426d4fb99a65a",
+    "adversarial-8aa225e.txt": "13ce6a9af6e31ab50db9476a4dce6c2313802ec7e4141de417b12d9fd83484f4"
+  }
+}

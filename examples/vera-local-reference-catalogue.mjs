@@ -22,8 +22,8 @@ async function settings(host) {
   for (const entry of value.sources) {
     if (!closed(entry, ['id','label','profile_id','persona_id','principal_ids','bridge','config_sha256','store_instance_id','bridge_identity'])
       || !token(entry.id,64) || !/^[a-z][a-z0-9._-]{0,63}$/.test(entry.id) || ['local','workspace'].includes(entry.id)
-      || !token(entry.label,100) || !entry.label.trim() || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(entry.profile_id ?? '')
-      || !token(entry.persona_id,256) || !/^store:[a-f0-9]{32}$/.test(entry.store_instance_id ?? '')
+      || !token(entry.label,100) || !entry.label.trim() || !token(entry.profile_id,36) || entry.profile_id.length !== 36 || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(entry.profile_id ?? '')
+      || !token(entry.persona_id,256) || !token(entry.store_instance_id,38) || !/^store:[a-f0-9]{32}$/.test(entry.store_instance_id ?? '')
       || !digest(entry.config_sha256) || !digest(entry.bridge_identity)
       || !Array.isArray(entry.principal_ids) || !entry.principal_ids.length || entry.principal_ids.length > 1000
       || entry.principal_ids.some(id => !token(id,256) || !id.trim()) || new Set(entry.principal_ids).size !== entry.principal_ids.length
