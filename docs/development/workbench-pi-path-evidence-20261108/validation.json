@@ -1,0 +1,45 @@
+{
+  "base_runtime": "2b787fd4c234747da22726ec03a3e4c6619ae95f",
+  "changed_runtime_files": [
+    "src/workbench.ts"
+  ],
+  "source_hashes": {
+    "src/workbench.ts": "d9c1fdb13ab71b74d1d593e3aca57f64724a97a6b6c96ee9486bc1502a5778b9",
+    "test/workbench-pi-path.test.mjs": "040f5ebf33cd2df8407917e73803fd96d844a996e1802ab061fcc64c33168980"
+  },
+  "build": "npm run build PASS",
+  "windows_targeted": {
+    "command": "node --test test/workbench-pi-path.test.mjs test/organization-yield.test.mjs",
+    "pass": 29,
+    "fail": 0
+  },
+  "windows_existing_workbench": {
+    "pass": 4,
+    "fail": 1,
+    "reason": "file-symlink EPERM setup at unchanged line92; exact frozen2b packaged baseline also4PASS/1EPERM"
+  },
+  "linux_source_overlay": {
+    "new_path_cases_pass": 6,
+    "existing_workbench_pass": 5,
+    "runtime": "copied current own dist plus unchanged accepted production deps/examples; not new distribution"
+  },
+  "provider_calls": 0,
+  "held_case_mutated": false,
+  "original_artifact_hashes": {
+    "baseline-probe.mjs": "0c6b9296997378ea41d0ff667807544e0e313dab89aeb8b8ab7ce1457cf00580",
+    "baseline-result.json": "750e4c98dc15155446beb71e344ac434a08a576637b6b264712068ded984d433",
+    "windows-targeted-original.log": "c62113770f0d793c862c83f2cfd4d1df137f82b9e4c6eaf7ad62ecfeb9839731",
+    "windows-workbench-original.log": "7b2006f479f6dc79803b95d4dfe66e0a866d018bf4e3ca582ffa3fdc56db3ab7",
+    "linux-source-check.mjs": "27743034a3de8cd1ea680a7f9d723075569eb5d06ac4b691827af702746a243a",
+    "linux-workbench-pi-path.test.mjs.log": "e48659d90b331db9894a30bb8aac2cf55b0d8754db35f3989c07616b7bbd2d1f",
+    "linux-workbench-pi-path.test.mjs.log.runner.log": "b892205c80d03d8a78f7390bfd8f671ce7ff6e5a6f8bef331c2e1c07f97cb2bb",
+    "linux-workbench-regression-r2.log": "e39315155fd352eaa8b45b5257925c5b736a673deaf24000fd25e59e69007996",
+    "linux-workbench-regression-r3.log": "53fcca4add2106a5e97d5923a13bacd9620c3a5ea7d96d4e9e2bd9a330240d9a",
+    "linux-workbench.test.mjs.log": "0c5044a017a123412e203066755703cb77139578a68bf294b57776d4ff9d6a57",
+    "linux-workbench.test.mjs.log.runner.log": "066ce68daf8ea186f27a7f62443094c3d01b6b8f7ed940585f3c8865bc6eed01",
+    "probe-imports.mjs": "037d1516d5af452b60e4d5a8af55c51615f00af15f6f3dc5473958ec8fbedbbd",
+    "windows-baseline-workbench-r2.log": "76ff27b62690eecdd2f66a4379bb074fa013bac07f9d7207675d40c72aeb95cb",
+    "windows-baseline-workbench.log": "593923edf8ed397dc57cfca6326ce1cd917532ea86d2e412b4303509006538ca"
+  },
+  "archive_sha256": "e165841e8600a6db92086f5e027f64688ba27900a086f9c93c1b9ad3cd7c7819"
+}

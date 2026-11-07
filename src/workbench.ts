@@ -327,10 +327,13 @@ export class PidaWorkbench {
       return tool(`workspace_${kind}`, `Pi ${kind} tool within your private workbench. Relative text file paths only.`, parameters, kind === "read" ? read : write, async (area, args, signal) => {
         validPath(args.path);
         const guard = (abs: string) => safePath(area.files, relative(area.files, abs).split("\\").join("/"));
+        // Pi supplies native absolute paths; retain the guard, then return to our
+        // forward-slash logical path contract before readText/apply validation.
+        const guardedRelative = (abs: string) => relative(area.files, guard(abs)).split("\\").join("/");
         const operations = {
-          readFile: async (abs: string) => Buffer.from(this.readText(area, relative(area.files, guard(abs)))),
-          access: async (abs: string) => { this.readText(area, relative(area.files, guard(abs))); },
-          writeFile: async (abs: string, text: string) => { this.apply(area, { [relative(area.files, guard(abs))]: text }); },
+          readFile: async (abs: string) => Buffer.from(this.readText(area, guardedRelative(abs))),
+          access: async (abs: string) => { this.readText(area, guardedRelative(abs)); },
+          writeFile: async (abs: string, text: string) => { this.apply(area, { [guardedRelative(abs)]: text }); },
           mkdir: async (abs: string) => { if (abs !== area.files) guard(abs); },
         };
         try {

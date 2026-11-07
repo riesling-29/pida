@@ -1,0 +1,29 @@
+✔ actual Pi loop writes, fails a test, repairs with Pi edit, retests, builds HTML and saves a Pi skill; restart reuses it (2016.5003ms)
+✔ QuickJS bridge excludes host APIs, discards failed writes and enforces resource/cancellation limits (1831.5937ms)
+✖ workspace permissions, principal isolation, traversal, links and total quotas are independently enforced (421.2871ms)
+✔ Git restore preserves exact contents and removes later files; failed or empty tests cannot save skills (1933.4881ms)
+✔ HTTP/SDK expose authenticated per-user files and status; generated HTML is returned as JSON only (500.6033ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7327.3773
+
+✖ failing tests:
+
+test at packaged-yield.test.mjs:80:1
+✖ workspace permissions, principal isolation, traversal, links and total quotas are independently enforced (421.2871ms)
+  Error: EPERM: operation not permitted, symlink 'C:\Users\migeo\AppData\Local\Temp\pida-workbench-xz6YrI\outside' -> 'C:\Users\migeo\AppData\Local\Temp\pida-workbench-xz6YrI\2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90\files\alias'
+      at async symlink (node:internal/fs/promises:1002:10)
+      at async TestContext.<anonymous> (file:///C:/Users/migeo/AppData/Local/Temp/pida-package-yield-ACavw1/packaged-yield.test.mjs:92:3)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'symlink',
+    path: 'C:\\Users\\migeo\\AppData\\Local\\Temp\\pida-workbench-xz6YrI\\outside',
+    dest: 'C:\\Users\\migeo\\AppData\\Local\\Temp\\pida-workbench-xz6YrI\\2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90\\files\\alias'
+  }

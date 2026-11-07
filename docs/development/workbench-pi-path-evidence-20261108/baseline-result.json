@@ -1,0 +1,17 @@
+{
+  "source_commit": "2b787fd4c234747da22726ec03a3e4c6619ae95f",
+  "platform": "win32",
+  "node": "24.18.0",
+  "scope": "Isolated public workbench tools, no model/native held workspace",
+  "nested_tool": {
+    "ok": false,
+    "error": "INVALID_PATH"
+  },
+  "flat_tool": {
+    "ok": true,
+    "error": null
+  },
+  "direct_nested_api": {
+    "passed": true
+  }
+}
