@@ -1,0 +1,101 @@
+{
+  "date": "2026-11-08",
+  "reviewer": "/root/pida_delivery_review",
+  "independence": "Distinct context, same Codex family. Read-only product review in isolated worktree; only untracked reviewer probes/logs created. No claim of cross-family review.",
+  "source": {
+    "reviewedCommit": "1f9c5ebcef8095f008c4a1d472bd86a2e995408e",
+    "parent": "503d70a67768911402292be74c68adadecbf8eb0",
+    "baselineReproduction": "b7de89b94ab824f195e36d2948a8380a26c6bc6d",
+    "sourceHashesVerified": 6,
+    "worktree": "D:\\ChantaResearchGroup\\pida-review-provider-diagnostic-20261108"
+  },
+  "environment": {
+    "os": "Windows win32",
+    "node": "v24.18.0",
+    "dependencyInstaller": "bun 1.4.2"
+  },
+  "runs": [
+    {
+      "command": "npm run build",
+      "result": "PASS at frozen reviewed commit",
+      "evidence": "review-diagnostic-build.log"
+    },
+    {
+      "command": "node --test --test-timeout=20000 test/provider-diagnostic.test.mjs test/provider-capabilities.test.mjs test/runtime.test.mjs",
+      "result": "26 pass, 0 fail, 0 cancelled, 0 skipped; no external provider requests, only faux or local fixture endpoints",
+      "evidence": "review-diagnostic-focused.log"
+    },
+    {
+      "command": "node --test --test-timeout=10000 review-diagnostic-adversaries.test.mjs",
+      "result": "5 independent cases passed before adding OCEL case. Includes 3 guard profiles, 5 malformed/wrong-family message variants, cancellation and timeout, aborted final message and exhausted retries.",
+      "evidence": "review-diagnostic-adversaries.log"
+    },
+    {
+      "command": "node --test --test-timeout=10000 --test-name-pattern='OCEL preserves' review-diagnostic-adversaries.test.mjs",
+      "result": "1 additional independent OCEL case passed",
+      "evidence": "review-diagnostic-ocel.log"
+    },
+    {
+      "command": "node review-diagnostic-baseline.mjs at b7de89b",
+      "result": "Offline pre-fix reproduction: one thrown synthetic provider error, limited/USAGE_UNAVAILABLE, usage unknown/tokens null, zero provider_rejected traces. No synthetic secret in result/trace/export.",
+      "evidence": "review-diagnostic-baseline.log"
+    },
+    {
+      "command": "SHA256 source validation; git diff --exit-code",
+      "result": "All 6 manifest entries match; tracked product source unchanged in review tree"
+    }
+  ],
+  "verifiedBehavior": [
+    "Known exact OpenAI/openai-responses quota error yields closed PROVIDER_SUBSCRIPTION_SHARING_LIMIT, only as provider-reported category. All wrong provider/API, unknown, secret-bearing or oversized errors remain PROVIDER_REJECTED; successful/toolUse/aborted messages get no rejection classification.",
+    "Token and cost guards still produce limited/USAGE_UNAVAILABLE for error responses with unknown usage. Unguarded error still produces failed/PROVIDER_FAILED. Unknown tokens and cost remain null, not measured zero. Model calls remain one when retries disabled.",
+    "Successful stream without usage still fails closed at token guard and has no provider_rejected trace; developer test independently executed against local fixture server.",
+    "Per-attempt model_response classification is preserved as history. Retry recovery to success produces no terminal rejection; exhausted retries produce one terminal trace bound to final request/attempt, without exposing private error text.",
+    "Cancelled, timed-out and aborted final responses have no terminal provider_rejected trace. Existing primary codes remain CANCELLED, RUN_TIMEOUT or PROVIDER_FAILED as applicable.",
+    "Terminal trace has exactly six fields and actual session/run identity. It is emitted once in settled sequence provider_rejected, run_finished, result. Model-response and terminal observation request/attempt identifiers agree.",
+    "Native supervisor/job replay test independently executed: one request, no tools, actual limited job/UNKNOWN organization, terminal activity preserved after reopen without reexecution.",
+    "OCEL includes classification and usage_status unknown, omits unavailable numeric usage/cost instead of inventing zero, and retains limited/USAGE_UNAVAILABLE terminal state and request/attempt linkage."
+  ],
+  "sourceAssessment": [
+    "Only 12-line classifier and 10 added runtime lines change product behavior. No RunResult/TraceEvent schema change, usage computation, retry configuration or primary error precedence change.",
+    "Terminal diagnostic predicate runs after settled status/recovery handling and requires final error assistant plus whitelisted failed/limited primary codes. Earlier recovered attempts cannot become terminal cause.",
+    "Only closed codes are added to model_response and trace metadata. Raw provider text is used for exact matching in memory and is not copied to new diagnostic fields.",
+    "Classification is deliberately narrow. It does not prove actual account entitlement, reset timing, cost, alternate credential availability or billing state."
+  ],
+  "fixtureCorrections": [
+    "Initial independent baseline probe incorrectly tried to override faux usage through fauxAssistantMessage options; returned faux messages synthesize nonzero usage. Corrected to throw, which yields zero SDK placeholders. Original failed construction log retained.",
+    "Baseline probe initially treated getTrace result as an object with events; corrected to existing array API. Failed probe log retained.",
+    "Initial adversarial setup omitted pricingVerified required by cost-budget constructor and expected nonexistent DEADLINE code instead of existing RUN_TIMEOUT. Corrected fixture expectations, without product edits. Original failures retained."
+  ],
+  "findings": [],
+  "limits": [
+    "Producer diagnostic unit only. Consumer current-job/run/attempt matching, enum whitelist/UI rendering and packaged desktop integration require separate consumer evidence.",
+    "All provider behavior here is synthetic/offline or local fixture transport. No new real provider call, auth refresh, key fallback or quota/reset probe was made.",
+    "Accepted runtime distributions, held real-case workspace and original negative/retry evidence were not modified. This new field must not be backfilled into historical runs.",
+    "Exact-message classifier covers only pinned message/provider/API contract; future or unmatched messages remain generic until independently supported.",
+    "No full-suite, Linux, installer, enterprise acceptance or successful real A/B run claim."
+  ],
+  "validity": "Applies only to exact 1f9c5eb and tested dependencies/environment. Withdraw if successful missing usage bypasses guards, placeholders become zero, raw provider text leaks via new diagnostics, retries or primary status change, recovered/cancelled/timeout attempts receive terminal rejection, or emitted/session/observation identities diverge. Relevant classifier/runtime/provider event changes require renewed review.",
+  "sourceHashes": {
+    "src/provider-diagnostic.ts": "faaf2722b9a56b6fd90930598847ef14ae19ec04751a70695dac2e04ce3a4f65",
+    "src/runtime.ts": "d4a640784d5ad4f22fb8f06ebe09cfa50af9e7d01ff5b81d1451a1dbecc01732",
+    "src/protocol.ts": "ba8ccf1c9c1b7400b431073ca1136122086a5eb0df50b52e648b850c463b95c1",
+    "src/agent-supervisor.ts": "f0c1e45cf927119ed769c9c025f6e7ad7bbc4a4483068da3acf17a62cea05090",
+    "test/provider-diagnostic.test.mjs": "beb65e5d62a58bb9482d98dfd8b6832708286dd0b97e0c288453380a8b8d3491",
+    "test/provider-capabilities.test.mjs": "f9023823ad74df5e7324d0644f8c8e13bd998bc672a57b9469e34c5638f5e007"
+  },
+  "evidenceHashes": {
+    "review-diagnostic-install.log": "4bd313edb47780a8107a325ba9bc21399cf874597894703e6141e366d0bcde51",
+    "review-diagnostic-baseline-build.log": "6d3803c3d83c3545712565477cdcbf4759bfe23f04c1c98ee2063daf998b069b",
+    "review-diagnostic-baseline.mjs": "b32529d102d95c2d190b1ed8811728e654d695f50d23e46e786ea2d6ab6a1c6a",
+    "review-diagnostic-baseline.log": "73c80b97ef6992acb1f0056ea7c48dd62eb12c4316aab1a3f3ffdd704a49cf3c",
+    "review-diagnostic-build.log": "6d3803c3d83c3545712565477cdcbf4759bfe23f04c1c98ee2063daf998b069b",
+    "review-diagnostic-focused.log": "a5fe98324425cccd80b61521534adc3498028f2aff72fa79b2ff1e34e62af125",
+    "review-diagnostic-adversaries.test.mjs": "bb85a975c62dacd4e2feec4ec5fc80f97a252577e772dd091d0f06288222ef3d",
+    "review-diagnostic-adversaries.log": "4f84c2bd78aaafad3747d059ec160c9674dcca563207d34fe401665d39401f76",
+    "review-diagnostic-ocel.log": "277f51e900d1a6bed6d34c6f6ca72823cb6bdf5f4f298944fa5c73863202adc2",
+    "review-diagnostic-baseline-fixture-failed.log": "9f26d994b4b684c47a9a6a7ca6aba213ae5ecdfadb811d99c4be19b205ad9831",
+    "review-diagnostic-baseline-trace-shape-failed.log": "09ab61a8dc2742ceb01def28317f8e12258002c475688d7d1b8bf68a6a895815",
+    "review-diagnostic-adversaries-fixture-errors.log": "ad3aa352cc2dd3679e831bf7184534d9a25c8cf124032876c53fa87510b30c67"
+  },
+  "verdict": "BOUNDED PASS for sanitized terminal provider-rejection producer diagnostic at 1f9c5ebcef8095f008c4a1d472bd86a2e995408e. No reproduced blocking finding. Consumer/desktop and live-provider acceptance remain separate."
+}

@@ -60,6 +60,16 @@ this carrier; the original real failure must not be retrospectively rewritten.
 
 ## Evidence, scope and falsification
 
+Independent review of frozen `1f9c5ebcef8095f008c4a1d472bd86a2e995408e`
+passed the build, 26 focused tests and six additional offline adversarial cases,
+including OCEL output. The [report](provider-diagnostic-independent-20261108/review-diagnostic-final-report.json)
+records its bounded verdict. Exact original report/probes/logs, including
+failed reviewer fixture construction attempts, are preserved byte-for-byte in
+[the evidence archive](provider-diagnostic-independent-20261108/original-evidence.zip),
+with [hash index](provider-diagnostic-independent-20261108/archive-index.json).
+This is an independent context within the same model family, not cross-family
+review or desktop/live-provider acceptance.
+
 Build and 26 focused tests passed: native persisted quota replay with one faux
 request and no tool execution; generic secret redaction; recovered retry with
 only historical response diagnosis; successful missing-usage response still

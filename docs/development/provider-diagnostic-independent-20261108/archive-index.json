@@ -1,0 +1,19 @@
+{
+  "original_sha256": {
+    "review-diagnostic-final-report.json": "9ccef17e9bd6b13ef156538987a9cf7d5cfea86d97b9d9ff11a545f2154d0793",
+    "review-diagnostic-install.log": "4bd313edb47780a8107a325ba9bc21399cf874597894703e6141e366d0bcde51",
+    "review-diagnostic-baseline-build.log": "6d3803c3d83c3545712565477cdcbf4759bfe23f04c1c98ee2063daf998b069b",
+    "review-diagnostic-baseline.mjs": "b32529d102d95c2d190b1ed8811728e654d695f50d23e46e786ea2d6ab6a1c6a",
+    "review-diagnostic-baseline.log": "73c80b97ef6992acb1f0056ea7c48dd62eb12c4316aab1a3f3ffdd704a49cf3c",
+    "review-diagnostic-build.log": "6d3803c3d83c3545712565477cdcbf4759bfe23f04c1c98ee2063daf998b069b",
+    "review-diagnostic-focused.log": "a5fe98324425cccd80b61521534adc3498028f2aff72fa79b2ff1e34e62af125",
+    "review-diagnostic-adversaries.test.mjs": "bb85a975c62dacd4e2feec4ec5fc80f97a252577e772dd091d0f06288222ef3d",
+    "review-diagnostic-adversaries.log": "4f84c2bd78aaafad3747d059ec160c9674dcca563207d34fe401665d39401f76",
+    "review-diagnostic-ocel.log": "277f51e900d1a6bed6d34c6f6ca72823cb6bdf5f4f298944fa5c73863202adc2",
+    "review-diagnostic-baseline-fixture-failed.log": "9f26d994b4b684c47a9a6a7ca6aba213ae5ecdfadb811d99c4be19b205ad9831",
+    "review-diagnostic-baseline-trace-shape-failed.log": "09ab61a8dc2742ceb01def28317f8e12258002c475688d7d1b8bf68a6a895815",
+    "review-diagnostic-adversaries-fixture-errors.log": "ad3aa352cc2dd3679e831bf7184534d9a25c8cf124032876c53fa87510b30c67"
+  },
+  "archive_sha256": "1fdec76ec41e6a3492e619dfabc3f9bdda0c81b8d98a9ab77df284685586ce6a",
+  "readable_report": "LF normalized; original exact bytes in ZIP"
+}
