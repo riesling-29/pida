@@ -65,7 +65,8 @@ test("actual Pi parent releases shared workspace before child starts; child cann
 test("actual delegation chain stops at depth two and job summaries are bounded result data", async t => {
   let s; const agents = [];
   s = await supervisor(t, profile => {
-    const index = agents.findIndex(agent => agent.id === profile.id), f = fauxProvider({ tokensPerSecond: 100000 });
+    // This checks depth/result boundaries, not thousands of timer-paced tiny streaming chunks.
+    const index = agents.findIndex(agent => agent.id === profile.id), f = fauxProvider({ tokensPerSecond: 100000, tokenSize: { min: 128, max: 128 } });
     f.setResponses([answer(call("agent_delegate", { agentId: agents[index + 1].id, input: "next task" }), { stopReason: "toolUse" }), answer("Bearer sensitive-token api_key=private-value " + "x".repeat(8000))]);
     return new PidaRuntime({ provider: () => ({ provider: f.provider, modelId: f.getModel().id }), tools: createAgentTools(s, profile.id), maxRunMs: 5000 });
   });

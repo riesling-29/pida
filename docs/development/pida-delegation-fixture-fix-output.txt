@@ -1,0 +1,11 @@
+✔ agent tools use same-owner profiles, explicit permissions, host request keys and no model-controlled ancestry (21.6413ms)
+✔ actual Pi parent releases shared workspace before child starts; child cannot delegate back to ancestor (280.1589ms)
+✔ actual delegation chain stops at depth two and job summaries are bounded result data (751.2436ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1611.3815
