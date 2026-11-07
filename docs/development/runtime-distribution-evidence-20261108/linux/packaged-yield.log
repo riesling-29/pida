@@ -1,0 +1,31 @@
+✔ native applied join waiting: exact result and continuation remain durable (293.18031ms)
+✔ native applied join child-first: exact result and continuation remain durable (153.661069ms)
+✔ native applied join required-failure: exact result and continuation remain durable (232.413288ms)
+✔ native applied join nonempty: exact result and continuation remain durable (231.584245ms)
+✔ yield waiting for paused child survives restart and creates exactly one continuation (159.379348ms)
+✔ empty response cannot yield from tool name and marker only (9.675424ms)
+✔ empty response cannot yield from false (6.806208ms)
+✔ empty response cannot yield from throw (7.65603ms)
+✔ empty response cannot yield from thenable (6.747292ms)
+✔ empty response cannot yield from truthy object (6.37552ms)
+✔ empty response cannot yield from read effect (7.174549ms)
+✔ empty response cannot yield from not applied (12.206435ms)
+✔ empty response cannot yield from unknown effect (4.932476ms)
+✔ empty response cannot yield from failed outcome (7.058409ms)
+✔ handoff rechecked after asynchronous work review: cancel (5.462725ms)
+✔ handoff rechecked after asynchronous work review: stale (6.943886ms)
+✔ handoff rechecked after asynchronous work review: deadline (356.254645ms)
+✔ native proof rejects foreign membership (33.757339ms)
+✔ native proof rejects stale membership (27.576724ms)
+✔ native proof rejects cancelled-join membership (25.330389ms)
+✔ host yield never overrides provider failure (4.816286ms)
+✔ host yield never overrides unknown usage (4.762985ms)
+✔ host yield never overrides token guard (9.655415ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2553.099883

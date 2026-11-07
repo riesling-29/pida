@@ -1,0 +1,15 @@
+import {createRequire} from 'node:module';
+import {pathToFileURL} from 'node:url';
+import {readFileSync,writeFileSync,mkdtempSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join,resolve} from 'node:path';
+import {spawnSync} from 'node:child_process';
+const runtime=resolve(process.argv[2]),testSource=resolve(process.argv[3]),output=resolve(process.argv[4]);
+const pida=join(runtime,'pida'),require=createRequire(join(pida,'package.json'));
+let text=readFileSync(testSource,'utf8');
+text=text.replace(/from '(typebox|@earendil-works\/pi-ai\/providers\/faux)'/g,(_all,spec)=>'from '+JSON.stringify(pathToFileURL(spec==='typebox'?require.resolve(spec):join(pida,'node_modules/@earendil-works/pi-ai',JSON.parse(readFileSync(join(pida,'node_modules/@earendil-works/pi-ai/package.json'),'utf8')).exports['./providers/*'].import.replace('*','faux'))).href));
+text=text.replace(/from '\.\.\/dist\/([^']+)'/g,(_all,file)=>'from '+JSON.stringify(pathToFileURL(join(pida,'dist',file)).href));
+const work=mkdtempSync(join(tmpdir(),'pida-package-yield-')),file=join(work,'packaged-yield.test.mjs');writeFileSync(file,text);
+const node=join(runtime,'node',process.platform==='win32'?'node.exe':'node');
+const env={PATH:join(runtime,'git',process.platform==='win32'?'cmd':'bin')+(process.platform==='win32'?';'+process.env.SystemRoot+'/System32':':/usr/bin:/bin'),HOME:work,USERPROFILE:work,TEMP:tmpdir(),TMP:tmpdir(),LANG:'C.UTF-8',...(process.platform==='win32'?{SystemRoot:process.env.SystemRoot,WINDIR:process.env.SystemRoot}:{}),GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:join(work,'absent.gitconfig')};
+const r=spawnSync(node,['--test',file],{cwd:work,env,encoding:'utf8',windowsHide:true,maxBuffer:8*1024*1024});writeFileSync(output,(r.stdout??'')+(r.stderr??''));if(r.status!==0)throw Error('PACKAGED_YIELD_FAILED:'+r.status);console.log(JSON.stringify({passed:true,source_test:testSource,output,scope:'exact packaged public APIs + faux provider; no stock wrapper multi-agent claim'}));
