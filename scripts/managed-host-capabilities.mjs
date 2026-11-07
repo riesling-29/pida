@@ -20,9 +20,19 @@ export function validateManagedCapabilities(value, source) {
   if (canonical(value) !== canonical(expected)) fail();
   return expected;
 }
-export function validateManagedCapabilityFiles(root, value, source) {
+export function validateManagedCapabilityFiles(root, value, source, manifest) {
   const expected = validateManagedCapabilities(value,source);
   const regular = (name, maximum) => { const path=join(root,name), stat=lstatSync(path);if(!stat.isFile()||stat.isSymbolicLink()||stat.nlink!==1||(maximum&&stat.size>maximum))fail();return path; };
+  const required = [capabilityPath, expected.entrypoint, 'pida/dist/execution-policy.js', 'pida/fixtures/execution-policy/profiles-v1.json',
+    ...(expected.persona_catalogue ? [expected.persona_catalogue.module, 'pida/examples/vera-local-reference-persona.mjs', 'pida/fixtures/vera-dispatch/local-reference-source-lock.json'] : [])];
+  if (manifest !== undefined) {
+    if (manifest.source_commit !== source || manifest.source?.source_commit !== source || !Array.isArray(manifest.files)) fail();
+    for (const name of required) {
+      const entries = manifest.files.filter(entry => entry.path === name);
+      if (entries.length !== 1 || entries[0].symlink !== undefined || typeof entries[0].sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(entries[0].sha256)) fail();
+    }
+    regular(capabilityPath,16384);
+  }
   regular(expected.entrypoint); regular('pida/dist/execution-policy.js');
   const golden=JSON.parse(readFileSync(regular('pida/fixtures/execution-policy/profiles-v1.json',16384),'utf8'));
   if(canonical(golden)!==canonical({schema_version:'pida.execution-policy.catalogue/1',profiles:expected.execution_policy.profiles}))fail();

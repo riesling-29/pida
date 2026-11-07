@@ -22,6 +22,6 @@ if (files.length !== manifest.file_count || sha(JSON.stringify(files)) !== manif
 const capabilityEntry = manifest.files.find(f => f.path === capabilityPath);
 if (capabilityEntry) {
   if (capabilityEntry.symlink || capabilityEntry.bytes > 16384) throw Error('MANAGED_CAPABILITIES_INVALID');
-  validateManagedCapabilityFiles(root, JSON.parse(readFileSync(join(root, capabilityPath), 'utf8')), manifest.source_commit);
+  validateManagedCapabilityFiles(root, JSON.parse(readFileSync(join(root, capabilityPath), 'utf8')), manifest.source_commit, manifest);
 }
 console.log(JSON.stringify({status:'PASS',distribution_id:manifest.distribution_id,source_commit:manifest.source_commit,files:files.length,tree_sha256:manifest.tree_sha256}));

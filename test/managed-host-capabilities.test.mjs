@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createManagedCapabilities, validateManagedCapabilities, validateManagedCapabilityFiles } from '../scripts/managed-host-capabilities.mjs';
@@ -23,5 +24,12 @@ test('release declaration requires shipped exact golden and declared regular mod
   const path=join(root,'pida/fixtures/execution-policy/profiles-v1.json');mkdirSync(join(path,'..'),{recursive:true});
   assert.throws(()=>validateManagedCapabilityFiles(root,value,source));
   cpSync(new URL('../fixtures/execution-policy/profiles-v1.json',import.meta.url),path);assert.deepEqual(validateManagedCapabilityFiles(root,value,source),value);
+  const sidecar=join(root,'managed-host-capabilities.json');writeFileSync(sidecar,JSON.stringify(value));
+  const required=['managed-host-capabilities.json',...paths,'pida/fixtures/execution-policy/profiles-v1.json'];
+  const manifest={source_commit:source,source:{source_commit:source},files:required.map(name=>({path:name,sha256:createHash('sha256').update(readFileSync(join(root,name))).digest('hex')}))};
+  assert.deepEqual(validateManagedCapabilityFiles(root,value,source,manifest),value);
+  for(const mutate of [m=>m.source.source_commit='b'.repeat(40),m=>m.files.splice(1,1),m=>m.files[1].symlink='module-target',m=>m.files.push(m.files[1])]){
+    const bad=structuredClone(manifest);mutate(bad);assert.throws(()=>validateManagedCapabilityFiles(root,value,source,bad),/MANAGED_CAPABILITIES_INVALID/);
+  }
   const golden=JSON.parse(readFileSync(path));golden.profiles[1].max_turns=25;writeFileSync(path,JSON.stringify(golden));assert.throws(()=>validateManagedCapabilityFiles(root,value,source),/MANAGED_CAPABILITIES_INVALID/);
 });
