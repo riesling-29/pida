@@ -739,7 +739,7 @@ export class PidaRuntime {
       if (saved?.lastStatus === "interrupted" && saved.activeRunId && saved.activeTaskId) {
         const previous = { sessionId: id, runId: saved.activeRunId, taskId: saved.activeTaskId };
         this.observations.record(previous, "run_interrupted", { detected_on_restore: true });
-        this.observations.finish(previous, resultManifest({ sessionId: id, runId: saved.activeRunId, taskId: saved.activeTaskId, agentId: this.observations.agentId, status: "interrupted", version: runtimeVersion, verification: [], limits: ["ORIGINAL_END_TIME_UNKNOWN", "RECOVERY_REQUIRES_STATE_INSPECTION"] }));
+        await this.observations.finish(previous, resultManifest({ sessionId: id, runId: saved.activeRunId, taskId: saved.activeTaskId, agentId: this.observations.agentId, status: "interrupted", version: runtimeVersion, verification: [], limits: ["ORIGINAL_END_TIME_UNKNOWN", "RECOVERY_REQUIRES_STATE_INSPECTION"] }));
         record.saved.activeRunId = undefined; record.saved.activeTaskId = undefined;
       }
       try {
@@ -1357,7 +1357,7 @@ export class PidaRuntime {
         ...(this.options.personaProvider?.authority === "external" && !this.options.personaProvider.authorizeInput ? ["PERSONA_AUTHORIZATION_SNAPSHOT_ONLY"] : []),
         ...(this.options.evidenceLimits ?? []), ...(!this.options.pricingVerified ? ["COST_UNKNOWN"] : []), ...(result.recovery ? ["EFFECT_STATE_REQUIRES_RECONCILIATION"] : []), ...(run.evidenceFailed || result.persistenceError ? ["EVIDENCE_OR_STORAGE_INCOMPLETE"] : [])] });
     this.observe(id, run, "run_finished", { status: result.status, code: result.code ?? null, persistence_error: result.persistenceError ?? null });
-    this.observations.finish({ sessionId: id, taskId: run.taskId, runId: run.id }, manifest);
+    await this.observations.finish({ sessionId: id, taskId: run.taskId, runId: run.id }, manifest);
     try { this.options.workSurface?.settle(result); } catch { /* Preserve admission receipt; never replay a run because review storage failed. */ }
     finish();
     emit({ type: "trace", trace: { ...finalTrace } });

@@ -8,7 +8,7 @@ import { createBashTool, createPowerShellTool, createReadTool, createWriteTool, 
 import { PidaError, type BusinessTool, type ToolContext } from "./runtime.js";
 import { CommandManager } from "./commands.js";
 import { createCommandTools } from "./command-tools.js";
-import { projectCommandEnvironment, type ProcessExecutor } from "./process-executor.js";
+import { createPidaPowerShellOperations, projectCommandEnvironment, type ProcessExecutor } from "./process-executor.js";
 
 export interface ProjectConfig {
   enabled: boolean;
@@ -193,7 +193,7 @@ export function createProjectTools(config: ProjectConfig, options: { protectedPa
     protectedPaths.push(resolve(commandStateDirectory));
     commands = new CommandManager({ root, stateDirectory: commandStateDirectory, shell, defaultDeadlineMs: timeoutSeconds * 1000, maxDeadlineMs: Math.max(timeoutSeconds * 1000, 600_000), executor: options.commandExecutor });
     tools.push(...createCommandTools(commands, () => String(mutationGeneration)));
-    const sdk = (shell === "powershell" ? createPowerShellTool : createBashTool)(root, { exposeSessionEnvironment: false, spawnHook: context => ({ ...context, cwd: root, env: commandEnvironment(context.env) }) });
+    const sdk = (shell === "powershell" ? createPowerShellTool : createBashTool)(root, { ...(shell === "powershell" ? { operations: createPidaPowerShellOperations() } : {}), exposeSessionEnvironment: false, spawnHook: context => ({ ...context, cwd: root, env: commandEnvironment(context.env) }) });
     tools.push({
       name: "project_shell", description: `Execute ${shell} on the trusted host in the selected project. NOT a sandbox: commands have host filesystem/network access. Foreground only; no background servers. Timeout defaults to ${timeoutSeconds}s and cannot exceed it. Returns actual exit status; exit zero alone is not independent verification.`,
       parameters: Type.Object({ command: Type.String({ minLength: 1, maxLength: 16000 }), timeout: Type.Optional(Type.Integer({ minimum: 1, maximum: timeoutSeconds })) }, { additionalProperties: false }),

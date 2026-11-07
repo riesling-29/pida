@@ -125,7 +125,8 @@ export class PidaWorkbench {
   }
   private git(area: Area, args: string[], raw = false) {
     try {
-      const output = execFileSync("git", ["--git-dir", area.git, "--work-tree", area.files, "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgsign=false", "-c", "user.name=Pida", "-c", "user.email=pida@localhost", ...args], {
+      // cwd is the owned files directory; short explicit sibling paths also avoid Git for Windows' GIT_DIR size guard.
+      const output = execFileSync("git", ["--git-dir", relative(area.files, area.git), "--work-tree", ".", "-c", "core.longpaths=true", "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgsign=false", "-c", "user.name=Pida", "-c", "user.email=pida@localhost", ...args], {
         cwd: area.files, encoding: "utf8", timeout: 5000, maxBuffer: 4194304,
         env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, HOME: area.root, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null", GIT_TERMINAL_PROMPT: "0" }, stdio: ["ignore", "pipe", "pipe"],
       });
