@@ -1,0 +1,43 @@
+{
+  "reviewed_source": "9cbecfd2111d78addeef1e3e696d9c22a03a061e",
+  "archive_sha256": "fe68de59e3918648a810c8b129c1b96cc9bf9fab8cbcdd864aede4a47383bb91",
+  "original_files": [
+    {
+      "name": "INDEPENDENT-EXECUTION-POLICY-REVIEW.md",
+      "sha256": "5312a5b0cdeebbed1027b5ecdf049298b08c82411d9fd9accbc4ba984071615b",
+      "bytes": 8060
+    },
+    {
+      "name": "adversarial.test.mjs",
+      "sha256": "ae719d07a4cd7ea2e24eac8e3160d1b4034ec73564e24213b1ff0121cbd80b41",
+      "bytes": 10296
+    },
+    {
+      "name": "adversarial.log",
+      "sha256": "1cc3190c57719bce14325f646a9a5573d359b6769624e075ebc27ec7e7a1178d",
+      "bytes": 1776
+    },
+    {
+      "name": "adversarial-first-seven.log",
+      "sha256": "47cbef2804a7f3e21ddfe3799684ffd8868a00df641b1c70751f1056deaae085",
+      "bytes": 1564
+    },
+    {
+      "name": "adversarial-fixture-import-failure.log",
+      "sha256": "8dcbe1103e6e6967b4666b21f1ecd21e99701f3a00c57f3ed826fd0844590375",
+      "bytes": 3114
+    },
+    {
+      "name": "focused.log",
+      "sha256": "e5805e3fa1255a79406020748b3583a3841da5f16cceba1288485a2632c8f7a6",
+      "bytes": 13832
+    },
+    {
+      "name": "source-hashes.json",
+      "sha256": "dd0b961d88b1d9ffbc547aadf49944b2b338b04853e6a617daee815a7c8f2e00",
+      "bytes": 1935
+    }
+  ],
+  "original_manifest_sha256": "8dd0976021ad8f57aa23b68ce0b5f765a1d56564bc369341bfeea1ec8ebac50a",
+  "scope": "Seven manifest-listed safe files plus original manifest only; no synthetic state dirs. Exact originals zipped; readable report LF."
+}
