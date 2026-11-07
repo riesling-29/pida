@@ -135,6 +135,15 @@ preserve the initial counterexample, corrected manifest, build script and result
 The current handoff points only to the corrected Linux archive; the previous one
 is listed separately as historical/rejected. No verifier check was waived.
 
+The [final independent distribution review](runtime-distribution-independent-final-20261107/INDEPENDENT-REVIEW.md)
+passed unchanged Windows and corrected Linux r2. It independently rebuilt and
+compared 148 compiled files, checked 125 dependency inventories on each platform,
+official Node bytes, all 375 MinGit files, the three Linux ELF files/notices and
+four isolated base/reference process probes. The report's original SHA-256 is
+`fdf273daffac7195873913f50684ffcbe031b44449f02c130a09fb544d457823`;
+its adjacent archive/index preserve reports, probe code and raw results without
+normalizing the original bytes. This is separate-context same-family review.
+
 Windows 10.0.26200 and Ubuntu 26.04.1/glibc 2.43 each passed exact tree/mode
 verification and **two clean relocated process probes**: default pida-local and
 explicit external reference Persona. Every probe completed one native mock job,
