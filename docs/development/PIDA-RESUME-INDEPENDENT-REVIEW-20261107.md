@@ -1,0 +1,7 @@
+# Independent resume review
+
+The separate reviewer accepted the bounded launcher resume unit at `bbb8e565282b676307c9ed92a8423a19b6c1f12e`. [Original report](resume-independent-review-evidence-20261107/pida-review-resume-20261107/review-resume-final-report.json), SHA256 `09d58ad3323f868e74dc114aa1b2a96888d54188c823fa015546d867d6e861f4`. All listed evidence files were copied byte-for-byte and hash-verified, including the baseline unlock log under its original relative path.
+
+The reviewer independently built source, verified seven source and eleven producer hashes, and reproduced 37 passes plus the single existing Windows file-symlink fixture setup failure. Additional actual-process probes preserved a completed native session/job/run/attempt/export across resume, left the entire persisted tree byte-identical for 28 mismatched/live/unknown-lock cases, and allowed exactly one of two simultaneous dead-owner resume launchers. Existing ACK-loss, current revocation, interrupted-process and failing/hanging cleanup cases passed.
+
+This is a same-model-family independent context review, not cross-family review. Source/config/Node/provider/policy credential migration, durable canonical Persona memory, production desktop integration and Linux acceptance remain outside it. The subsequent organization-admission runtime unit is not covered. Re-review changed source and withdraw the bounded result if identity preservation, no-replay, lock ownership, current authority or cleanup guarantees fail.

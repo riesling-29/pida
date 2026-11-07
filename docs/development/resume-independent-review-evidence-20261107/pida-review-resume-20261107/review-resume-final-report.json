@@ -1,0 +1,111 @@
+{
+  "date": "2026-11-07",
+  "reviewer": "/root/pida_delivery_review",
+  "independence": "Distinct Codex context, same family. Isolated read-only product checkout; untracked independent probes and evidence only. No product source edits.",
+  "source": {
+    "reviewedCommit": "bbb8e565282b676307c9ed92a8423a19b6c1f12e",
+    "base": "a81fbc95ec5c51470add0963a88f47f9d0213dd5",
+    "baselineUnlockCommit": "e98c23e4a1794e144ffaf700aa0b908b90515c7d",
+    "worktree": "D:\\ChantaResearchGroup\\pida-review-resume-20261107",
+    "producerCommit": "c1e3617aa88e6013ea34f76c3f4c41504618f863",
+    "manifestFilesVerified": 7,
+    "producerSourceFilesVerified": 11
+  },
+  "environment": {
+    "os": "Windows win32",
+    "node": "v24.18.0",
+    "python": "3.11.9",
+    "dependencyInstaller": "bun 1.4.2"
+  },
+  "runs": [
+    {
+      "command": "bun install --frozen-lockfile",
+      "result": "PASS; 129 packages installed",
+      "evidence": "review-resume-install.log"
+    },
+    {
+      "command": "npm run build",
+      "result": "PASS",
+      "evidence": "review-resume-build.log"
+    },
+    {
+      "command": "PIDA_TEST_VERA_SOURCE=<hash-verified c1e3617 source-only directory> node --test --test-timeout=20000 test/collaboration-policy-client.test.mjs test/collaboration.test.mjs test/collaboration-regressions.test.mjs test/workspace-persona-pi.test.mjs test/workspace-unlock.test.mjs",
+      "result": "38 total: 37 pass, 1 fail, 0 cancelled, 0 skipped. All 35 host/collaboration/Persona cases passed; unlock 2 pass, 1 file-symlink setup EPERM.",
+      "evidence": "review-resume-focused.log"
+    },
+    {
+      "command": "node --test --test-timeout=20000 test/workspace-unlock.test.mjs at frozen e98c23e",
+      "result": "3 total: 2 pass, same 1 file-symlink setup EPERM reproduced independently. Test fails at symlinkSync test/workspace-unlock.test.mjs:55 before file-link rejection assertion; preceding live-supervisor and junction assertions execute successfully.",
+      "evidence": "../pida-review-host-fix-20261107/review-resume-unlock-baseline.log"
+    },
+    {
+      "command": "node review-resume-generator.mjs; node --test --test-timeout=40000 review-tests/resume-adversaries.test.mjs",
+      "result": "3 independent actual-process tests pass, with 28 immutability adversaries inside the second test.",
+      "evidence": "review-resume-adversaries.log"
+    },
+    {
+      "command": "git diff --exit-code",
+      "result": "PASS; tracked source unchanged"
+    }
+  ],
+  "independentAdversaries": [
+    {
+      "case": "Completed native session resume",
+      "proof": "Run one actual scripted native organization job to completed, require sessionId/runId/attemptId, capture export, stop actual host and launch resume. Receipt, full job, session ID, run ID, attempt ID and exported bundle equal before/after. Same native OrgAttempt still links OrgTask and job. Exactly one job; API token changes."
+    },
+    {
+      "case": "Rejected launch complete persisted-tree immutability",
+      "proof": "12 manifest field mismatches (host/principal/Node/workspace/source/config/policy credential/provider workspace/provider profile/Persona module/module bytes/schema), changed config bytes, and 15 invalid/live/remote/oversize lock cases across launcher/root runtime/supervisor lock. Hash every persisted file before and after each rejected actual child launch. All complete trees unchanged."
+    },
+    {
+      "case": "Simultaneous dead-owner resume",
+      "proof": "SIGKILL actual fresh host, then start two actual resume children concurrently. Exactly one returns ready and authenticated capabilities; other returns HOST_WORKSPACE_LOCKED. No live host lock theft."
+    }
+  ],
+  "existingProcessRegressionIndependentlyRun": [
+    "Discard successful 202 ACK body, stop/reopen actual host; retry returns original native job, same organization and one job only.",
+    "Reject old transport token, wrong host/policy credential and changed payload; current revoked authority blocks readback and queued dispatch with no model run ID.",
+    "SIGKILL while job marked running but waiting for dispatch authorization; resume preserves job as interrupted, pauses agent with needsReconciliation, no blind replay or duplicate job; later authorized retry returns original receipt.",
+    "Original host shutdown rejection and hanging-runtime tests still close HTTP, attempt Persona cleanup and exit nonzero within documented cleanup bound.",
+    "Actual Python policy/public producer subprocesses, Unicode golden digest and strict scope/nonce/echo binding remain exercised."
+  ],
+  "sourceReview": [
+    "Resume validates exact manifest against current trusted host/principal/config/source/Node/provider/Persona and policy credential before locking, then repeats validation under launcher lock before runtime unlock.",
+    "Private manifest binds configuration and identity; API token is separately rotated after successful workspace open. Changing policy endpoint port remains allowed by documented authority credential contract.",
+    "Launcher lock uses exclusive creation, same-host PID liveness with only ESRCH accepted, recovery lock and byte recheck. Unknown, remote, live and bounded oversized owner state deny.",
+    "Existing unlockWorkspaceState preflights eligible runtime/supervisor owners and validates paths; verified dead same-host locks only. Memory transaction locks are intentionally not removed.",
+    "Reuses createWorkspace and supervisor interrupted recovery; queued work keeps existing scheduler/current-policy semantics. No second organization runtime introduced."
+  ],
+  "limitations": [
+    "38-test invocation is not fully green: Windows file-symlink rejection assertion remains unexecuted because fixture creation itself is EPERM. Baseline reproduction establishes this failure is not introduced by resume; it does not prove the unexecuted assertion.",
+    "Single concurrent recovery scenario is bounded evidence, not exhaustive stress/proof of every filesystem/process race.",
+    "Crash test stops before dispatch authorization completes, not during an arbitrary external side effect. Existing reconciliation semantics remain required; no general exactly-once effects claim.",
+    "No production Schumpeter authority endpoint, UI, desktop service restart, Linux, installer, paid model or canonical Persona memory acceptance.",
+    "Public Persona fixture is disposable after each start; retained native runtime identity is not durable canonical memory.",
+    "Manifest/source pinning is consistency checking, not protection against an actor with trusted parent or same-user filesystem authority. Transitive modules of arbitrary trusted custom Persona modules are not attested.",
+    "Older workspace adoption and source/config/Node/provider/policy credential migration are unsupported and rejected by this unit.",
+    "Other previously tracked full-suite Windows failures are not waived; reviewed host behavior does not establish full product readiness."
+  ],
+  "findings": [],
+  "validity": "Applies to the frozen commit, pinned producer and tested Windows environment. Re-review on relevant lifecycle/source/dependency/config changes. Withdraw if rejected launches change stored profiles/runtime, a live/unknown owner is displaced, concurrent launchers both serve, repeated delivery changes native identity, interrupted work replays, revoked authority allows dispatch or prior cleanup guarantees regress.",
+  "sourceHashes": {
+    "examples/schumpeter-host.mjs": "137b61110c3a0987f7b0d0dfff7b1464ea5769a85bf1064f8f75283d598b4792",
+    "examples/host-workspace.mjs": "62fdfd9573440deb18538034515a8b823524915713528f7ed2c230abe365f5f0",
+    "test/collaboration-policy-client.test.mjs": "2c8543b9bf30425401a3777bae241e678ad6c53b6ad663c98fa97c841e298345",
+    "src/workspace-unlock.ts": "2893aa582d5df968d8f0912d42fe210fcb22e8c84cc829fea66987b1c82af42e",
+    "src/storage.ts": "f6472f169d31ebdaf07b1bf3ada4a93e38b50bae8387555ae3f99fa36c1f8afa",
+    "docs/SCHUMPETER-HOST-1.md": "39eb35382709998fbcb869a0ab18dfa45f9d51b8a1004e37f5529944543f0e3d",
+    "docs/development/PIDA-HOST-RESUME-20261107.md": "4a339c2bd75d93ce8ac9eab0595bb0559edf5ecbcb4373801956afe53402697e"
+  },
+  "evidenceHashes": {
+    "review-resume-install.log": "6941330947d9763f017cb25227cfb0bb399682670c6654c5b9cc4d15957956fd",
+    "review-resume-build.log": "6d3803c3d83c3545712565477cdcbf4759bfe23f04c1c98ee2063daf998b069b",
+    "review-resume-focused.log": "1b7ad493520d342c075023805f36e1ab2e601c66daefbd826e776e3a0484dbcf",
+    "review-resume-adversaries.log": "6f748df5ec18b744bdc0dc70964920a55f1de16e3fc9086915da99ea05ba0802",
+    "review-resume-generator.mjs": "d3fbb862c44d9a0fb5a8a255057ca03a90dcca2456b6595c341eea5b5c58e01c",
+    "review-resume-additions.txt": "a33abe74c2c94fa9a197d0fddb71d794bd0a8503de9618174fd751fdec280a14",
+    "review-tests/resume-adversaries.test.mjs": "e2b5841004436feeacd13043cd9791248dab466878e73a974e9ca23b462e0fd5",
+    "../pida-review-host-fix-20261107/review-resume-unlock-baseline.log": "333a30c90b8a56797fe88937860397cb93af5381df35afce63ff0dace1dacf8b"
+  },
+  "verdict": "BOUNDED PASS for explicit same-host launcher resume at bbb8e565282b676307c9ed92a8423a19b6c1f12e; no reproduced blocking defect. Windows symlink coverage and production desktop/integration acceptance remain open."
+}
