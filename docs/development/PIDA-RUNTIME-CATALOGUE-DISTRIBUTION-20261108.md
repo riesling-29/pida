@@ -1,0 +1,27 @@
+# Managed policy/catalogue runtime distribution - 2026-11-08
+
+Exact combined source: `0f1b895d72d2f05a7c4fa21a2c9a5070aad71d8f`. This private modified build retains upstream package version0.8.18 but its distribution_id includes the exact source prefix; it is not an untouched upstream release. Existing b7/D archives, cached runtimes and real-case workspaces were not modified or migrated.
+
+The independently accepted policy9cb and corrected catalogue127 source are combined with the independently accepted inventory-capability generator0f1b. Generator report SHA7769835cb8e545137a249aff0e2262413463da26b4f935e2d0b4b638b5bc697a is preserved with initial counterexamples in [generator review archive](managed-capabilities-generator-independent-20261108/archive-index.json). Source acceptance is distinct from the independent artifact gate, which is pending here.
+
+## Immutable handoff
+
+Full paths and SHA256 values: [handoff.json](runtime-catalogue-distribution-evidence-20261108/handoff.json). Both ordinary-extracted archives verified before and after owner probes. Both platforms carry identical [managed-host-capabilities.json](runtime-catalogue-distribution-evidence-20261108/managed-host-capabilities.json), SHA862dea17a42aa001e9e20c810f36a97d3b577d985af908e98d19b676df701973, inventoried as a regular file. Sidecar and both manifest source provenance fields agree. Consumers must verify the approved full manifest/tree before parsing capabilities and compare actual ready/admission readback; filenames or renderer flags cannot authorize features.
+
+Windows archive SHA550afde0caff9e0ae2a7e3acadb82c6ef64d8ceb967f85bec44d68a125be15e8; manifest0c3a5c551520deabe9504dbcbce9591fa740638ce01f3b42244e01f0ae6845f3;16108files.
+
+Linux archive SHA040733b5aa20e976705996e3af20f704357f98ddaed6b6dbc0e6ab1ae38fda4c; manifest6440e590ccf0a56da344571647c336beb350d0fca5b55523930e669d0830480a;15782files. Ordinary tar extraction preserves canonical file modes. Linux Git's previously documented glibc floor and restricted local Git closure remain; arbitrary Linux ABI acceptance is not claimed.
+
+Both reuse official checksummed Node24.18.0 and the same bundled Git/dependency/license closures. All125 dependency inventory entries and full node/git/node_modules byte/mode inventories exactly match the accepted b7 baseline. Every586 own package files, including152 compiled outputs, match the frozen source archive/build. Nine compiled file identities differ from b7: policy/workspace/supervisor/index outputs plus an inferred property-order-only provider-settings.d.ts difference; provider-settings.ts source is unchanged. Complete lists appear in each closure.json. No new coding tools, command permissions, project mounts or billing route were added.
+
+## Owner environment checks
+
+[Probe source](runtime-catalogue-distribution-evidence-20261108/probe-managed-capability-distribution.mjs) uses the supplied bundled Node/Git and package modules with a clean child environment and fresh disposable workspaces. Four scenarios passed on both Windows and Linux: default smoke local; explicit work local; work with global reference; work with two distinct catalogue profiles. Each uses stock mock execution, checks exact ready2/capability2 policy values, actual native organization deadline/repair bounds, terminal jobs/receipts, then stops and resumes the same native IDs with a rotated transport token. Wrong selected policy and changed catalogue label refuse without managed workspace mutation. Actual multi-agent delegate/join semantics remain source-reviewed evidence; this release probe is not a new live multi-agent model test.
+
+Reference probes use a separate explicit external Python executable and source-locked f6 export, with new synthetic stores. They verify exact job/attempt/org/persona binding and current-provider-check receipts; they do not exercise the parent's packaged Python service or canonical/private memory. No credential store, provider network call, account action or GUI was used. Native criteria remain empty, so completed jobs do not imply native artifact acceptance. These offline stock mock calls did not change any actual-model request counter.
+
+An initial Windows probe fixture computed bridge identity before normalizing the external Python path string, so catalogue startup correctly rejected it. The instrumentation now resolves trusted paths before identity computation. No release/runtime byte or guard was changed for that fixture correction. Final full runtime tree checks pass on both platforms.
+
+## Remaining gate
+
+Independent artifact review must verify exact archives/manifest/sidecar/source/vendor closure and packaged behavior. Sch consumer integration, packaged reference bridge, GUI and any new real provider execution require their own authorization/validation. Retaining D is the no-change alternative; no automatic existing workspace migration is provided. Withdraw this release claim if any pinned byte differs, required sidecar/provenance check fails, actual ready/policy/catalogue mismatches, or a resumed identity changes. Full source and platform identity bound the validity of these checks.

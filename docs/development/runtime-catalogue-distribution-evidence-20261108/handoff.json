@@ -1,0 +1,50 @@
+{
+  "source_commit": "0f1b895d72d2f05a7c4fa21a2c9a5070aad71d8f",
+  "status": "Owner packaged probes PASS; independent artifact review pending",
+  "generator_review": {
+    "report_sha256": "7769835cb8e545137a249aff0e2262413463da26b4f935e2d0b4b638b5bc697a",
+    "archive": "../managed-capabilities-generator-independent-20261108/archive-index.json"
+  },
+  "policy_source": "9cbecfd2111d78addeef1e3e696d9c22a03a061e",
+  "catalogue_source": "127611e346be6be6709ba6db59132934a7913c3a",
+  "producer_source": "f6edd022d4389237fcee5d6c0a4db8a0d0b13399",
+  "platforms": {
+    "windows": {
+      "source_commit": "0f1b895d72d2f05a7c4fa21a2c9a5070aad71d8f",
+      "platform": "win32-x64",
+      "runtime": "D:\\ChantaResearchGroup\\pida-execution-policy-20261108\\.pida-test-runtime-catalogue-20261108\\windows\\runtime",
+      "archive": "D:\\ChantaResearchGroup\\pida-execution-policy-20261108\\.pida-test-runtime-catalogue-20261108\\windows\\pida-runtime-0f1b895-win32-x64.tar.gz",
+      "archive_sha256": "550afde0caff9e0ae2a7e3acadb82c6ef64d8ceb967f85bec44d68a125be15e8",
+      "archive_bytes": 107629918,
+      "manifest_sha256": "0c3a5c551520deabe9504dbcbce9591fa740638ce01f3b42244e01f0ae6845f3",
+      "tree_sha256": "8a9948e6f5910c2178d3dfa9c77c6acb98bbd4e9a56c3c85efdc37dac0329170",
+      "file_count": 16108,
+      "dependencies": 125,
+      "node_binary_sha256": "9a4eb5f1c29c6a2e93852ead46b999e284a6a5ca8bab4d4e241d587d025a52de",
+      "package_sha256": "fba076093248cd2a0505b0416db9ef9ffbc31507eadba49270b074eb59ca9c25",
+      "delivery_archive": "D:\\ChantaResearchGroup\\pida-execution-policy-20261108\\.pida-test-runtime-catalogue-20261108\\windows\\pida-runtime-0f1b895-win32-x64.tar.gz",
+      "extracted_runtime": "D:\\ChantaResearchGroup\\pida-execution-policy-20261108\\.pida-test-runtime-catalogue-20261108\\windows\\extracted\\runtime",
+      "sidecar_sha256": "862dea17a42aa001e9e20c810f36a97d3b577d985af908e98d19b676df701973"
+    },
+    "linux": {
+      "source_commit": "0f1b895d72d2f05a7c4fa21a2c9a5070aad71d8f",
+      "platform": "linux-x64",
+      "runtime": "/var/tmp/pida-catalogue-0f1b895-20261108/runtime",
+      "archive": "/var/tmp/pida-catalogue-0f1b895-20261108/pida-runtime-0f1b895-linux-x64.tar.gz",
+      "archive_sha256": "040733b5aa20e976705996e3af20f704357f98ddaed6b6dbc0e6ab1ae38fda4c",
+      "archive_bytes": 79632774,
+      "manifest_sha256": "6440e590ccf0a56da344571647c336beb350d0fca5b55523930e669d0830480a",
+      "tree_sha256": "6691865f6c4895bd522909e0499a03215eb5e325148693bd7eafebd9853e5ec2",
+      "file_count": 15782,
+      "dependencies": 125,
+      "node_binary_sha256": "41a74efb34cbde5c7632cdac0cf8bd1a14d0b8d73dc1e82755014d9a9ce70f5c",
+      "package_sha256": "fba076093248cd2a0505b0416db9ef9ffbc31507eadba49270b074eb59ca9c25",
+      "delivery_archive": "D:\\ChantaResearchGroup\\pida-execution-policy-20261108\\.pida-test-runtime-catalogue-20261108\\linux\\pida-runtime-0f1b895-linux-x64.tar.gz",
+      "extracted_runtime": "/var/tmp/pida-catalogue-0f1b895-20261108/extracted/runtime",
+      "sidecar_sha256": "862dea17a42aa001e9e20c810f36a97d3b577d985af908e98d19b676df701973"
+    }
+  },
+  "provider_network_calls": 0,
+  "old_D_unchanged": true,
+  "probe_scope": "Four actual packaged stock mock scenarios per platform: default smoke, explicit work, global reference work, two-profile catalogue work; fresh/resume/native IDs/receipts and profile mismatch preservation. External source-locked Python; parent packaged bridge and GUI not tested."
+}

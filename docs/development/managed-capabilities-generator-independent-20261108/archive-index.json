@@ -1,0 +1,73 @@
+{
+  "source": "0f1b895d72d2f05a7c4fa21a2c9a5070aad71d8f",
+  "scope": "Independent generator source PASS; original findings preserved; no synthetic directories.",
+  "archive_sha256": "c971c47b920385ea33bb69ed406127def831bbdcdd4ce99fec17094c239b5554",
+  "original_index_sha256": "6be4443557097c54ba2243e2eebda14d5e6c33e4157e8da01ab221cc3b442fb8",
+  "files": [
+    {
+      "name": "final-source-hashes.json",
+      "bytes": 759,
+      "sha256": "7b6d8580f737f4d26a3eec789899684bdf9460be3389b50ed3b52098069ef655"
+    },
+    {
+      "name": "fixed-probe-result.json",
+      "bytes": 48375,
+      "sha256": "c2852f832a7b30cb220614f8d95b6195cf271cd13335dffc2ddef175c1d54265"
+    },
+    {
+      "name": "fixture-note.txt",
+      "bytes": 269,
+      "sha256": "d1d5f8d9479352a47b31e349c48317fcaf5009c32d0c9d87e9b3008b7c1b06a3"
+    },
+    {
+      "name": "INDEPENDENT-GENERATOR-REVIEW.md",
+      "bytes": 6016,
+      "sha256": "7769835cb8e545137a249aff0e2262413463da26b4f935e2d0b4b638b5bc697a"
+    },
+    {
+      "name": "INITIAL-FINDINGS.md",
+      "bytes": 2497,
+      "sha256": "166471b28854fe4718f15896ec41c3389ae803e9131ed9d71891ee3f1ccf40ff"
+    },
+    {
+      "name": "initial-managed-host-capabilities.mjs",
+      "bytes": 2568,
+      "sha256": "da81892539a8cb9481d899a5659c5ff7a643ccddd1db79ea50439c3a8bc2d5d6"
+    },
+    {
+      "name": "initial-source-hashes.json",
+      "bytes": 759,
+      "sha256": "b2c2217f520d6cb4a770d9979da102db5a648a045cb272b2e16001ff7a1b17ce"
+    },
+    {
+      "name": "initial-verify-runtime-distribution.mjs",
+      "bytes": 2181,
+      "sha256": "7b7d4b063b4903eb92bb9cdcefa82929fc9cf5b67c68bd4cb0445658f49ef8c0"
+    },
+    {
+      "name": "npm-dry-run.json",
+      "bytes": 296,
+      "sha256": "d06ce19a4284814b8e1cbf4ecdf1b361de178e319f5d637dfb87eec912952839"
+    },
+    {
+      "name": "ordering-probe.mjs",
+      "bytes": 2673,
+      "sha256": "c84997be4fb59e895015abfee263301ee68f4fbdc55740f3cf27e779158cee9c"
+    },
+    {
+      "name": "ordering-result.json",
+      "bytes": 5536,
+      "sha256": "bfdf1621421e34fd8bb9b8e4b75c679c5f342e11f7f394c29f5f7b6cd087d86a"
+    },
+    {
+      "name": "probe-result.json",
+      "bytes": 46454,
+      "sha256": "c6df4dbbb3dbd7c1b5965c38b0c6355e13603a6ff3323d7cfb21ef9ae49bbbcd"
+    },
+    {
+      "name": "probe.mjs",
+      "bytes": 4135,
+      "sha256": "ddda27b765628a7ab9d0fcfab4a5de523c054c7374007e407a7f8520119bd9f1"
+    }
+  ]
+}
