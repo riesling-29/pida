@@ -1,0 +1,50 @@
+﻿[
+    {
+        "path":  "baseline-core.json",
+        "sha256":  "f183f97361db8741dd561dbc19c7440af86ce2e6ddea8d3aac612b549235e32e"
+    },
+    {
+        "path":  "baseline-core.log",
+        "sha256":  "504d69068a1957bf42f98e067c717bc55d2da736eea311f90d6c27b46b531927"
+    },
+    {
+        "path":  "fixed-core.json",
+        "sha256":  "a7ff00d7e7db14ee614459945191764d112ff5acff2708d001951ca614698f5c"
+    },
+    {
+        "path":  "fixed-core.log",
+        "sha256":  "d00dd01f2f384b8ff1ae853cebf30586018aab03d94e67b7b03205e1858f8235"
+    },
+    {
+        "path":  "fixed-regressions.json",
+        "sha256":  "bce085859a5f2f8dd7ff99f541ee977b9b96f6fb838d4a0f685784f1ce7f83f3"
+    },
+    {
+        "path":  "fixed-regressions.log",
+        "sha256":  "56be14b227e40b589254545247483328081d9d100903c4a1b5879b1c4759e591"
+    },
+    {
+        "path":  "independent-probe-result.json",
+        "sha256":  "78a3c569a2649e36d9ff2f1a0df6756a122ae13ed7a434defa9f3256b7b63c85"
+    },
+    {
+        "path":  "independent-probe.json",
+        "sha256":  "a58bd498ea0e8638f163408290e18dc58e1ecd683a4945c1e8033149a12b897f"
+    },
+    {
+        "path":  "independent-probe.log",
+        "sha256":  "6704137c1c2b47c0d247de460c42c2d75fa1f0662f51fb6a5012bb64359e9b0f"
+    },
+    {
+        "path":  "independent-probe.mjs",
+        "sha256":  "274e4011e4e26eebc9af7a4465be196a97ae961e841632f31b407be3a7af8ce8"
+    },
+    {
+        "path":  "INDEPENDENT-REVIEW.md",
+        "sha256":  "ff162dbaf9154f1121cf6ecadb750331242eb1a1fb70422aadfe3a129f4e96cb"
+    },
+    {
+        "path":  "run-review.mjs",
+        "sha256":  "fac2eec5a6093267837c8727176cd897461933117f96927cfb4983e2bb96fa8c"
+    }
+]

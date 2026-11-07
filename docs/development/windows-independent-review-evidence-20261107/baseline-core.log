@@ -1,0 +1,260 @@
+✖ agent HTTP routes enforce identity, ownership and write/tool grants before accessing private state (119.1315ms)
+✖ native Pi turns materialize standard OCEL, preserve IDs through restart, and retain HTTP ownership (205.3216ms)
+✖ real project shell runs tests, reports nonzero exit and strips provider environment (576.3633ms)
+✔ foreground shell timeout/cancellation are uncertain effects and output is bounded (1875.6005ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 1
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3137.0973
+
+✖ failing tests:
+
+test at test\agents-http.test.mjs:201:1
+✖ agent HTTP routes enforce identity, ownership and write/tool grants before accessing private state (119.1315ms)
+  Error: GIT_OPERATION_FAILED
+      at fail (file:///D:/ChantaResearchGroup/pida-review-windows-baseline-20261107/dist/workbench.js:25:29)
+      at PidaWorkbench.git (file:///D:/ChantaResearchGroup/pida-review-windows-baseline-20261107/dist/workbench.js:175:20)
+      at PidaWorkbench.area (file:///D:/ChantaResearchGroup/pida-review-windows-baseline-20261107/dist/workbench.js:159:18)
+      at file:///D:/ChantaResearchGroup/pida-review-windows-baseline-20261107/dist/workbench.js:200:67
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async PidaWorkbench.locked (file:///D:/ChantaResearchGroup/pida-review-windows-baseline-20261107/dist/workbench.js:203:20)
+      at async TestContext.<anonymous> (file:///D:/ChantaResearchGroup/pida-review-windows-baseline-20261107/test/agents-http.test.mjs:206:3)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    code: 'GIT_OPERATION_FAILED',
+    status: 400,
+    details: undefined
+  }
+
+test at test\ocel.test.mjs:19:1
+✖ native Pi turns materialize standard OCEL, preserve IDs through restart, and retain HTTP ownership (205.3216ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  ... Skipped lines
+  
+    {
+      eventTypes: [
+        {
+          attributes: [
+            {
+  ...
+            {
+  -           name: 'payload.status',
+  -           type: 'string'
+  -         },
+  -         {
+              name: 'sequence_number',
+              type: 'float'
+            },
+            {
+              name: 'source_event_id',
+  ...
+          ],
+  -       name: 'run_finished'
+  -     },
+  -     {
+  -       attributes: [
+  -         {
+  -           name: 'capture_mode',
+  -           type: 'string'
+  -         },
+  -         {
+  -           name: 'data_scope',
+  -           type: 'string'
+  -         },
+  -         {
+  -           name: 'payload_digest',
+  -           type: 'string'
+  -         },
+  -         {
+  -           name: 'sequence_number',
+  -           type: 'float'
+  -         },
+  -         {
+  -           name: 'source_event_id',
+  -           type: 'string'
+  -         },
+  -         {
+  -           name: 'source_id',
+  -           type: 'string'
+  -         }
+  -       ],
+          name: 'run_started'
+        },
+        {
+          attributes: [
+            {
+  ...
+        },
+  -     {
+  -       attributes: [
+  -         {
+  -           name: 'source_id',
+  -           value: '2fedbde5-bf01-420f-8a82-422f3ef80dd8'
+  -         },
+  -         {
+  -           name: 'source_event_id',
+  -           value: '75f7dc2d-1999-4b80-a565-6ebd434c7ebc'
+  -         },
+  -         {
+  -           name: 'sequence_number',
+  -           value: 12
+  -         },
+  -         {
+  -           name: 'payload_digest',
+  -           value: 'da885275a7120c1868be8b6bcb26f82735a3662651245d4deb52faad3b0eb389'
+  -         },
+  -         {
+  -           name: 'capture_mode',
+  -           value: 'native-runtime'
+  -         },
+  -         {
+  -           name: 'data_scope',
+  -           value: 'metadata-only'
+  -         },
+  -         {
+  -           name: 'payload.status',
+  -           value: 'completed'
+  -         }
+  -       ],
+  -       id: 'pida:Event:32af3d87a9dce7ed92dd3f7c144a600f741879499b187d41ff2fa02ccd736c56',
+  -       relationships: [
+  -         {
+  -           objectId: 'pida:Agent:daca2c83b69cb8bb06dea9f8e9a694d91ddf908cf7c45b78c3cd02156fc48c96',
+  -           qualifier: 'actor'
+  -         },
+  -         {
+  -           objectId: 'pida:Session:af1a8c48bb3172129ef9853c1468407fa34c0ad936b83d5827783ef78cba874c',
+  -           qualifier: 'session'
+  -         },
+  -         {
+  -           objectId: 'pida:Task:ef17537196212c058e4e5ab040694bcc64117d4c1ce94817fb75de6b491eb537',
+  -           qualifier: 'task'
+  -         },
+  -         {
+  -           objectId: 'pida:Run:22d1131e347a90ae00f3ab28ef0f1e7e74a30c49e9297d7cfa068554cb80ee18',
+  -           qualifier: 'run'
+  -         }
+  -       ],
+  -       time: '2026-11-07T12:25:32.410Z',
+  -       type: 'run_finished'
+  -     }
+      ],
+      objectTypes: [
+        {
+          attributes: [
+            {
+  ...
+            {
+  -           name: 'reported_status',
+  -           type: 'string'
+  -         },
+  -         {
+              name: 'run_id',
+              type: 'string'
+            }
+          ],
+          name: 'Run'
+  ...
+            },
+  -         {
+  -           name: 'reported_status',
+  -           time: '2026-11-07T12:25:32.410Z',
+  -           value: 'completed'
+  -         }
+          ],
+          id: 'pida:Run:22d1131e347a90ae00f3ab28ef0f1e7e74a30c49e9297d7cfa068554cb80ee18',
+          relationships: [
+            {
+              objectId: 'pida:Session:af1a8c48bb3172129ef9853c1468407fa34c0ad936b83d5827783ef78cba874c',
+  
+      at TestContext.<anonymous> (file:///D:/ChantaResearchGroup/pida-review-windows-baseline-20261107/test/ocel.test.mjs:44:10)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: {
+      eventTypes: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      objectTypes: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      events: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      objects: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ]
+    },
+    expected: {
+      eventTypes: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      objectTypes: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ],
+      events: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      objects: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object]
+      ]
+    },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\project-tools.test.mjs:55:1
+✖ real project shell runs tests, reports nonzero exit and strips provider environment (576.3633ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 7
+  
+      at TestContext.<anonymous> (file:///D:/ChantaResearchGroup/pida-review-windows-baseline-20261107/test/project-tools.test.mjs:65:43)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 7,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+STDERR

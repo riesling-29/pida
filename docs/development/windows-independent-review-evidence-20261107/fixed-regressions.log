@@ -1,0 +1,23 @@
+✔ real long command has separate wait/deadline, non-consuming cursors, and request replay protection (996.1019ms)
+✔ permission/owner and unsupported PTY/sandbox checks happen before spawning (386.845ms)
+✔ managed commands exclude provider credentials and preserve large UTF-8 output for later reads (280.3122ms)
+✔ live UTF-8 reads wait for a complete code point and shutdown waits for the actual driver (611.7648ms)
+﹣ cancel requests settle only after Pi driver exit and stop ordinary descendants on POSIX (0.1335ms) # SKIP
+✔ execution deadline cancels a real command and uncertain state requires host reconciliation (797.0961ms)
+﹣ actual host crash restores an interrupted handle without replaying its orphan command (0.1344ms) # SKIP
+✔ project command tools run through Pi and prevent project writes while a command owns execution (1214.696ms)
+✔ Pi managed executor preserves native exit codes and PowerShell final statement semantics (1609.5711ms)
+✔ owned workbench history supports deeply nested workspace paths without global Git configuration (407.3775ms)
+✔ terminal OCEL transient replacement preserves completion or explicit durable unavailability (782.2215ms)
+✔ terminal OCEL persistent replacement preserves completion or explicit durable unavailability (977.6434ms)
+✔ terminal OCEL permanent replacement preserves completion or explicit durable unavailability (742.2784ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 2
+ℹ todo 0
+ℹ duration_ms 5088.2652
+
+STDERR

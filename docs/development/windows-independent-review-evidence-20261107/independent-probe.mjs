@@ -1,0 +1,41 @@
+import { createHash } from 'node:crypto';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import assert from 'node:assert/strict';
+const cwd = resolve(process.argv[2]);
+const directory = resolve('D:/ChantaResearchGroup/pida-windows-review-evidence-20261107/probe-data');
+mkdirSync(directory, { recursive: true });
+const hash = path => existsSync(path) ? createHash('sha256').update(readFileSync(path)).digest('hex') : null;
+const configPath = join(process.env.USERPROFILE, '.gitconfig'), beforeGlobal = hash(configPath);
+const { PidaWorkbench, workbenchPermissions } = await import(pathToFileURL(join(cwd, 'dist/workbench.js')));
+const { createPiProcessExecutor, projectCommandEnvironment } = await import(pathToFileURL(join(cwd, 'dist/process-executor.js')));
+const root = join(directory, 'ws', 'pida', 'host-12345678', '.pida', 'agents', '00000000-0000-4000-8000-000000000001', 'workbench');
+const bench = new PidaWorkbench(root), principal = { id: 'desktop-test-owner', permissions: workbenchPermissions };
+const content = 'independent Unicode 연구\n\n';
+const initial = await bench.write(principal, 'artifacts/result.txt', content);
+await bench.write(principal, 'artifacts/result.txt', 'modified');
+await bench.write(principal, 'artifacts/extra.txt', 'later');
+const tool = bench.tools().find(t => t.name === 'workspace_restore');
+const restored = await tool.execute({ checkpoint: initial.checkpoint }, { principal, signal: AbortSignal.timeout(5000), sessionId: 'review', runId: 'review' });
+assert.equal(restored.ok, true);
+const reopened = new PidaWorkbench(root);
+assert.equal((await reopened.read(principal, 'artifacts/result.txt')).content, content);
+await assert.rejects(reopened.read(principal, 'artifacts/extra.txt'), /FILE_NOT_FOUND/);
+assert.deepEqual((await reopened.status({ ...principal, id: 'other-owner' })).files, []);
+const afterGlobal = hash(configPath); assert.equal(afterGlobal, beforeGlobal);
+writeFileSync(join(directory, 'native.mjs'), 'process.stderr.write("synthetic stderr"); process.exit(3010);\n');
+const exe = createPiProcessExecutor('powershell');
+let output = '';
+const status = await exe.execute({ command: `& '${process.execPath.replaceAll("'", "''")}' 'native.mjs'`, cwd: directory, env: projectCommandEnvironment(process.env), signal: AbortSignal.timeout(5000), onData: chunk => { output += chunk; }, pty: false, sandbox: 'none' });
+assert.equal(status.exitCode, 3010); assert.match(output, /synthetic stderr/);
+const sourceManifest = JSON.parse(readFileSync(join(cwd, 'docs/development/windows-runtime-evidence-20261107/manifest.json'), 'utf8'));
+const hashes = [...sourceManifest.source, ...sourceManifest.evidence].map(entry => ({ ...entry, actual: hash(join(cwd, entry.path)), matches: hash(join(cwd, entry.path)) === entry.sha256 }));
+assert.ok(hashes.every(entry => entry.matches));
+const ownerHash = createHash('sha256').update(principal.id).digest('hex');
+const result = { source: 'c8a19f7002bb61a2836e039500091dc6e26694fb', platform: process.platform, node: process.version,
+  representativePath: { root, rootLength: root.length, filesLength: join(root, ownerHash, 'files').length, gitConfigLength: join(root, ownerHash, 'history.git', 'config').length, templateLength: join(root, ownerHash, 'history.git', 'hooks', 'fsmonitor-watchman.sample').length, note: 'Representative disposable host layout, not acceptance of an unfinalized desktop default path.' },
+  unicodeRestore: true, extraFileRemoved: true, otherOwnerIsolated: true, globalGitConfigUnchanged: beforeGlobal === afterGlobal,
+  nativeExit: { exitCode: status.exitCode, stderrRetained: true }, hashes };
+writeFileSync(new URL('independent-probe-result.json', import.meta.url), JSON.stringify(result, null, 2) + '\n');
+console.log(JSON.stringify(result));

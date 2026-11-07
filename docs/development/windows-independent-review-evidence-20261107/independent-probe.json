@@ -1,0 +1,13 @@
+{
+  "cwd": "D:/ChantaResearchGroup/pida-review-windows-20261107",
+  "label": "independent-probe",
+  "node": "v24.18.0",
+  "args": [
+    "D:/ChantaResearchGroup/pida-windows-review-evidence-20261107/independent-probe.mjs",
+    "D:/ChantaResearchGroup/pida-review-windows-20261107"
+  ],
+  "started": "2026-11-07T12:26:41.476Z",
+  "finished": "2026-11-07T12:26:43.276Z",
+  "code": 0,
+  "signal": null
+}

@@ -1,0 +1,8 @@
+# Independent host and Windows review records
+
+Two separate reviewer contexts inspected frozen source and exercised actual Windows processes. They use the same model family; no cross-family review is claimed.
+
+- [Host final report](host-independent-review-evidence-20261107/pida-review-host-fix-20261107/review-host-final-report.json), SHA256 `430c7950622442809dc9515115b787e2621d44b4285bad6f6fef88ad6214e878`: bounded pass at `e98c23e4a1794e144ffaf700aa0b908b90515c7d`. Build, 34 focused tests, independent native job/run/OrgAttempt checks, two embedded restart/current-policy cases, and the corrected original shutdown fault pass. Original failure evidence is retained alongside final probes with original bytes and relative paths.
+- [Windows final report](windows-independent-review-evidence-20261107/INDEPENDENT-REVIEW.md), SHA256 `ff162dbaf9154f1121cf6ecadb750331242eb1a1fb70422aadfe3a129f4e96cb`: bounded pass at `c8a19f7002bb61a2836e039500091dc6e26694fb`. Reviewer reproduced all three defects on the baseline, then observed four core passes and eleven new/command passes with two pre-existing POSIX skips. Independent native exit 3010, Unicode Git restore/remove/reopen/owner isolation, unchanged global Git config, and representative short host path were checked.
+
+All artifacts listed by the review manifests were hash-verified while copying. These records do not approve the subsequently implemented explicit launcher resume unit, a full Windows test suite, arbitrary path depth, Linux deployment or final desktop acceptance. Earlier evidence remains scoped to its exact source. Review conclusions must be reconsidered when relevant sources, lifecycle behavior or environments change.
