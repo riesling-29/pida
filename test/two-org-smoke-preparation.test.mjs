@@ -5,7 +5,7 @@ import { mkdtempSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from
 import { tmpdir } from 'node:os';
 import { join, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { prepareTwoOrgSmoke,prepareAnswerGoal,auditSyntheticPiToolCalls,captureLinkedOrganization,readCapturedRunArtifact } from './helpers/two-org-smoke.mjs';
+import { prepareTwoOrgSmoke,prepareAnswerGoal,prepareAnswerGoalFromResult,auditSyntheticPiToolCalls,captureLinkedOrganization,readCapturedRunArtifact } from './helpers/two-org-smoke.mjs';
 import { AgentSupervisor } from '../dist/agent-supervisor.js';
 import { PidaRuntime } from '../dist/runtime.js';
 import { createAgentTools } from '../dist/agent-tools.js';
@@ -21,6 +21,14 @@ test('preparation keeps oracle out of goals and distinguishes delegated leakage 
   assert.match(plan.organization_budget_source,/not hidden API overrides/);assert.match(plan.join_timeout_scope,/remaining native organization deadline/);
   const goal=prepareAnswerGoal(plan,{case_id:plan.case_id,derived:privateOracle.expected_derived,sha256:'a'.repeat(64),revision:'a'.repeat(64)});
   assert.ok(goal.includes(String(privateOracle.expected_derived)),'B legitimately consumes the observed derived A data');
+  assert.match(plan.organization_a.goal,/final reply must contain the complete same JSON data/);assert.match(goal,/final reply must contain the complete same JSON data/);
+  const content=JSON.stringify({case_id:plan.case_id,derived:privateOracle.expected_derived}),result={content,sha256:createHash('sha256').update(content).digest('hex'),publicationRevision:'publication:revision-1',jobId:randomUUID()};
+  const resultGoal=prepareAnswerGoalFromResult(plan,result);
+  assert.match(resultGoal,/source_result_sha256/);assert.match(resultGoal,/source_publication_revision/);assert.ok(!resultGoal.includes('source_file_revision'));
+  assert.match(resultGoal,/final reply must contain the complete same JSON data/);
+  assert.throws(()=>prepareAnswerGoalFromResult(plan,{...result,content:content+' '}),/OBSERVED_FINAL_RESULT_REQUIRED/);
+  const pathOnly='artifacts/organization-a-result.json';
+  assert.throws(()=>prepareAnswerGoalFromResult(plan,{...result,content:pathOnly,sha256:createHash('sha256').update(pathOnly).digest('hex')}),/FINAL_RESULT_JSON_REQUIRED/);
   const log=calls=>JSON.stringify({type:'message',message:{role:'assistant',content:calls}})+'\n';
   const good=auditSyntheticPiToolCalls(log([{type:'toolCall',id:'delegate',name:'agent_delegate',arguments:{input:'Read own reference'}},{type:'toolCall',id:'write',name:'workspace_write',arguments:{content:String(privateOracle.seed)}}]),privateOracle);
   assert.equal(good.child_assignment_check,'NO_VALUE_IN_OBSERVED_ASSIGNMENT'); assert.ok(!JSON.stringify(good).includes(String(privateOracle.seed)));

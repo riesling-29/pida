@@ -46,12 +46,24 @@ projection before analysis. Every run keeps its own sequence; no atomic
 organization snapshot or cross-run total order is inferred.
 
 The operator reviews and forwards the actual A artifact and accepts its exact
-Schumpeter revision. Only then build B's goal with `prepareAnswerGoal`; the
+Schumpeter revision. Only then build B's goal with the source-specific helper
+described below (`prepareAnswerGoal` is the verified-file variant); the
 desktop submits B once as a fresh native session, without native reply_to_job_id
 pointing to A. Capture B independently and review its exact artifact. B's use of
 A's derived value does not prove B used its own Persona. Child Persona-use
 evidence requires auditing the explicitly supplied fresh synthetic assignment
 for seed/answer leakage; absent audit leaves that claim unknown.
+
+For the currently accepted UI capture, the published artifact is the full
+selected terminal `job.result.text` plus provenance. A's continuation and B's
+goal now explicitly require a complete JSON final reply with the same data as
+their declared workbench file, not a path-only answer. Use the distinct
+`prepareAnswerGoalFromResult` path for this observed result: supply exact content,
+its SHA-256, actual publication revision and final continuation job ID. It rejects
+non-JSON or changed bytes and labels result provenance without claiming a file
+revision. Preserve result text hash, workbench file hash and Schumpeter logical
+publication revision separately. Unobserved file bytes remain unverified; never
+substitute a terminal result capture as proof of that file's existence/content.
 
 For logical Persona inclusion, use the authenticated per-job export API and
 validate the bundle. Select `context_input_included` events with

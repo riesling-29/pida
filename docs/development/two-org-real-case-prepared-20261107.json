@@ -7,7 +7,7 @@
   "sole_submitter": "desktop_shell",
   "oracle_scope": "Private Persona configuration only; never native goal or criteria.",
   "runtime_application_source": "bb9886ffc3a2a815e3c255b7dbfc83b4b4bac5e3",
-  "helper_source": "test/helpers/two-org-smoke.mjs with current documented UI-budget correction; prior 4d2faec capture evidence remains historical",
+  "helper_source": "test/helpers/two-org-smoke.mjs with current UI60s and complete-JSON final-result corrections; old capture source pins remain historical",
   "desktop_workspace_proposed": "D:/ChantaResearchGroup/Schumpeter-shell-20261107/desktop-app/evidence/local-real-case-20261107",
   "desktop_user_data_proposed": "D:/ChantaResearchGroup/Schumpeter-shell-20261107/desktop-app/evidence/local-real-case-user-20261107",
   "challenge_private_path": "D:\\ChantaResearchGroup\\pida\\.pida-test-final-real-case-20261107\\persona-description.txt",
@@ -35,5 +35,15 @@
     "budget_source": "Current desktop UI/service defaults; no hidden API overrides"
   },
   "next": "Desktop sole submitter provisions fresh Persona/profile IDs without task submission; owner prepares public plan from IDs. Root RELEASE is required before native admission.",
-  "superseded_preparation_assumption": "A 90000ms / B 45000ms not supported by current UI; replaced with both60000ms, repair0"
+  "superseded_preparation_assumption": "A 90000ms / B 45000ms not supported by current UI; replaced with both60000ms, repair0",
+  "capture_route": {
+    "ui_source": "selected completed root job.result.text",
+    "answer_helper": "prepareAnswerGoalFromResult",
+    "separate_identities": [
+      "final result SHA256",
+      "workbench file SHA256 if separately observed",
+      "Schumpeter publication revision"
+    ],
+    "file_presence_inferred_from_result": false
+  }
 }

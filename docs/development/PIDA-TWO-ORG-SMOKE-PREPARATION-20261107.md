@@ -96,6 +96,9 @@ messages, not fabricated agent-send tool calls. Then:
    derived, actual child_job_id and child_agent_id. Child/root filesystems are
    separate; a child result is transferred as native join data, not assumed to
    be a shared file. No harness-generated child result is injected.
+   The continuation must also return the complete same JSON data as its final
+   reply, without fences, commentary or a path-only answer. The final reply and
+   file are separate observed byte sources, even when their parsed data match.
 4. Capture the actual final continuation artifact as described below. The
    operator forwards its observed bytes/reference and reviews/accepts the exact
    Schumpeter artifact revision. No native acceptance criterion contains the
@@ -106,6 +109,19 @@ messages, not fabricated agent-send tool calls. Then:
    `artifacts/organization-b-answer.json` with the forwarded data and received:true.
    B legitimately consumes A's derived value. Therefore B's matching value is
    **not** evidence that B obtained that value from its own Persona.
+
+The accepted desktop capture route publishes the selected completed root's
+full `job.result.text` with immutable provenance, not an arbitrary workbench
+file. For that route use `prepareAnswerGoalFromResult` with exact observed text,
+its SHA-256, the actual Schumpeter publication revision and selected continuation
+job ID. This requires a complete JSON result with the expected case and integer
+derived value; path-only or changed-byte input is rejected. The resulting B
+goal uses `source_kind=native-final-result`, `source_result_sha256`,
+`source_publication_revision` and `source_job_id`, never a fabricated file
+revision. B must write the received JSON data and return that complete same data
+as its final reply. The file-based helper remains available only for separately
+verified captured file bytes. Verify each observed source independently; matching
+parsed JSON does not imply matching byte hashes or prove an unobserved file.
 
 Cross-organization correlation is Schumpeter room/contract/message/artifact
 identity. B's envelope must not use A's job as `reply_to_job_id`: that optional
