@@ -1,0 +1,144 @@
+{
+  "schema_version": "pida.repository-profile.owner-evidence/1",
+  "base_commit": "7fb1d727ab367ce58145652da0764f3cfda6b100",
+  "source_files": {
+    "src/repository-profile.ts": "b7a78aab57e70431b6a9dbf2207c18b972335b83fbbe0b85bd2492eb2b7520a5",
+    "src/workspace.ts": "15eed2cc89e56d1eec911d5a27f154426cd9597b2c31ab1db202049abf2c2b1c",
+    "src/agent-supervisor.ts": "e43b44b3b0a4a62193f0b539d266b47b308f2c4f13aba9b5367d3d2b7d4d12fe",
+    "src/index.ts": "e9b6dfd79760e27cff6f1e453756d87ab5e5859ecf5a1cf099db4d0f3c24c33a",
+    "examples/repository-profile.mjs": "af86789cc6cac742e8e7e4abdea12c591ee35c044ab3e4abf2f1d578edf90d84",
+    "examples/schumpeter-host.mjs": "42c65c86323b6574f1f43dd61ff99002448201fef7c728996d66099e3952e090",
+    "examples/host-workspace.mjs": "554f83932916be9480360245b3edd15681f45fc0ae3afe80515ad897348a10fe",
+    "test/repository-profile.test.mjs": "2c2ed4ede085da958ecac5bf8bcb361490c7f0ddcd15ef181989d026e8817ed7",
+    "fixtures/repository-profile/capability-v1.json": "618b265c16fc157d85d6fb5eac99b590710be92973dd7cee68d0eecbc2978105"
+  },
+  "unchanged_critical_files": {
+    "src/runtime.ts": {
+      "base_blob_sha256": "49052742ea495c1ff618a2d2d3ebde965eba1e4ae870573a8f0a3e96b85210da",
+      "working_sha256": "49052742ea495c1ff618a2d2d3ebde965eba1e4ae870573a8f0a3e96b85210da",
+      "normalized_content_equal": true
+    },
+    "src/program-proxy.ts": {
+      "base_blob_sha256": "e08da9a2c44ab4b77b324fa206f5a0a7de79a36f4f51e955e1f4660fed4c5c18",
+      "working_sha256": "e08da9a2c44ab4b77b324fa206f5a0a7de79a36f4f51e955e1f4660fed4c5c18",
+      "normalized_content_equal": true
+    },
+    "src/program-registry.ts": {
+      "base_blob_sha256": "b432a26eda23fb064d7dd2f0bd938cbe0e308ee2abcd8f76ddd54f92dc93e2e9",
+      "working_sha256": "b432a26eda23fb064d7dd2f0bd938cbe0e308ee2abcd8f76ddd54f92dc93e2e9",
+      "normalized_content_equal": true
+    },
+    "src/project-tools.ts": {
+      "base_blob_sha256": "cf0f09b94713f1e3e125d4e02137f3e54781e32bcfcd4299b3a80305193e0df6",
+      "working_sha256": "cf0f09b94713f1e3e125d4e02137f3e54781e32bcfcd4299b3a80305193e0df6",
+      "normalized_content_equal": true
+    },
+    "src/project-view.ts": {
+      "base_blob_sha256": "59c3b07b05660d12e02ec561dc6eaf1ed16faa746b476d13983147adad54f66e",
+      "working_sha256": "59c3b07b05660d12e02ec561dc6eaf1ed16faa746b476d13983147adad54f66e",
+      "normalized_content_equal": true
+    },
+    "src/execution-policy.ts": {
+      "base_blob_sha256": "24e9fcc5c8ab280d587240e1f77e6afc7abe4dbc2d079d0519ca487a729df27c",
+      "working_sha256": "24e9fcc5c8ab280d587240e1f77e6afc7abe4dbc2d079d0519ca487a729df27c",
+      "normalized_content_equal": true
+    },
+    "test/program-proxy.test.mjs": {
+      "base_blob_sha256": "8b36bd0f4c28db47a28c105c7c53f410a68fa87f747f8807b7a1151681ea255d",
+      "working_sha256": "8b36bd0f4c28db47a28c105c7c53f410a68fa87f747f8807b7a1151681ea255d",
+      "normalized_content_equal": true
+    },
+    "test/execution-policy.test.mjs": {
+      "base_blob_sha256": "09b02bdc9288c48212f503089351b550adf6b8754d814a99dba0f195e7875b78",
+      "working_sha256": "09b02bdc9288c48212f503089351b550adf6b8754d814a99dba0f195e7875b78",
+      "normalized_content_equal": true
+    }
+  },
+  "logs": [
+    {
+      "original_name": ".repository-final-linux.log",
+      "original_sha256": "a34edacc03acc067aa7032ad6a95068a759cb8e5d2837a26e3065680426fb8ac",
+      "original_encoding": "utf-8-sig",
+      "readable_copy": "repository-final-linux.log",
+      "readable_sha256": "a34edacc03acc067aa7032ad6a95068a759cb8e5d2837a26e3065680426fb8ac"
+    },
+    {
+      "original_name": ".repository-final-windows-repository.log",
+      "original_sha256": "b8182a2786a1d436646bd92bcc888c6d4f73654fda1a03adc64b677cdd371d12",
+      "original_encoding": "utf-16",
+      "readable_copy": "repository-final-windows-repository.log",
+      "readable_sha256": "98098322a3bb02b4a6abaac844cc11bd941a85bb1d744060aadec2f96a65ad71"
+    },
+    {
+      "original_name": ".repository-final-windows.log",
+      "original_sha256": "c1df71f0d202c18c6d89fe4be8b854768ef2b827bad9f6c795b5f90c61e01090",
+      "original_encoding": "utf-16",
+      "readable_copy": "repository-final-windows.log",
+      "readable_sha256": "b6fec108c50cecc4264e8f53624b43a588b019eb85d11e2fc62561caef84c25b"
+    },
+    {
+      "original_name": ".repository-focused.log",
+      "original_sha256": "3b020ad5d5d0dbaa7391a0c5dacdae89aeda941999ad90f34211923c7b531db8",
+      "original_encoding": "utf-16",
+      "readable_copy": "repository-focused.log",
+      "readable_sha256": "4eba0c2f501c6baf5af9b5c31ae952ac8f14bca443bd9dfcca12feb714ae2066"
+    },
+    {
+      "original_name": ".repository-linux.log",
+      "original_sha256": "85adfccbc4c99e85784ded8f21fb5fd810d623983c3eef9face3f44adfb7e1a8",
+      "original_encoding": "utf-8-sig",
+      "readable_copy": "repository-linux.log",
+      "readable_sha256": "85adfccbc4c99e85784ded8f21fb5fd810d623983c3eef9face3f44adfb7e1a8"
+    },
+    {
+      "original_name": ".repository-persona-regression.log",
+      "original_sha256": "c5dde8790e321cb1c16ca5a8301bcb6acbd881353713bf3adcb37f4dcd308693",
+      "original_encoding": "utf-16",
+      "readable_copy": "repository-persona-regression.log",
+      "readable_sha256": "9b3f697fc27ed81a028bd5d17cb8ad9e4fb56ec0f560a0c8cbd0bfd88a162bc5"
+    },
+    {
+      "original_name": ".repository-windows-baseline.log",
+      "original_sha256": "a8615907859d9a83839ec31ab6bb4dbaf8364223ca4a45104b7b31c69de7ecc0",
+      "original_encoding": "utf-16",
+      "readable_copy": "repository-windows-baseline.log",
+      "readable_sha256": "95769aa511f25c43dcaba3c3fae4c63eb7cefde5e4c9a1f28b9dd9b3413fda00"
+    }
+  ],
+  "raw_archive_sha256": "8b2f12db7dfd031f02726eac5cc26a6263b55dd7d276647682d50c7a83be778b",
+  "validation": {
+    "build": "PASS",
+    "windows_repository_and_policy": {
+      "pass": 25,
+      "fail": 0,
+      "scope": "Before the final protected-ancestor guard, which only affects repository selection; final repository12 rerun separately"
+    },
+    "linux_repository": {
+      "pass": 12,
+      "fail": 0
+    },
+    "broader_windows": {
+      "pass": 35,
+      "fail": 1,
+      "failure": "pre-existing symlink fixture EPERM, reproduced on unchanged prior source"
+    },
+    "broader_linux": {
+      "pass": 22,
+      "fail": 1,
+      "failure": "PROGRAM_NPM_UNAVAILABLE: intentionally npm-free official runtime, outside fixed-Node profile"
+    },
+    "windows_repository_final_after_protected_ancestor_guard": {
+      "pass": 12,
+      "fail": 0
+    },
+    "windows_existing_global_reference_and_catalogue": {
+      "pass": 5,
+      "fail": 0,
+      "source_fixture": "f6edd022d4389237fcee5d6c0a4db8a0d0b13399",
+      "scope": "mode2 regression; not combined repository+catalogue execution"
+    }
+  },
+  "models": "offline scripted provider only; controlled synthetic usage explicitly marked; unmodified faux estimate TOKEN_BUDGET retained",
+  "package_release": false,
+  "independent_review": "PENDING"
+}

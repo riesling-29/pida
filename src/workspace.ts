@@ -1,3 +1,6 @@
+import { validateRepositoryProfileCapability, validateRepositoryProgramManifest, type RepositoryProfileCapability } from './repository-profile.js';
+import { inspectProgramProxy } from './program-proxy.js';
+import { canonical as repositoryCanonical, sha256 as repositoryDigest } from './private-state.js';
 import { validateExecutionPolicy, executionRuntimeBounds, type ExecutionPolicy } from "./execution-policy.js";
 import { createProgramRegistry, type ProgramRegistration } from "./program-registry.js";
 import { managedMcpConfigSchema, managedMcpExtension, type ManagedMcpConfig, type ManagedMcpActivation } from "./mcp.js";
@@ -414,6 +417,8 @@ export interface WorkspacePersonaSource {
 export interface CreateWorkspaceOptions {
   /** Trusted managed-host policy. Does not change standalone config schema or grants. */
   executionPolicy?: Readonly<ExecutionPolicy>;
+  /** Trusted managed repository attestation; not an HTTP/model tool grant. */
+  repositoryProfile?: Readonly<RepositoryProfileCapability>;
   /** Trusted embedding host only; absent leaves external delivery disabled. */
   collaboration?: CollaborationPolicy;
   /** Optional host-selected credential store, never an HTTP/model-selected path. */
@@ -435,6 +440,22 @@ export interface CreateWorkspaceOptions {
 export async function createWorkspace(directory: string, options: CreateWorkspaceOptions = {}) {
   const executionPolicy = options.executionPolicy === undefined ? undefined : validateExecutionPolicy(options.executionPolicy);
   const root = resolve(directory), config = readConfig(root), env = providerEnvironment(root, config);
+  const repositoryProfile = options.repositoryProfile === undefined ? undefined : validateRepositoryProfileCapability(options.repositoryProfile);
+  if (repositoryProfile) {
+    const registration = config.programs?.[0];
+    if (executionPolicy?.id !== 'work/1' || !config.project?.enabled || config.project.trustedHost !== false
+      || config.tools.enabled.length || config.codingPacks?.length || config.permissions.includes('project:execute')
+      || config.permissions.includes('workbench:execute') || config.programs?.length !== 1 || !registration?.enabled
+      || registration.id !== repositoryProfile.program.id || resolve(root, registration.root) !== resolve(root, config.project.root)
+      || ![...repositoryProfile.project_permissions, repositoryProfile.program.permission].every(p => config.permissions.includes(p)))
+      throw Error('REPOSITORY_CONFIGURATION_MISMATCH');
+    const inspected = inspectProgramProxy(resolve(root, registration.root), resolve(root, registration.manifest));
+    validateRepositoryProgramManifest(inspected.manifest);
+    if (repositoryDigest(repositoryCanonical(registration.approval)) !== repositoryProfile.program.approval_digest
+      || repositoryDigest(repositoryCanonical(inspected.approval)) !== repositoryProfile.program.approval_digest
+      || inspected.manifest.timeoutMs !== repositoryProfile.program.timeout_ms || inspected.manifest.effect !== 'write')
+      throw Error('REPOSITORY_CONFIGURATION_MISMATCH');
+  }
   if (options.personaProvider && options.personaSources !== undefined) throw new PidaError("PERSONA_SOURCE_CONFIG_CONFLICT", 400);
   const registeredPersonaSources = new Map<string, WorkspacePersonaSource>();
   if (options.personaSources !== undefined && (!Array.isArray(options.personaSources) || options.personaSources.length > 32))
@@ -687,7 +708,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
     lifetime.add(closeMain);
     agents = selectedMain.agents ? await AgentSupervisor.open({
       directory: agentDirectory, maxConcurrent: config.agents?.maxConcurrent ?? 3,
-      collaboration: options.collaboration, executionPolicy,
+      collaboration: options.collaboration, executionPolicy, repositoryProfile,
       acceptance: { criteria: config.acceptanceChecks ?? [], capture: async (profile, requestPrincipal) => {
         if (!selectedAgent.workbench) throw new PidaError("WORKBENCH_DISABLED", 404);
         return agentWorkbench(profile.id).captureFiles(requestPrincipal);

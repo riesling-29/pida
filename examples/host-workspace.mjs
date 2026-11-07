@@ -20,7 +20,7 @@ export function sourceDigest(root) {
   } };
   walk(join(root, 'dist'));
   if (!files.length) fail('HOST_SOURCE_MISSING');
-  files.push(...['package.json', 'examples/schumpeter-host.mjs', 'examples/host-workspace.mjs',
+  files.push(...['package.json', 'examples/schumpeter-host.mjs', 'examples/host-workspace.mjs', 'examples/repository-profile.mjs',
     'examples/vera-dispatch-persona.mjs', 'scripts/vera-dispatch-host-probe.py', 'fixtures/vera-dispatch/producer-source-lock.json'].map(p => join(root, p)));
   return digest(JSON.stringify(files.sort().map(path => [relative(root, path).replaceAll('\\', '/'), digest(readFileSync(path))])));
 }

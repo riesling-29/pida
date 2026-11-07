@@ -1,0 +1,23 @@
+{
+  "schema_version": "pida.repository-profile.capabilities/1",
+  "id": "repository-fixed-node/1",
+  "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "root_selection_id": "00000000-0000-4000-8000-000000000001",
+  "scope": "shared-host-project",
+  "project_permissions": [
+    "project:read",
+    "project:write"
+  ],
+  "trusted_host_shell": false,
+  "program": {
+    "id": "approved_check",
+    "permission": "program:approved_check",
+    "tool_name": "program_approved_check",
+    "approval_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "timeout_ms": 2000,
+    "effect": "write"
+  },
+  "single_writer": "managed-host-run-lease/1",
+  "file_capture_scope": "selected-project-file-at-capture-time",
+  "sandbox": "none"
+}

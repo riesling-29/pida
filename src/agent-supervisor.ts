@@ -1,3 +1,4 @@
+import { validateRepositoryProfileCapability, type RepositoryProfileCapability } from './repository-profile.js';
 import { existsSync, lstatSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { hostname } from "node:os";
@@ -45,6 +46,7 @@ export interface AgentSupervisorOptions {
   acceptance?: LocalAcceptanceOptions;
   /** Optional immutable managed-host policy; absent preserves standalone defaults. */
   executionPolicy?: Readonly<ExecutionPolicy>;
+  repositoryProfile?: Readonly<RepositoryProfileCapability>;
   collaboration?: CollaborationPolicy;
   /** Host policy only. Profiles contain no supplied paths, tool grants or provider credentials. */
   createRuntime(profile: AgentProfile, context: { signal: AbortSignal }): Promise<PidaRuntime> | PidaRuntime;
@@ -96,6 +98,7 @@ export class AgentSupervisor {
   private readonly runtimeCreation = new AbortController();
   private readonly maxConcurrent: number;
   private readonly executionPolicy?: Readonly<ExecutionPolicy>;
+  private readonly repositoryProfile?: Readonly<RepositoryProfileCapability>;
   private started = false;
   private closed = false;
   private closing?: Promise<void>;
@@ -106,6 +109,8 @@ export class AgentSupervisor {
 
   private constructor(private readonly options: AgentSupervisorOptions) {
     this.executionPolicy = options.executionPolicy === undefined ? undefined : validateExecutionPolicy(options.executionPolicy);
+    this.repositoryProfile = options.repositoryProfile === undefined ? undefined : validateRepositoryProfileCapability(options.repositoryProfile);
+    if (this.repositoryProfile && this.executionPolicy?.id !== 'work/1') throw Error('REPOSITORY_CONFIGURATION_MISMATCH');
     this.directory = resolve(options.directory);
     this.statePath = join(this.directory, "supervisor.json");
     this.lockPath = join(this.directory, "supervisor.lock");
@@ -347,7 +352,8 @@ export class AgentSupervisor {
   organizationAdmissionCapabilities(principal: Principal) {
     this.usable(); this.principal(principal); if (!principal.permissions.includes("pida:agents")) denied("FORBIDDEN", 403);
     const ids = (this.options.acceptance?.criteria ?? []).map(c => c.id).sort(), criteria = this.criteria(ids);
-    return { schema_version: this.executionPolicy ? "pida.organization.admission.capabilities/2" : "pida.organization.admission.capabilities/1",
+    return { schema_version: this.repositoryProfile ? "pida.organization.admission.capabilities/3" : this.executionPolicy ? "pida.organization.admission.capabilities/2" : "pida.organization.admission.capabilities/1",
+      ...(this.repositoryProfile ? { repository_profile: copy(this.repositoryProfile) } : {}),
       ...(this.executionPolicy ? { execution_policy: copy(this.executionPolicy) } : {}), enabled: typeof this.options.collaboration?.authorizeAdmission === "function",
       host_id: this.options.collaboration?.hostId ?? null, admission_schema: "pida.organization.admission/1", receipt_schema: "pida.organization.admission.receipt/1",
       supervisor_state_version: 4, acceptance: { criterion_ids: ids, criteria_digest: criterionDigest(criteria), environment_revision: this.environment(), criteria: copy(criteria) } } as const;

@@ -6,3 +6,4 @@ date_kst	decision	evidence	limit_or_next_action
 2026-11-07	Keep Persona inclusion and acceptance scopes separate	PERSONA-PROVIDER.md; pi-logical-context input receipt	Public remote authorization/readback and canonical append remain separate
 2026-11-07	Record collaboration request intake	Schumpeter 237417a5e5742888f565b30581387c7a2833a7f3; CR-PIDA-COLLABORATION-20261106-01	Local proposed response only; no runtime implementation or external publication
 2026-11-07	Use source and documentation verification only	PIDA-OWNER-READINESS-2026-11-07.md	No runtime test or cross-family review claimed
+2026-11-08	Implement optional repository mode3 in isolated source only	MANAGED-REPOSITORY-PROFILE-IMPLEMENTATION-20261108.md; repository-profile-evidence-20261108/manifest.json	Independent source review pending; fixed Node runner is unsandboxed; baseline failure and separate repair only; accepted0f/D unchanged

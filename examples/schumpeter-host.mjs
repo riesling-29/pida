@@ -1,7 +1,8 @@
+import { readRepositoryProfile } from './repository-profile.mjs';
 // Trusted parent-process entrypoint. The ready line is a private credential transport, NOT a log.
 import { mkdir, readdir, writeFile, readFile } from 'node:fs/promises';
 import { existsSync, lstatSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { resolve, join, isAbsolute } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
 import { once } from 'node:events';
@@ -57,8 +58,9 @@ try {
   if (existsSync(directory) && (lstatSync(directory).isSymbolicLink() || !lstatSync(directory).isDirectory())) throw Error('HOST_STATE_UNSAFE');
   if (workspaceMode === 'fresh' && existsSync(directory) && (await readdir(directory)).length) throw Error('HOST_WORKSPACE_NOT_EMPTY');
   if (workspaceMode === 'resume' && !existsSync(directory)) throw Error('HOST_MANIFEST_INVALID');
+  const repositoryMode = process.env.PIDA_REPOSITORY_PROFILE !== undefined;
   const previousManifest = workspaceMode === 'resume' ? readHostManifest(directory) : null;
-  if (previousManifest && (previousManifest.schema_version !== 'pida.local-host.workspace/2' || typeof previousManifest.execution_policy_id !== 'string')) throw Error('HOST_RESUME_MISMATCH');
+  if (previousManifest && (previousManifest.schema_version !== (repositoryMode ? 'pida.local-host.workspace/3' : 'pida.local-host.workspace/2') || typeof previousManifest.execution_policy_id !== 'string')) throw Error('HOST_RESUME_MISMATCH');
   const executionPolicy = resolveExecutionPolicy(args['execution-policy'] ?? previousManifest?.execution_policy_id ?? 'smoke/1');
   if (previousManifest && (previousManifest.execution_policy_id !== executionPolicy.id || previousManifest.execution_policy_digest !== executionPolicy.digest)) throw Error('HOST_RESUME_MISMATCH');
   let nativeCredentials, selectedProvider = { kind: 'mock' }, providerSourceDigest = '';
@@ -72,7 +74,26 @@ try {
     nativeCredentials = new ChatGPTCredentialStore(providerDirectory, approved.stateDir);
     if (!nativeCredentials.status().connected) throw Error('HOST_PROVIDER_CREDENTIAL_UNAVAILABLE');
   }
-  const expectedManifest = configDigest => ({ schema_version: 'pida.local-host.workspace/2', execution_policy_id: executionPolicy.id, execution_policy_digest: executionPolicy.digest, host_id: hostId, principal_id: 'local-user', node_version: process.versions.node,
+  // Paths only from trusted parent configuration; unknown parent-private locations are checked by that parent.
+  const protectedPaths = [args['provider-workspace'], args['persona-module'], process.env.PIDA_PERSONA_BRIDGE_CONFIG, process.env.PIDA_PERSONA_BRIDGE_STORE, process.env.PIDA_PERSONA_BRIDGE_EXECUTABLE, process.env.PIDA_PERSONA_CATALOGUE].filter(Boolean);
+  if (repositoryMode) {
+    const bridgePrefixes = JSON.parse(process.env.PIDA_PERSONA_BRIDGE_PREFIX_ARGS ?? '[]');
+    if (Array.isArray(bridgePrefixes)) protectedPaths.push(...bridgePrefixes.filter(p => typeof p === 'string' && isAbsolute(p)));
+    if (process.env.PIDA_PERSONA_CATALOGUE) {
+      const bytes = await readFile(process.env.PIDA_PERSONA_CATALOGUE);
+      if (bytes.length > 262144) throw Error('HOST_PERSONA_CATALOGUE_INVALID');
+      const catalogue = JSON.parse(bytes);
+      for (const source of catalogue.sources ?? []) {
+        if (Array.isArray(source.bridge?.prefix_args)) protectedPaths.push(...source.bridge.prefix_args.filter(p => typeof p === 'string' && isAbsolute(p)));
+        for (const key of ['config','store','executable']) if (typeof source.bridge?.[key] === 'string') protectedPaths.push(source.bridge[key]);
+      }
+    }
+  }
+  const repositoryOptions = { hostId, executionPolicyId: executionPolicy.id, workspaceDirectory: directory,
+    runtimeDirectory: fileURLToPath(new URL('../', import.meta.url)), protectedPaths };
+  const repository = repositoryMode ? readRepositoryProfile(repositoryOptions) : null;
+  const expectedManifest = configDigest => ({ schema_version: repository ? 'pida.local-host.workspace/3' : 'pida.local-host.workspace/2',
+    ...(repository ? { repository_profile_id: repository.capability.id, repository_profile_digest: repository.capability.digest } : {}), execution_policy_id: executionPolicy.id, execution_policy_digest: executionPolicy.digest, host_id: hostId, principal_id: 'local-user', node_version: process.versions.node,
     workspace_directory: directory, source_digest: sourceDigest(fileURLToPath(new URL('../', import.meta.url))), config_digest: configDigest,
     policy_credential_digest: digest(policyToken), provider_workspace: args['provider-workspace'] ? resolve(args['provider-workspace']) : '',
     provider_source_digest: providerSourceDigest, persona_module: args['persona-module'] ? resolve(args['persona-module']) : '',
@@ -101,6 +122,8 @@ try {
     const globalProvider = typeof persona?.personaProvider === 'function', catalogue = Array.isArray(persona?.personaSources);
     if (globalProvider === catalogue || typeof persona?.close !== 'function' || !/^[A-Za-z0-9._/-]{1,100}$/.test(persona.mode ?? '')) throw Error('HOST_PERSONA_MODULE_INVALID');
   }
+  // Recheck the immutable selection after asynchronous producer readiness, before recovery writes.
+  if (repository && readRepositoryProfile(repositoryOptions).capability.digest !== repository.capability.digest) throw Error('HOST_REPOSITORY_CHANGED');
   await mkdir(directory, { recursive: true }); releaseHostLock = acquireHostLock(directory);
   // Repeat validation under exclusive ownership; never rewrite mismatched profiles or their runtime state.
   if (workspaceMode === 'resume') {
@@ -111,18 +134,19 @@ try {
   const config = workspaceMode === 'resume' ? readConfig(directory) : { ...readConfig(directory), preset: 'headless', provider: selectedProvider, tools: { directory: 'tools', enabled: [] }, codingPacks: [],
     agents: { enabled: true, maxConcurrent: 2 }, workbench: { enabled: true }, permissions: ['pida:collaborate', 'workbench:read', 'workbench:write', 'workbench:history'],
     runtime: { maxRunMs: executionPolicy.run_timeout_ms, maxProviderRetries: 0, maxOutputRetries: 0, autoCompaction: false, maxTotalTokens: 16384 } };
+  if (workspaceMode === 'fresh' && repository) { config.project = repository.project; config.programs = repository.programs; config.permissions.push(...repository.permissions); }
   if (workspaceMode === 'fresh') await writeFile(join(directory, 'pida.config.json'), JSON.stringify(config, null, 2) + '\n');
   if (workspaceMode === 'fresh' && config.provider.kind === 'mock') {
     config.permissions.push('lots:read'); await writeFile(join(directory, 'pida.config.json'), JSON.stringify(config, null, 2) + '\n');
   }
-  app = await createWorkspace(directory, { executionPolicy, collaboration: policy, nativeCredentials,
+  app = await createWorkspace(directory, { executionPolicy, ...(repository ? { repositoryProfile: repository.capability } : {}), collaboration: policy, nativeCredentials,
     ...(config.provider.kind === 'mock' ? { extensions: [{ id: 'host-synthetic-lot', scope: 'workspace', activate: () => ({ tools: [lotStatusTool] }) }] } : {}),
     ...(persona ? (persona.personaSources ? { personaSources: persona.personaSources } : { personaProvider: persona.personaProvider }) : {}) });
   if (workspaceMode === 'fresh') saveHostFile(join(directory, '.pida-host.json'), JSON.stringify(expectedManifest(digest(await readFile(join(directory, 'pida.config.json')))), null, 2) + '\n');
   saveHostFile(join(directory, '.env'), 'PIDA_API_TOKEN=' + apiToken + '\n');
   app.server.listen(0, '127.0.0.1'); await once(app.server, 'listening');
   const capabilities = app.agents.collaborationCapabilities({ id: 'local-user', permissions: ['pida:agents'] });
-  process.stdout.write(JSON.stringify({ type: 'pida-host-ready', protocol: 'pida.local-host/2', execution_policy: executionPolicy, host_id: hostId,
+  process.stdout.write(JSON.stringify({ type: 'pida-host-ready', protocol: repository ? 'pida.local-host/3' : 'pida.local-host/2', ...(repository ? { repository_profile: repository.capability } : {}), execution_policy: executionPolicy, host_id: hostId,
     base_url: 'http://127.0.0.1:' + app.server.address().port, api_token: apiToken, principal_id: 'local-user', capabilities,
     provider_mode: config.provider.kind === 'mock' ? 'mock' : 'configured-native-chatgpt', persona_mode: persona?.mode ?? 'pida-local', workspace_mode: workspaceMode }) + '\n');
   process.stdin.resume(); process.stdin.once('end', stop);

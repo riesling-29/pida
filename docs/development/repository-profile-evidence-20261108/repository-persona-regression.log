@@ -1,0 +1,13 @@
+✔ catalogue: actual two-profile input/receipt isolation, persisted selection, revocation has no fallback (1021.4258ms)
+✔ catalogue: already-expired B grant denies without selecting A (570.3914ms)
+✔ catalogue: closed shape, unique identities, semantic order, pins and snapshot substitution (436.326ms)
+✔ catalogue launcher: closed ready2, actual fresh/resume, reorder stability and immutable substitution denial (7588.4046ms)
+✔ production reference host: actual native IDs, Unicode context, read-only input authorization and profile-bound resume (3855.3302ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10175.4396

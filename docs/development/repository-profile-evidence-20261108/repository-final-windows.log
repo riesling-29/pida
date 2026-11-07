@@ -1,0 +1,33 @@
+✔ closed named catalog pins exact safe tuples and digest excluding itself (1.9018ms)
+✔ managed smoke/1 native create defaults and ceilings reject without publication (15.3845ms)
+✔ managed work/1 native create defaults and ceilings reject without publication (10.3366ms)
+✔ no managed option preserves standalone native default, repairs and capability v1 (7.4684ms)
+✔ atomic admission refuses overbudget before authorization and preserves ACK-loss exact identities (11.2619ms)
+✔ actual native delegate/join explicit deadlines survive continuation and reopen (424.2984ms)
+✔ actual native delegate/join implicit deadlines survive continuation and reopen (473.4939ms)
+✔ trusted workspace runtime bounds override mutable config without adding permissions (23.6711ms)
+✔ actual smoke/1 host fresh/resume identity and wrong-policy rejection preserve all state (1804.7734ms)
+✔ actual work/1 host fresh/resume identity and wrong-policy rejection preserve all state (2128.0604ms)
+✔ invalid selected policy and legacy manifest refuse before creating or mutating workspace (1754.8331ms)
+✔ implicit join ceiling and expire remain authoritative across persisted reopen (1165.6293ms)
+✔ implicit join ceiling and cancel remain authoritative across persisted reopen (1122.7321ms)
+✔ closed private binding and public projection accept only fixed approved Node scope (105.5356ms)
+✔ closed fields, UUID types, digest, root identity, protected paths and unsafe aliases refuse (102.817ms)
+✔ unsafe runner schema and changed approval never create a managed workspace (284.1505ms)
+✔ actual mode3 fresh/resume, caps and queued identity; changed bindings refuse without any workspace writes (3950.0408ms)
+✔ repository requires work selection before initialization; mode2 remains opt-in independent (1858.4445ms)
+✔ actual native baseline failure then distinct repair goal edits, checks and reads exact live file (908.8873ms)
+✔ same-run fixed write-effect checker replay stays blocked after later edit (559.7299ms)
+✔ fixed runner rejects model arguments, changed entrypoint and inherited credential environment; cancellation stays unknown (293.2183ms)
+✔ unmodified faux usage estimate still enforces managed token ceiling (600.451ms)
+✔ shared project run lease serializes two native agents inside this one host (987.0071ms)
+✔ project tools retain boundary checks; explicit native cancellation retains unknown effects and no replay (502.4024ms)
+✔ root replacement on resume refuses before managed recovery; exact config privileges remain pinned (1961.4638ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 25
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12691.3459
