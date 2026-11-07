@@ -1,0 +1,267 @@
+{
+  "schema_version": "pida.real-case-a-observation/2",
+  "case_id": "5bd55085-d316-4dc3-97cf-091d70a32478",
+  "runtime_source": "b7f7d523c6fede56d508575a6bb78afa343e5566",
+  "host_id": "desktop-c70db42530f74e03",
+  "scope": "Actual authorized A once, observed completed native graph; no Sch capture/acceptance/B yet",
+  "native_org_id": "29569444-4941-4096-8cfc-8d79cbd88814",
+  "native_org_status": "unknown",
+  "native_verification_scope": "Empty native criteria remain UNKNOWN; no native acceptance claim.",
+  "request_counts": {
+    "new_case": 6,
+    "prior_two_org": 11,
+    "historical_smoke": 1,
+    "all_recorded": 18
+  },
+  "runs": [
+    {
+      "job_id": "6080e981-de8a-4d5e-a14b-571088764a70",
+      "agent_id": "99f26d01-7d23-4a83-862b-712f6d7a448d",
+      "task_id": "9664ea19-c2ad-4862-bf25-af4a2d710610",
+      "attempt_id": "0da11421-1a1c-4563-bbad-92a21e78cc0c",
+      "run_id": "660f4c67-ab43-4516-a778-1e4088bdf616",
+      "session_id": "01a1b6e9-c116-74cf-bc54-d8a3e00efb2f",
+      "status": "completed",
+      "code": "AGENT_JOIN_YIELDED",
+      "result_chars": 0,
+      "result_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "model_requests": 3,
+      "logical_input_inclusions": [
+        {
+          "request_id": "387ba740-6cfd-4fc9-92bb-2a19798da3eb",
+          "authorization": "current-provider-check",
+          "exact_native_ids": true
+        },
+        {
+          "request_id": "f07cfd5f-2a12-4cd0-a3ba-fef9f40c6326",
+          "authorization": "current-provider-check",
+          "exact_native_ids": true
+        },
+        {
+          "request_id": "093d61dd-5d38-45b3-9831-2c9f17e92202",
+          "authorization": "current-provider-check",
+          "exact_native_ids": true
+        }
+      ],
+      "artifact_ref_paths": []
+    },
+    {
+      "job_id": "6745cb3d-3859-4e6f-bfd7-6b99a89903a4",
+      "agent_id": "f0e76d8c-2055-4a93-a44c-c0d4eea5a8ad",
+      "task_id": "b6e9b3e5-f117-4ddb-8e56-067983d96415",
+      "attempt_id": "331b7daa-7345-4f41-a16a-ee85190614d2",
+      "run_id": "43e1c25d-6693-4588-9554-88524edbde46",
+      "session_id": "01a1b6e9-db05-74cf-bc54-d8a4e091aa90",
+      "status": "completed",
+      "code": null,
+      "result_chars": 68,
+      "result_sha256": "9e6a409af31d9ec276ddbab56f79d91436de2b51b56d2679867997feefbf0737",
+      "model_requests": 1,
+      "logical_input_inclusions": [
+        {
+          "request_id": "0abcd0d7-1c27-44e1-be27-be9c81922278",
+          "authorization": "current-provider-check",
+          "exact_native_ids": true
+        }
+      ],
+      "artifact_ref_paths": []
+    },
+    {
+      "job_id": "05863fc6-c183-42e4-aaab-e9fe4352cbbb",
+      "agent_id": "99f26d01-7d23-4a83-862b-712f6d7a448d",
+      "task_id": "9664ea19-c2ad-4862-bf25-af4a2d710610",
+      "attempt_id": "a2e234e5-d04f-4326-9b4b-cd710b2fe50c",
+      "run_id": "673b7dda-5b62-4cba-8423-91e2512eb1e5",
+      "session_id": "01a1b6e9-c116-74cf-bc54-d8a3e00efb2f",
+      "status": "completed",
+      "code": null,
+      "result_chars": 178,
+      "result_sha256": "c7a211825563be87603fa099e9f37f719281329d6cc31f8eff9c9936db8513ea",
+      "model_requests": 2,
+      "logical_input_inclusions": [
+        {
+          "request_id": "bc999439-8748-4cf9-91d0-04490c5a502d",
+          "authorization": "current-provider-check",
+          "exact_native_ids": true
+        },
+        {
+          "request_id": "6c3b144c-bc8a-4b2b-a294-097af7f2c50f",
+          "authorization": "current-provider-check",
+          "exact_native_ids": true
+        }
+      ],
+      "artifact_ref_paths": [
+        "artifacts/organization-a-result.json"
+      ]
+    }
+  ],
+  "joins": [
+    {
+      "id": "ea8cda06-e155-4b99-9de8-7d2754f545bb",
+      "status": "ready",
+      "code": null,
+      "parent_job_id": "6080e981-de8a-4d5e-a14b-571088764a70",
+      "continuation_job_id": "05863fc6-c183-42e4-aaab-e9fe4352cbbb",
+      "required": [
+        "6745cb3d-3859-4e6f-bfd7-6b99a89903a4"
+      ]
+    }
+  ],
+  "checks": {
+    "initial_yield_actual_empty": true,
+    "all_jobs_completed": true,
+    "child_json_case_matches": true,
+    "child_matches_private_oracle": true,
+    "child_assignment_audit": {
+      "schema_version": "pida.synthetic-tool-audit/1",
+      "source_sha256": "ea47677d558d38860c070918a61a148130d56e3cbfa3d75370655e00fdf16e9f",
+      "tool_calls": [
+        {
+          "tool_call_id": "call_4fa85fe046b34bdda59b5bff09d2558f|fc_0c14069c00e25921016aef567bb98487d081f28f6129d06525",
+          "tool_name": "agent_delegate",
+          "arguments_sha256": "a02e5d92614c20e83c9eb96a1df1ae482f23233b4b1b0dc4c8d84d2eee5194d7",
+          "delegation_contains_raw_seed": false,
+          "delegation_contains_expected_answer": false,
+          "scope": "child own-Persona proof weakens if either flag is true"
+        },
+        {
+          "tool_call_id": "call_47616f8a128a47e890f88411234f5224|fc_0c14069c00e25921016aef5680de9487d0bee393947bbf17c9",
+          "tool_name": "agent_join",
+          "arguments_sha256": "9e0caec0d896a04ee10414124cf08165cbe52ca9c1482898218ac5a99e7bfa4c",
+          "delegation_contains_raw_seed": false,
+          "delegation_contains_expected_answer": false,
+          "scope": "model-derived output is allowed; not independent harness injection"
+        },
+        {
+          "tool_call_id": "call_bf88e2df204c4fca956029d8ab2f3fb7|fc_0c14069c00e25921016aef568df55c87d09c15e7ca9417b931",
+          "tool_name": "workspace_write",
+          "arguments_sha256": "53db0063ef1779dc81cbbdff74ee4046b81dab3ff530a1714c8eb0da88e21245",
+          "delegation_contains_raw_seed": false,
+          "delegation_contains_expected_answer": false,
+          "scope": "model-derived output is allowed; not independent harness injection"
+        }
+      ],
+      "child_assignment_check": "NO_VALUE_IN_OBSERVED_ASSIGNMENT",
+      "limits": [
+        "Only explicitly supplied fresh synthetic Pi JSONL; no canonical log discovery.",
+        "No raw tool arguments or Persona seed included in this result.",
+        "Absence in observed assignment does not prove model causality."
+      ]
+    },
+    "one_actual_continuation": true,
+    "final_case_matches": true,
+    "final_oracle_matches": true,
+    "final_child_ids_match": true,
+    "file_case_matches": true,
+    "file_oracle_matches": true,
+    "file_child_ids_match": true,
+    "final_text_equals_file_bytes": true,
+    "file_bytes_equal_write_argument": true,
+    "manifest_exact_bytes_sha": true
+  },
+  "final_text": {
+    "job_id": "05863fc6-c183-42e4-aaab-e9fe4352cbbb",
+    "sha256": "c7a211825563be87603fa099e9f37f719281329d6cc31f8eff9c9936db8513ea",
+    "bytes": 178
+  },
+  "actual_workbench_file": {
+    "path": "artifacts/organization-a-result.json",
+    "artifact_id": "9262d4a5bfb4d0ad2ade988a0c83c89d784a3623a24f05d4312cf98dac885ffb",
+    "sha256": "c7a211825563be87603fa099e9f37f719281329d6cc31f8eff9c9936db8513ea",
+    "bytes": 178,
+    "manifest_join_verified": true,
+    "capture_method": "Read-only exact fresh local file bytes matched final run manifest; not a public API or published artifact revision."
+  },
+  "public_evidence_leak_scan": [
+    {
+      "name": "real-case-d-a-current-graph.json",
+      "sha256": "011775d73497aa12ae556d2608c09fb53e3c8f1d17e487402af687a67450fcee",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-d-a-first-readback.json",
+      "sha256": "163643679869af3b375824d3b7f5feebbf68df666c93eef7260897f4c24f9698",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-d-a-preflight.json",
+      "sha256": "02b4559f7fc68ea3536a692a640f71f3d1f45f68ad6a36d79dd5be292967376f",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-d-a-reservation.json",
+      "sha256": "13f2e20761952c6a79c9c150c07ec125a3d3654a87e5e411b77d5c3858a95f43",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-d-preparation-identities.json",
+      "sha256": "71fdbef93f4bd99e1f0107100e69a19cd1f04386d4eb8819df2461e2f1fa2e1c",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-d-preparation-launch.json",
+      "sha256": "359d629140c70ab64c856bda64d0079dc3d0fe1e650371857541fd58678d1b69",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-d-preparation-organizations.json",
+      "sha256": "dbe76c81cfbdb8ae802e318a30e5ef8291b7d7bf7618f0bba78a19f33deac778",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-d-preparation-profile.json",
+      "sha256": "0cc2321c1fbd741b1ad73c07999a4debe58c8ee1eabacb43854e219309d0abd2",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-d-prepared-contract.json",
+      "sha256": "71d0e4845e01aaf456557c58a879a77dc84fe1ca7e0fcb1859e37770db40e86e",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-d-workspace-selection.json",
+      "sha256": "ed24bab215ce05a9c7906293b8e06dec6e39d4fea4ebe7c2023997978ac8ef6e",
+      "seed_present": false,
+      "expected_answer_present": false
+    }
+  ],
+  "raw_evidence_hashes": {
+    "supervisor.json": "442d30d403b806094e46ec48858b2a1263624f7cdb2e101c2265992202985015",
+    "660f4c67-ab43-4516-a778-1e4088bdf616-health.json": "3057733c629b0d676ebb9060bffa96a928dc024aae19062b3d33c2e7c8c143f3",
+    "660f4c67-ab43-4516-a778-1e4088bdf616-jsonl": "10ec5221946fcb1baa244dc0d6417126701a32c90d554a3c0f40f047c20cb287",
+    "660f4c67-ab43-4516-a778-1e4088bdf616-manifest.json": "1d77457c26222b1086b7511b3a44836696165a6494d96a1e3cb8d2f659e263d8",
+    "660f4c67-ab43-4516-a778-1e4088bdf616-ocel.json": "41d0b6d7fb5f7cb71d69741c0171d86e9f28b7882c3bf798b626e7f624993ba5",
+    "660f4c67-ab43-4516-a778-1e4088bdf616-ocel.meta.json": "e46d5b2890c62c896a88e77d890238aff0c3a7a9fa04f2639d0816e34a391654",
+    "99f26d01-7d23-4a83-862b-712f6d7a448d-pi.jsonl": "ea47677d558d38860c070918a61a148130d56e3cbfa3d75370655e00fdf16e9f",
+    "43e1c25d-6693-4588-9554-88524edbde46-health.json": "3057733c629b0d676ebb9060bffa96a928dc024aae19062b3d33c2e7c8c143f3",
+    "43e1c25d-6693-4588-9554-88524edbde46-jsonl": "52dda61c777c88f9ae91059aee532aa0ea35612f367f2f7c3185d3563d7b92e0",
+    "43e1c25d-6693-4588-9554-88524edbde46-manifest.json": "a90b78f82d6c8b30aa9a61488152bdfd735e6762c7bd4093e7d4e2b532962822",
+    "43e1c25d-6693-4588-9554-88524edbde46-ocel.json": "68e026f45aa8bfdb07348cd0745d96d0bcb5c1124522e4f7c786ad92194f5eae",
+    "43e1c25d-6693-4588-9554-88524edbde46-ocel.meta.json": "17ffe74d0ca0ad2b4c1d1f0e2b082e78fe407b14dade9f4c6e3588e7d6fd4e26",
+    "f0e76d8c-2055-4a93-a44c-c0d4eea5a8ad-pi.jsonl": "c9cbb2c03398bb3ad02539aa629d26d0b9bb3db1e9877106d16c0ad4b72a31f6",
+    "673b7dda-5b62-4cba-8423-91e2512eb1e5-health.json": "3057733c629b0d676ebb9060bffa96a928dc024aae19062b3d33c2e7c8c143f3",
+    "673b7dda-5b62-4cba-8423-91e2512eb1e5-jsonl": "238b05a36f5c43ec4b522b787d8a7d63b06a66aaa010bdc314ef0e784babab06",
+    "673b7dda-5b62-4cba-8423-91e2512eb1e5-manifest.json": "bf80a7c6236210dd9b71e176235f6a7afdf786243fad531afc27d87fcc52504f",
+    "673b7dda-5b62-4cba-8423-91e2512eb1e5-ocel.json": "df08f212c665a4c503c76b24ad035ef68a7a3fefa68a0f23dc236949bbe7316d",
+    "673b7dda-5b62-4cba-8423-91e2512eb1e5-ocel.meta.json": "70429a5a4a3eb3b1d42554bce992c71d733bc35aead88fbe419e63a8a96d1d58",
+    "organization-a-result.json": "c7a211825563be87603fa099e9f37f719281329d6cc31f8eff9c9936db8513ea",
+    "submitted-goal.txt": "1fddb2b18e84a6f90d7545fd6077d588a5f81302bf787ffdbd529509737e6bf1"
+  },
+  "cost": "UNKNOWN",
+  "limits": [
+    "Logical input inclusion/current-provider-check is not exact provider-wire capture.",
+    "Child oracle match and assignment absence are bounded evidence, not internal causal proof.",
+    "File and final result are separately observed byte identities, even if equal.",
+    "Sch publication and acceptance still require separate exact-revision review.",
+    "Only designated fresh synthetic workspace/evidence; no provider or auth requests."
+  ]
+}
