@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-11-07T13:37:42.996Z",
+  "providerKind": "native",
+  "providerId": "openai",
+  "modelId": "gpt-6-astra",
+  "authMode": "chatgpt",
+  "credentialPresent": true,
+  "statusCode": null,
+  "checkedWithoutRefresh": true,
+  "networkCalls": 0,
+  "credentialValuesRecorded": false,
+  "limits": [
+    "Presence is not proof of provider authorization or future token refresh.",
+    "OAuth billing cost is unknown."
+  ]
+}
