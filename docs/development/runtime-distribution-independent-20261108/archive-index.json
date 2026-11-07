@@ -1,0 +1,87 @@
+{
+  "original_entries": [
+    {
+      "name": "audit-delta.mjs",
+      "bytes": 2708,
+      "sha256": "c749a5a68effb54a7e926cdb9abc4b83c013e67f7322cfe8445abb3164bb13f7"
+    },
+    {
+      "name": "INDEPENDENT-DELTA-REVIEW.md",
+      "bytes": 7375,
+      "sha256": "cf320933d945b1d1816e2f4862f7ccaee3c43d62cdb2e7dd6d65f1fe5e820bbb"
+    },
+    {
+      "name": "linux-base.json",
+      "bytes": 721,
+      "sha256": "f6870b7deee5dc8d27c3367ec38618ceae2d8b3f5fb16447de123554205e3505"
+    },
+    {
+      "name": "linux-delta.json",
+      "bytes": 9302,
+      "sha256": "ec304b3901166648f768b921ea91d885f5db6a095646e4ed7cfbaa9d7074ce55"
+    },
+    {
+      "name": "linux-exact-verifier.json",
+      "bytes": 242,
+      "sha256": "99112b99b5dd7b706ff9d912cd0fa617ebde810835c95226559ddc98fd469701"
+    },
+    {
+      "name": "linux-independent-tree-diff.json",
+      "bytes": 209,
+      "sha256": "f913a008ce26accd77df71a988bcea5084d1b4d38404e5227d63c00b1823b68d"
+    },
+    {
+      "name": "linux-packaged-yield.log",
+      "bytes": 1750,
+      "sha256": "b112f0d93ae4316b705e359814839a81528621afd50421ff9d4daab588b0b33d"
+    },
+    {
+      "name": "metadata.json",
+      "bytes": 1591,
+      "sha256": "8c19952109891bd2501493131f0060db021e6de78ef188b59b2d9aaf02b364b7"
+    },
+    {
+      "name": "metadata.py",
+      "bytes": 2246,
+      "sha256": "bee6e420a524d251ed3bfbeebac4f7738dad8278ec121a345b92ceb032d84d5d"
+    },
+    {
+      "name": "organization-yield.test.mjs",
+      "bytes": 11896,
+      "sha256": "1eadc1d4bc752a229847ee1200154634320721a26b78089e0f77ec3773769c64"
+    },
+    {
+      "name": "probe-packaged-yield.mjs",
+      "bytes": 1994,
+      "sha256": "91ee1a5f6b907c7a3c35ed0cbe9bdff40c428aa668f8d7fba5c67c04419af8f5"
+    },
+    {
+      "name": "reviewer-fixture-correction.txt",
+      "bytes": 209,
+      "sha256": "ec7fe0af47eca3c631bfd2b13ddadc1bbbfd5d7aaf074192321c80b3e1c77c49"
+    },
+    {
+      "name": "windows-base.json",
+      "bytes": 767,
+      "sha256": "768e975261d6501b9da300cccddc16f5c7e3ffccb7581533e817c1a1a165e389"
+    },
+    {
+      "name": "windows-delta.json",
+      "bytes": 9302,
+      "sha256": "380846bd58bf03a78264b2d64ebe8c1078ac116fba5a9b87937a2f88f65ff5de"
+    },
+    {
+      "name": "windows-exact-verifier.json",
+      "bytes": 242,
+      "sha256": "a380ce05acb851e69533ea0becf516d5929a44ef5ee874f852cfcc80072fd44f"
+    },
+    {
+      "name": "windows-packaged-yield.log",
+      "bytes": 1717,
+      "sha256": "be1ea9915567f8325a0baa43f58d1f31c29341849706473196c673a123eccba8"
+    }
+  ],
+  "original_manifest_sha256": "14354b3ce68ac296d5db06c23fb198ab57d1a60970ba38497136ad5cfd38bc6a",
+  "archive_sha256": "a0915eb5a572ced6993538030db54c46ceb220b475cfe96e6a45a9f73994837d",
+  "readable_report": "LF normalized; originals exact in ZIP"
+}

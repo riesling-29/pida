@@ -44,7 +44,16 @@ authority/capture/diagnostic join tests must declare their external harness,
 and actual managed multi-agent GUI behavior still requires its own gate.
 No hidden product test mode or paid model request was added.
 
-Independent distribution delta review is pending at this author handoff.
+Independent distribution delta review passed for these exact bytes. The
+[report](runtime-distribution-independent-20261108/INDEPENDENT-DELTA-REVIEW.md)
+records 150 rebuilt dist files and 340 own package files matching source,
+unchanged vendor bytes/modes and 125 dependency/license inventories, normal
+extraction and post-probe trees, 23 packaged SDK tests per OS and stock base
+fresh/resume per OS. Reference-provider probes remain author evidence in this
+narrow delta; the reviewer did not rerun the parent's frozen bridge.
+Original review artifacts are preserved in the
+[archive](runtime-distribution-independent-20261108/original-evidence.zip) with
+[hash index](runtime-distribution-independent-20261108/archive-index.json).
 No real-model, full-suite, GUI, billing or generic Linux compatibility claim
 follows. Linux retains the previous glibc 2.38 floor and bounded local Git
 closure; Windows uses short app-owned paths. The claim is withdrawn for an

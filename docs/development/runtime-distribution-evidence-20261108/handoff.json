@@ -1,6 +1,6 @@
 {
   "source_commit": "2b787fd4c234747da22726ec03a3e4c6619ae95f",
-  "status": "author verified; independent distribution delta review pending",
+  "status": "Independent bounded distribution delta PASS; GUI/live/frozen-parent-reference gates separate",
   "scope": "Private modified build; no real model/GUI; old bb9886 runtime/workspaces unchanged",
   "platforms": {
     "windows": {
@@ -51,5 +51,10 @@
   "persona_source": "f6edd022d4389237fcee5d6c0a4db8a0d0b13399",
   "persona_runtime_digest": "0f85831175f24aea7237a6a003bdb14972a32cf13a7e76394c3fa9898b3763d6",
   "external_model_calls": 0,
-  "fresh_workspace_required": true
+  "fresh_workspace_required": true,
+  "independent_report": {
+    "path": "../runtime-distribution-independent-20261108/INDEPENDENT-DELTA-REVIEW.md",
+    "original_sha256": "cf320933d945b1d1816e2f4862f7ccaee3c43d62cdb2e7dd6d65f1fe5e820bbb",
+    "reference_probes": "Author evidence only in this narrow independent delta"
+  }
 }
