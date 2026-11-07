@@ -6,6 +6,7 @@ import { EffectLedger, type EffectReceipt } from "./effects.js";
 import { ObservationArchive, type ObservationSink, type ObservationContext } from "./observation.js";
 import { exportOcel, type OcelExport } from "./ocel.js";
 import { ModelAttemptUsage } from "./model-observation.js";
+import { providerRejectionCode } from "./provider-diagnostic.js";
 import { validatePersonaSnapshot, type PersonaProvider } from "./persona-provider.js";
 import { resultManifest } from "./evidence.js";
 import type { ArtifactSnapshot, ToolEvidence, VerificationResult, ObservationBundle } from "./execution-contract.js";
@@ -1182,6 +1183,7 @@ export class PidaRuntime {
         if (!["error", "aborted"].includes(event.message.stopReason)) providerRetryExhausted = false;
         run.outputTruncated = event.message.stopReason === "length";
         const usage = event.message.usage;
+        const rejectionCode = providerRejectionCode(event.message);
         const measured = (run.attempt?.usage ?? new ModelAttemptUsage()).snapshot(usage);
         const tokens = measured.tokens, cost = usage?.cost?.total;
         if (typeof tokens === "number") run.tokens += tokens; else run.usageKnown = false;
@@ -1189,6 +1191,7 @@ export class PidaRuntime {
         else if (this.options.maxCostUsd !== undefined) stop("limited", "USAGE_UNAVAILABLE");
         this.observe(id, run, "model_response", { request_id: run.requestId ?? null, attempt: run.attempts ?? null,
           stop_reason: event.message.stopReason, ...measured,
+          ...(rejectionCode ? { code: rejectionCode } : {}),
           first_output_ms: run.attempt?.firstOutputMs ?? null,
           duration_ms: run.attempt ? Math.max(0, performance.now() - run.attempt.startedAt) : null,
           cost_usd: typeof tokens === "number" && this.options.pricingVerified && Number.isFinite(cost) && cost! >= 0 ? cost! : null });
@@ -1328,6 +1331,12 @@ export class PidaRuntime {
     } catch { result.recovery = { autoRetry: false, pendingEffectIds: [], action: "repair-effect-ledger" }; }
     if (result.recovery && result.status === "completed") { result.status = "failed"; result.code = "EFFECT_STATE_UNKNOWN"; }
     try { await this.options.workSurface?.finish(run.principal, result); } catch { /* Admission stays inspectable; incomplete review cannot trigger replay. */ }
+    // A terminal carrier cannot turn an earlier, recovered rejection into the final cause.
+    // Keep actual assistant output, accounting guard and primary status/code unchanged.
+    const providerCode = providerRejectionCode(lastAssistant);
+    const providerTrace = providerCode && ["failed", "limited"].includes(result.status)
+      && ["USAGE_UNAVAILABLE", "PROVIDER_FAILED", "PROVIDER_RETRY_EXHAUSTED"].includes(result.code ?? "")
+      ? trace("provider_rejected", { code: providerCode }, false, { request_id: run.requestId ?? null, attempt: run.attempts ?? null }) : undefined;
     const finalTrace = trace(
       "run_finished",
       { status: result.status, code: result.code },
@@ -1360,6 +1369,7 @@ export class PidaRuntime {
     await this.observations.finish({ sessionId: id, taskId: run.taskId, runId: run.id }, manifest);
     try { this.options.workSurface?.settle(result); } catch { /* Preserve admission receipt; never replay a run because review storage failed. */ }
     finish();
+    if (providerTrace) emit({ type: "trace", trace: { ...providerTrace } });
     emit({ type: "trace", trace: { ...finalTrace } });
     emit({ type: "result", result });
     return result;
