@@ -12,7 +12,7 @@ const python=resolve(pythonArg);
 const runtime=resolve(runtimeArg),evidence=resolve(evidenceArg),reference=resolve(referenceArg),sha=b=>createHash('sha256').update(b).digest('hex');
 assert.equal(sha(readFileSync(join(runtime,'manifest.json'))),manifestHash);
 const manifest=JSON.parse(readFileSync(join(runtime,'manifest.json'))),sidecarBytes=readFileSync(join(runtime,'managed-host-capabilities.json')),sidecar=JSON.parse(sidecarBytes);
-assert.equal(sidecar.source_commit,manifest.source_commit);assert.equal(Object.keys(sidecar).length,8);
+assert.equal(sidecar.source_commit,manifest.source_commit);assert.equal(Object.keys(sidecar).length,sidecar.schema_version==='pida.managed-host.capabilities/2'?9:8);
 const declared=manifest.files.find(f=>f.path==='managed-host-capabilities.json');assert.equal(declared.sha256,sha(sidecarBytes));
 const lock=JSON.parse(readFileSync(join(runtime,'pida/fixtures/vera-dispatch/local-reference-source-lock.json')));
 for(const [name,hash]of Object.entries(lock.runtime_files))assert.equal(sha(readFileSync(join(reference,name))),hash);

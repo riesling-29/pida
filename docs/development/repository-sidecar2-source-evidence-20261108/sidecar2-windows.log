@@ -1,0 +1,12 @@
+✔ release capability is exact closed eight-key metadata and source-bound policy tuples (3.2689ms)
+✔ release declaration requires shipped exact golden and declared regular modules (7.218ms)
+✔ repository sidecar2 preserves mode2 defaults and rejects incomplete or downgraded mode3 declarations (0.8318ms)
+✔ repository descriptor and public shape golden plus actual regular inventory paths are required (8.3615ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 70.3093

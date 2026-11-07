@@ -63,7 +63,9 @@
     "scripts/vera-dispatch-host-probe.py",
     "fixtures/vera-dispatch/producer-source-lock.json",
     "fixtures/vera-dispatch/local-reference-source-lock.json",
-    "fixtures/execution-policy/profiles-v1.json"
+    "fixtures/execution-policy/profiles-v1.json",
+    "fixtures/repository-profile/capability-v1.json",
+    "fixtures/repository-profile/managed-descriptor-v1.json"
   ],
   "overrides": {
     "@earendil-works/pi-agent-core": "1.2.0",

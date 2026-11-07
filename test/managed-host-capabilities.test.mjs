@@ -33,3 +33,19 @@ test('release declaration requires shipped exact golden and declared regular mod
   }
   const golden=JSON.parse(readFileSync(path));golden.profiles[1].max_turns=25;writeFileSync(path,JSON.stringify(golden));assert.throws(()=>validateManagedCapabilityFiles(root,value,source),/MANAGED_CAPABILITIES_INVALID/);
 });
+
+test('repository sidecar2 preserves mode2 defaults and rejects incomplete or downgraded mode3 declarations',()=>{
+ const value=createManagedCapabilities(source,'repository/1');assert.equal(Object.keys(value).length,9);assert.equal(Object.keys(value.repository_profile).length,7);assert.equal(value.ready_protocol,'pida.local-host/2');assert.equal(value.repository_profile.ready_protocol,'pida.local-host/3');assert.ok(value.persona_catalogue);assert.deepEqual(validateManagedCapabilities(value,source),value);
+ for(const edit of [v=>delete v.repository_profile,v=>v.repository_profile=null,v=>v.repository_profile.extra=1,v=>v.repository_profile.module='pida/examples/other.mjs',v=>v.repository_profile.environment_key='MODEL_PATH',v=>v.repository_profile.ready_protocol='pida.local-host/2',v=>v.ready_protocol='pida.local-host/3',v=>v.persona_catalogue=null,v=>v.schema_version='pida.managed-host.capabilities/1']){const bad=structuredClone(value);edit(bad);assert.throws(()=>validateManagedCapabilities(bad,source));}
+ const legacy=createManagedCapabilities(source,'catalogue/1');legacy.repository_profile=value.repository_profile;assert.throws(()=>validateManagedCapabilities(legacy,source));
+});
+
+test('repository descriptor and public shape golden plus actual regular inventory paths are required',()=>{
+ const root=mkdtempSync(join(tmpdir(),'pd-repocap-')),value=createManagedCapabilities(source,'repository/1');
+ const files=[value.entrypoint,'pida/dist/execution-policy.js',value.persona_catalogue.module,'pida/examples/vera-local-reference-persona.mjs','pida/fixtures/vera-dispatch/local-reference-source-lock.json',value.repository_profile.module,'pida/dist/repository-profile.js'];
+ for(const name of files){mkdirSync(join(root,name,'..'),{recursive:true});writeFileSync(join(root,name),'synthetic-module');}
+ for(const name of ['execution-policy/profiles-v1.json','repository-profile/managed-descriptor-v1.json','repository-profile/capability-v1.json']){const dest=join(root,'pida/fixtures',name);mkdirSync(join(dest,'..'),{recursive:true});cpSync(new URL('../fixtures/'+name,import.meta.url),dest);files.push('pida/fixtures/'+name);}
+ writeFileSync(join(root,'managed-host-capabilities.json'),JSON.stringify(value));files.push('managed-host-capabilities.json');const manifest={source_commit:source,source:{source_commit:source},files:files.map(name=>({path:name,sha256:createHash('sha256').update(readFileSync(join(root,name))).digest('hex')}))};assert.deepEqual(validateManagedCapabilityFiles(root,value,source,manifest),value);
+ for(const path of [value.repository_profile.module,'pida/dist/repository-profile.js','pida/fixtures/repository-profile/managed-descriptor-v1.json','pida/fixtures/repository-profile/capability-v1.json']){const bad=structuredClone(manifest);bad.files=bad.files.filter(f=>f.path!==path);assert.throws(()=>validateManagedCapabilityFiles(root,value,source,bad));}
+ const descriptor=join(root,'pida/fixtures/repository-profile/managed-descriptor-v1.json');writeFileSync(descriptor,JSON.stringify({...value.repository_profile,ready_protocol:'pida.local-host/2'}));assert.throws(()=>validateManagedCapabilityFiles(root,value,source,manifest));
+});
