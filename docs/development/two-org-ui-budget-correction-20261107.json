@@ -1,0 +1,17 @@
+{
+  "scope": "Preparation helper/UI-budget correction only; runtime source and distribution unchanged",
+  "command": "node --test test/two-org-smoke-preparation.test.mjs",
+  "passed": 3,
+  "failed": 0,
+  "paid_calls": 0,
+  "organization_a_ms": 60000,
+  "organization_b_ms": 60000,
+  "repair_attempts": 0,
+  "join_requested_ms": 45000,
+  "join_capped_by_org_remaining": true,
+  "hidden_api_overrides": false,
+  "source_sha256": {
+    "test/helpers/two-org-smoke.mjs": "e4489c865fb24e071816d6814091e53b6ffbcae2dc6853b073ef562e538518d4",
+    "test/two-org-smoke-preparation.test.mjs": "15fb79cc2f038fb742d1e324ccadef10a1d0042ebf064a568cece8ad21049551"
+  }
+}

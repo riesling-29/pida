@@ -26,6 +26,14 @@ agents, requests or elapsed bounds, request the parent cancel once and read
 back; terminate the dedicated host if it cannot settle. Polling is not a hard
 aggregate call cap and must not trigger effect retries.
 
+Both UI-created native goals use the current service defaults: timeout 60,000 ms
+and repair attempts 0. The reserve UI has no budget inputs. The plan's fields
+are observations of those defaults, not instructions to inject unseen API
+parameters. The requested 45,000 ms join is capped by A's remaining deadline.
+The earlier A 90,000 / B 45,000 assumptions are superseded; per-run 20 seconds
+and the bounded monitor remain unchanged. A future longer per-run launcher
+profile alone would not extend this independent organization deadline.
+
 After the native goal settles, use frozen helper `captureLinkedOrganization`
 with the actual A receipt. Preserve the initial receipt root job and separately
 identify the root task's completed continuation attempt. Use

@@ -16,6 +16,9 @@ test('preparation keeps oracle out of goals and distinguishes delegated leakage 
   const {plan,privateOracle}=prepareTwoOrgSmoke({rootAgentId:randomUUID(),childAgentId:randomUUID(),answerAgentId:randomUUID(),caseId:'synthetic-unit',seed:654321});
   assert.ok(!JSON.stringify(plan).includes('654321')); assert.ok(!JSON.stringify(plan).includes(String(privateOracle.expected_derived)));
   assert.equal(plan.native_goals,2); assert.equal(plan.runtime_bounds.maxTurns,24); assert.equal(plan.monitor.hard_total_request_cap,false);
+  assert.equal(plan.organization_a.timeout_ms,60000);assert.equal(plan.organization_b.timeout_ms,60000);
+  assert.equal(plan.organization_a.max_repair_attempts,0);assert.equal(plan.organization_b.max_repair_attempts,0);
+  assert.match(plan.organization_budget_source,/not hidden API overrides/);assert.match(plan.join_timeout_scope,/remaining native organization deadline/);
   const goal=prepareAnswerGoal(plan,{case_id:plan.case_id,derived:privateOracle.expected_derived,sha256:'a'.repeat(64),revision:'a'.repeat(64)});
   assert.ok(goal.includes(String(privateOracle.expected_derived)),'B legitimately consumes the observed derived A data');
   const log=calls=>JSON.stringify({type:'message',message:{role:'assistant',content:calls}})+'\n';

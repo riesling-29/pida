@@ -7,7 +7,7 @@
   "sole_submitter": "desktop_shell",
   "oracle_scope": "Private Persona configuration only; never native goal or criteria.",
   "runtime_application_source": "bb9886ffc3a2a815e3c255b7dbfc83b4b4bac5e3",
-  "helper_source": "4d2faec685b4db8645912bf545b9b02add457951",
+  "helper_source": "test/helpers/two-org-smoke.mjs with current documented UI-budget correction; prior 4d2faec capture evidence remains historical",
   "desktop_workspace_proposed": "D:/ChantaResearchGroup/Schumpeter-shell-20261107/desktop-app/evidence/local-real-case-20261107",
   "desktop_user_data_proposed": "D:/ChantaResearchGroup/Schumpeter-shell-20261107/desktop-app/evidence/local-real-case-user-20261107",
   "challenge_private_path": "D:\\ChantaResearchGroup\\pida\\.pida-test-final-real-case-20261107\\persona-description.txt",
@@ -27,7 +27,13 @@
     "observed_request_stop_threshold": 12,
     "hard_total_request_cap": false,
     "active_case_wall_ms": 180000,
-    "billing": "unknown"
+    "billing": "unknown",
+    "organization_a_ms": 60000,
+    "organization_b_ms": 60000,
+    "requested_join_ms": 45000,
+    "join_scope": "Capped by remaining organization deadline",
+    "budget_source": "Current desktop UI/service defaults; no hidden API overrides"
   },
-  "next": "Desktop sole submitter provisions fresh Persona/profile IDs without task submission; owner prepares public plan from IDs. Root RELEASE is required before native admission."
+  "next": "Desktop sole submitter provisions fresh Persona/profile IDs without task submission; owner prepares public plan from IDs. Root RELEASE is required before native admission.",
+  "superseded_preparation_assumption": "A 90000ms / B 45000ms not supported by current UI; replaced with both60000ms, repair0"
 }

@@ -31,9 +31,9 @@ forces low thinking. OAuth cost remains **unknown** unless actually measured.
 | Provider/output retries | 0 / 0; automatic compaction false |
 | Token observation | 16,384 per run, checked after responses; not a billing cap |
 | Host concurrency | 2; A then B are admitted sequentially |
-| A native organization | max_repair_attempts 0, timeout_ms 90,000 |
-| A durable join | timeoutMs 45,000, one required child, no optional children |
-| B native organization | max_repair_attempts 0, timeout_ms 45,000 |
+| A native organization | Current desktop default: max_repair_attempts 0, timeout_ms 60,000 |
+| A durable join | Requested timeoutMs 45,000, capped by organization time remaining; one required child, no optional children |
+| B native organization | Current desktop default: max_repair_attempts 0, timeout_ms 60,000 |
 | Case monitor | 500 ms observation cadence; stop after >12 observed requests, unexpected jobs/agents, unknown effects or 180 seconds active case time |
 
 `src/workspace.ts` supplies the agent/workbench defaults 24/48. The ordinary
@@ -43,6 +43,17 @@ host source are used to tighten them. The monitor is observational and may
 overshoot between reads; it is not a hard aggregate-call cap. Planned requests
 are approximately A root 3 + child 1 + continuation 2, then B 2 = **8 estimated**.
 Report actual requests/turns/status/elapsed time afterwards, not the estimate.
+
+The desktop reserve UI exposes no organization budget fields. Its service omits
+timeout_ms/max_repair_attempts and uses the existing 60,000 ms / repair 0 defaults
+for both goals. The earlier preparation's A 90,000 / B 45,000 assumptions are
+superseded. These plan values describe actual defaults; the observer must not
+inject hidden API overrides. Native deadline readback takes precedence over the
+monitor's overall 180-second case bound, and the join cannot outlive its parent
+organization deadline. A future launcher-only 180-second per-run profile would
+not extend the current 60-second organization deadline: useful longer goals
+require a separately reviewed closed per-goal budget selection, not arbitrary
+renderer runtime JSON. No such change is part of this case.
 
 The accepted managed profile grants native workbench read/write/history and
 delegation, but no project shell, network/web tool or workbench execution
