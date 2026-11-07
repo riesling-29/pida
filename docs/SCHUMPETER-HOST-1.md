@@ -12,10 +12,10 @@ node <pida-package>/examples/schumpeter-host.mjs --workspace <new-empty-short-pa
 
 Set `PIDA_SCHUMPETER_AUTH_URL` to `http://127.0.0.1:<policy-port>/v1/pida-authorization` and `PIDA_SCHUMPETER_AUTH_TOKEN` to the separately registered host-policy credential through the child environment. These are host settings, never envelope, model or renderer selections. Only URLs resolving under WHATWG normalization to the literal `127.0.0.1` / `::1` address and the fixed path are accepted; DNS hostnames, URL credentials, query, fragment and redirects are rejected. No global plugin installation is needed.
 
-The entrypoint refuses a nonempty or symlink workspace, initializes a fresh private runtime, binds Pida to `127.0.0.1` on an ephemeral port and emits **one private parent-pipe message**, not a log:
+By default (`--workspace-mode fresh`), the entrypoint refuses a nonempty or symlink workspace and initializes a fresh private runtime. It binds Pida to `127.0.0.1` on an ephemeral port and emits **one private parent-pipe message**, not a log:
 
 ```text
-{type:"pida-host-ready",protocol:"pida.local-host/1",host_id,base_url,api_token,principal_id:"local-user",capabilities,provider_mode,persona_mode}
+{type:"pida-host-ready",protocol:"pida.local-host/1",host_id,base_url,api_token,principal_id:"local-user",capabilities,provider_mode,persona_mode,workspace_mode:"fresh"|"resume"}
 ```
 
 The parent must verify `host_id`, loopback address, protocol and authenticated capability readback before attaching. Keep `api_token` in the service's private connection state; never put it in UI metadata, ordinary logs, command-line arguments or repository evidence. It differs from the policy credential. Closing parent stdin or SIGINT/SIGTERM closes this host; it does not stop another workspace's runtime.
@@ -23,6 +23,16 @@ The parent must verify `host_id`, loopback address, protocol and authenticated c
 Default mode is explicitly `mock` + `pida-local`. The existing scripted mock only exercises its synthetic lot-status tool; it is not proof of arbitrary autonomous work. `--provider-workspace <approved-existing-config>` can select an existing native ChatGPT provider and supported credential store while all sessions/workbench/runtime state stay in the fresh workspace. No existing session is opened or copied. The selected credential store may perform its normal OAuth refresh; credential bytes are not copied into new evidence. Other provider reuse profiles fail explicitly rather than silently choosing a billing path.
 
 The narrow host permits workbench read/write/history, not OS project shell or arbitrary plugins. It sets a 20-second run bound, zero provider/output retries and a 16,384 observed-token guard (including the large workbench tool context). The guard is not a hard provider output/billing cap. General product deployments can embed `createWorkspace` with explicit policy and their own supported host configuration rather than treating this example as unrestricted administration.
+
+## Explicit same-host resume
+
+After a successful launch with the current launcher, the same trusted parent can use the same arguments plus `--workspace-mode resume`. It must restore the same registered host-policy credential from its private store and retain the same persistent organization/native session/agent mapping. A changed policy endpoint port is allowed; its current authorization checks still apply. The returned API transport token is newly generated, so the parent must replace its private connection token and perform authenticated capability readback again. Do not recreate native organizations on resume.
+
+The private `.pida-host.json` manifest uses `pida.local-host.workspace/1`. It binds host and `local-user` principal, absolute workspace path, exact compiled Pida/example source fingerprint and Node version, config bytes, selected provider workspace/profile, trusted Persona module path/bytes and a digest of the policy credential. It contains no bearer tokens. Wrong host/principal/source/version/profile/credential or absent manifest fails closed before runtime/config/token mutation. Older fresh workspaces without this manifest are not silently adopted. Configuration, source, Node upgrades and policy-credential rotation require an explicit migration procedure; this unit does not implement such migration. The source fingerprint does not attest arbitrary transitive modules loaded by a custom trusted Persona module.
+
+A launcher lock excludes concurrent launches; unknown, remote or live lock owners are preserved. After exclusive acquisition and repeated manifest validation, explicit resume reuses Pida's existing same-machine/dead-process-only workspace unlock operation, then opens the existing `createWorkspace` state. Running jobs interrupted by process death become `interrupted` with the agent paused and requiring reconciliation. They are not replayed; retries of an authorized collaboration request return the same historical receipt/job. Queued admitted jobs retain normal scheduler semantics and current dispatch authorization. Pending effects still require the existing explicit reconciliation; resume is not permission to replay them.
+
+Failure closes HTTP and attempts all owned runtime/Persona cleanup with a five-second bound. Cleanup failure exits nonzero. The included public Persona fixture remains disposable synthetic memory on each process start; native Pida identity/session persistence does not imply durable canonical Persona memory. Whole desktop/service credential persistence and Linux restart behavior require separate acceptance.
 
 ## Current policy wire
 

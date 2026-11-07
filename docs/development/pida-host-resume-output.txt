@@ -1,0 +1,66 @@
+✔ trusted endpoint is literal loopback, credential-free URL and exact path only (1.2899ms)
+✔ parent EOF closes HTTP and Persona even when runtime close rejects (788.5286ms)
+✔ parent EOF closes HTTP and Persona even when runtime close hangs (5663.6285ms)
+✔ actual Python policy independently verifies Unicode digest, current grant and strict nonce/echo binding (728.5633ms)
+✔ supported local-host process (local) uses Python current policy, capability/readback and exact native job mapping (2000.8355ms)
+✔ supported local-host process (public-fixture) uses Python current policy, capability/readback and exact native job mapping (2086.9531ms)
+✔ explicit resume preserves native identity and lost ACK dedup; wrong profile, live lock and revoked policy fail closed (6110.2288ms)
+✔ corrupt persisted delegated depth without parent cannot erase collaboration ancestry (20.6246ms)
+✔ persisted child derives current external grant from native lineage after restart (108.2124ms)
+✔ persisted continuation derives current external grant from native lineage after restart (171.3256ms)
+✔ new admission during async acceptance principal discards the obsolete capture (208.1877ms)
+✔ new admission during async acceptance capture discards the obsolete capture (232.2351ms)
+✔ byte-capacity rejection rolls back admission, preserves prior receipts and reopens; no history eviction (1491.1965ms)
+✔ closed envelope and shared canonical digest golden vector (1.4124ms)
+✔ concurrent delivery, lost ACK and persisted restart reuse the exact receipt/job; changed payload conflicts (20.9287ms)
+✔ actual process exits before/after file replacement and after ACK preserve all-or-nothing job binding (2074.2829ms)
+✔ policy rejects foreign host, sender/mapping, stale revisions and revoked read/dispatch; absence disables delivery (102.3221ms)
+✔ cancelled organization returns immutable duplicate history only, rejects new messages and late replies (31.7726ms)
+✔ restart rechecks host dispatch authority instead of replaying the saved grant (90.1637ms)
+✔ reply cancellation while dispatch authorization awaits prevents model invocation (156.0207ms)
+✔ async receive policy cannot bypass cancellation during its await (11.9049ms)
+✔ persisted corrupt receipt/job mapping fails closed and preserves file evidence (13.8495ms)
+✔ v2 migration preserves native jobs and creates no fictional receipts (11.9702ms)
+✔ HTTP + SDK enforce dedicated permission and current authority; native organization API still works (59.3461ms)
+✔ local and named Persona workers run concurrently without sharing memory authority (555.2285ms)
+✔ only host-approved sources can be selected and external identity cannot be overwritten at registration (68.6102ms)
+✔ source choice survives restart; a removed external source fails closed while local jobs and old results remain usable (308.4009ms)
+✔ external factory failure is isolated and incompatible routing configurations fail before activation (137.643ms)
+✔ unlabelled legacy sessions never migrate from external authority to local memory silently (261.6416ms)
+✔ ordinary workspace needs no PIX or Schumpeter and binds main and managed worker before first input (377.8246ms)
+✔ PI tool registration and PIX configuration never grant analysis permission (71.6818ms)
+✔ explicit broken PIX paths degrade analysis to unavailable while normal model runs still work (360.3091ms)
+✔ external contract factory owns main and worker context; local canonical tools and HTTP writes are disabled (232.3409ms)
+✔ legacy empty and long private roles bind without exporting role instruction text (393.2805ms)
+✔ embedded SDK main principals retain isolated canonical memory and context scopes (260.841ms)
+✔ explicit unlock covers root and agent stores only, preserves memory/data and tolerates absent locks (42.9293ms)
+✔ preflight rejects live or unverifiable nested owners without partially removing root lock (34.425ms)
+✖ active supervisor and linked directories or lock files are never unlocked (33.4888ms)
+ℹ tests 38
+ℹ suites 0
+ℹ pass 37
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17967.4395
+
+✖ failing tests:
+
+test at test\workspace-unlock.test.mjs:44:1
+✖ active supervisor and linked directories or lock files are never unlocked (33.4888ms)
+  Error: EPERM: operation not permitted, symlink 'C:\Users\migeo\AppData\Local\Temp\pida-unlock-vkrSLS\owner.json' -> 'C:\Users\migeo\AppData\Local\Temp\pida-unlock-vkrSLS\runtime.lock'
+      at symlinkSync (node:fs:1877:11)
+      at TestContext.<anonymous> (file:///D:/ChantaResearchGroup/pida/test/workspace-unlock.test.mjs:55:39)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'symlink',
+    path: 'C:\\Users\\migeo\\AppData\\Local\\Temp\\pida-unlock-vkrSLS\\owner.json',
+    dest: 'C:\\Users\\migeo\\AppData\\Local\\Temp\\pida-unlock-vkrSLS\\runtime.lock'
+  }

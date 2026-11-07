@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -102,4 +102,65 @@ for (const personaMode of process.env.PIDA_TEST_VERA_SOURCE ? ['local', 'public-
   // Existing workspace cannot be reused by a fresh-host launcher.
   const second = pipe(spawn(process.execPath, [join(root, 'examples/schumpeter-host.mjs'), '--workspace', directory, '--host-id', 'host-1'], { env: { ...process.env, PIDA_SCHUMPETER_AUTH_URL: server.url, PIDA_SCHUMPETER_AUTH_TOKEN: token }, stdio: ['pipe', 'pipe', 'pipe'] }), 'pida-host-ready');
   await assert.rejects(second.ready, /HOST_WORKSPACE_NOT_EMPTY/); await second.close();
+});
+
+test('explicit resume preserves native identity and lost ACK dedup; wrong profile, live lock and revoked policy fail closed', async t => {
+  const server = await policyServer(t), directory = await mkdtemp(join(tmpdir(), 'pida-resume-'));
+  let host;
+  const launch = (mode = 'resume', hostId = 'host-1', selectedToken = token) => pipe(spawn(process.execPath,
+    [join(root, 'examples/schumpeter-host.mjs'), '--workspace', directory, '--host-id', hostId, '--workspace-mode', mode],
+    { env: { ...process.env, PIDA_SCHUMPETER_AUTH_URL: server.url, PIDA_SCHUMPETER_AUTH_TOKEN: selectedToken }, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }), 'pida-host-ready');
+  t.after(async () => { await host?.close(); await rm(directory, { recursive: true, force: true }); });
+  host = launch('fresh'); const first = await host.ready;
+  assert.equal(first.workspace_mode, 'fresh');
+  let client = new PidaClient({ baseUrl: first.base_url, token: () => first.api_token });
+  const coordinator = await client.createAgent({ name: 'coordinator' }), worker = await client.createAgent({ name: 'worker' });
+  await client.pauseAgent(coordinator.id); await client.pauseAgent(worker.id);
+  const org = await client.createOrganization({ requestId: 'resume-org', goal: 'coordinate', agentId: coordinator.id, participants: [coordinator.id, worker.id], criterionIds: [] });
+  const e = { ...golden, request_id: 'lost-ack', recipient: { ...golden.recipient, org_session_id: org.id, agent_id: worker.id } }; e.payload_digest = collaborationDigest(e);
+  await server.command({ grant: grantFor(e) });
+  const response = await fetch(first.base_url + '/v1/collaboration/messages', { method: 'POST', headers: { Authorization: 'Bearer ' + first.api_token, 'Content-Type': 'application/json' }, body: JSON.stringify(e) });
+  assert.equal(response.status, 202); await response.body.cancel(); // Deliberately discard ACK bytes after committed admission.
+  const originalJobs = (await client.listAgentJobs(worker.id)).jobs; assert.equal(originalJobs.length, 1);
+  const immutable = async () => Promise.all(['.env', '.pida-host.json', 'pida.config.json'].map(p => readFile(join(directory, p), 'utf8')));
+  const beforeLock = await immutable(), competing = launch();
+  await assert.rejects(competing.ready, /HOST_WORKSPACE_LOCKED/); await competing.close(); assert.deepEqual(await immutable(), beforeLock);
+  await host.close(); const before = await immutable();
+  for (const [wrongHost, wrongToken] of [['foreign-host', token], ['host-1', token + '-rotated']]) {
+    const failed = launch('resume', wrongHost, wrongToken); await assert.rejects(failed.ready, /HOST_RESUME_MISMATCH/); await failed.close(); assert.deepEqual(await immutable(), before);
+  }
+  const manifestPath = join(directory, '.pida-host.json'), manifestText = before[1];
+  for (const [field, value] of [['principal_id', 'foreign-owner'], ['source_digest', '0'.repeat(64)], ['schema_version', 'unknown/2']]) {
+    await writeFile(manifestPath, JSON.stringify({ ...JSON.parse(manifestText), [field]: value }));
+    const bad = await immutable(), failed = launch(); await assert.rejects(failed.ready, /HOST_RESUME_MISMATCH/); await failed.close(); assert.deepEqual(await immutable(), bad);
+  }
+  await writeFile(manifestPath, manifestText);
+  host = launch(); const reopened = await host.ready; assert.equal(reopened.workspace_mode, 'resume');
+  assert.notEqual(reopened.api_token, first.api_token); assert.equal(reopened.host_id, first.host_id); assert.equal(reopened.principal_id, first.principal_id);
+  client = new PidaClient({ baseUrl: reopened.base_url, token: () => reopened.api_token });
+  await assert.rejects(new PidaClient({ baseUrl: reopened.base_url, token: () => first.api_token }).getCollaborationCapabilities());
+  const receipt = await client.receiveCollaboration(e); assert.equal(receipt.job_id, originalJobs[0].id);
+  assert.deepEqual(await client.receiveCollaboration(e), receipt); assert.equal((await client.listAgentJobs(worker.id)).jobs.length, 1);
+  assert.equal((await client.getOrganization(org.id)).organization.id, org.id);
+  const changed = { ...e, input: 'changed' }; changed.payload_digest = collaborationDigest(changed);
+  await assert.rejects(client.receiveCollaboration(changed), { code: 'COLLABORATION_REQUEST_CONFLICT' });
+  await server.command({ grant: null }); await assert.rejects(client.getCollaborationReceipt(receipt.receipt_id), { code: 'COLLABORATION_FORBIDDEN' });
+  await client.resumeAgent(worker.id);
+  let job; for (let i = 0; i < 100; i++) { job = await client.getAgentJob(worker.id, receipt.job_id); if (job.status !== 'queued' && job.status !== 'running') break; await delay(10); }
+  assert.equal(job.code, 'COLLABORATION_FORBIDDEN'); assert.equal(job.runId, undefined);
+
+  // Kill a real process while a second job is awaiting dispatch policy; reopening never replays that attempt.
+  await server.command({ grant: grantFor(e) }); await client.pauseAgent(worker.id);
+  const crashEnvelope = { ...e, request_id: 'interrupted-dispatch' }; crashEnvelope.payload_digest = collaborationDigest(crashEnvelope);
+  const crashReceipt = await client.receiveCollaboration(crashEnvelope); await server.command({ mode: 'delay' }); await client.resumeAgent(worker.id);
+  for (let i = 0; i < 100; i++) { job = await client.getAgentJob(worker.id, crashReceipt.job_id); if (job.status === 'running') break; await delay(5); }
+  assert.equal(job.status, 'running'); host.child.kill('SIGKILL'); await host.closed;
+  await server.command({ mode: 'normal', grant: null }); host = launch(); const recovered = await host.ready;
+  client = new PidaClient({ baseUrl: recovered.base_url, token: () => recovered.api_token });
+  job = await client.getAgentJob(worker.id, crashReceipt.job_id); assert.equal(job.status, 'interrupted'); assert.equal(job.code, 'AGENT_PROCESS_INTERRUPTED');
+  const profile = await client.getAgent(worker.id); assert.equal(profile.paused, true); assert.equal(profile.needsReconciliation, true);
+  await delay(350); assert.equal((await client.getAgentJob(worker.id, job.id)).status, 'interrupted');
+  await assert.rejects(client.receiveCollaboration(crashEnvelope), { code: 'COLLABORATION_FORBIDDEN' });
+  await server.command({ grant: grantFor(e) }); assert.deepEqual(await client.receiveCollaboration(crashEnvelope), crashReceipt);
+  assert.equal((await client.listAgentJobs(worker.id)).jobs.length, 2, 'no new job or effect replay on restart or retry');
 });
