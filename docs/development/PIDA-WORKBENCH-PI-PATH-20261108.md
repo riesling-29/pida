@@ -45,7 +45,15 @@ fixture attempts are preserved in the
 [archive](workbench-pi-path-evidence-20261108/original-evidence.zip), with source
 hashes and outcomes in [validation](workbench-pi-path-evidence-20261108/validation.json).
 
-Independent source review is pending at this author freeze. Old C package,
+Independent source review passed exact `b7f7d523c6fede56d508575a6bb78afa343e5566`.
+The [report](workbench-pi-path-independent-20261108/INDEPENDENT-SOURCE-REVIEW.md)
+records four independent baseline/fixed Windows/Linux runs of 61 tool invocations
+each, including 48 invalid-path calls per run, directory links, hardlinks,
+dangling links, exact effect/artifact identity and reopening. Only rebuilt
+dist/workbench.js changed; new distribution acceptance remains separate.
+Original evidence is [archived](workbench-pi-path-independent-20261108/original-evidence.zip)
+with a [hash index](workbench-pi-path-independent-20261108/archive-index.json).
+Old C package,
 case files and its six requests remain unchanged; prior validation six requests
 stay separate, for twelve total recorded calls before any new release. B and
 all retries remain held. A new runtime package and fresh verification identity
