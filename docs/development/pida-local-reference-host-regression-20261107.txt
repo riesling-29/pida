@@ -1,0 +1,19 @@
+✔ trusted endpoint is literal loopback, credential-free URL and exact path only (1.071ms)
+✔ parent EOF closes HTTP and Persona even when runtime close rejects (759.6028ms)
+✔ parent EOF closes HTTP and Persona even when runtime close hangs (5599.9574ms)
+✔ actual Python policy independently verifies Unicode digest, current grant and strict nonce/echo binding (742.1403ms)
+✔ supported local-host process (local) uses Python current policy, capability/readback and exact native job mapping (2005.9228ms)
+✔ supported local-host process (public-fixture) uses Python current policy, capability/readback and exact native job mapping (2112.3416ms)
+✔ explicit resume preserves native identity and lost ACK dedup; wrong profile, live lock and revoked policy fail closed (6181.7546ms)
+✔ admission policy v2 binds full Unicode reservation and rejects fake observed mapping, bad echoes and revoked grants (710.069ms)
+✔ actual host admits exactly one root (local) while reserved and reconciles observed promotion after ACK loss (3075.0288ms)
+✔ actual host admits exactly one root (public-fixture) while reserved and reconciles observed promotion after ACK loss (2323.5284ms)
+✔ production reference host: actual native IDs, Unicode context, read-only input authorization and profile-bound resume (2466.6646ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 24063.3858

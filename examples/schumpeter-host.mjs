@@ -72,7 +72,10 @@ try {
     policy_credential_digest: digest(policyToken), provider_workspace: args['provider-workspace'] ? resolve(args['provider-workspace']) : '',
     provider_source_digest: providerSourceDigest, persona_module: args['persona-module'] ? resolve(args['persona-module']) : '',
     persona_module_digest: personaModuleDigest });
-  const personaModuleDigest = args['persona-module'] ? digest(await readFile(resolve(args['persona-module']))) : '';
+  const personaModule = args['persona-module'] ? await import(pathToFileURL(resolve(args['persona-module'])).href) : null;
+  const personaIdentity = typeof personaModule?.hostPersonaIdentity === 'function' ? await personaModule.hostPersonaIdentity({ hostId }) : '';
+  if (typeof personaIdentity !== 'string' || personaIdentity.length > 256) throw Error('HOST_PERSONA_MODULE_INVALID');
+  const personaModuleDigest = args['persona-module'] ? digest(Buffer.concat([await readFile(resolve(args['persona-module'])), Buffer.from(personaIdentity)])) : '';
   if (workspaceMode === 'resume') validateHostManifest(directory, expectedManifest(digest(await readFile(join(directory, 'pida.config.json')))));
   await mkdir(directory, { recursive: true }); releaseHostLock = acquireHostLock(directory);
   // Repeat validation under exclusive ownership; never rewrite mismatched profiles or their runtime state.
@@ -86,7 +89,7 @@ try {
     runtime: { maxRunMs: 20000, maxProviderRetries: 0, maxOutputRetries: 0, autoCompaction: false, maxTotalTokens: 16384 } };
   if (workspaceMode === 'fresh') await writeFile(join(directory, 'pida.config.json'), JSON.stringify(config, null, 2) + '\n');
   if (args['persona-module']) {
-    const module = await import(pathToFileURL(resolve(args['persona-module'])).href);
+    const module = personaModule;
     if (typeof module.createHostPersona !== 'function') throw Error('HOST_PERSONA_MODULE_INVALID');
     persona = await module.createHostPersona({ hostId, workspaceDirectory: directory, async taskScope(taskId, agentId) {
       if (!app?.agents || agentId === 'main') throw Error('HOST_PERSONA_ORGANIZATION_REQUIRED');

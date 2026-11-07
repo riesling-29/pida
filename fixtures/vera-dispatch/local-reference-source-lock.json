@@ -1,0 +1,52 @@
+{
+  "kind": "local-reference-runtime-source",
+  "config_schema": "vera-local-reference/0.1.0",
+  "dispatch_protocol": "vera-dispatch/0.1.0",
+  "reviewed_dispatch_commit": "c1e3617aa88e6013ea34f76c3f4c41504618f863",
+  "runtime_files": {
+    "persona_substrate/__init__.py": "7949d0517ee62483e7038ec9355dc28e9918e33359331439ce2299e5b07a1101",
+    "persona_substrate/contracts.py": "ba662d91b24784ce418879ed608dfeb0127af6c3c0474ef9b44bbd2133081903",
+    "persona_substrate/provider.py": "c66c325aba711a7e8ca6099605bc5ba9335356f03589a945b85654df33929c6a",
+    "persona_substrate/consumer.py": "4ebc076458d7c60880d82473a94452df18e235a4bd1765e3e8dfdcaff5670a4f",
+    "persona_substrate/dispatch.py": "3c52e7ce73ae7afa0545f314d9bb6671203dce87d90b938478015bb9c91842cd",
+    "persona_substrate/local_bridge.py": "98f149a6cbbc16c1fe74cb0adb8937fa205f16483ab7615ded48e90d02b4cc5b",
+    "persona_substrate/schemas/contracts.json": "a6a652fc73bbfc00713dc5142d261b903f92f70c129fccdd4f74e136604b5c6f",
+    "persona_substrate/schemas/VeraContext.observed.schema.json": "7787fb2611fa43aa534ca1becafe47b14aa6ac3089e21ed5078ac184f70f5dcf",
+    "scripts/local_persona_bridge.py": "e5fc3963d6cf79b3d208a9fd3b99eeb89b3e046aa6c41c2994882863601a2310"
+  },
+  "source_digest": "6b6800faa1fab3b5f288afeef39e37392e9cf714455e7f00e12b2d3dade605ac",
+  "entrypoint": "scripts/local_persona_bridge.py",
+  "embedded_entrypoint": "persona_substrate.local_bridge.main",
+  "python": {
+    "minimum_tested": "3.11",
+    "dependencies": "Python standard library only",
+    "interpreter_included": false,
+    "bundled_interpreter_acceptance": "NOT_RUN"
+  },
+  "license_inventory": [
+    {
+      "component": "Vera-Substrate source",
+      "origin": "https://github.com/riesling-29/Vera-Substrate",
+      "observation": "No repository-root LICENSE/COPYING declaration found at inspected source; no redistribution grant inferred."
+    },
+    {
+      "component": "observed context schema",
+      "origin": "riesling-29/pida@30fef192b478b1697bb95a22ad7340cf1c485b03:src/vera-contract.ts",
+      "observation": "Observed producer schema copied as contract evidence; no separate license grant inferred."
+    },
+    {
+      "component": "Python interpreter/standard library",
+      "included": false,
+      "observation": "Distributor supplying Python must preserve its applicable license/notices; this source export contains no interpreter."
+    }
+  ],
+  "limits": [
+    "explicit initialization only",
+    "immutable user configuration",
+    "organization-bound native IDs required",
+    "no fixture source included",
+    "no canonical migration",
+    "no memory learning or state-write IPC",
+    "no remote authentication or producer receipts"
+  ]
+}
