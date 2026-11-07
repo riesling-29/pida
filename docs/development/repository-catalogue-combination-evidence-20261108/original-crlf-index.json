@@ -1,0 +1,14 @@
+{
+  "files": {
+    "linux-after.json": "a741e52eb29722d70465075badaf86bb67f8d4c6a0aa54536e9acd4ec3f53db4",
+    "linux-before.json": "a741e52eb29722d70465075badaf86bb67f8d4c6a0aa54536e9acd4ec3f53db4",
+    "linux-result.json": "49627f9154b8012a9171c78e2bcbaf0d4bfbb4f6b61cdf81df10f632a104401d",
+    "metadata-only/handoff.json": "0d1c2524c7436720da82e1879c525380e6c3d523853b4cb9ad42ec019530e9b1",
+    "metadata-verification.json": "0667b1278b746cd25fc79b73b0bc34dce34e0128964bd490d359d28cd16cfb4a",
+    "original-logs-index.json": "1ea8384b0d4e56c3f45c13164065fce858f5e93d3deb41e6b78ee0108440e77a",
+    "windows-after.json": "67412838abbb88208e91d2177b761922db882aeba2f2b3458518f858f8ff4f2c",
+    "windows-before.json": "67412838abbb88208e91d2177b761922db882aeba2f2b3458518f858f8ff4f2c",
+    "windows-result.json": "e649cf6c882eb96b1d29141260d4017973db18aeffaf92a0c1156dfe47fa6496"
+  },
+  "note": "Original generated/source bytes retained; readable copies normalized to LF. Native saved OCEL/manifest bytes were already LF and unchanged."
+}
