@@ -1,0 +1,21 @@
+{
+  "producer_source": "e9a1d31140bcff34e3c9ef0f82f4b3dbca0ddd68",
+  "producer_files": {
+    "src/program-proxy.ts": "e08da9a2c44ab4b77b324fa206f5a0a7de79a36f4f51e955e1f4660fed4c5c18",
+    "src/repository-profile.ts": "b7a78aab57e70431b6a9dbf2207c18b972335b83fbbe0b85bd2492eb2b7520a5",
+    "src/project-view.ts": "59c3b07b05660d12e02ec561dc6eaf1ed16faa746b476d13983147adad54f66e",
+    "src/client.ts": "79b41ce7b758a134adf1e2103643a913ddf78ff19b739eede3f1dc62f9e9a222",
+    "src/http.ts": "4b21860c5185565b7c603de5fdf4fff54b7d86491451b8cd485f89e1fd5298d3",
+    "src/private-state.ts": "21b55bc07bc267f7c51481e20362e0a153ffa7f98569de8e9cb42a1b6cb4a93d",
+    "src/index.ts": "e9b6dfd79760e27cff6f1e453756d87ab5e5859ecf5a1cf099db4d0f3c24c33a",
+    "examples/repository-profile.mjs": "af86789cc6cac742e8e7e4abdea12c591ee35c044ab3e4abf2f1d578edf90d84",
+    "examples/schumpeter-host.mjs": "42c65c86323b6574f1f43dd61ff99002448201fef7c728996d66099e3952e090",
+    "scripts/managed-host-capabilities.mjs": "06102764b2dfb1ee35c7ad3b9d8e70f22c60eeb2ad4c8b354b7fe35383aa3828",
+    "fixtures/repository-profile/managed-descriptor-v1.json": "22d1a2839a8e42deb23a5601be8b7d5ee7ce547a51d2f646f507aeeac2c7d13d"
+  },
+  "proposal_source": "30996fbda89f5d1e3a9f26bd194b842185eba045",
+  "proposal_path": "docs/development/REPOSITORY-CONSUMER-CONTRACT-PROPOSAL-20261108.md",
+  "proposal_git_blob_sha256": "7f33c4a2ff6a9c253bd1330f4e64b561f886b9acfe144dff09188d688e6e7f21",
+  "scope": "Original clean30996fb read. Concurrent uncommitted helper/ticket additions are outside this disposition.",
+  "method": "Read-only exact committed producer source comparison; no new product execution"
+}
