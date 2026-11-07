@@ -1,3 +1,4 @@
+import { validateExecutionPolicy, executionRuntimeBounds, type ExecutionPolicy } from "./execution-policy.js";
 import { createProgramRegistry, type ProgramRegistration } from "./program-registry.js";
 import { managedMcpConfigSchema, managedMcpExtension, type ManagedMcpConfig, type ManagedMcpActivation } from "./mcp.js";
 import { activateExtensions, assertBusinessTool, assertExtension, ResourceLifetime, type WorkspaceExtension } from "./extensions.js";
@@ -411,6 +412,8 @@ export interface WorkspacePersonaSource {
   create(context: WorkspacePersonaContext): PersonaProvider | Promise<PersonaProvider>;
 }
 export interface CreateWorkspaceOptions {
+  /** Trusted managed-host policy. Does not change standalone config schema or grants. */
+  executionPolicy?: Readonly<ExecutionPolicy>;
   /** Trusted embedding host only; absent leaves external delivery disabled. */
   collaboration?: CollaborationPolicy;
   /** Optional host-selected credential store, never an HTTP/model-selected path. */
@@ -430,6 +433,7 @@ export interface CreateWorkspaceOptions {
 }
 
 export async function createWorkspace(directory: string, options: CreateWorkspaceOptions = {}) {
+  const executionPolicy = options.executionPolicy === undefined ? undefined : validateExecutionPolicy(options.executionPolicy);
   const root = resolve(directory), config = readConfig(root), env = providerEnvironment(root, config);
   if (options.personaProvider && options.personaSources !== undefined) throw new PidaError("PERSONA_SOURCE_CONFIG_CONFLICT", 400);
   const registeredPersonaSources = new Map<string, WorkspacePersonaSource>();
@@ -627,7 +631,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
           ...(area ? { inspectArtifacts: (p: Principal) => area.captureArtifacts(p) } : {}),
           personaProvider: persona,
           ...(project ? { singleWriter: true } : {}), evidenceLimits,
-          ...(area || profile ? { maxTurns: 24, maxToolCalls: 48, maxRunMs: 180_000 } : {}), ...config.runtime,
+          ...(area || profile ? { maxTurns: 24, maxToolCalls: 48, maxRunMs: 180_000 } : {}), ...config.runtime, ...(executionPolicy ? executionRuntimeBounds(executionPolicy) : {}),
           systemPrompt: config.systemPrompt + (profile ? "\n\nAgent role: " + profile.role : "") + (area ? "\n\n" + workbenchPrompt : "") + packs.prompt + (project ? "\n\n" + project.prompt : "")
             + (profile && store ? "\nUse agent_memory_recall for prior information. Record meaningful changes to understanding with agent_memory_transition and sourced experience with agent_memory_remember. Persona edits belong to the owner. A job status is not an information-state transition." : ""),
         });
@@ -683,7 +687,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
     lifetime.add(closeMain);
     agents = selectedMain.agents ? await AgentSupervisor.open({
       directory: agentDirectory, maxConcurrent: config.agents?.maxConcurrent ?? 3,
-      collaboration: options.collaboration,
+      collaboration: options.collaboration, executionPolicy,
       acceptance: { criteria: config.acceptanceChecks ?? [], capture: async (profile, requestPrincipal) => {
         if (!selectedAgent.workbench) throw new PidaError("WORKBENCH_DISABLED", 404);
         return agentWorkbench(profile.id).captureFiles(requestPrincipal);

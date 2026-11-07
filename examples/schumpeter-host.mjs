@@ -5,17 +5,18 @@ import { resolve, join } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
 import { once } from 'node:events';
+import { resolveExecutionPolicy } from '../dist/execution-policy.js';
 import { initWorkspace, readConfig, createWorkspace } from '../dist/workspace.js';
 import { createCollaborationPolicyClient } from '../dist/collaboration-policy-client.js';
 import { ChatGPTCredentialStore } from '../dist/chatgpt-auth.js';
 import { validateNativeProvider } from '../dist/provider-catalog.js';
 import { lotStatusTool } from '../dist/tools.js';
 import { unlockWorkspaceState } from '../dist/workspace-unlock.js';
-import { digest, sourceDigest, validateHostManifest, saveHostFile, acquireHostLock } from './host-workspace.mjs';
+import { digest, sourceDigest, readHostManifest, validateHostManifest, saveHostFile, acquireHostLock } from './host-workspace.mjs';
 
 const args = {};
 for (let i = 2; i < process.argv.length; i += 2) {
-  if (!['--workspace', '--host-id', '--workspace-mode', '--provider-workspace', '--persona-module'].includes(process.argv[i]) || !process.argv[i + 1] || args[process.argv[i].slice(2)] !== undefined) throw Error('INVALID_HOST_ARGUMENT');
+  if (!['--workspace', '--host-id', '--workspace-mode', '--provider-workspace', '--persona-module', '--execution-policy'].includes(process.argv[i]) || !process.argv[i + 1] || args[process.argv[i].slice(2)] !== undefined) throw Error('INVALID_HOST_ARGUMENT');
   args[process.argv[i].slice(2)] = process.argv[i + 1];
 }
 let app, persona, shutdownPromise, releaseHostLock;
@@ -56,6 +57,10 @@ try {
   if (existsSync(directory) && (lstatSync(directory).isSymbolicLink() || !lstatSync(directory).isDirectory())) throw Error('HOST_STATE_UNSAFE');
   if (workspaceMode === 'fresh' && existsSync(directory) && (await readdir(directory)).length) throw Error('HOST_WORKSPACE_NOT_EMPTY');
   if (workspaceMode === 'resume' && !existsSync(directory)) throw Error('HOST_MANIFEST_INVALID');
+  const previousManifest = workspaceMode === 'resume' ? readHostManifest(directory) : null;
+  if (previousManifest && (previousManifest.schema_version !== 'pida.local-host.workspace/2' || typeof previousManifest.execution_policy_id !== 'string')) throw Error('HOST_RESUME_MISMATCH');
+  const executionPolicy = resolveExecutionPolicy(args['execution-policy'] ?? previousManifest?.execution_policy_id ?? 'smoke/1');
+  if (previousManifest && (previousManifest.execution_policy_id !== executionPolicy.id || previousManifest.execution_policy_digest !== executionPolicy.digest)) throw Error('HOST_RESUME_MISMATCH');
   let nativeCredentials, selectedProvider = { kind: 'mock' }, providerSourceDigest = '';
   if (args['provider-workspace']) {
     const providerDirectory = resolve(args['provider-workspace']);
@@ -67,7 +72,7 @@ try {
     nativeCredentials = new ChatGPTCredentialStore(providerDirectory, approved.stateDir);
     if (!nativeCredentials.status().connected) throw Error('HOST_PROVIDER_CREDENTIAL_UNAVAILABLE');
   }
-  const expectedManifest = configDigest => ({ schema_version: 'pida.local-host.workspace/1', host_id: hostId, principal_id: 'local-user', node_version: process.versions.node,
+  const expectedManifest = configDigest => ({ schema_version: 'pida.local-host.workspace/2', execution_policy_id: executionPolicy.id, execution_policy_digest: executionPolicy.digest, host_id: hostId, principal_id: 'local-user', node_version: process.versions.node,
     workspace_directory: directory, source_digest: sourceDigest(fileURLToPath(new URL('../', import.meta.url))), config_digest: configDigest,
     policy_credential_digest: digest(policyToken), provider_workspace: args['provider-workspace'] ? resolve(args['provider-workspace']) : '',
     provider_source_digest: providerSourceDigest, persona_module: args['persona-module'] ? resolve(args['persona-module']) : '',
@@ -86,7 +91,7 @@ try {
   const apiToken = randomBytes(32).toString('hex'); process.env.PIDA_API_TOKEN = apiToken;
   const config = workspaceMode === 'resume' ? readConfig(directory) : { ...readConfig(directory), preset: 'headless', provider: selectedProvider, tools: { directory: 'tools', enabled: [] }, codingPacks: [],
     agents: { enabled: true, maxConcurrent: 2 }, workbench: { enabled: true }, permissions: ['pida:collaborate', 'workbench:read', 'workbench:write', 'workbench:history'],
-    runtime: { maxRunMs: 20000, maxProviderRetries: 0, maxOutputRetries: 0, autoCompaction: false, maxTotalTokens: 16384 } };
+    runtime: { maxRunMs: executionPolicy.run_timeout_ms, maxProviderRetries: 0, maxOutputRetries: 0, autoCompaction: false, maxTotalTokens: 16384 } };
   if (workspaceMode === 'fresh') await writeFile(join(directory, 'pida.config.json'), JSON.stringify(config, null, 2) + '\n');
   if (args['persona-module']) {
     const module = personaModule;
@@ -108,14 +113,14 @@ try {
   if (workspaceMode === 'fresh' && config.provider.kind === 'mock') {
     config.permissions.push('lots:read'); await writeFile(join(directory, 'pida.config.json'), JSON.stringify(config, null, 2) + '\n');
   }
-  app = await createWorkspace(directory, { collaboration: policy, nativeCredentials,
+  app = await createWorkspace(directory, { executionPolicy, collaboration: policy, nativeCredentials,
     ...(config.provider.kind === 'mock' ? { extensions: [{ id: 'host-synthetic-lot', scope: 'workspace', activate: () => ({ tools: [lotStatusTool] }) }] } : {}),
     ...(persona ? { personaProvider: persona.personaProvider } : {}) });
   if (workspaceMode === 'fresh') saveHostFile(join(directory, '.pida-host.json'), JSON.stringify(expectedManifest(digest(await readFile(join(directory, 'pida.config.json')))), null, 2) + '\n');
   saveHostFile(join(directory, '.env'), 'PIDA_API_TOKEN=' + apiToken + '\n');
   app.server.listen(0, '127.0.0.1'); await once(app.server, 'listening');
   const capabilities = app.agents.collaborationCapabilities({ id: 'local-user', permissions: ['pida:agents'] });
-  process.stdout.write(JSON.stringify({ type: 'pida-host-ready', protocol: 'pida.local-host/1', host_id: hostId,
+  process.stdout.write(JSON.stringify({ type: 'pida-host-ready', protocol: 'pida.local-host/2', execution_policy: executionPolicy, host_id: hostId,
     base_url: 'http://127.0.0.1:' + app.server.address().port, api_token: apiToken, principal_id: 'local-user', capabilities,
     provider_mode: config.provider.kind === 'mock' ? 'mock' : 'configured-native-chatgpt', persona_mode: persona?.mode ?? 'pida-local', workspace_mode: workspaceMode }) + '\n');
   process.stdin.resume(); process.stdin.once('end', stop);

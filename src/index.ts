@@ -42,3 +42,5 @@ export * from "./commands.js";
 export * from "./process-executor.js";
 
 export { normalizeCodemodeConfig, composePermission, type CodemodeConfig, type ResolvedCodemodeConfig } from "./codemode.js";
+
+export * from "./execution-policy.js";

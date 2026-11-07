@@ -72,7 +72,7 @@ for (const personaMode of process.env.PIDA_TEST_VERA_SOURCE ? ['local', 'public-
     ...(personaMode === 'public-fixture' ? ['--persona-module', join(root, 'examples/vera-dispatch-persona.mjs')] : [])],
     { env: { ...process.env, PIDA_SCHUMPETER_AUTH_URL: server.url, PIDA_SCHUMPETER_AUTH_TOKEN: token, PIDA_VERA_SOURCE: process.env.PIDA_TEST_VERA_SOURCE, PIDA_VERA_PYTHON: process.env.PYTHON ?? 'python' }, stdio: ['pipe', 'pipe', 'pipe'] }), 'pida-host-ready');
   t.after(async () => { await host.close(); await rm(directory, { recursive: true, force: true }); });
-  const ready = await host.ready; assert.equal(ready.protocol, 'pida.local-host/1'); assert.equal(ready.host_id, 'host-1'); assert.equal(ready.persona_mode, personaMode === 'local' ? 'pida-local' : 'vera-dispatch-synthetic/0.1.0');
+  const ready = await host.ready; assert.equal(ready.protocol, 'pida.local-host/2'); assert.equal(ready.host_id, 'host-1'); assert.equal(ready.persona_mode, personaMode === 'local' ? 'pida-local' : 'vera-dispatch-synthetic/0.1.0');
   assert.equal(new URL(ready.base_url).hostname, '127.0.0.1');
   const client = new PidaClient({ baseUrl: ready.base_url, token: () => ready.api_token });
   const cap = await client.getCollaborationCapabilities(); assert.equal(cap.enabled, true); assert.equal(cap.host_id, ready.host_id); assert.equal(cap.reply_mode, 'fresh-task-only');

@@ -9,6 +9,8 @@ import type { RunResult, StreamEvent, TraceEvent } from "./protocol.js";
 import { collaborationId, collaborationKey, validCollaborationEnvelope, type CollaborationEnvelope, type CollaborationPolicy, type CollaborationReceipt, type CollaborationRecord } from "./collaboration.js";
 import { validOrganizationAdmission, type OrganizationAdmission, type OrganizationAdmissionReceipt, type OrganizationAdmissionRecord } from "./organization-admission.js";
 
+import { validateExecutionPolicy, type ExecutionPolicy } from "./execution-policy.js";
+
 export interface AgentProfile {
   id: string; owner: string; name: string; role: string; persona?: string;
   /** Immutable host-approved source reference; never a URL, module path or credential. */
@@ -41,6 +43,8 @@ export interface AgentSupervisorOptions {
   maxJobs?: number;
   maxDelegationDepth?: number;
   acceptance?: LocalAcceptanceOptions;
+  /** Optional immutable managed-host policy; absent preserves standalone defaults. */
+  executionPolicy?: Readonly<ExecutionPolicy>;
   collaboration?: CollaborationPolicy;
   /** Host policy only. Profiles contain no supplied paths, tool grants or provider credentials. */
   createRuntime(profile: AgentProfile, context: { signal: AbortSignal }): Promise<PidaRuntime> | PidaRuntime;
@@ -91,6 +95,7 @@ export class AgentSupervisor {
   private pendingRuntimeLoads = 0;
   private readonly runtimeCreation = new AbortController();
   private readonly maxConcurrent: number;
+  private readonly executionPolicy?: Readonly<ExecutionPolicy>;
   private started = false;
   private closed = false;
   private closing?: Promise<void>;
@@ -100,10 +105,11 @@ export class AgentSupervisor {
   private organizationTimer?: ReturnType<typeof setTimeout>;
 
   private constructor(private readonly options: AgentSupervisorOptions) {
+    this.executionPolicy = options.executionPolicy === undefined ? undefined : validateExecutionPolicy(options.executionPolicy);
     this.directory = resolve(options.directory);
     this.statePath = join(this.directory, "supervisor.json");
     this.lockPath = join(this.directory, "supervisor.lock");
-    this.maxConcurrent = options.maxConcurrent ?? 2;
+    this.maxConcurrent = this.executionPolicy?.max_concurrent ?? options.maxConcurrent ?? 2;
     if (options.acceptance && !validCriteria(options.acceptance.criteria)) denied("ACCEPTANCE_CRITERIA_INVALID");
     if (options.acceptance?.environmentRevision !== undefined && !validText(options.acceptance.environmentRevision, 256)) denied("ACCEPTANCE_ENVIRONMENT_INVALID");
     if (options.acceptance) options.acceptance = { ...options.acceptance, criteria: copy(options.acceptance.criteria) };
@@ -341,11 +347,17 @@ export class AgentSupervisor {
   organizationAdmissionCapabilities(principal: Principal) {
     this.usable(); this.principal(principal); if (!principal.permissions.includes("pida:agents")) denied("FORBIDDEN", 403);
     const ids = (this.options.acceptance?.criteria ?? []).map(c => c.id).sort(), criteria = this.criteria(ids);
-    return { schema_version: "pida.organization.admission.capabilities/1", enabled: typeof this.options.collaboration?.authorizeAdmission === "function",
+    return { schema_version: this.executionPolicy ? "pida.organization.admission.capabilities/2" : "pida.organization.admission.capabilities/1",
+      ...(this.executionPolicy ? { execution_policy: copy(this.executionPolicy) } : {}), enabled: typeof this.options.collaboration?.authorizeAdmission === "function",
       host_id: this.options.collaboration?.hostId ?? null, admission_schema: "pida.organization.admission/1", receipt_schema: "pida.organization.admission.receipt/1",
       supervisor_state_version: 4, acceptance: { criterion_ids: ids, criteria_digest: criterionDigest(criteria), environment_revision: this.environment(), criteria: copy(criteria) } } as const;
   }
+  private assertOrganizationBudget(timeout: number, repairs: number) {
+    if (this.executionPolicy && (timeout > this.executionPolicy.organization_timeout_ms || repairs > this.executionPolicy.max_repair_attempts))
+      denied("HOST_EXECUTION_BUDGET_EXCEEDED");
+  }
   private admissionDefinitionCurrent(a: OrganizationAdmission) {
+    this.assertOrganizationBudget(a.definition.timeout_ms, a.definition.max_repair_attempts);
     const ids = (this.options.acceptance?.criteria ?? []).map(c => c.id).sort();
     if (canonical(a.definition.criterion_ids) !== canonical(ids) || a.definition.criteria_digest !== criterionDigest(this.criteria(ids))
       || a.definition.environment_revision !== this.environment()) denied("ORGANIZATION_ADMISSION_PROFILE_STALE", 409);
@@ -376,6 +388,7 @@ export class AgentSupervisor {
     this.usable(); this.principal(principal); principal = copy(principal);
     if (!validOrganizationAdmission(input)) denied("ORGANIZATION_ADMISSION_INVALID");
     const a = copy(input), e = a.envelope, d = a.definition, key = collaborationKey(principal.id, e);
+    this.assertOrganizationBudget(d.timeout_ms, d.max_repair_attempts);
     await this.authorizeAdmission(principal, a, "admit");
     const duplicate = this.state.organizationAdmissions.find(r => collaborationKey(r.owner, r.admission.envelope) === key);
     if (duplicate) { if (duplicate.admission.admission_digest !== a.admission_digest) denied("ORGANIZATION_ADMISSION_CONFLICT", 409); return copy(duplicate.receipt); }
@@ -644,8 +657,9 @@ export class AgentSupervisor {
       || !Array.isArray(input.criterionIds) || input.criterionIds.length > 32 || new Set(input.criterionIds).size !== input.criterionIds.length
       || this.criteria(input.criterionIds).length !== input.criterionIds.length) denied("ORG_ARGUMENT_INVALID");
     for (const id of input.participants) this.owned(id, principal);
-    const repairs = input.maxRepairAttempts ?? 0, timeout = input.timeoutMs ?? 3600000;
+    const repairs = input.maxRepairAttempts ?? 0, timeout = input.timeoutMs ?? this.executionPolicy?.organization_timeout_ms ?? 3600000;
     if (!Number.isSafeInteger(repairs) || repairs < 0 || repairs > 3 || !Number.isSafeInteger(timeout) || timeout < 1000 || timeout > 86400000) denied("ORG_BUDGET_INVALID");
+    this.assertOrganizationBudget(timeout, repairs);
     const definitionDigest = sha256(canonical(input)), duplicate = this.state.organization.sessions.find(o => o.owner === principal.id && o.requestId === input.requestId);
     if (duplicate) { if (duplicate.definitionDigest !== definitionDigest) denied("ORG_REQUEST_CONFLICT", 409); return copy(duplicate); }
     if (this.state.organization.sessions.length >= 1000) denied("ORG_SESSION_LIMIT", 429);
@@ -658,10 +672,11 @@ export class AgentSupervisor {
   }
   registerJoin(parentJobId: string, principal: Principal, input: { requestId: string; required: string[]; optional?: string[]; timeoutMs?: number }): BatchJoin {
     this.usable(); const parent = this.ownedJob(parentJobId, principal);
-    const optional = input?.optional ?? [], timeout = input?.timeoutMs ?? 3600000;
+    const optional = input?.optional ?? [], timeout = input?.timeoutMs ?? this.executionPolicy?.join_timeout_ms ?? 3600000;
     if (!input || Object.keys(input).some(k => !["requestId", "required", "optional", "timeoutMs"].includes(k)) || !validText(input.requestId, 128)
       || !Array.isArray(input.required) || !Array.isArray(optional) || !input.required.length || input.required.length + optional.length > 16
       || new Set([...input.required, ...optional]).size !== input.required.length + optional.length || !Number.isSafeInteger(timeout) || timeout < 1000 || timeout > 3600000) denied("JOIN_ARGUMENT_INVALID");
+    if (this.executionPolicy && timeout > this.executionPolicy.join_timeout_ms) denied("HOST_EXECUTION_BUDGET_EXCEEDED");
     const payloadDigest = sha256(canonical(input)), state = this.state.organization;
     const duplicate = state.joins.find(j => j.parentJobId === parent.id && j.requestId === input.requestId);
     if (duplicate) { if (duplicate.payloadDigest !== payloadDigest) denied("JOIN_REQUEST_CONFLICT", 409); return copy(duplicate); }

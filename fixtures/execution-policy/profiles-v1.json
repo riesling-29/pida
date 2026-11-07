@@ -1,0 +1,35 @@
+{
+  "schema_version": "pida.execution-policy.catalogue/1",
+  "profiles": [
+    {
+      "schema_version": "pida.execution-policy/1",
+      "id": "smoke/1",
+      "run_timeout_ms": 20000,
+      "organization_timeout_ms": 60000,
+      "join_timeout_ms": 60000,
+      "max_turns": 24,
+      "max_tool_calls": 48,
+      "max_provider_retries": 0,
+      "max_output_retries": 0,
+      "max_repair_attempts": 0,
+      "max_total_tokens": 16384,
+      "max_concurrent": 2,
+      "digest": "667218b58ee13ff266df2c65611cbd593e64427042f7c7181c60a73c3ec1cf33"
+    },
+    {
+      "schema_version": "pida.execution-policy/1",
+      "id": "work/1",
+      "run_timeout_ms": 180000,
+      "organization_timeout_ms": 900000,
+      "join_timeout_ms": 900000,
+      "max_turns": 24,
+      "max_tool_calls": 48,
+      "max_provider_retries": 0,
+      "max_output_retries": 0,
+      "max_repair_attempts": 0,
+      "max_total_tokens": 16384,
+      "max_concurrent": 2,
+      "digest": "a91ce5756809619bcb474fe90fe27b4b301dc9d7caea3e32dafa270b0d2a547b"
+    }
+  ]
+}
