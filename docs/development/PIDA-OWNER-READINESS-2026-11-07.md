@@ -2,6 +2,19 @@
 
 Date: 2026-11-07 (Asia/Seoul). Scope: initial owner readiness and source inspection only.
 
+Subsequent authorized implementation is recorded separately; the initial findings
+below remain historical. Current owner branch is
+`feat/pida-durable-collaboration-20261107`. The final platform artifact source is
+`bb9886ffc3a2a815e3c255b7dbfc83b4b4bac5e3`; later evidence/docs commits do not
+change those artifact bytes. See [distribution handoff](PIDA-RUNTIME-DISTRIBUTION-20261107.md),
+[atomic organization admission](PIDA-ORGANIZATION-ADMISSION-20261107.md),
+[source-backed reference Persona](PIDA-LOCAL-REFERENCE-HOST-20261107.md) and
+[observation terminal](PIDA-OBSERVATION-TUI-20261107.md).
+Independent focused reviews passed after recorded fixes, and both platform
+packages passed base/reference mock-job restart probes. Full desktop/PTY assembly,
+fresh provider connection and the final real multi-organization scenario remain
+separate parent-owned gates; no complete-product acceptance is claimed here.
+
 ## Intended boundary
 
 Pida remains independently usable for one or many agents. It owns organization execution, native jobs, joins, bounded repair and local acceptance. PersonaSubstrate owns persona identity and memory. Schumpeter owns the outer session containing multiple organizations and cross-organization collaboration. PIX owns neutral process computation. These boundaries come from the user's current direction; this document does not turn a cross-app request into authority to change another app.

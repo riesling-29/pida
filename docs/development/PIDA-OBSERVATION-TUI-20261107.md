@@ -67,3 +67,10 @@ Windows/Linux with the bundled executable. Withdraw this slice if attach writes
 managed state, leaks the token, bypasses the GET-only guard, selects a foreign
 host, or detach stops/cancels host work. Validity is limited to the pinned source
 and separately recorded environment evidence.
+
+The [final independent review](observation-tui-independent-final-20261107/INDEPENDENT-REVIEW.md)
+passed `8bf35c4`, including the original GET counterexample with corrected outcome,
+full-tree preservation, endpoint/redirect/token guards and safe layout handling.
+Its adjacent archive/index preserve original evidence, including the initial
+45-path mutation. This is separate-context same-family review. It does not close
+the full-screen PTY/desktop gate.

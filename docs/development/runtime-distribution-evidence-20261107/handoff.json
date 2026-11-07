@@ -1,0 +1,44 @@
+{
+  "source_commit": "bb9886ffc3a2a815e3c255b7dbfc83b4b4bac5e3",
+  "scope": "Private modified build; no GUI/live-model acceptance",
+  "platforms": {
+    "windows": {
+      "source_commit": "bb9886ffc3a2a815e3c255b7dbfc83b4b4bac5e3",
+      "platform": "win32-x64",
+      "runtime": "D:\\ChantaResearchGroup\\pida\\.pida-test-runtime-distribution-20261107\\windows-accepted\\runtime",
+      "archive": "D:\\ChantaResearchGroup\\pida\\.pida-test-runtime-distribution-20261107\\windows-accepted\\pida-runtime-bb9886f-win32-x64.tar.gz",
+      "archive_sha256": "1d96edc0160d79c06c0a5cbe94dc6feb800a3efab09bc8b08cd065ad025023d4",
+      "archive_bytes": 104836076,
+      "manifest_sha256": "0d63aac8c755d601a4e8bff151ea3648bc4afd00393449c533d0b4600d5d9e6b",
+      "tree_sha256": "c82d47c595270ae5577a67c7ecf45e6e77af08320563888af4dd1137035951a6",
+      "file_count": 15975,
+      "dependencies": 125,
+      "node_binary_sha256": "9a4eb5f1c29c6a2e93852ead46b999e284a6a5ca8bab4d4e241d587d025a52de",
+      "package_sha256": "5e93895d6848c009d5e88a4b4119a886e26561decbb5fed303d2e953b99e650d",
+      "delivery_archive": "D:\\ChantaResearchGroup\\pida\\.pida-test-runtime-distribution-20261107\\windows-accepted\\pida-runtime-bb9886f-win32-x64.tar.gz",
+      "base_probe": "PASS",
+      "external_reference_probe": "PASS",
+      "provider_credentials_used": false,
+      "synthetic_transport_tokens_used": true
+    },
+    "linux": {
+      "source_commit": "bb9886ffc3a2a815e3c255b7dbfc83b4b4bac5e3",
+      "platform": "linux-x64",
+      "runtime": "/var/tmp/pida-bb9886f-20261107/runtime",
+      "archive": "/var/tmp/pida-bb9886f-20261107/pida-runtime-bb9886f-linux-x64.tar.gz",
+      "archive_sha256": "7a2b4236d896866c3e4f9a09387bbc3ce5da3e457ca16d3749ab1cfb59ddee0b",
+      "archive_bytes": 76806789,
+      "manifest_sha256": "d98d05da9fe723223d7cd444fa8274f4a660d40018c3246789826d2634daefe6",
+      "tree_sha256": "43d39293eeb74a9347f3e04088f404483f9214f33a4137112cab1aaabd4a7baa",
+      "file_count": 15649,
+      "dependencies": 125,
+      "node_binary_sha256": "41a74efb34cbde5c7632cdac0cf8bd1a14d0b8d73dc1e82755014d9a9ce70f5c",
+      "package_sha256": "5e93895d6848c009d5e88a4b4119a886e26561decbb5fed303d2e953b99e650d",
+      "delivery_archive": "D:\\ChantaResearchGroup\\pida\\.pida-test-runtime-distribution-20261107\\linux-accepted\\pida-runtime-bb9886f-linux-x64.tar.gz",
+      "base_probe": "PASS",
+      "external_reference_probe": "PASS",
+      "provider_credentials_used": false,
+      "synthetic_transport_tokens_used": true
+    }
+  }
+}

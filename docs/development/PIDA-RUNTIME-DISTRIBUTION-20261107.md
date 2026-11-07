@@ -106,9 +106,34 @@ task/artifact controls remain Schumpeter's responsibility.
 
 ## Acceptance boundaries
 
-Actual platform artifact hashes and clean-process outcomes are appended in the
-handoff evidence after the final reviewed source freeze. Historical candidate
-artifacts must not be substituted. API-only and explicit external-Python reference
+Final artifact source is `bb9886ffc3a2a815e3c255b7dbfc83b4b4bac5e3`.
+It includes the independently reviewed store-instance fix `11439f4` and
+noninitializing observation-route fix `8bf35c4`; the compiled organization runtime
+remains the reviewed B implementation. The [handoff record](runtime-distribution-evidence-20261107/handoff.json)
+contains exact local archive paths and all hashes. The
+[original evidence archive](runtime-distribution-evidence-20261107/original-evidence.zip)
+preserves both full manifests, all four clean-process results, npm/source metadata,
+official checksums and historical initial packaging failure. Its
+[index](runtime-distribution-evidence-20261107/archive-index.json) pins every original byte.
+
+| Platform | Final archive SHA-256 | Manifest SHA-256 |
+| --- | --- | --- |
+| Windows x64 | `1d96edc0160d79c06c0a5cbe94dc6feb800a3efab09bc8b08cd065ad025023d4` | `0d63aac8c755d601a4e8bff151ea3648bc4afd00393449c533d0b4600d5d9e6b` |
+| Linux x64 | `7a2b4236d896866c3e4f9a09387bbc3ce5da3e457ca16d3749ab1cfb59ddee0b` | `d98d05da9fe723223d7cd444fa8274f4a660d40018c3246789826d2634daefe6` |
+
+Windows 10.0.26200 and Ubuntu 26.04.1/glibc 2.43 each passed exact tree/mode
+verification and **two clean relocated process probes**: default pida-local and
+explicit external reference Persona. Every probe completed one native mock job,
+observed its run_finished event and reopened the same job/OrgAttempt with a rotated
+transport token. Reference probes checked actual job/attempt/org/agent inclusion
+binding using producer `f6edd02` source export. External interpreters were Python
+3.11.9 on Windows and 3.14.4 on Linux. No provider credential or paid call was used;
+synthetic host/policy transport tokens were generated privately for each probe.
+The historical result field `credentials_used:false` means provider credentials,
+as clarified by the handoff's explicit fields.
+
+Historical `14bea12`, `7997d51` and `8bf35c4` candidate artifacts must not be
+substituted for this final build. API-only and explicit external-Python reference
 profiles are distinct from the parent's Electron/Python GUI package. No new paid
 model call, desktop rendering, general remote Git, broad Linux compatibility,
 semantic Persona improvement or billing claim is made by packaging tests.

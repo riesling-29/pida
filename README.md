@@ -1,5 +1,11 @@
 # Pida-core
 
+The local Schumpeter integration build is identified by an exact source revision
+and platform manifest, separately from upstream 0.8.18. See the
+[standalone runtime distribution and acceptance limits](docs/development/PIDA-RUNTIME-DISTRIBUTION-20261107.md),
+[explicit reference Persona host](docs/development/PIDA-LOCAL-REFERENCE-HOST-20261107.md)
+and [host-wide observation terminal](docs/development/PIDA-OBSERVATION-TUI-20261107.md).
+
 **처음 사용하시나요? → [한국어 사용 가이드](docs/USER-GUIDE.ko.md)**  
 설치·모델 연결, 평소 시작과 종료, 멀티 에이전트 Web/TUI, 프로젝트 연결, 업데이트와 잠금 오류 복구를 한곳에서 확인할 수 있습니다.
 

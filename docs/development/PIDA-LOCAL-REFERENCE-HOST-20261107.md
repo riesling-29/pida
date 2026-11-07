@@ -87,6 +87,11 @@ paths. No new paid provider call is made. A logical context receipt is not raw
 provider wire capture, semantic Persona improvement or artifact acceptance.
 
 Validity is limited to the recorded producer/consumer bytes and tested platforms.
+The [final independent join review](local-reference-independent-final-20261107/FINAL-REVIEW.md)
+passed the `11439f4` consumer with `f6edd02` producer; original probes/results are
+preserved in its adjacent archive/index. This is a separate context in the same
+Codex family, not cross-family review. Platform package probes are recorded in
+[the distribution record](PIDA-RUNTIME-DISTRIBUTION-20261107.md).
 Withdraw compatibility if profile negotiation, Unicode bytes, native identity,
 current authorization, bounded cleanup or immutable resume checks fail. Next:
 independent consumer/producer join review, then verify the parent-packaged Python
