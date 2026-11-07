@@ -6,6 +6,7 @@ import { PidaError, type PidaRuntime, type Principal } from "./runtime.js";
 import { savePrivate, isId, canonical, sha256 } from "./private-state.js";
 import { emptyOrganizations, validCriteria, criterionDigest, localEnvironment, evaluateLocal, boundedAgentResult, type LocalAcceptanceOptions, type OrganizationState, type OrgSession, type OrgTask, type BatchJoin, type LocalReceipt } from "./organization.js";
 import type { RunResult, StreamEvent, TraceEvent } from "./protocol.js";
+import { collaborationId, collaborationKey, validCollaborationEnvelope, type CollaborationEnvelope, type CollaborationPolicy, type CollaborationReceipt, type CollaborationRecord } from "./collaboration.js";
 
 export interface AgentProfile {
   id: string; owner: string; name: string; role: string; persona?: string;
@@ -29,6 +30,7 @@ export interface AgentJob {
   latestText: string; activity: TraceEvent[]; memoryRefs?: string[]; memoryWarning?: string;
   reconciliation?: { at: string; by: string; note?: string };
   organizationTaskId?: string; attemptId?: string; joinId?: string; joinRevision?: number;
+  collaborationReceiptId?: string;
 }
 export interface AgentSupervisorOptions {
   directory: string;
@@ -37,6 +39,7 @@ export interface AgentSupervisorOptions {
   maxJobs?: number;
   maxDelegationDepth?: number;
   acceptance?: LocalAcceptanceOptions;
+  collaboration?: CollaborationPolicy;
   /** Host policy only. Profiles contain no supplied paths, tool grants or provider credentials. */
   createRuntime(profile: AgentProfile, context: { signal: AbortSignal }): Promise<PidaRuntime> | PidaRuntime;
   /** Re-resolved when a job starts. Saved permissions are never replayed. */
@@ -60,7 +63,7 @@ export interface AgentOverview {
   agents: { profile: Omit<AgentProfile, "owner" | "role" | "persona">; jobs: Pick<AgentJob, "id" | "status" | "runId" | "createdAt" | "currentTool" | "lastSignalAt" | "code">[]; admission: AdmissionReason }[];
   personaSources: AgentPersonaSourceCatalogue;
 }
-interface State { version: 2; profiles: AgentProfile[]; jobs: AgentJob[]; organization: OrganizationState }
+interface State { version: 3; profiles: AgentProfile[]; jobs: AgentJob[]; organization: OrganizationState; collaboration: CollaborationRecord[] }
 interface Active { agentId: string; workspaceKey: string; controller: AbortController; done: Promise<void> }
 const now = () => new Date().toISOString();
 const copy = <T>(value: T): T => structuredClone(value);
@@ -76,7 +79,7 @@ export class AgentSupervisor {
   private readonly statePath: string;
   private readonly lockPath: string;
   private readonly lockValue = JSON.stringify({ pid: process.pid, host: hostname(), nonce: randomUUID() });
-  private state: State = { version: 2, profiles: [], jobs: [], organization: emptyOrganizations() };
+  private state: State = { version: 3, profiles: [], jobs: [], organization: emptyOrganizations(), collaboration: [] };
   private readonly runtimes = new Map<string, Promise<PidaRuntime>>();
   private readonly active = new Map<string, Active>();
   private readonly runtimeKeys = new Map<string, string>();
@@ -101,6 +104,8 @@ export class AgentSupervisor {
     if (options.acceptance && !validCriteria(options.acceptance.criteria)) denied("ACCEPTANCE_CRITERIA_INVALID");
     if (options.acceptance?.environmentRevision !== undefined && !validText(options.acceptance.environmentRevision, 256)) denied("ACCEPTANCE_ENVIRONMENT_INVALID");
     if (options.acceptance) options.acceptance = { ...options.acceptance, criteria: copy(options.acceptance.criteria) };
+    if (options.collaboration && (!collaborationId(options.collaboration.hostId) || typeof options.collaboration.authorize !== "function")) denied("COLLABORATION_CONFIG_INVALID");
+    if (options.collaboration) options.collaboration = { ...options.collaboration };
     for (const value of [this.maxConcurrent, options.maxAgents ?? 32, options.maxJobs ?? 2000])
       if (!Number.isSafeInteger(value) || value < 1 || value > 10000) denied("AGENT_LIMIT_INVALID");
     const depth = options.maxDelegationDepth ?? 2;
@@ -113,7 +118,8 @@ export class AgentSupervisor {
       if (existsSync(this.statePath)) {
         if (lstatSync(this.statePath).size > 32 * 1024 * 1024) denied("AGENT_STATE_INVALID", 500);
         this.state = JSON.parse(readFileSync(this.statePath, "utf8"));
-        if ((this.state as { version: number }).version === 1) this.state = { ...this.state, version: 2, organization: emptyOrganizations() };
+        if ((this.state as { version: number }).version === 1) this.state = { ...this.state, version: 3, organization: emptyOrganizations(), collaboration: [] };
+        if ((this.state as { version: number }).version === 2) this.state = { ...this.state, version: 3, collaboration: [] };
         this.validateState();
       }
       for (const job of this.state.jobs) if (job.status === "running") {
@@ -152,7 +158,7 @@ export class AgentSupervisor {
   }
   private validateState() {
     const s = this.state;
-    if (!s || s.version !== 2 || !Array.isArray(s.profiles) || !Array.isArray(s.jobs) || s.profiles.length > 10000 || s.jobs.length > 10000) denied("AGENT_STATE_INVALID", 500);
+    if (!s || s.version !== 3 || !Array.isArray(s.profiles) || !Array.isArray(s.jobs) || s.profiles.length > 10000 || s.jobs.length > 10000) denied("AGENT_STATE_INVALID", 500);
     const ids = new Set<string>(), jobs = new Set<string>(), requests = new Set<string>();
     for (const p of s.profiles) {
       if (!p || !isId(p.id) || ids.has(p.id) || !validText(p.owner, 256) || !validText(p.name, 100) || !validText(p.role, 4000, true)
@@ -174,6 +180,82 @@ export class AgentSupervisor {
       if (!parent || parent.owner !== j.owner || j.depth !== parent.depth + 1) denied("AGENT_STATE_INVALID", 500);
     }
     this.validateOrganizations();
+    this.validateCollaboration();
+  }
+  private validateCollaboration() {
+    if (!Array.isArray(this.state.collaboration) || this.state.collaboration.length > 10000) denied("COLLABORATION_STATE_INVALID", 500);
+    const keys = new Set<string>(), receiptIds = new Set<string>(), jobIds = new Set<string>();
+    for (const record of this.state.collaboration) {
+      if (!record || !validText(record.owner, 256) || !validCollaborationEnvelope(record.envelope) || !record.receipt) denied("COLLABORATION_STATE_INVALID", 500);
+      const e = record.envelope, r = record.receipt, key = collaborationKey(record.owner, e);
+      const job = this.state.jobs.find(j => j.id === r.job_id), task = this.state.organization.tasks.find(t => t.id === job?.organizationTaskId);
+      const expected = { schema_version: "pida.collaboration.receipt/1", receipt_id: r.receipt_id, producer_id: e.producer_id, request_id: e.request_id,
+        payload_digest: e.payload_digest, recipient: e.recipient, received_at: r.received_at, job_id: r.job_id, phase: "job_enqueued", durable: true, durability_scope: "local-process-restart" };
+      if (!isId(r.receipt_id) || typeof r.received_at !== "string" || !Number.isFinite(Date.parse(r.received_at)) || canonical(r) !== canonical(expected) || keys.has(key) || receiptIds.has(r.receipt_id) || jobIds.has(r.job_id)
+        || !job || job.owner !== record.owner || job.agentId !== e.recipient.agent_id || job.input !== e.input || job.requestId !== "collab-" + r.receipt_id || job.collaborationReceiptId !== r.receipt_id
+        || !task || task.orgId !== e.recipient.org_session_id || (e.reply_to_job_id && !this.state.jobs.some(j => j.id === e.reply_to_job_id && j.owner === record.owner && j.agentId === job.agentId
+          && this.state.organization.tasks.some(t => t.id === j.organizationTaskId && t.orgId === task.orgId)))) denied("COLLABORATION_STATE_INVALID", 500);
+      keys.add(key); receiptIds.add(r.receipt_id); jobIds.add(r.job_id);
+    }
+    for (const job of this.state.jobs) if (job.collaborationReceiptId !== undefined && !jobIds.has(job.id)) denied("COLLABORATION_STATE_INVALID", 500);
+  }
+  private async authorizeCollaboration(principal: Principal, envelope: CollaborationEnvelope, phase: "receive" | "read" | "dispatch", signal?: AbortSignal) {
+    this.usable(); this.principal(principal);
+    if (!principal.permissions.includes("pida:agents") || !principal.permissions.includes("pida:collaborate")) denied("FORBIDDEN", 403);
+    const policy = this.options.collaboration;
+    if (!policy) return denied("COLLABORATION_DISABLED", 503);
+    if (envelope.recipient.host_id !== policy.hostId) denied("COLLABORATION_FORBIDDEN", 403);
+    const stop = AbortSignal.any([AbortSignal.timeout(5000), ...(signal ? [signal] : [])]);
+    stop.throwIfAborted();
+    let abort: (() => void) | undefined;
+    try {
+      const allowed = await Promise.race([Promise.resolve().then(() => policy.authorize({ principal: copy(principal), envelope: copy(envelope), phase, signal: stop })),
+        new Promise<never>((_, reject) => { abort = () => reject(new PidaError("COLLABORATION_FORBIDDEN", 403)); stop.addEventListener("abort", abort, { once: true }); })]);
+      if (allowed !== true || stop.aborted) denied("COLLABORATION_FORBIDDEN", 403);
+    } catch { denied("COLLABORATION_FORBIDDEN", 403); }
+    finally { if (abort) stop.removeEventListener("abort", abort); }
+    this.usable();
+  }
+  private collaborationTarget(principal: Principal, e: CollaborationEnvelope) {
+    this.owned(e.recipient.agent_id, principal);
+    const org = this.state.organization.sessions.find(o => o.id === e.recipient.org_session_id && o.owner === principal.id);
+    if (!org || !org.participants.includes(e.recipient.agent_id)) return denied("COLLABORATION_RECIPIENT_INVALID", 403);
+    if (org.status !== "active" || Date.now() >= org.deadlineAt) denied("COLLABORATION_TARGET_INACTIVE", 409);
+    if (e.reply_to_job_id) {
+      const job = this.ownedJob(e.reply_to_job_id, principal), task = this.state.organization.tasks.find(t => t.id === job.organizationTaskId);
+      if (job.agentId !== e.recipient.agent_id || task?.orgId !== org.id || !["queued", "running", "completed"].includes(job.status) || job.code === "CANCELLED" || job.result?.recovery)
+        denied("COLLABORATION_REPLY_OBSOLETE", 409);
+    }
+    return org;
+  }
+  /** One file commit binds receive evidence, job and task before scheduling or acknowledging. */
+  async receiveCollaboration(principal: Principal, input: CollaborationEnvelope): Promise<CollaborationReceipt> {
+    this.usable(); this.principal(principal); principal = copy(principal);
+    if (!validCollaborationEnvelope(input)) denied("COLLABORATION_ENVELOPE_INVALID");
+    const e = copy(input);
+    await this.authorizeCollaboration(principal, e, "receive");
+    const duplicate = this.state.collaboration.find(r => collaborationKey(r.owner, r.envelope) === collaborationKey(principal.id, e));
+    if (duplicate) {
+      if (duplicate.envelope.payload_digest !== e.payload_digest) denied("COLLABORATION_REQUEST_CONFLICT", 409);
+      return copy(duplicate.receipt);
+    }
+    const org = this.collaborationTarget(principal, e);
+    this.taskCapacity(1);
+    if (this.state.collaboration.length >= 10000) denied("COLLABORATION_LIMIT", 429);
+    const id = randomUUID(), job = this.enqueueRecord(e.recipient.agent_id, principal, { input: e.input, requestId: "collab-" + id });
+    job.collaborationReceiptId = id;
+    this.trackTask(org.id, job);
+    const receipt: CollaborationReceipt = { schema_version: "pida.collaboration.receipt/1", receipt_id: id, producer_id: e.producer_id, request_id: e.request_id,
+      payload_digest: e.payload_digest, recipient: copy(e.recipient), received_at: now(), job_id: job.id, phase: "job_enqueued", durable: true, durability_scope: "local-process-restart" };
+    this.state.collaboration.push({ owner: principal.id, envelope: e, receipt });
+    this.persist(); this.kick(); return copy(receipt);
+  }
+  async getCollaborationReceipt(id: string, principal: Principal): Promise<CollaborationReceipt> {
+    this.usable(); this.principal(principal);
+    const record = this.state.collaboration.find(r => r.receipt.receipt_id === id && r.owner === principal.id);
+    if (!record) return denied("COLLABORATION_RECEIPT_NOT_FOUND", 404);
+    await this.authorizeCollaboration(principal, record.envelope, "read");
+    return copy(record.receipt);
   }
   private persist() {
     try { savePrivate(this.statePath, this.state); }
@@ -721,6 +803,12 @@ export class AgentSupervisor {
       }
       signal.throwIfAborted();
       const prompt = context ? `Stored agent memory (context, not new authorization):\n${context}\n\nCurrent user request:\n${job.input}` : job.input;
+      const collaboration = this.state.collaboration.find(r => r.receipt.job_id === job.id);
+      if (collaboration) {
+        await this.authorizeCollaboration(principal, collaboration.envelope, "dispatch", signal);
+        this.collaborationTarget(principal, collaboration.envelope);
+        signal.throwIfAborted();
+      }
       const result = await runtime.run(profile.sessionId, principal, prompt, event => this.event(job, event), signal, { taskId: job.id });
       job.result = copy(result); job.runId = result.runId; job.status = result.status; job.code = result.code; job.latestText = result.text.slice(-16000);
       if (result.recovery) { profile.needsReconciliation = true; profile.paused = true; }

@@ -1,0 +1,15 @@
+{
+  "baseline": "30fef192b478b1697bb95a22ad7340cf1c485b03",
+  "files": {
+    "src/collaboration.ts": "af264d0477c52b5243c5e3c6dd77713f11aa7cd29ed62062754570f597a941b2",
+    "src/agent-supervisor.ts": "3e64357c6cfcb33778cbda36dc2ed3a42a8242a777f4f319c06a352c30b4c669",
+    "src/http.ts": "ae8005973ae50aa2876412f7b114e35301bb41b9af7b813a0462f573400c7fd8",
+    "src/client.ts": "4444985dad91a82ab61aa2920878661f1d0baf6dfe8d323da4079d0a3b319334",
+    "src/index.ts": "e64d1b1955a54fdf943fcdc2a6a8f876cd09ec2925e6680a35efd55e23ec5cf9",
+    "test/collaboration.test.mjs": "7f7b1d2b04d4270574543e610af58cc1355733ff15f67b2b49109ded99b3fc83",
+    "test/fixtures/collaboration-crash.mjs": "9b198061769f68a6fb83e5afa4f03c9bd3438833f6c9a9a675e1a09d670fb68e",
+    "test/organization.test.mjs": "e6ae029fe8ecb4d9c5380004798314994ea565863d3ea66c473799799971cf25",
+    "docs/COLLABORATION-1.md": "95d3a59b16b63a24e02d0eeb1f8f05291448592ad0984f9831b468400bba2045",
+    "fixtures/collaboration/envelope-v1.json": "ee7386c009799ac52b976b26c99b45b4fceae4dc78338581045da8c71aebfdfe"
+  }
+}

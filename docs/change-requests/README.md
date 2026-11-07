@@ -4,6 +4,7 @@ This index is the Pida owner's intake/response record. Original requests remain 
 
 | Direction | Request | Owner disposition | Response / next gate |
 | --- | --- | --- | --- |
+| Schumpeter → Pida | [CR-PIDA-COLLABORATION-20261106-01](https://github.com/Chanta-Research-Group/Schumpeter/blob/237417a5e5742888f565b30581387c7a2833a7f3/docs/change_requests/CR-PIDA-COLLABORATION-20261106-01.md) | 2026-11-07: owner-agreed bounded durable delivery implemented; broader CR remains open | [Contract](../COLLABORATION-1.md), [validation](../development/PIDA-COLLABORATION-VALIDATION-20261107.md): exact native job mapping; fresh-task replies only; no full waiting-parent continuation/live federation acceptance |
 | Persona → Pida | [CR-PIDA-001](incoming/PERSONA-CR-PIDA-001.md) | ACCEPTED; input-boundary slice implemented in 0.8.5 | [Response](responses/PERSONA-CR-PIDA-001.md); public remote revalidation and receipt readback remain owner-pending |
 | Schumpeter → Pida | [CR-PIDA-20261103-01](incoming/SCHUMPETER-CR-PIDA-20261103-01.md) | Current producer supplied; updated consumer verified | [0.8.6 follow-up](responses/SCHUMPETER-CURRENT-CONSUMER-20261103.md); explicit current profile imports current captures |
 | Pida → Persona | [CR-PERSONA-20261103-01](CR-PERSONA-20261103-01.md) | Site owner response received; partial acceptance | [0.8.6 disposition](responses/PERSONA-SITE-CR-PERSONA-20261103-01.md): exact formatter checked; remote authorization and CAS append still owner-pending |

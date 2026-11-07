@@ -25,6 +25,7 @@ export { createProjectTools, type ProjectConfig } from "./project-tools.js";
 
 export * from "./agent-memory.js";
 export * from "./agent-supervisor.js";
+export * from "./collaboration.js";
 export * from "./provider-connector.js";
 export * from "./project-view.js";
 export * from "./agent-tools.js";

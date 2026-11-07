@@ -1,0 +1,8 @@
+date_kst	decision	evidence	limit_or_next_action
+2026-11-07	Use isolated pida owner checkout	D:/ChantaResearchGroup/pida; 30fef192b478b1697bb95a22ad7340cf1c485b03; clean initial state	Branch docs/pida-owner-intake-20261107; documentation only
+2026-11-07T20:35:46+09:00	Preserve discovered existing checkout	D:/pida same HEAD/main; four untracked entries	Existing contents untouched; initial root search was not machine-wide
+2026-11-07	Reuse native organization/job model	client.ts organization list/create/get/cancel; supervisor state v2	OrgSession is goal-bound; outer persistent organization mapping is separate
+2026-11-07	Do not equate steering ACK with durable inbox	runtime.ts queuedInputDurable false; AUDIT-FIXES-0.8.18.md	Coordinate versioned receive/job mapping and crash boundary before code
+2026-11-07	Keep Persona inclusion and acceptance scopes separate	PERSONA-PROVIDER.md; pi-logical-context input receipt	Public remote authorization/readback and canonical append remain separate
+2026-11-07	Record collaboration request intake	Schumpeter 237417a5e5742888f565b30581387c7a2833a7f3; CR-PIDA-COLLABORATION-20261106-01	Local proposed response only; no runtime implementation or external publication
+2026-11-07	Use source and documentation verification only	PIDA-OWNER-READINESS-2026-11-07.md	No runtime test or cross-family review claimed
