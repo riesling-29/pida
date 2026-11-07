@@ -1,0 +1,104 @@
+{
+  "schema_version": "pida.real-case-negative/1",
+  "case_id": "0227453a-4ceb-4edf-a27b-6ad701d4a9be",
+  "attempt_label": "Original root-released A; immutable before user-authorized retry",
+  "runtime_source": "bb9886ffc3a2a815e3c255b7dbfc83b4b4bac5e3",
+  "native_ids": {
+    "id": "079134b2-2899-48d3-b095-5ed09a4a0b53",
+    "agentId": "caf248e1-6414-4fd0-ac65-4bc0a6a50e60",
+    "organizationTaskId": "2c39a849-f450-4b58-887e-de61def231cc",
+    "attemptId": "532e7246-5d81-4796-933f-9003ba1d7a66",
+    "runId": "f234a372-39a1-4407-b36f-368867ad0bde",
+    "sessionId": "01a1b6ab-fc84-775e-8963-0f7088df7f5b"
+  },
+  "status": "limited",
+  "code": "USAGE_UNAVAILABLE",
+  "org_status": "unknown",
+  "observed_model_requests": 1,
+  "attempts": 1,
+  "joins": 0,
+  "child_jobs": 0,
+  "native_active_ms": 4678,
+  "assistant_stop_reason": "error",
+  "assistant_content_blocks": 0,
+  "sdk_usage_zero_placeholders": true,
+  "model_response": [
+    {
+      "turn_id": "73ca79f4-e187-4499-a612-a01516052713",
+      "turn_index": 1,
+      "request_id": "d0ae7d99-9d1c-4fe2-8316-58bc81582a9f",
+      "attempt": 1,
+      "stop_reason": "error",
+      "usage_status": "unknown",
+      "input_tokens": null,
+      "uncached_input_tokens": null,
+      "output_tokens": null,
+      "cache_read_tokens": null,
+      "cache_write_tokens": null,
+      "reasoning_tokens": null,
+      "tokens": null,
+      "first_output_ms": null,
+      "duration_ms": 4477.752199999988,
+      "cost_usd": null
+    }
+  ],
+  "provider_reported_category": "ChatGPT Subscription Sharing usage limit reached",
+  "provider_error_sha256": "a3f2d14c9ef1e3169972af93918373235c6ec289178ac15e9011d7bd8bf9a351",
+  "independent_quota_or_reset_verified": false,
+  "result_text_bytes": 0,
+  "result_text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "artifact_refs": [],
+  "logical_input_receipts": [
+    {
+      "source_id": "5512f267-dec2-4f05-8bce-19139d2e4ae5",
+      "event_id": "0523eb11-cd57-4910-8337-bfde26fa30d5",
+      "sequence": 6,
+      "checks": {
+        "job": true,
+        "attempt": true,
+        "run": true,
+        "agent": true,
+        "org": true,
+        "host": true,
+        "authorized": true,
+        "logical_scope": true
+      }
+    }
+  ],
+  "child_assignment_audit": "UNKNOWN: no assistant tool calls or child execution",
+  "private_oracle_result": "NOT_EVALUABLE: no completed output",
+  "billing": "unknown",
+  "source_files": [
+    {
+      "private_copy": ".pida-test-final-real-case-20261107\\evidence-a-original\\observation.health.json",
+      "sha256": "3057733c629b0d676ebb9060bffa96a928dc024aae19062b3d33c2e7c8c143f3"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107\\evidence-a-original\\observation.jsonl",
+      "sha256": "58e871512130c68018cee533c2d58f283f738af64e86115a1112393ce3a0251e"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107\\evidence-a-original\\observation.manifest.json",
+      "sha256": "6f9634208d527579ad4baf3d37e751a94358710bef9fa169703b0b8dae8b1e08"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107\\evidence-a-original\\observation.ocel.json",
+      "sha256": "f60eadafb734301e5021cfcff6918479818166bb8687e82e9fc7e3c54bd9c7df"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107\\evidence-a-original\\observation.ocel.meta.json",
+      "sha256": "1431541904ceee9d2bad3af676072816538d22d4db385a58a860cd31fd09348f"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107\\evidence-a-original\\supervisor.json",
+      "sha256": "b551dd8b6215e65dd89ce35ce511e72df05e42d537ef1034c5b9aa51bb8abcf0"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107\\evidence-a-original\\synthetic-pi-session.jsonl",
+      "sha256": "99d4554090b179bb73354203032b10de83b732b462401521c284dca8348921fb"
+    }
+  ],
+  "no_retry_in_this_attempt": true,
+  "original_runtime_or_state_rewritten": false,
+  "raw_context_published": false
+}
