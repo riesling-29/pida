@@ -1,0 +1,33 @@
+{
+  "case_id": "0227453a-4ceb-4edf-a27b-6ad701d4a9be",
+  "source": "4d2faec685b4db8645912bf545b9b02add457951",
+  "state": "PREPARED_NO_EXECUTION",
+  "profiles": 3,
+  "native_goals": 2,
+  "sole_submitter": "desktop_shell",
+  "oracle_scope": "Private Persona configuration only; never native goal or criteria.",
+  "runtime_application_source": "bb9886ffc3a2a815e3c255b7dbfc83b4b4bac5e3",
+  "helper_source": "4d2faec685b4db8645912bf545b9b02add457951",
+  "desktop_workspace_proposed": "D:/ChantaResearchGroup/Schumpeter-shell-20261107/desktop-app/evidence/local-real-case-20261107",
+  "desktop_user_data_proposed": "D:/ChantaResearchGroup/Schumpeter-shell-20261107/desktop-app/evidence/local-real-case-user-20261107",
+  "challenge_private_path": "D:\\ChantaResearchGroup\\pida\\.pida-test-final-real-case-20261107\\persona-description.txt",
+  "native_profiles": null,
+  "host_id": null,
+  "admission_receipts": [],
+  "execution_released": false,
+  "model_calls": 0,
+  "limits": {
+    "native_goals": 2,
+    "expected_jobs": 4,
+    "profiles": 3,
+    "run_ms": 20000,
+    "provider_retries": 0,
+    "output_retries": 0,
+    "repair_attempts": 0,
+    "observed_request_stop_threshold": 12,
+    "hard_total_request_cap": false,
+    "active_case_wall_ms": 180000,
+    "billing": "unknown"
+  },
+  "next": "Desktop sole submitter provisions fresh Persona/profile IDs without task submission; owner prepares public plan from IDs. Root RELEASE is required before native admission."
+}
