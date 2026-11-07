@@ -688,6 +688,31 @@ export class AgentSupervisor {
       required: [...input.required], optional: [...optional], deadlineAt: Math.min(org.deadlineAt, Date.now() + timeout), failurePolicy: "block", status: "waiting" };
     task.status = "queued"; state.joins.push(join); this.persist(); this.kick(); return copy(join);
   }
+  /** Read-only terminal handoff proof for the native agent_join host tool.
+   * No result/model marker can create this persisted membership or active lease.
+   */
+  confirmJoinYield(parentJobId: string, principal: Principal, input: { agentId: string; sessionId: string; runId: string; joinId: string; revision: number }): boolean {
+    this.usable(); this.principal(principal);
+    if (!principal.permissions.includes("agent:delegate")) return false;
+    const parent = this.state.jobs.find(j => j.id === parentJobId && j.owner === principal.id);
+    const active = parent && this.active.get(parent.id), profile = this.state.profiles.find(p => p.id === input.agentId && p.owner === principal.id);
+    if (!parent || !active || active.controller.signal.aborted || !profile || active.agentId !== input.agentId
+      || parent.agentId !== input.agentId || parent.status !== "running" || parent.runId !== input.runId
+      || parent.sessionId !== input.sessionId || profile.sessionId !== input.sessionId || parent.result?.recovery) return false;
+    const state = this.state.organization, task = state.tasks.find(t => t.id === parent.organizationTaskId);
+    const attempt = state.attempts.find(a => a.id === parent.attemptId), org = task && state.sessions.find(o => o.id === task.orgId);
+    const join = state.joins.find(j => j.id === input.joinId);
+    if (!task || !attempt || !org || !join || org.owner !== principal.id || task.agentId !== input.agentId
+      || attempt.jobId !== parent.id || attempt.taskId !== task.id || task.attempts.at(-1) !== attempt.id
+      || !["queued", "waiting"].includes(task.status) || org.status !== "active" || Date.now() >= org.deadlineAt
+      || !org.participants.includes(input.agentId) || join.parentJobId !== parent.id || join.taskId !== task.id || join.orgId !== org.id
+      || join.status !== "waiting" || join.revision !== input.revision || Date.now() >= join.deadlineAt || join.continuationJobId) return false;
+    return [...join.required, ...join.optional].every(id => {
+      const child = this.state.jobs.find(j => j.id === id), childTask = child && state.tasks.find(t => t.id === child.organizationTaskId);
+      return !!child && child.owner === principal.id && child.parentJobId === parent.id && !!childTask
+        && childTask.orgId === org.id && childTask.agentId === child.agentId && org.participants.includes(child.agentId);
+    });
+  }
   listOrganizations(principal: Principal) { this.principal(principal); return this.state.organization.sessions.filter(o => o.owner === principal.id).map(copy); }
   acceptanceCriteria(principal: Principal) { this.principal(principal); return copy(this.options.acceptance?.criteria ?? []); }
   async getOrganization(id: string, principal: Principal) {
