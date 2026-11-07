@@ -1,0 +1,388 @@
+{
+  "version": "git version 2.53.0",
+  "kernel": "6.18.33.2-microsoft-standard-WSL2",
+  "architecture": "x86_64",
+  "relocatedWithSpaces": true,
+  "cleanPath": "/tmp/pida-git-linux-xfphn6n0/relocated dependency with spaces/bin",
+  "resolvedGit": "/tmp/pida-git-linux-xfphn6n0/relocated dependency with spaces/bin/git",
+  "ambientExecutableLookupExcluded": [
+    "git",
+    "ssh",
+    "perl",
+    "curl"
+  ],
+  "syntheticGlobalConfigUnchanged": true,
+  "actualUserConfig": "Not read; isolated HOME, system/global configuration disabled",
+  "artifactUnchanged": true,
+  "files": 49,
+  "bytes": 5748026,
+  "inventoryDigest": "13671a0da1c4e6409865a96f72ade7d2c9a192b51138d225c06bafbb383e8e27",
+  "inventory": [
+    {
+      "path": "bin/git",
+      "bytes": 484,
+      "sha256": "5da3c56d312517849c3c7e30e32d333693f1d3234ce01147870f267efcbd723e"
+    },
+    {
+      "path": "lib/libpcre2-8.so.0",
+      "bytes": 699056,
+      "sha256": "4a6b6b2078685b074869d75cb068664d7da6b3036df7bca0442b1bbbd4ac7e65"
+    },
+    {
+      "path": "lib/libz.so.1",
+      "bytes": 121272,
+      "sha256": "47b61967895b30e8c0c6818dd633ffeb87711cf637c688f981896f0dd84ce23b"
+    },
+    {
+      "path": "libexec/git-core/git",
+      "bytes": 4547768,
+      "sha256": "5516c9f362c29376ab9a499a33082f9f611941d8c75930c880e30ad109e39c9a"
+    },
+    {
+      "path": "share/common-licenses/Apache-2.0",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "share/common-licenses/Artistic",
+      "bytes": 6111,
+      "sha256": "b7fd9b73ea99602016a326e0b62e6646060d18febdd065ceca8bb482208c3d88"
+    },
+    {
+      "path": "share/common-licenses/BSD",
+      "bytes": 1499,
+      "sha256": "5d588eb3b157d52112afea935c88a7ff9efddc1e2d95a42c25d3b96ad9055008"
+    },
+    {
+      "path": "share/common-licenses/CC0-1.0",
+      "bytes": 7048,
+      "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+    },
+    {
+      "path": "share/common-licenses/GFDL",
+      "bytes": 22955,
+      "sha256": "110535522396708cea37c72a802c5e7e81391139f5f7985631c93ef242b206a4"
+    },
+    {
+      "path": "share/common-licenses/GFDL-1.2",
+      "bytes": 20394,
+      "sha256": "2652c22ba086f92e55ae4a9f9c890ad4766ffd7814a73d318e22a597edf857a4"
+    },
+    {
+      "path": "share/common-licenses/GFDL-1.3",
+      "bytes": 22955,
+      "sha256": "110535522396708cea37c72a802c5e7e81391139f5f7985631c93ef242b206a4"
+    },
+    {
+      "path": "share/common-licenses/GPL",
+      "bytes": 35149,
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    {
+      "path": "share/common-licenses/GPL-1",
+      "bytes": 12527,
+      "sha256": "49c007bafb5ad6dd9f9d4dae4d3ac0461975498150c05d684c551f0914ab486c"
+    },
+    {
+      "path": "share/common-licenses/GPL-2",
+      "bytes": 17984,
+      "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6"
+    },
+    {
+      "path": "share/common-licenses/GPL-3",
+      "bytes": 35149,
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+    },
+    {
+      "path": "share/common-licenses/LGPL",
+      "bytes": 7652,
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118"
+    },
+    {
+      "path": "share/common-licenses/LGPL-2",
+      "bytes": 25270,
+      "sha256": "cc535c21133c895b56b374c8a1dc1eb948d99003ed2b47372069456b62f42b24"
+    },
+    {
+      "path": "share/common-licenses/LGPL-2.1",
+      "bytes": 26419,
+      "sha256": "20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95"
+    },
+    {
+      "path": "share/common-licenses/LGPL-3",
+      "bytes": 7652,
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118"
+    },
+    {
+      "path": "share/common-licenses/MPL-1.1",
+      "bytes": 25755,
+      "sha256": "f849fc26a7a99981611a3a370e83078deb617d12a45776d6c4cada4d338be469"
+    },
+    {
+      "path": "share/common-licenses/MPL-2.0",
+      "bytes": 16726,
+      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85"
+    },
+    {
+      "path": "share/doc/git/NEWS.Debian.gz",
+      "bytes": 427,
+      "sha256": "511929a5f39205445d332a2d7c8c85c6748d62df1c86294fd2050dd96e429037"
+    },
+    {
+      "path": "share/doc/git/README.Debian",
+      "bytes": 2057,
+      "sha256": "a98303a987d975c07237fa421a0c944343f202c56dbbcf636e00ad616590b207"
+    },
+    {
+      "path": "share/doc/git/README.emacs",
+      "bytes": 805,
+      "sha256": "7438c790ce9b9e562d3352854fb58238ab26c515817afea3fff14dd23feb7e8b"
+    },
+    {
+      "path": "share/doc/git/README.md",
+      "bytes": 3662,
+      "sha256": "4dddaa908cc3407fe752784073847ca4ba949793800a686bed696f93a64534a0"
+    },
+    {
+      "path": "share/doc/git/README.source",
+      "bytes": 3139,
+      "sha256": "c198f422b385c345a7c7a912b30ebe440a736494cecabf59a68cbba167298602"
+    },
+    {
+      "path": "share/doc/git/changelog.Debian.gz",
+      "bytes": 9452,
+      "sha256": "a1368e003eccfc0780095ed5d6df9244af312b5b196b32a0b5994cc68ec587f3"
+    },
+    {
+      "path": "share/doc/git/copyright",
+      "bytes": 17251,
+      "sha256": "c60bb8fe022a5f6030d7cc8b98afdd2e2fe84d021e8a2f58e49ab32e176c906d"
+    },
+    {
+      "path": "share/doc/libpcre2-8-0/README.Debian",
+      "bytes": 458,
+      "sha256": "c8b10fd8a13c4913ce6d9640636276de05f285cd63f3b18bf123f3ff9d66672d"
+    },
+    {
+      "path": "share/doc/libpcre2-8-0/changelog.Debian.gz",
+      "bytes": 1846,
+      "sha256": "5892f33420b40aebce3a8496a2db43b43f9bf95abe26a99e6177e92d08b50a9a"
+    },
+    {
+      "path": "share/doc/libpcre2-8-0/copyright",
+      "bytes": 6627,
+      "sha256": "e915cde4251f96ec6af107ecd2e194440a4e69440893b0c982802f8a1e4ae40a"
+    },
+    {
+      "path": "share/doc/zlib1g/changelog.Debian.gz",
+      "bytes": 2052,
+      "sha256": "8f30d24c32a0bc366060873e086ce887a6eac9fb5c5a0d9937649b0d9e8e4030"
+    },
+    {
+      "path": "share/doc/zlib1g/copyright",
+      "bytes": 2927,
+      "sha256": "9e5b96d63773a5d177ba264254390f792be07e41748ebd94730981c6cac31cc6"
+    },
+    {
+      "path": "share/git-core/templates/description",
+      "bytes": 73,
+      "sha256": "85ab6c163d43a17ea9cf7788308bca1466f1b0a8d1cc92e26e9bf63da4062aee"
+    },
+    {
+      "path": "share/git-core/templates/hooks/applypatch-msg.sample",
+      "bytes": 478,
+      "sha256": "0223497a0b8b033aa58a3a521b8629869386cf7ab0e2f101963d328aa62193f7"
+    },
+    {
+      "path": "share/git-core/templates/hooks/commit-msg.sample",
+      "bytes": 896,
+      "sha256": "1f74d5e9292979b573ebd59741d46cb93ff391acdd083d340b94370753d92437"
+    },
+    {
+      "path": "share/git-core/templates/hooks/fsmonitor-watchman.sample",
+      "bytes": 4726,
+      "sha256": "e0549964e93897b519bd8e333c037e51fff0f88ba13e086a331592bf801fa1d0"
+    },
+    {
+      "path": "share/git-core/templates/hooks/post-update.sample",
+      "bytes": 189,
+      "sha256": "81765af2daef323061dcbc5e61fc16481cb74b3bac9ad8a174b186523586f6c5"
+    },
+    {
+      "path": "share/git-core/templates/hooks/pre-applypatch.sample",
+      "bytes": 424,
+      "sha256": "e15c5b469ea3e0a695bea6f2c82bcf8e62821074939ddd85b77e0007ff165475"
+    },
+    {
+      "path": "share/git-core/templates/hooks/pre-commit.sample",
+      "bytes": 1649,
+      "sha256": "57185b7b9f05239d7ab52db045f5b89eb31348d7b2177eab214f5eb872e1971b"
+    },
+    {
+      "path": "share/git-core/templates/hooks/pre-merge-commit.sample",
+      "bytes": 416,
+      "sha256": "d3825a70337940ebbd0a5c072984e13245920cdf8898bd225c8d27a6dfc9cb53"
+    },
+    {
+      "path": "share/git-core/templates/hooks/pre-push.sample",
+      "bytes": 1374,
+      "sha256": "ecce9c7e04d3f5dd9d8ada81753dd1d549a9634b26770042b58dda00217d086a"
+    },
+    {
+      "path": "share/git-core/templates/hooks/pre-rebase.sample",
+      "bytes": 4898,
+      "sha256": "4febce867790052338076f4e66cc47efb14879d18097d1d61c8261859eaaa7b3"
+    },
+    {
+      "path": "share/git-core/templates/hooks/pre-receive.sample",
+      "bytes": 544,
+      "sha256": "a4c3d2b9c7bb3fd8d1441c31bd4ee71a595d66b44fcf49ddb310252320169989"
+    },
+    {
+      "path": "share/git-core/templates/hooks/prepare-commit-msg.sample",
+      "bytes": 1492,
+      "sha256": "e9ddcaa4189fddd25ed97fc8c789eca7b6ca16390b2392ae3276f0c8e1aa4619"
+    },
+    {
+      "path": "share/git-core/templates/hooks/push-to-checkout.sample",
+      "bytes": 2783,
+      "sha256": "a53d0741798b287c6dd7afa64aee473f305e65d3f49463bb9d7408ec3b12bf5f"
+    },
+    {
+      "path": "share/git-core/templates/hooks/sendemail-validate.sample",
+      "bytes": 2308,
+      "sha256": "44ebfc923dc5466bc009602f0ecf067b9c65459abfe8868ddc49b78e6ced7a92"
+    },
+    {
+      "path": "share/git-core/templates/hooks/update.sample",
+      "bytes": 3650,
+      "sha256": "8d5f2fa83e103cf08b57eaa67521df9194f45cbdbcb37da52ad586097a14d106"
+    },
+    {
+      "path": "share/git-core/templates/info/exclude",
+      "bytes": 240,
+      "sha256": "6671fe83b7a07c8932ee89164d1f2793b2318058eb8b98dc5c06ee0a5a3b0ec1"
+    }
+  ],
+  "commands": [
+    {
+      "args": [
+        "--version"
+      ],
+      "status": 0,
+      "output": "git version 2.53.0"
+    },
+    {
+      "args": [
+        "init",
+        "--quiet"
+      ],
+      "status": 0,
+      "output": ""
+    },
+    {
+      "args": [
+        "commit",
+        "--allow-empty",
+        "-qm",
+        "Initial workspace"
+      ],
+      "status": 0,
+      "output": ""
+    },
+    {
+      "args": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "status": 0,
+      "output": "38ecdba597acf8ec85ed73cf8683cc4d5538c0aa"
+    },
+    {
+      "args": [
+        "add",
+        "--all"
+      ],
+      "status": 0,
+      "output": ""
+    },
+    {
+      "args": [
+        "commit",
+        "-qm",
+        "Synthetic artifact"
+      ],
+      "status": 0,
+      "output": ""
+    },
+    {
+      "args": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "status": 0,
+      "output": "f6d69c51a57c381d838c7d180c544101369ff28f"
+    },
+    {
+      "args": [
+        "status",
+        "--porcelain"
+      ],
+      "status": 0,
+      "output": ""
+    },
+    {
+      "args": [
+        "log",
+        "--format=%s",
+        "-1"
+      ],
+      "status": 0,
+      "output": "Synthetic artifact"
+    },
+    {
+      "args": [
+        "merge-base",
+        "--is-ancestor",
+        "38ecdba597acf8ec85ed73cf8683cc4d5538c0aa",
+        "f6d69c51a57c381d838c7d180c544101369ff28f"
+      ],
+      "status": 0,
+      "output": ""
+    },
+    {
+      "args": [
+        "diff",
+        "--name-only",
+        "38ecdba597acf8ec85ed73cf8683cc4d5538c0aa",
+        "f6d69c51a57c381d838c7d180c544101369ff28f"
+      ],
+      "status": 0,
+      "output": "result.txt"
+    },
+    {
+      "args": [
+        "ls-tree",
+        "-r",
+        "--name-only",
+        "HEAD"
+      ],
+      "status": 0,
+      "output": "result.txt"
+    },
+    {
+      "args": [
+        "show",
+        "HEAD:result.txt"
+      ],
+      "status": 0,
+      "output": "Synthetic Linux Git artifact: 리슬링"
+    }
+  ],
+  "externalRuntime": [
+    "/bin/sh",
+    "glibc",
+    "/lib64/ld-linux-x86-64.so.2"
+  ],
+  "scope": "13 actual local built-in Git invocations under clean PATH; not general/remote Git or clean VM proof"
+}
