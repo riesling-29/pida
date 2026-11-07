@@ -18,7 +18,7 @@ export interface OrganizationAdmissionReceipt {
 export interface OrganizationAdmissionRecord { owner: string; admission: OrganizationAdmission; receipt: OrganizationAdmissionReceipt }
 const closed = (value: unknown, keys: string[]): value is Record<string, unknown> => !!value && typeof value === "object" && !Array.isArray(value)
   && Object.getPrototypeOf(value) === Object.prototype && Object.keys(value).length === keys.length && Object.keys(value).every(k => keys.includes(k));
-const nativeId = (value: unknown): value is string => isId(value) && value.length === 36;
+const nativeId = (value: unknown): value is string => isId(value) && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
 const digest = (value: unknown): value is string => typeof value === "string" && /^[a-f0-9]{64}$/.test(value) && value.length === 64;
 export const organizationDefinitionDigest = (definition: OrganizationAdmissionDefinition): string => sha256(canonical(definition));
 export function organizationAdmissionDigest(admission: Omit<OrganizationAdmission, "admission_digest"> | OrganizationAdmission): string {
@@ -26,7 +26,8 @@ export function organizationAdmissionDigest(admission: Omit<OrganizationAdmissio
 }
 export function validOrganizationAdmission(value: unknown): value is OrganizationAdmission {
   if (!closed(value, ["schema_version", "reservation_id", "envelope", "definition", "definition_digest", "admission_digest"])
-    || value.schema_version !== "pida.organization.admission/1" || !collaborationId(value.reservation_id) || !validCollaborationEnvelope(value.envelope)) return false;
+    || value.schema_version !== "pida.organization.admission/1" || !collaborationId(value.reservation_id) || !validCollaborationEnvelope(value.envelope)
+    || !nativeId(value.envelope.recipient.org_session_id) || !nativeId(value.envelope.recipient.agent_id)) return false;
   const d = value.definition, e = value.envelope;
   if (!closed(d, ["goal", "root_agent_id", "participants", "criterion_ids", "criteria_digest", "environment_revision", "max_repair_attempts", "timeout_ms"])
     || d.goal !== e.input || d.root_agent_id !== e.recipient.agent_id

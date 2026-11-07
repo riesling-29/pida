@@ -1,0 +1,11 @@
+✔ admission policy v2 binds full Unicode reservation and rejects fake observed mapping, bad echoes and revoked grants (730.7016ms)
+✔ actual host admits exactly one root (local) while reserved and reconciles observed promotion after ACK loss (3131.5335ms)
+✔ actual host admits exactly one root (public-fixture) while reserved and reconciles observed promotion after ACK loss (2185.0283ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6627.432

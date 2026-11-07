@@ -7,8 +7,10 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
+import { randomUUID } from 'node:crypto';
 import { createCollaborationPolicyClient } from '../dist/collaboration-policy-client.js';
 import { collaborationDigest } from '../dist/collaboration.js';
+import { organizationDefinitionDigest, organizationAdmissionDigest } from '../dist/organization-admission.js';
 import { PidaClient } from '../dist/client.js';
 const root = fileURLToPath(new URL('../', import.meta.url)), token = 'synthetic-policy-token-'.repeat(3);
 const golden = JSON.parse(await readFile(join(root, 'fixtures/collaboration/envelope-v1.json'), 'utf8'));
@@ -163,4 +165,73 @@ test('explicit resume preserves native identity and lost ACK dedup; wrong profil
   await assert.rejects(client.receiveCollaboration(crashEnvelope), { code: 'COLLABORATION_FORBIDDEN' });
   await server.command({ grant: grantFor(e) }); assert.deepEqual(await client.receiveCollaboration(crashEnvelope), crashReceipt);
   assert.equal((await client.listAgentJobs(worker.id)).jobs.length, 2, 'no new job or effect replay on restart or retry');
+});
+
+test('admission policy v2 binds full Unicode reservation and rejects fake observed mapping, bad echoes and revoked grants', async t => {
+  const server = await policyServer(t), a = JSON.parse(await readFile(join(root, 'fixtures/organization-admission/admission-v1.json'), 'utf8'));
+  const policy = createCollaborationPolicyClient({ hostId: 'host-1', authorizationUrl: server.url, token: () => token, timeoutMs: 100 });
+  const input = { principal: { id: 'local-user', permissions: [] }, admission: a, phase: 'admit', signal: new AbortController().signal };
+  await server.command({ grant: grantFor(a.envelope), reservation_state: 'observed' });
+  assert.equal(await policy.authorizeAdmission(input), false, 'existing-looking mapping without reserved provenance is not admission authority');
+  await server.command({ reservation: a, reservation_state: 'reserved' });
+  for (const phase of ['admit', 'dispatch', 'read']) assert.equal(await policy.authorizeAdmission({ ...input, phase }), true);
+  await server.command({ reservation_state: 'observed' }); assert.equal(await policy.authorizeAdmission(input), true);
+  assert.equal(await policy.authorizeAdmission({ ...input, principal: { id: 'foreign' } }), false);
+  const altered = structuredClone(a); altered.definition.timeout_ms++; altered.definition_digest = organizationDefinitionDigest(altered.definition); altered.admission_digest = organizationAdmissionDigest(altered);
+  assert.equal(await policy.authorizeAdmission({ ...input, admission: altered }), false);
+  for (const mode of ['nonce', 'phase', 'owner', 'host', 'stale', 'recipient', 'definition', 'reservation', 'reservation-state', 'redirect', 'malformed', 'oversize', 'delay']) {
+    await server.command({ mode }); assert.equal(await policy.authorizeAdmission(input), false, mode);
+  }
+  await server.command({ mode: 'normal', grant: null }); assert.equal(await policy.authorizeAdmission(input), false);
+});
+
+for (const personaMode of process.env.PIDA_TEST_VERA_SOURCE ? ['local', 'public-fixture'] : ['local']) test(`actual host admits exactly one root (${personaMode}) while reserved and reconciles observed promotion after ACK loss`, async t => {
+  const server = await policyServer(t), directory = await mkdtemp(join(tmpdir(), 'pida-admit-host-'));
+  const args = [join(root, 'examples/schumpeter-host.mjs'), '--workspace', directory, '--host-id', 'host-1',
+    ...(personaMode === 'public-fixture' ? ['--persona-module', join(root, 'examples/vera-dispatch-persona.mjs')] : [])];
+  const env = { ...process.env, PIDA_SCHUMPETER_AUTH_URL: server.url, PIDA_SCHUMPETER_AUTH_TOKEN: token,
+    PIDA_VERA_SOURCE: process.env.PIDA_TEST_VERA_SOURCE, PIDA_VERA_PYTHON: process.env.PYTHON ?? 'python' };
+  let host = pipe(spawn(process.execPath, args, { env, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }), 'pida-host-ready');
+  t.after(async () => { await host.close(); await rm(directory, { recursive: true, force: true }); });
+  let ready = await host.ready, client = new PidaClient({ baseUrl: ready.base_url, token: () => ready.api_token });
+  const agent = await client.createAgent({ name: 'sole-root' }), cap = await client.getOrganizationAdmissionCapabilities(); assert.equal(cap.enabled, true); assert.equal(cap.supervisor_state_version, 4);
+  const a = JSON.parse(await readFile(join(root, 'fixtures/organization-admission/admission-v1.json'), 'utf8'));
+  a.envelope.recipient.agent_id = agent.id;
+  a.envelope.payload_digest = collaborationDigest(a.envelope);
+  a.definition = { ...a.definition, root_agent_id: agent.id, participants: [agent.id], criterion_ids: cap.acceptance.criterion_ids,
+    criteria_digest: cap.acceptance.criteria_digest, environment_revision: cap.acceptance.environment_revision };
+  a.definition_digest = organizationDefinitionDigest(a.definition); a.admission_digest = organizationAdmissionDigest(a);
+  await assert.rejects(client.admitOrganization(a), { code: 'ORGANIZATION_ADMISSION_FORBIDDEN' });
+  assert.equal((await client.listAgentJobs(agent.id)).jobs.length, 0);
+  await server.command({ grant: grantFor(a.envelope), reservation: a, reservation_state: 'reserved' });
+  const response = await fetch(ready.base_url + '/v1/collaboration/organization-admissions', { method: 'POST', headers: { Authorization: 'Bearer ' + ready.api_token, 'Content-Type': 'application/json' }, body: JSON.stringify(a) });
+  assert.equal(response.status, 202); await response.body.cancel();
+  let job; for (let i = 0; i < 200; i++) { job = (await client.listAgentJobs(agent.id)).jobs[0]; if (job && !['queued', 'running'].includes(job.status)) break; await delay(10); }
+  assert.equal(job.status, 'completed', JSON.stringify({ status: job.status, code: job.code }));
+  const receipt = await client.admitOrganization(a); assert.equal(receipt.job_id, job.id); assert.equal(receipt.root_task_id, job.organizationTaskId); assert.equal(receipt.root_attempt_id, job.attemptId);
+  const view = await client.getOrganization(a.envelope.recipient.org_session_id); assert.equal(view.tasks.length, 1); assert.equal(view.attempts.length, 1); assert.equal(view.joins.length, 0);
+  if (personaMode === 'public-fixture') {
+    const bundle = await client.exportAgentJob(agent.id, job.id), included = bundle.events.find(e => e.activity === 'context_input_included'); assert.ok(included);
+    const binding = JSON.parse(included.payload.descriptor).personaBinding.externalContext;
+    assert.equal(binding.attemptId, receipt.root_attempt_id); assert.equal(binding.taskId, receipt.job_id); assert.equal(binding.organizationSessionId, a.envelope.recipient.org_session_id);
+  }
+  await host.close(); host = pipe(spawn(process.execPath, [...args, '--workspace-mode', 'resume'], { env, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }), 'pida-host-ready');
+  ready = await host.ready; client = new PidaClient({ baseUrl: ready.base_url, token: () => ready.api_token });
+  assert.deepEqual(await client.admitOrganization(a), receipt, 'promotion can reconcile from same immutable receipt after restart');
+  await server.command({ reservation_state: 'observed' }); assert.deepEqual(await client.getOrganizationAdmissionReceipt(receipt.receipt_id), receipt);
+  assert.equal((await client.listAgentJobs(agent.id)).jobs.length, 1);
+  if (personaMode === 'local') {
+    const next = structuredClone(a); next.envelope.request_id += '-crash'; next.envelope.recipient.org_session_id = randomUUID(); next.reservation_id += '-crash';
+    next.envelope.payload_digest = collaborationDigest(next.envelope); next.admission_digest = organizationAdmissionDigest(next);
+    await server.command({ grant: grantFor(next.envelope), reservation: next, reservation_state: 'reserved', mode: 'delay' });
+    const interruptedReceipt = await client.admitOrganization(next);
+    for (let i = 0; i < 100; i++) { job = await client.getAgentJob(agent.id, interruptedReceipt.job_id); if (job.status === 'running') break; await delay(5); }
+    assert.equal(job.status, 'running'); host.child.kill('SIGKILL'); await host.closed; await server.command({ mode: 'normal' });
+    host = pipe(spawn(process.execPath, [...args, '--workspace-mode', 'resume'], { env, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }), 'pida-host-ready');
+    ready = await host.ready; client = new PidaClient({ baseUrl: ready.base_url, token: () => ready.api_token });
+    assert.deepEqual(await client.admitOrganization(next), interruptedReceipt);
+    job = await client.getAgentJob(agent.id, interruptedReceipt.job_id); assert.equal(job.status, 'interrupted'); assert.equal(job.runId, undefined);
+    assert.equal((await client.getAgent(agent.id)).needsReconciliation, true); assert.equal((await client.listAgentJobs(agent.id)).jobs.length, 2);
+  }
+  await server.command({ grant: null }); await assert.rejects(client.getOrganizationAdmissionReceipt(receipt.receipt_id), { code: 'ORGANIZATION_ADMISSION_FORBIDDEN' });
 });

@@ -139,7 +139,7 @@ test('v1 migrates without inventing organizations; future formats fail closed',a
   const path=directory(t),options={directory:path,resolvePrincipal:()=>owner,createRuntime:()=>{throw Error('no replay');}};
   let s=await AgentSupervisor.open(options);s.register(owner,{name:'legacy'});await s.close();
   const file=join(path,'supervisor.json'),state=JSON.parse(readFileSync(file,'utf8'));state.version=1;delete state.organization;writeFileSync(file,JSON.stringify(state));
-  s=await AgentSupervisor.open(options);assert.deepEqual(s.listOrganizations(owner),[]);assert.equal(JSON.parse(readFileSync(file,'utf8')).version,3);await s.close();
+  s=await AgentSupervisor.open(options);assert.deepEqual(s.listOrganizations(owner),[]);assert.equal(JSON.parse(readFileSync(file,'utf8')).version,4);await s.close();
   const next=JSON.parse(readFileSync(file,'utf8'));next.version=99;writeFileSync(file,JSON.stringify(next));await assert.rejects(AgentSupervisor.open(options),{code:'AGENT_STATE_INVALID'});
 });
 

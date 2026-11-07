@@ -8,7 +8,10 @@ import sys
 import threading
 import time
 
-state = {'grant': None, 'mode': 'normal', 'calls': []}
+sys.stdin.reconfigure(encoding='utf-8')
+sys.stdout.reconfigure(encoding='utf-8')
+
+state = {'grant': None, 'mode': 'normal', 'calls': [], 'reservation': None, 'reservation_state': 'reserved'}
 lock = threading.Lock()
 token = os.environ['POLICY_FIXTURE_TOKEN']
 
@@ -24,16 +27,19 @@ class Handler(BaseHTTPRequestHandler):
             return
         try:
             length = int(self.headers.get('Content-Length', '0'))
-            if length < 1 or length > 65536:
+            if length < 1 or length > 131072:
                 raise ValueError()
             request = json.loads(self.rfile.read(length))
             with lock:
                 grant, mode = state['grant'], state['mode']
+                reservation, reservation_state = state['reservation'], state['reservation_state']
                 state['calls'].append(request['phase'])
-            envelope = request['envelope']
+            v2 = request['schema_version'] == 'schumpeter.pida.authorization.request/2'
+            admission = request['admission'] if v2 else None
+            envelope = admission['envelope'] if v2 else request['envelope']
             unsigned = {k: v for k, v in envelope.items() if k != 'payload_digest'}
             digest = hashlib.sha256(json.dumps(unsigned, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
-            allowed = bool(grant and request['schema_version'] == 'schumpeter.pida.authorization.request/1'
+            allowed = bool(grant and request['schema_version'] in ['schumpeter.pida.authorization.request/1', 'schumpeter.pida.authorization.request/2']
                            and request['host_id'] == grant['host_id'] and request['principal_id'] == grant['principal_id']
                            and envelope['recipient'] == grant['recipient'] and envelope['sender_binding_id'] == grant['sender_binding_id']
                            and all(envelope[k] == grant[k] for k in ['room_id', 'room_revision', 'contract_id', 'contract_revision'])
@@ -41,6 +47,21 @@ class Handler(BaseHTTPRequestHandler):
             value = {'schema_version': 'schumpeter.pida.authorization.response/1', 'request_id': request['request_id'], 'authorized': allowed, 'phase': request['phase'],
                      'principal_id': request['principal_id'], 'host_id': request['host_id'], 'payload_digest': envelope['payload_digest'],
                      'room_revision': envelope['room_revision'], 'contract_revision': envelope['contract_revision'], 'recipient': envelope['recipient']}
+            if v2:
+                canonical_digest = lambda item: hashlib.sha256(json.dumps(item, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+                allowed = bool(allowed and reservation == admission and reservation_state in ['reserved', 'observed']
+                               and request['phase'] in ['admit', 'read', 'dispatch']
+                               and admission['definition_digest'] == canonical_digest(admission['definition'])
+                               and admission['admission_digest'] == canonical_digest({k: v for k, v in admission.items() if k != 'admission_digest'}))
+                value.update({'schema_version': 'schumpeter.pida.authorization.response/2', 'authorized': allowed,
+                              'admission_digest': admission['admission_digest'], 'definition_digest': admission['definition_digest'],
+                              'reservation_id': admission['reservation_id'], 'reservation_state': reservation_state if reservation else None})
+                if mode == 'definition':
+                    value['definition_digest'] = '0' * 64
+                if mode == 'reservation':
+                    value['reservation_id'] = 'wrong-reservation'
+                if mode == 'reservation-state':
+                    value['reservation_state'] = 'existing'
             if mode == 'delay':
                 time.sleep(0.3)
             if mode == 'nonce':
@@ -85,6 +106,10 @@ try:
                 state['grant'] = command['grant']
             if 'mode' in command:
                 state['mode'] = command['mode']
+            if 'reservation' in command:
+                state['reservation'] = command['reservation']
+            if 'reservation_state' in command:
+                state['reservation_state'] = command['reservation_state']
             value = {'id': command['id'], 'calls': list(state['calls'])}
         print(json.dumps(value), flush=True)
 finally:

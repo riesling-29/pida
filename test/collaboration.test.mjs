@@ -180,7 +180,7 @@ test('v2 migration preserves native jobs and creates no fictional receipts', asy
   const path = directory(t), o = options(path); let s = await AgentSupervisor.open(o); const { agent } = setup(s); await s.close();
   const file = join(path, 'supervisor.json'), prior = JSON.parse(readFileSync(file, 'utf8')); prior.version = 2; delete prior.collaboration; writeFileSync(file, JSON.stringify(prior));
   s = await AgentSupervisor.open(o);
-  try { assert.equal(s.jobs(agent.id, owner).length, 1); const current = JSON.parse(readFileSync(file, 'utf8')); assert.equal(current.version, 3); assert.deepEqual(current.collaboration, []); }
+  try { assert.equal(s.jobs(agent.id, owner).length, 1); const current = JSON.parse(readFileSync(file, 'utf8')); assert.equal(current.version, 4); assert.deepEqual(current.collaboration, []); assert.deepEqual(current.organizationAdmissions, []); }
   finally { await s.close(); }
 });
 

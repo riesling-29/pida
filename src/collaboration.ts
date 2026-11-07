@@ -1,5 +1,6 @@
 import { canonical, sha256, isId } from "./private-state.js";
 import type { Principal } from "./runtime.js";
+import type { OrganizationAdmission } from "./organization-admission.js";
 
 /** Contract-bound external delivery. No permission or principal is supplied by the sender. */
 export interface CollaborationRecipient {
@@ -24,6 +25,8 @@ export interface CollaborationPolicy {
   /** Validate CURRENT sender binding, recipient mapping, room/contract revisions and grants.
    * Rejection/absence fails closed. This is not Persona input authorization. */
   authorize(input: { principal: Principal; envelope: CollaborationEnvelope; phase: "receive" | "read" | "dispatch"; signal: AbortSignal }): boolean | Promise<boolean>;
+  /** Separate current reserved/observed admission authority; absence leaves first-root admission disabled. */
+  authorizeAdmission?(input: { principal: Principal; admission: OrganizationAdmission; phase: "admit" | "read" | "dispatch"; signal: AbortSignal }): boolean | Promise<boolean>;
 }
 export interface CollaborationRecord { owner: string; envelope: CollaborationEnvelope; receipt: CollaborationReceipt }
 export const collaborationId = (value: unknown): value is string => typeof value === "string" && value.length <= 128 && !/[\r\n]/.test(value) && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(value);

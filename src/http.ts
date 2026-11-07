@@ -201,6 +201,11 @@ export function createPidaServer(options: HttpOptions) {
       const principal = await options.authenticate(auth.slice(7));
       if (!principal) throw new PidaError("UNAUTHORIZED", 401);
       if (path.startsWith("/v1/collaboration/")) {
+        if (path === "/v1/collaboration/organization-admission-capabilities" && req.method === "GET") {
+          if (!principal.permissions.includes("pida:agents")) throw new PidaError("FORBIDDEN", 403);
+          if (!options.agents) throw new PidaError("AGENTS_DISABLED", 404);
+          json(res, 200, options.agents.organizationAdmissionCapabilities(principal)); return;
+        }
         if (path === "/v1/collaboration/capabilities" && req.method === "GET") {
           if (!principal.permissions.includes("pida:agents")) throw new PidaError("FORBIDDEN", 403);
           if (!options.agents) throw new PidaError("AGENTS_DISABLED", 404);
@@ -209,6 +214,9 @@ export function createPidaServer(options: HttpOptions) {
         if (!principal.permissions.includes("pida:agents") || !principal.permissions.includes("pida:collaborate")) throw new PidaError("FORBIDDEN", 403);
         const agents = options.agents; if (!agents) throw new PidaError("AGENTS_DISABLED", 404);
         if (path === "/v1/collaboration/messages" && req.method === "POST") { json(res, 202, await agents.receiveCollaboration(principal, await body(req, 65536) as any)); return; }
+        if (path === "/v1/collaboration/organization-admissions" && req.method === "POST") { json(res, 202, await agents.admitOrganization(principal, await body(req, 131072) as any)); return; }
+        const admissionReceipt = /^\/v1\/collaboration\/organization-admission-receipts\/([a-f0-9-]{36})$/.exec(path);
+        if (admissionReceipt && req.method === "GET") { json(res, 200, await agents.getOrganizationAdmissionReceipt(admissionReceipt[1]!, principal)); return; }
         const receipt = /^\/v1\/collaboration\/receipts\/([a-f0-9-]{36})$/.exec(path);
         if (receipt && req.method === "GET") { json(res, 200, await agents.getCollaborationReceipt(receipt[1]!, principal)); return; }
         throw new PidaError("NOT_FOUND", 404);

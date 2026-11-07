@@ -1,6 +1,6 @@
 # Organization root admission /1
 
-Status: implementation contract agreed by Pida and Schumpeter adapter owners on 2026-11-07, after explicit parent authorization. Not implemented or accepted at this document's first revision. Existing collaboration envelope /1, delivery /1 and native `createOrganization` semantics remain separate.
+Status: implementation contract agreed by Pida and Schumpeter adapter owners on 2026-11-07, after explicit parent authorization. The current local implementation has developer verification recorded in [the validation note](development/PIDA-ORGANIZATION-ADMISSION-20261107.md); independent runtime and final desktop acceptance are separate. Existing collaboration envelope /1, delivery /1 and native `createOrganization` semantics remain separate.
 
 ## Purpose and alternatives
 
@@ -27,6 +27,8 @@ Schumpeter preallocates a fresh native OrgSession UUID and records it as an auth
 ```
 
 All fields are required except the envelope's existing optional reply correlation. `goal` equals `envelope.input`; `root_agent_id` equals `envelope.recipient.agent_id`. Every participant is an owned existing native agent, unique, and the root is included. `recipient.org_session_id` is the proposed fresh native session UUID. Budgets match the existing native limits: 0–3 repairs, timeout 1,000–86,400,000 ms; there are no implicit defaults. Arrays retain their supplied order in digests; retries must use the same definition.
+
+The HTTP request body is separately bounded to 128 KiB; JSON escaping and repeated goal fields count toward that transport limit. IDs use explicit canonical UUID structure for native recipients/participants. No selection field supplies a principal or policy endpoint.
 
 `definition_digest` is SHA256 over the canonical definition. `admission_digest` is SHA256 over the whole closed outer object with only `admission_digest` omitted, including the nested envelope and `definition_digest`. Canonicalization uses the existing collaboration rules: recursively sorted ASCII keys, compact JSON scalar escaping, UTF-8 bytes, safe integers and Unicode scalar strings. These digests bind participants, goal, budgets and host acceptance definitions, not merely message text. A shared Pida helper and non-ASCII golden request will be published with implementation before consumer integration.
 
@@ -59,7 +61,7 @@ After current authorization, Pida checks collisions, current host criteria and c
 
 Receipt schema `pida.organization.admission.receipt/1` contains `receipt_id`, `producer_id`, `request_id`, `payload_digest`, `definition_digest`, `admission_digest`, `reservation_id`, `recipient`, `received_at`, `job_id`, `root_task_id`, `root_attempt_id`, `phase:"organization_root_enqueued"`, `durable:true`, `durability_scope:"local-process-restart"`. The proposed native session ID is already exact in `recipient.org_session_id`. Readback and idempotent retries recheck current authority and return the same immutable receipt; they do not create another session/job or re-execute a completed/interrupted task. Receipt readback uses a separate admission-receipt route. Deduplication retains authenticated owner + producer + request + persistent recipient organization scope and checks the complete admission digest; reservation reuse and native session ID reuse also conflict. Altered definition/payload under the same scope returns 409.
 
-The exact readback route is `GET /v1/collaboration/organization-admission-receipts/{receipt_id}`. Capability response keys are exactly `schema_version`, `enabled`, `host_id`, `admission_schema`, `receipt_schema`, `supervisor_state_version`, `acceptance`; the five acceptance keys are those specified above. Policy schemas are negotiated by this versioned contract rather than extra capability fields.
+The exact readback route is `GET /v1/collaboration/organization-admission-receipts/{receipt_id}`. Capability response keys are exactly `schema_version`, `enabled`, `host_id`, `admission_schema`, `receipt_schema`, `supervisor_state_version`, `acceptance`; the four acceptance keys are those specified above. Policy schemas are negotiated by this versioned contract rather than extra capability fields.
 
 Shared canonical implementation: [organization-admission.ts](../src/organization-admission.ts). Frozen Unicode [admission fixture](../fixtures/organization-admission/admission-v1.json), [policy request](../fixtures/organization-admission/authorization-request-v2.json) and [policy response](../fixtures/organization-admission/authorization-response-v2.json) are contract evidence only until the runtime unit completes. Golden definition digest is `b019e1eb3f96a9fc0a3cd3572231f1a201e3c2e5a4e87064d565af3f4b80ccd4`; admission digest is `a1712127fa0457c6668d766858d7974618410d0dbdf706b5d5ead12aade24e71`. The fixture's Node environment revision is synthetic fixed data; real clients must use host readback.
 

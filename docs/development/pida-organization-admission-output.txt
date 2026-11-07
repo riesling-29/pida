@@ -1,0 +1,95 @@
+✔ agent tools use same-owner profiles, explicit permissions, host request keys and no model-controlled ancestry (35.0751ms)
+✔ actual Pi parent releases shared workspace before child starts; child cannot delegate back to ancestor (269.8855ms)
+✖ actual delegation chain stops at depth two and job summaries are bounded result data (15106.3682ms)
+✔ trusted endpoint is literal loopback, credential-free URL and exact path only (1.5435ms)
+✔ parent EOF closes HTTP and Persona even when runtime close rejects (928.3663ms)
+✔ parent EOF closes HTTP and Persona even when runtime close hangs (5788.238ms)
+✔ actual Python policy independently verifies Unicode digest, current grant and strict nonce/echo binding (724.2336ms)
+✔ supported local-host process (local) uses Python current policy, capability/readback and exact native job mapping (2055.3426ms)
+✔ supported local-host process (public-fixture) uses Python current policy, capability/readback and exact native job mapping (2098.7591ms)
+✔ explicit resume preserves native identity and lost ACK dedup; wrong profile, live lock and revoked policy fail closed (6261.623ms)
+✔ admission policy v2 binds full Unicode reservation and rejects fake observed mapping, bad echoes and revoked grants (715.3913ms)
+✔ actual host admits exactly one root (local) while reserved and reconciles observed promotion after ACK loss (2115.0074ms)
+✔ actual host admits exactly one root (public-fixture) while reserved and reconciles observed promotion after ACK loss (2225.3686ms)
+✔ corrupt persisted delegated depth without parent cannot erase collaboration ancestry (26.8325ms)
+✔ persisted child derives current external grant from native lineage after restart (143.3778ms)
+✔ persisted continuation derives current external grant from native lineage after restart (195.7194ms)
+✔ new admission during async acceptance principal discards the obsolete capture (216.1004ms)
+✔ new admission during async acceptance capture discards the obsolete capture (217.4579ms)
+✔ byte-capacity rejection rolls back admission, preserves prior receipts and reopens; no history eviction (1606.0576ms)
+✔ closed envelope and shared canonical digest golden vector (1.7322ms)
+✔ concurrent delivery, lost ACK and persisted restart reuse the exact receipt/job; changed payload conflicts (23.6056ms)
+✔ actual process exits before/after file replacement and after ACK preserve all-or-nothing job binding (2367.6836ms)
+✔ policy rejects foreign host, sender/mapping, stale revisions and revoked read/dispatch; absence disables delivery (67.2472ms)
+✔ cancelled organization returns immutable duplicate history only, rejects new messages and late replies (13.3028ms)
+✔ restart rechecks host dispatch authority instead of replaying the saved grant (62.1218ms)
+✔ reply cancellation while dispatch authorization awaits prevents model invocation (107.301ms)
+✔ async receive policy cannot bypass cancellation during its await (8.4131ms)
+✔ persisted corrupt receipt/job mapping fails closed and preserves file evidence (12.7496ms)
+✔ v2 migration preserves native jobs and creates no fictional receipts (9.2174ms)
+✔ HTTP + SDK enforce dedicated permission and current authority; native organization API still works (100.7482ms)
+✔ Unicode admission golden binds full definition and preserves exact canonical digest (3.1275ms)
+✔ closed admission domain rejects invented authority, mismatched root/input and malformed definition even with recomputed hashes (1.3549ms)
+✔ one atomic native root precedes ACK; lost ACK/restart returns same receipt without duplicate goal or replay (166.499ms)
+✔ same scoped request altered definition, reservation or native ID conflicts; stale host profile and foreign participant do not publish (12.5331ms)
+✔ current reservation revoked after durable admission blocks dispatch/read/retry, default admission remains disabled (38.1329ms)
+✔ real Pi first root delegates and joins without parked coordinator; native descendant authority revoke=false (457.0987ms)
+✔ real Pi first root delegates and joins without parked coordinator; native descendant authority revoke=true (336.2799ms)
+✔ corrupt admission/native mapping is rejected on reopen and original bytes preserved (13.5566ms)
+✔ admitted descendant retains reservation authority across restart; cancelled reply never creates a fresh goal (98.5821ms)
+✔ native repair attempt rechecks original reservation before a second model call (66.1435ms)
+✔ v3 migration preserves existing native and delivery records without fictional admission (12.6173ms)
+✔ admission capacity failure rolls back all five collections and preserves previous receipt through restart (875.2837ms)
+✔ real Pi delegates, joins at maxConcurrent=1, continues once in the parent session and survives restart (724.4984ms)
+✔ children completed before registration reconcile in reverse order; ready continuation persists and cancellation uses revision CAS (412.0427ms)
+✔ required cancellation blocks; optional cancellation remains visible in successful join (540.109ms)
+✔ independent exact workbench check repairs once, invalidates changed bytes/criteria/environment and never trusts model PASS (1049.6471ms)
+✔ unavailable checker is UNKNOWN, repair budget is finite, unrelated organizations still settle (208.685ms)
+✔ HTTP organization API enforces authorization and the SDK reuses host-selected checks (150.5631ms)
+✔ v1 migrates without inventing organizations; future formats fail closed (13.2522ms)
+✔ revoked delegation prevents an already queued continuation from invoking the model (311.6134ms)
+✔ an abort-ignoring parent callback retains the lease and cannot enable children or continuation (326.9915ms)
+✔ nested batch uses the child final attempt, not its initial delegating run (827.2971ms)
+✔ persisted repair intent resumes once after restart and an expired organization cannot start it (135.327ms)
+✔ stopping during a continuation leaves it interrupted and never creates another continuation on reopen (265.7801ms)
+✔ host cancellation interrupts only its organization and late capture cannot accept cancelled work (92.3223ms)
+✔ local and named Persona workers run concurrently without sharing memory authority (562.891ms)
+✔ only host-approved sources can be selected and external identity cannot be overwritten at registration (51.0156ms)
+✔ source choice survives restart; a removed external source fails closed while local jobs and old results remain usable (345.9544ms)
+✔ external factory failure is isolated and incompatible routing configurations fail before activation (138.3814ms)
+✔ unlabelled legacy sessions never migrate from external authority to local memory silently (306.7944ms)
+✔ ordinary workspace needs no PIX or Schumpeter and binds main and managed worker before first input (433.2693ms)
+✔ PI tool registration and PIX configuration never grant analysis permission (62.7422ms)
+✔ explicit broken PIX paths degrade analysis to unavailable while normal model runs still work (383.7625ms)
+✔ external contract factory owns main and worker context; local canonical tools and HTTP writes are disabled (215.0223ms)
+✔ legacy empty and long private roles bind without exporting role instruction text (445.292ms)
+✔ embedded SDK main principals retain isolated canonical memory and context scopes (274.2902ms)
+ℹ tests 66
+ℹ suites 0
+ℹ pass 65
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 23669.9091
+
+✖ failing tests:
+
+test at test\agent-tools.test.mjs:65:1
+✖ actual delegation chain stops at depth two and job summaries are bounded result data (15106.3682ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'limited'
+  - 'failed'
+  
+      at TestContext.<anonymous> (file:///D:/ChantaResearchGroup/pida/test/agent-tools.test.mjs:76:76)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'limited',
+    expected: 'failed',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

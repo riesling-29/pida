@@ -1,0 +1,32 @@
+{
+  "base": "3cfc76b",
+  "contract": "fd07eb27ee4f7d5c68fc5175118d426d82519ee3",
+  "golden": "836eff8",
+  "producer": "c1e3617aa88e6013ea34f76c3f4c41504618f863",
+  "independentReview": "pending",
+  "files": {
+    "src/organization-admission.ts": "5d3a6e1ec16db1de42863aad2b664b9bbd67e21c2741a8d71a2379e293544d82",
+    "src/collaboration.ts": "51e76df2c58e496617db792cd404cece7247f09278b062c5608dc2d62c9f3da1",
+    "src/collaboration-policy-client.ts": "9e1036a823d96543d886c2392d009ec2c7af47f91486bfe6c6e7489f95d4cfbd",
+    "src/agent-supervisor.ts": "f0c1e45cf927119ed769c9c025f6e7ad7bbc4a4483068da3acf17a62cea05090",
+    "src/http.ts": "4b21860c5185565b7c603de5fdf4fff54b7d86491451b8cd485f89e1fd5298d3",
+    "src/client.ts": "79b41ce7b758a134adf1e2103643a913ddf78ff19b739eede3f1dc62f9e9a222",
+    "src/index.ts": "5e5e89fde644adfa897e6567b36eae0752465464c85d66ce9f3d5c9a317d8651",
+    "test/organization-admission-contract.test.mjs": "fc8c86a580345c235aa91e52617e2d538d0e8839a93989636022fb933474ab1c",
+    "test/organization-admission.test.mjs": "3a8137353cec44559a3ad996b3c5f3d8727a42078c9c99a98df481e0dbb2a51a",
+    "test/collaboration-policy-client.test.mjs": "b5a311df0408635cc71e4e86a14513544cba1e37ab35a687d8eea7ae1a91aac8",
+    "test/fixtures/collaboration-policy-server.py": "1908d90c620664c9f25a492b30149974d5e2e1085d548ac704ed568d5aa4beab",
+    "test/collaboration.test.mjs": "5d898479b0df575695e17a03b99f67442ff162f31954a788b0bce4e2a2b16ab4",
+    "test/organization.test.mjs": "38c7512f079d20251f7cf6a975f96bb19b40f1176ec95a19f9a680e55a3baa1f",
+    "docs/ORGANIZATION-ADMISSION-1.md": "20761c3bcad616ec2e7bd051b9233726734ebcc7ed0240826228b4520a1ca723",
+    "docs/development/PIDA-ORGANIZATION-ADMISSION-20261107.md": "bbefa2ae6fde6c83086fb4ada0a1043bd89ce6a2cd5569f76435ffc26b330947",
+    "fixtures/organization-admission/admission-v1.json": "b362d4308df80bc9a64f8ec309f8c67fa7fd361cfd4f921768c93daf89f35830",
+    "fixtures/organization-admission/authorization-request-v2.json": "97921890c16db0560bd152001f31bf3bfb258ba78883e1a99d8a015999598f01",
+    "fixtures/organization-admission/authorization-response-v2.json": "98cfad03604be972c077c86dc3eaa996fb4942cec84ff17ad543e5d5fec7a4fd"
+  },
+  "baselineFailure": {
+    "baseline": "bbb8e565282b676307c9ed92a8423a19b6c1f12e",
+    "test": "test/agent-tools.test.mjs",
+    "sha256": "182989398786b8e8fb2a1f583366f140a273c32d82738da65a6136fd1def75f4"
+  }
+}
