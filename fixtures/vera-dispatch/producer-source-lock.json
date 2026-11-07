@@ -1,0 +1,19 @@
+{
+  "profile": "vera-dispatch/0.1.0",
+  "baseline": "1cfe29c0eab735ab6b10fae733419eaaad2aec11",
+  "source_kind": "new-working-tree-source; not recovered continuity source",
+  "files": {
+    "persona_substrate/__init__.py": "7949d0517ee62483e7038ec9355dc28e9918e33359331439ce2299e5b07a1101",
+    "persona_substrate/contracts.py": "ba662d91b24784ce418879ed608dfeb0127af6c3c0474ef9b44bbd2133081903",
+    "persona_substrate/provider.py": "c66c325aba711a7e8ca6099605bc5ba9335356f03589a945b85654df33929c6a",
+    "persona_substrate/consumer.py": "4ebc076458d7c60880d82473a94452df18e235a4bd1765e3e8dfdcaff5670a4f",
+    "persona_substrate/dispatch.py": "3c52e7ce73ae7afa0545f314d9bb6671203dce87d90b938478015bb9c91842cd",
+    "persona_substrate/dispatch_fixture.py": "7d20e32c0a09106c47f1f83ab536b97d51ba52879b8e364f90f3ea178586b2a5",
+    "persona_substrate/schemas/contracts.json": "a6a652fc73bbfc00713dc5142d261b903f92f70c129fccdd4f74e136604b5c6f",
+    "persona_substrate/schemas/VeraContext.observed.schema.json": "7787fb2611fa43aa534ca1becafe47b14aa6ac3089e21ed5078ac184f70f5dcf",
+    "scripts/dispatch_probe.py": "69528612d801e22b9f905c5bb5ff5cc72461b37fb349b4a145c9422347b2fd47",
+    "scripts/verify_dispatch_profile.py": "ae3c595a0adb66f762ba0bb0820f0ecf42a2533a76118e1f8ada6c8e6f6f27ae",
+    "tests/test_dispatch_authorization.py": "3f9017745d8e16d1b05b96b276f78bbb9fa7933d1e048c5acc2ae3b317fe0d0c"
+  },
+  "source_digest": "7dd9aa5ea22afaab033b62d54864d6849ac038e414ea7cc93fd341828cd731cb"
+}

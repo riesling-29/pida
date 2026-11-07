@@ -11,6 +11,7 @@ export { validateObservationBundle } from "./integration-contract.js";
 export { observationContractRevision } from "./execution-contract.js";
 export * from "./persona-provider.js";
 export * from "./vera-persona-provider.js";
+export * from "./vera-dispatch-provider.js";
 export * from "./process-intelligence.js";
 export * from "./pix-port.js";
 export * from "./ocel.js";

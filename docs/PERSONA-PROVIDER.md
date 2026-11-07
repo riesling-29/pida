@@ -1,5 +1,7 @@
 # Managed Persona context consumer
 
+2026-11-07 addition: [explicit `vera-dispatch/0.1.0` subset](VERA-DISPATCH-0.1.md) provides a separately negotiated public producer integration. It does not replace the historical continuity evidence below or imply graph/behavior capabilities from a shared wire shape.
+
 Pida owns the execution/input boundary. `PersonaProvider` in `src/persona-provider.ts` is a **Pida consumer port**, not a claim that PersonaSubstrate currently implements this API. No PersonaSubstrate repository, canonical database, identity record or service is changed by this patch.
 
 ## Authority and reuse
