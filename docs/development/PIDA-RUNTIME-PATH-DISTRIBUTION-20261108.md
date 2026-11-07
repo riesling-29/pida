@@ -30,7 +30,17 @@ explicit requirements of the reference probe; it does not prove the parent's
 frozen Python service. Stock mock remains single-root. No hidden product test
 mode, new provider request, billing change or user workspace migration occurred.
 
-Independent package delta review is pending at this author handoff. Source
+Independent package delta review passed these exact archives. The
+[report](runtime-path-distribution-independent-20261108/INDEPENDENT-DISTRIBUTION-REVIEW.md)
+verifies 150 built files and 378 own source-package files, unchanged vendor
+bytes/modes/dependency/license inventory, normal extraction and exact trees
+before/after, and 61 public tool invocations per OS including 48 invalid-path
+calls, actual links, reopen, effect classification and artifact identity. Four
+stock base/reference/resume records remain author evidence in this narrow
+delta. The unchanged join suite was retained, not rerun. Original artifacts are
+[archived](runtime-path-distribution-independent-20261108/original-evidence.zip)
+with [hash index](runtime-path-distribution-independent-20261108/archive-index.json).
+Source
 acceptance, package closure, parent service/UI and actual model validation are
 separate. A fresh verification workspace must retain its new exact runtime
 identity; no existing manifest is rewritten. Known prior actual validation

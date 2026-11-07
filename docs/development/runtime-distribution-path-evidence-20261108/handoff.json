@@ -1,6 +1,6 @@
 {
   "source_commit": "b7f7d523c6fede56d508575a6bb78afa343e5566",
-  "status": "Authorverified; independent package delta review pending",
+  "status": "Independent bounded package delta PASS; parent assembly/GUI/live gates separate",
   "scope": "Private modified build; only workbench.js code delta; old2b/BB caches and realcase failures unchanged",
   "platforms": {
     "windows": {
@@ -60,5 +60,11 @@
   "persona_runtime_digest": "0f85831175f24aea7237a6a003bdb14972a32cf13a7e76394c3fa9898b3763d6",
   "native_join_prior_evidence": "Exact other dist modules byte-identical to independently accepted2b, retained not rerun",
   "provider_calls": 0,
-  "fresh_verification_workspace": true
+  "fresh_verification_workspace": true,
+  "independent_review": {
+    "path": "../runtime-path-distribution-independent-20261108/INDEPENDENT-DISTRIBUTION-REVIEW.md",
+    "original_sha256": "df1d48ba937bf0563b4328ecceb5e8dc4feef72d3d4a72c359ab420139bd3699",
+    "stock_reference_resume": "Four author records retained; not independently rerun in this delta",
+    "unchanged_join": "Prior proof retained, not rerun"
+  }
 }
