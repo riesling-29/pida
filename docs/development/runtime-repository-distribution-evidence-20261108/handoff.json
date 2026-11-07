@@ -1,7 +1,7 @@
 {
   "source_commit": "e9a1d31140bcff34e3c9ef0f82f4b3dbca0ddd68",
   "repository_source": "b5252fba5a66c2c40dca49017a4a4b929a47170a",
-  "status": "Owner Windows/Linux artifact checks PASS; independent artifact gate PENDING",
+  "status": "Independent bounded Windows/Linux artifact PASS; no parent desktop promotion",
   "generator_review_sha256": "5799c15d99a62835a627541398594dd5712716dfbd2e15373b89581220b8407a",
   "generator_archive": "../repository-sidecar2-independent-20261108/archive-index.json",
   "platforms": {
@@ -36,7 +36,7 @@
       "node_binary_sha256": "41a74efb34cbde5c7632cdac0cf8bd1a14d0b8d73dc1e82755014d9a9ce70f5c",
       "package_sha256": "e4e5e2688b39f84b5b0b545c211f292c92239aed752628e64e785226dc3a5777",
       "delivery_archive": "D:\\ChantaResearchGroup\\pida-repository-profile-20261108\\.pida-test-runtime-repository-20261108\\linux\\pida-runtime-e9a1d31-linux-x64.tar.gz",
-      "extracted_runtime": "\\var\\tmp\\pida-repository-e9a1d31-20261108\\extracted\\runtime",
+      "extracted_runtime": "/var/tmp/pida-repository-e9a1d31-20261108/extracted/runtime",
       "sidecar_sha256": "8f4bd65fe7a74ac6944059bc97158b13f98fd473b95240352cd2e0ff49d8e579"
     }
   },
@@ -45,5 +45,11 @@
     "scripts/probe-managed-capability-distribution.mjs": "01e9eae7c67ef1b1abd774bb2780e8fb4a80f8ef82a7f5e444e7a3e0202ac6e0"
   },
   "no_external_model_provider_calls": true,
-  "old_0f_and_D_unchanged": true
+  "old_0f_and_D_unchanged": true,
+  "independent_review": {
+    "report_sha256": "af7afe74771294a9f4859a57f5a70fcbb49d33109a17c415f023b540e81a65bf",
+    "index_sha256": "5a723b73f3a17645ca51efaa37482a84bd809941b48ffd16a143a0014d2c08d6",
+    "archive": "../runtime-repository-distribution-independent-20261108/archive-index.json",
+    "scope": "12 repository +4 retained stock cases eachOS;154dist+474otherown source; unchanged vendor/125deps/modes; full before/after trees. Excludes combined mode3+catalogue, parent frozen Python, GUI and real model."
+  }
 }
