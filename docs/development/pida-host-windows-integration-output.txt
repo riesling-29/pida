@@ -1,0 +1,23 @@
+✔ workspace SDK preserves three agents, sourced information, isolated artifacts and jobs across reconnect/restart (mock model; real Pi/tool/HTTP) (2012.6625ms)
+✔ paused and cancelled queued agent jobs survive restart without invoking the mock model/tool (466.8344ms)
+✔ agent HTTP routes enforce identity, ownership and write/tool grants before accessing private state (265.5807ms)
+✔ trusted endpoint is literal loopback, credential-free URL and exact path only (1.1771ms)
+✔ actual Python policy independently verifies Unicode digest, current grant and strict nonce/echo binding (737.2987ms)
+✔ supported local-host process (local) uses Python current policy, capability/readback and exact native job mapping (2087.1529ms)
+✔ supported local-host process (public-fixture) uses Python current policy, capability/readback and exact native job mapping (2168.0153ms)
+✔ native Pi turns materialize standard OCEL, preserve IDs through restart, and retain HTTP ownership (266.4026ms)
+✔ PIX skill is bundled; absent engine stays unavailable with durable evidence and scoped access (37.2871ms)
+✔ actual workbench verification relates to tested artifact versions and stays stale after a later edit (929.5499ms)
+✔ Pi managed executor preserves native exit codes and PowerShell final statement semantics (1714.8528ms)
+✔ owned workbench history supports deeply nested workspace paths without global Git configuration (414.1264ms)
+✔ terminal OCEL transient replacement preserves completion or explicit durable unavailability (792.2282ms)
+✔ terminal OCEL persistent replacement preserves completion or explicit durable unavailability (998.35ms)
+✔ terminal OCEL permanent replacement preserves completion or explicit durable unavailability (767.3105ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5604.405
