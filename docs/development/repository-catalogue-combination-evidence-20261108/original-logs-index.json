@@ -1,0 +1,9 @@
+{
+  "files": {
+    "windows.log": "ef981a57be8b0d3011b7497524f53e9b32a0b6abf32362f490a18368acbbc035",
+    "windows-r2.log": "ef981a57be8b0d3011b7497524f53e9b32a0b6abf32362f490a18368acbbc035",
+    "linux.log": "ab611cb0bbfd1ffd4d3cd2b4e39711c987247f01df689c878681515a1eeb1807",
+    "windows/result.json": "a46b5ed0d8e02da535ee52a0363583ce505e76f116010fde7ab016117b82216e"
+  },
+  "note": "Initial Windows passed before SDK parent PATH/HOME isolation was explicitly aligned to stock child environment. Windows-r2 and Linux use final probe; no product change."
+}

@@ -1,0 +1,82 @@
+{
+  "status": "PASS",
+  "scope": "Existing saved metadata only; no export or execution",
+  "checks": [
+    {
+      "job_id": "4ac5ec9d-8137-4911-b2cd-df07b913de08",
+      "run_id": "4ffafbd4-b6e6-4ff6-a0ad-f15ee68796ab",
+      "canonical_document_sha256": "a1e2be7dd32c18b936c6fb8b4a0cad1bb5aba45998d4373890d5a2a4e7b1a011",
+      "source_bundle_digest": "191c35c52a28b19e242f7b7fd105d55cf38a917ddddc52acb573ff39b2f4050f",
+      "events": 16,
+      "objects": 9,
+      "terminal": "completed",
+      "limits": [
+        "NO_INDEPENDENT_TASK_ACCEPTANCE",
+        "AGENT_SUPPLIED_CHECKS_ARE_SCOPED",
+        "PI_INTERNAL_REQUEST_USAGE_NOT_EXPORTED",
+        "HOST_PROJECT_ARTIFACTS_NOT_CAPTURED",
+        "HOST_PROGRAM_NOT_SANDBOXED",
+        "PROGRAM_DEPENDENCIES_NOT_PINNED",
+        "PROGRAM_DESCENDANTS_NOT_GUARANTEED_STOPPED",
+        "COST_UNKNOWN"
+      ]
+    },
+    {
+      "job_id": "31a7a2ed-6af5-4948-8395-52df01fc331a",
+      "run_id": "0101421b-1024-485b-be35-018ea0a63b41",
+      "canonical_document_sha256": "ccab2b78e629727ffa4bdb28bb025f3859d2cda4154d4c471dd7089bab57c6ab",
+      "source_bundle_digest": "1a0a41a4cd98d81b8d0db63887dbd1c282d67a5f85afc3fc129f842f66f6a908",
+      "events": 16,
+      "objects": 9,
+      "terminal": "completed",
+      "limits": [
+        "NO_INDEPENDENT_TASK_ACCEPTANCE",
+        "AGENT_SUPPLIED_CHECKS_ARE_SCOPED",
+        "PI_INTERNAL_REQUEST_USAGE_NOT_EXPORTED",
+        "HOST_PROJECT_ARTIFACTS_NOT_CAPTURED",
+        "HOST_PROGRAM_NOT_SANDBOXED",
+        "PROGRAM_DEPENDENCIES_NOT_PINNED",
+        "PROGRAM_DESCENDANTS_NOT_GUARANTEED_STOPPED",
+        "COST_UNKNOWN"
+      ]
+    },
+    {
+      "job_id": "91f29a2e-547d-4db9-ba9e-f9b329e252a1",
+      "run_id": "04fc92fd-2842-4920-9548-5ae6a627df93",
+      "canonical_document_sha256": "60107e424c38ad81e00166a2cca692ebc651f1163e06c96ee28301f17e28d7ea",
+      "source_bundle_digest": "bfada9b4f63cc248046d437f2b944752e90e2e93036182e175380a5d88bf0bec",
+      "events": 16,
+      "objects": 9,
+      "terminal": "failed",
+      "limits": [
+        "NO_INDEPENDENT_TASK_ACCEPTANCE",
+        "AGENT_SUPPLIED_CHECKS_ARE_SCOPED",
+        "PI_INTERNAL_REQUEST_USAGE_NOT_EXPORTED",
+        "HOST_PROJECT_ARTIFACTS_NOT_CAPTURED",
+        "HOST_PROGRAM_NOT_SANDBOXED",
+        "PROGRAM_DEPENDENCIES_NOT_PINNED",
+        "PROGRAM_DESCENDANTS_NOT_GUARANTEED_STOPPED",
+        "COST_UNKNOWN"
+      ]
+    },
+    {
+      "job_id": "9032b60e-31e0-47f7-ae71-6f6a1d8d3b32",
+      "run_id": "fd7fd03b-f5f6-487a-ac25-9a2b625c55e0",
+      "canonical_document_sha256": "6a3a69bda3c80162c20bf8bb5027aa7335d9052859799cf34cb36beb1daf3f83",
+      "source_bundle_digest": "ef2d66cf66dd02820f71413eee82bf694779ccc8d57d6de2982abb5f690095c6",
+      "events": 30,
+      "objects": 15,
+      "terminal": "completed",
+      "limits": [
+        "NO_INDEPENDENT_TASK_ACCEPTANCE",
+        "AGENT_SUPPLIED_CHECKS_ARE_SCOPED",
+        "PI_INTERNAL_REQUEST_USAGE_NOT_EXPORTED",
+        "HOST_PROJECT_ARTIFACTS_NOT_CAPTURED",
+        "HOST_PROGRAM_NOT_SANDBOXED",
+        "PROGRAM_DEPENDENCIES_NOT_PINNED",
+        "PROGRAM_DESCENDANTS_NOT_GUARANTEED_STOPPED",
+        "COST_UNKNOWN"
+      ]
+    }
+  ]
+}

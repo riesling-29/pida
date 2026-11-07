@@ -1,0 +1,108 @@
+{
+  "schema": "pida.synthetic-combination.metadata-handoff/1",
+  "source_commit": "e9a1d31140bcff34e3c9ef0f82f4b3dbca0ddd68",
+  "manifest_sha256": "f1b9156e6bee986a88666da451b352e006e18c83639408aa8a062b15f62f8ed1",
+  "sidecar_sha256": "8f4bd65fe7a74ac6944059bc97158b13f98fd473b95240352cd2e0ff49d8e579",
+  "persona_source": "f6edd022d4389237fcee5d6c0a4db8a0d0b13399",
+  "persona_runtime_digest": "0f85831175f24aea7237a6a003bdb14972a32cf13a7e76394c3fa9898b3763d6",
+  "records": [
+    {
+      "agent_id": "46280801-2d66-47ec-bcae-265a777a5629",
+      "source_id": "profile-a",
+      "org_id": "71a0de55-628a-404a-a5ce-a1a6c922810b",
+      "job_id": "4ac5ec9d-8137-4911-b2cd-df07b913de08",
+      "attempt_id": "8dea3134-b9c5-48da-b558-850d9a23eb08",
+      "run_id": "4ffafbd4-b6e6-4ff6-a0ad-f15ee68796ab",
+      "inclusion_events": 2,
+      "provenance": "actual stock mock host",
+      "organization_task_id": "c2391e0d-cf85-4840-8f1e-ba6a56303b07",
+      "session_id": "01a1b74a-3a8b-775e-992a-8a8a5b6867ba",
+      "status": "completed",
+      "code": null,
+      "native_organization_status": "unknown",
+      "source_state_sha256": "bfbb1774401ac24501475c45a76057093f7985e419ad6373e5b893c02e7b2782",
+      "files": {
+        "stock-profile-a.ocel.json": "5b88270d8edd31252aefd9c61cd466539716bc259b3e794d18445c5df54de56f",
+        "stock-profile-a.ocel.meta.json": "27ff08ef0dabe312f3f497fbb08f13dc512422932e114f7b1b31e73440135c53",
+        "stock-profile-a.manifest.json": "506339918dede8b62159db373c07c6326d04b7b459c3151a1d165285b685fdf6"
+      }
+    },
+    {
+      "agent_id": "16d64712-1317-427a-98c8-4cd7615ffd84",
+      "source_id": "profile-b",
+      "org_id": "4feb5ea5-cbad-4917-b2c2-c5fd92caa1e7",
+      "job_id": "31a7a2ed-6af5-4948-8395-52df01fc331a",
+      "attempt_id": "c7da21a3-7572-430c-930f-ab009860ee8e",
+      "run_id": "0101421b-1024-485b-be35-018ea0a63b41",
+      "inclusion_events": 2,
+      "provenance": "actual stock mock host",
+      "organization_task_id": "e885e1fd-25cd-47cb-9e85-947f902e0e7d",
+      "session_id": "01a1b74a-3be5-775e-992a-8a8ce3041f9b",
+      "status": "completed",
+      "code": null,
+      "native_organization_status": "unknown",
+      "source_state_sha256": "bfbb1774401ac24501475c45a76057093f7985e419ad6373e5b893c02e7b2782",
+      "files": {
+        "stock-profile-b.ocel.json": "d9c901156f1f320027e2ea2c5e04b1e60583cc3a428fb8e723332b325842f7ed",
+        "stock-profile-b.ocel.meta.json": "37fcb03d9048920f06f4e9b8ec44dae2078ee85f24ec582825f71342f6089935",
+        "stock-profile-b.manifest.json": "8102319667acb75bac82097f84a696221626a7e0751b81d84fce91b0f538500a"
+      }
+    },
+    {
+      "agent_id": "d8088a0a-e5db-4a25-a3e8-24e5360135b8",
+      "source_id": "profile-a",
+      "org_id": "10f83456-e5c9-4a1b-a889-f6ab0e564b9d",
+      "job_id": "91f29a2e-547d-4db9-ba9e-f9b329e252a1",
+      "attempt_id": "8ae40714-3c67-40dc-a281-9bc9f40dbe5a",
+      "run_id": "04fc92fd-2842-4920-9548-5ae6a627df93",
+      "status": "failed",
+      "code": "PROGRAM_EXIT_FAILED",
+      "inclusion_events": 2,
+      "provenance": "public SDK with scripted provider and simulated 15-token response usage",
+      "organization_task_id": "92834dab-6899-458c-a787-4cfacc09b8cc",
+      "session_id": "01a1b74a-4af4-7022-aefa-91928bb1f6be",
+      "native_organization_status": "unknown",
+      "source_state_sha256": "1c76dd4fd34a0bc2d7b5521b99d57574ad610b1258adccba24a1908655927908",
+      "files": {
+        "sdk-profile-a.ocel.json": "e461f6e7ba41178cfafffab77c4ac07a142e326c2d7237f5992a59818e396c39",
+        "sdk-profile-a.ocel.meta.json": "e6de0c84f1d3748b01a53922519afb346580d7cce40d53453f442eff07496578",
+        "sdk-profile-a.manifest.json": "d8caf96c595640deae5fdccda6898f47820e4e1fe8246b992791fcf39ecec234"
+      }
+    },
+    {
+      "agent_id": "74f579f2-a07e-4f43-94f9-96aea4072aa0",
+      "source_id": "profile-b",
+      "org_id": "c0285fee-cea2-4bbe-8077-1765b4c28cd4",
+      "job_id": "9032b60e-31e0-47f7-ae71-6f6a1d8d3b32",
+      "attempt_id": "f9cc7139-cd08-4155-8074-e20d32c28673",
+      "run_id": "fd7fd03b-f5f6-487a-ac25-9a2b625c55e0",
+      "status": "completed",
+      "code": null,
+      "inclusion_events": 4,
+      "provenance": "public SDK with scripted provider and simulated 15-token response usage",
+      "organization_task_id": "e95bcab8-731a-4df1-8573-0bf089ba027d",
+      "session_id": "01a1b74a-4c49-7022-aefa-9194ba58ff7b",
+      "native_organization_status": "unknown",
+      "source_state_sha256": "1c76dd4fd34a0bc2d7b5521b99d57574ad610b1258adccba24a1908655927908",
+      "files": {
+        "sdk-profile-b.ocel.json": "2d45f348b33daf799f32a288146e97b6f14d0f66dd66cc61295f4791dfa460d2",
+        "sdk-profile-b.ocel.meta.json": "c308d554d98fdb05d15e89e5f36dda6c2d32069db11c98e9ffe851773d503e09",
+        "sdk-profile-b.manifest.json": "acba2013325507ae070b3edab0fa2157f8677ab0f2257c5c3bd22dfe98561408"
+      }
+    }
+  ],
+  "privacy": {
+    "only_saved_ocel_and_manifest": true,
+    "descriptor_or_prompt_or_tool_bodies": false,
+    "marker_scan_pass": true,
+    "closed_attribute_allowlist": true
+  },
+  "limits": [
+    "HOST_PROJECT_ARTIFACTS_NOT_CAPTURED",
+    "Native run task_id is job identity; separate organization_task_id supplied by exact supervisor join.",
+    "Failed baseline and separate repair belong to distinct native organizations; no within-run recovery claim.",
+    "Stock provider is mock; SDK provider usage is simulated, not observed external billing.",
+    "Only per-run observation order; no cross-run causality or aggregate efficiency claim.",
+    "Live project file hash is separate from empty native ResultManifest artifacts."
+  ]
+}
