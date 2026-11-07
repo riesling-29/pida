@@ -1,0 +1,59 @@
+{
+  "schema_version": "pida.real-case-b-preparation/1",
+  "case_id": "5bd55085-d316-4dc3-97cf-091d70a32478",
+  "state": "PREPARED_B_NOT_RELEASED",
+  "goal_sha256": "9d46efd9cb02e2b9d204ab2810e933120524d9c1caa5886c7696c06a6e5e0e26",
+  "goal_private_path": ".pida-test-real-case-d-20261108/goal-b.txt",
+  "source": {
+    "kind": "native-final-result",
+    "job_id": "05863fc6-c183-42e4-aaab-e9fe4352cbbb",
+    "sha256": "c7a211825563be87603fa099e9f37f719281329d6cc31f8eff9c9936db8513ea",
+    "bytes": 178,
+    "captured_bytes_equal_audited_native_result": true,
+    "contract_id": "c70e1249-05ff-594c-b184-7a2bdd6ceb05",
+    "publication_revision": 4,
+    "submission_number": 1,
+    "submission_digest": "sha256:8c293a553645bff218fc3e5a2d1581ad9fa249a07290da2f39e7fc9b8fa1f5dd",
+    "acceptance_current_revision": 5
+  },
+  "participants": [
+    "67d8b04c-f8ee-41b9-a5c1-5a4d257cb455"
+  ],
+  "contract": {
+    "title": "Acknowledge reviewed A result",
+    "criteria": [
+      {
+        "id": "check-1",
+        "kind": "json-equals",
+        "artifact": "agent-result.txt",
+        "pointer": "/received",
+        "expected": true
+      }
+    ],
+    "separate_operator_review": [
+      "Admit only after separate root B release and exact A artifact review.",
+      "Use actual A final-result bytes and provenance, not a fabricated value or file revision.",
+      "Return complete JSON received:true plus the source-specific fields in the generated B goal."
+    ],
+    "requester_org": "0867b7ca-f800-4176-a6b1-04ce435d6331",
+    "provider_org": "fc364dbc-4715-4585-9f37-8e4f18f7d444",
+    "expected_json_text": "true",
+    "objective": "After separate release, acknowledge the actually reviewed A terminal result and preserve its exact source provenance. Return complete JSON with received:true and the generated B goal fields."
+  },
+  "counts": {
+    "new_case_observed": 6,
+    "all_recorded": 18,
+    "new_case_threshold": 12
+  },
+  "audit": {
+    "raw_seed_in_goal": false,
+    "derived_value_from_observed_a_result": true,
+    "b_persona_proof_claim": false
+  },
+  "limits": [
+    "B is a fresh native goal, not an A continuation.",
+    "Publication revision4 is distinct from current acceptance revision5.",
+    "Source digest identifies exact captured terminal result; file bytes were separately verified.",
+    "No provider call or admission during preparation."
+  ]
+}
