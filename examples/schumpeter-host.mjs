@@ -71,14 +71,16 @@ try {
     const module = await import(pathToFileURL(resolve(args['persona-module'])).href);
     if (typeof module.createHostPersona !== 'function') throw Error('HOST_PERSONA_MODULE_INVALID');
     persona = await module.createHostPersona({ hostId, workspaceDirectory: directory, async taskScope(taskId, agentId) {
-      if (!app?.agents || agentId === 'main') return { organizationSessionId: 'host-session:main' };
+      if (!app?.agents || agentId === 'main') throw Error('HOST_PERSONA_ORGANIZATION_REQUIRED');
       const principal = { id: 'local-user', permissions: [] }, job = app.agents.getJob(taskId, principal);
       if (job.agentId !== agentId) throw Error('HOST_PERSONA_TASK_MISMATCH');
       for (const org of app.agents.listOrganizations(principal)) {
         const view = await app.agents.getOrganization(org.id, principal);
-        if (view.tasks.some(t => t.id === job.organizationTaskId)) return { organizationSessionId: org.id };
+        if (view.tasks.some(t => t.id === job.organizationTaskId && t.agentId === agentId)
+          && view.attempts.some(a => a.id === job.attemptId && a.taskId === job.organizationTaskId && a.jobId === job.id))
+          return { organizationSessionId: org.id, organizationTaskId: job.organizationTaskId, attemptId: job.attemptId, jobId: job.id };
       }
-      return { organizationSessionId: 'host-session:standalone' };
+      throw Error('HOST_PERSONA_ORGANIZATION_REQUIRED');
     } });
     if (typeof persona?.personaProvider !== 'function' || typeof persona?.close !== 'function' || !/^[A-Za-z0-9._/-]{1,100}$/.test(persona.mode ?? '')) throw Error('HOST_PERSONA_MODULE_INVALID');
   }

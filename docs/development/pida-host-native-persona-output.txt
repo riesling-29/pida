@@ -1,0 +1,10 @@
+✔ supported local-host process (local) uses Python current policy, capability/readback and exact native job mapping (2022.7113ms)
+✔ supported local-host process (public-fixture) uses Python current policy, capability/readback and exact native job mapping (2114.9976ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4672.1987

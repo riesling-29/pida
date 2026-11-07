@@ -37,11 +37,17 @@ export async function createHostPersona(host) {
       const selections = new WeakMap();
       return { id: 'pida.vera-dispatch/0.1.0', agentId: context.agentId, authority: 'external', async resolveContext(request) {
         const scope = await host.taskScope(request.taskId, context.agentId);
+        if (!scope.attemptId || !scope.organizationTaskId || scope.jobId !== request.taskId) throw Error('HOST_PERSONA_ORGANIZATION_REQUIRED');
         const provider = createVeraDispatchPersonaProvider({ protocol: 'vera-dispatch/0.1.0', requiredCapabilities: [...veraDispatchCapabilities], agentId: context.agentId,
           principalId: context.principal.id, providerPrincipal: 'principal:fixture', personaId, hostId: host.hostId, projectId: 'schumpeter',
           organizationSessionId: scope.organizationSessionId, agentInstanceId: context.agentId, role: context.role || 'host', memoryScope: scopes,
           port: { describe: r => invoke({ action: 'describe' }, r.signal),
-            resolve: r => invoke({ action: 'resolve', request: { runId: r.runId, taskId: r.taskId, organizationSessionId: scope.organizationSessionId } }, r.signal),
+            resolve: async r => {
+              const value = await invoke({ action: 'resolve', request: { runId: r.runId, taskId: r.taskId,
+                attemptId: scope.attemptId, organizationSessionId: scope.organizationSessionId } }, r.signal);
+              if (value?.binding?.attempt_id !== scope.attemptId) throw Error('HOST_PERSONA_ATTEMPT_MISMATCH');
+              return value;
+            },
             authorizeInput: r => invoke({ action: 'authorize', request: { protocol: r.protocol, requestId: r.requestId, inputDigest: r.inputDigest,
               runId: r.runId, taskId: r.taskId, hostId: host.hostId, binding: r.binding, context: r.context } }, r.signal) } });
         const snapshot = await provider.resolveContext(request); selections.set(snapshot, provider); return snapshot;

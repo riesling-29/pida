@@ -38,7 +38,7 @@ def main():
                     request = message['request']
                     binding = provider.bind(principal, settings['personaId'], {'agent_instance_id': settings['agentInstanceId'],
                         'project_id': 'schumpeter', 'organization_session_id': request['organizationSessionId'],
-                        'task_id': request['taskId'], 'attempt_id': 'attempt:' + request['runId'], 'run_id': request['runId'],
+                        'task_id': request['taskId'], 'attempt_id': request['attemptId'], 'run_id': request['runId'],
                         'host_id': settings['hostId'], 'memory_scope': scopes}, 'bind-' + request['runId'])
                     previous = provider.read_working_state(principal, binding['binding_id'], scopes)
                     if previous is None:

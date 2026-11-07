@@ -86,6 +86,10 @@ for (const personaMode of process.env.PIDA_TEST_VERA_SOURCE ? ['local', 'public-
     assert.ok(included); const binding = JSON.parse(included.payload.descriptor).personaBinding;
     assert.equal(binding.providerId, 'pida.vera-dispatch/0.1.0'); assert.equal(binding.externalContext.hostId, 'host-1');
     assert.equal(binding.externalContext.organizationSessionId, org.id); assert.equal(binding.externalContext.agentInstanceId, worker.id);
+    assert.equal(binding.externalContext.taskId, job.id, 'Persona taskId denotes exact native runtime job');
+    assert.equal(binding.externalContext.attemptId, job.attemptId, 'actual native OrgAttempt, not a synthetic run prefix');
+    const view = await client.getOrganization(org.id);
+    assert.ok(view.attempts.some(a => a.id === binding.externalContext.attemptId && a.taskId === job.organizationTaskId && a.jobId === job.id));
   }
   await client.pauseAgent(worker.id);
   const next = { ...e, request_id: 'host-task-revoked' }; next.payload_digest = collaborationDigest(next);
