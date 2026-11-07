@@ -24,21 +24,28 @@
     "linux": {
       "source_commit": "bb9886ffc3a2a815e3c255b7dbfc83b4b4bac5e3",
       "platform": "linux-x64",
-      "runtime": "/var/tmp/pida-bb9886f-20261107/runtime",
-      "archive": "/var/tmp/pida-bb9886f-20261107/pida-runtime-bb9886f-linux-x64.tar.gz",
-      "archive_sha256": "7a2b4236d896866c3e4f9a09387bbc3ce5da3e457ca16d3749ab1cfb59ddee0b",
-      "archive_bytes": 76806789,
-      "manifest_sha256": "d98d05da9fe723223d7cd444fa8274f4a660d40018c3246789826d2634daefe6",
-      "tree_sha256": "43d39293eeb74a9347f3e04088f404483f9214f33a4137112cab1aaabd4a7baa",
+      "runtime": "/var/tmp/pida-bb9886f-modes-r2-20261107/runtime",
+      "archive": "/var/tmp/pida-bb9886f-modes-r2-20261107/pida-runtime-bb9886f-linux-x64.tar.gz",
+      "archive_sha256": "937d1a762b61c96bc558b4aca3fb3647ec01823b894e62c387013adb5d01576c",
+      "archive_bytes": 76808609,
+      "manifest_sha256": "bdb1abd8c643b6b90854ff8a8e5f7ec40e837fc3c18f6a4c8d81cef8aeacc08a",
+      "tree_sha256": "86ef45a2f238e9d2045fbb263857bda1db1df2bb94fe757f0e0b5dd1cd9518d7",
       "file_count": 15649,
       "dependencies": 125,
       "node_binary_sha256": "41a74efb34cbde5c7632cdac0cf8bd1a14d0b8d73dc1e82755014d9a9ce70f5c",
       "package_sha256": "5e93895d6848c009d5e88a4b4119a886e26561decbb5fed303d2e953b99e650d",
-      "delivery_archive": "D:\\ChantaResearchGroup\\pida\\.pida-test-runtime-distribution-20261107\\linux-accepted\\pida-runtime-bb9886f-linux-x64.tar.gz",
+      "delivery_archive": "D:\\ChantaResearchGroup\\pida\\.pida-test-runtime-distribution-20261107\\linux-modes-r2\\pida-runtime-bb9886f-linux-x64.tar.gz",
+      "packaging_commit": "46e22f5f3868e56ece5eaed9d0582ff7a160a800",
+      "normal_tar_extraction_verification": "PASS",
       "base_probe": "PASS",
       "external_reference_probe": "PASS",
       "provider_credentials_used": false,
       "synthetic_transport_tokens_used": true
     }
+  },
+  "historical_rejected_linux": {
+    "archive_sha256": "7a2b4236d896866c3e4f9a09387bbc3ce5da3e457ca16d3749ab1cfb59ddee0b",
+    "manifest_sha256": "d98d05da9fe723223d7cd444fa8274f4a660d40018c3246789826d2634daefe6",
+    "reason": "0777 Git modes changed under ordinary tar extraction; superseded by canonical-mode packaging"
   }
 }

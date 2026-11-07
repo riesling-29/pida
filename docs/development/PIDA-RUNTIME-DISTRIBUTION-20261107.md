@@ -119,7 +119,21 @@ official checksums and historical initial packaging failure. Its
 | Platform | Final archive SHA-256 | Manifest SHA-256 |
 | --- | --- | --- |
 | Windows x64 | `1d96edc0160d79c06c0a5cbe94dc6feb800a3efab09bc8b08cd065ad025023d4` | `0d63aac8c755d601a4e8bff151ea3648bc4afd00393449c533d0b4600d5d9e6b` |
-| Linux x64 | `7a2b4236d896866c3e4f9a09387bbc3ce5da3e457ca16d3749ab1cfb59ddee0b` | `d98d05da9fe723223d7cd444fa8274f4a660d40018c3246789826d2634daefe6` |
+| Linux x64, canonical-mode r2 | `937d1a762b61c96bc558b4aca3fb3647ec01823b894e62c387013adb5d01576c` | `bdb1abd8c643b6b90854ff8a8e5f7ec40e837fc3c18f6a4c8d81cef8aeacc08a` |
+
+The first Linux archive `7a2b4236...dee0b` is **rejected**, despite its earlier
+staging-tree probes. Independent normal tar extraction changed inherited Git
+0777 modes under the user's umask and failed the exact manifest verifier.
+Packaging-only commit `46e22f5f3868e56ece5eaed9d0582ff7a160a800` assigns Linux
+Git directories/two executable entrypoints 0755 and data/libraries 0644 before
+manifest creation. The application/npm source remains `bb9886f`; the Windows
+archive is unchanged. Corrected Linux evidence explicitly performs ordinary tar
+extraction before verification and both execution probes. Its
+[original evidence archive](runtime-distribution-linux-modes-r2-20261107/original-evidence.zip)
+and [index](runtime-distribution-linux-modes-r2-20261107/archive-index.json)
+preserve the initial counterexample, corrected manifest, build script and results.
+The current handoff points only to the corrected Linux archive; the previous one
+is listed separately as historical/rejected. No verifier check was waived.
 
 Windows 10.0.26200 and Ubuntu 26.04.1/glibc 2.43 each passed exact tree/mode
 verification and **two clean relocated process probes**: default pida-local and

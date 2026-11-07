@@ -1,0 +1,15 @@
+{
+  "packaging_commit": "46e22f5f3868e56ece5eaed9d0582ff7a160a800",
+  "app_source_commit": "bb9886ffc3a2a815e3c255b7dbfc83b4b4bac5e3",
+  "archive_sha256": "aad50f5da87b907d134616c9c4127e36f76644804fd006181c97d32148cca126",
+  "files": {
+    "manifest.json": "bdb1abd8c643b6b90854ff8a8e5f7ec40e837fc3c18f6a4c8d81cef8aeacc08a",
+    "result.json": "8145145337c104f7a5027ba5428fbeb35a5e6bd017458ba7bed095db83f36671",
+    "handoff.json": "7a6902c5276585fcca02e3690c4b57a51e35a668e65cd2bc13928e9629ed1195",
+    "verify-result.json": "cd7ff4e33a4b1df9397f3192efd2127f7788e39efb052a6b0561a344c0733221",
+    "clean-probe.json": "f98b8d39e3098fe953f633337f7f3bab102f532a81b3b2c3b2d1e6080bdc6c45",
+    "reference-probe.json": "0b494b558108232281bbc23ac4f2de20a8cfd04086781496a776c383d201eaef",
+    "build-linux-modes-r2.mjs": "aeb4024bfc2e4885e71803daa5a19ccb99b0fb73431aad4516b9a5ffb046f151",
+    "rejected-normal-extraction-diff.json": "d61ef0dafc580db3fa5b38385bbe55d56fa8641bd139ff799297e11dc5cd90a0"
+  }
+}
