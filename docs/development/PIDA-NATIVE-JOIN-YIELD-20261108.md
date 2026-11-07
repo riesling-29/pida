@@ -55,6 +55,16 @@ retains existing interrupted recovery semantics.
 
 ## Verification and limits
 
+Independent review of exact `2b787fd4c234747da22726ec03a3e4c6619ae95f`
+passed the build, all 62 focused cases and 17 additional adversarial cases.
+The [review report](native-join-yield-independent-20261108/INDEPENDENT-NATIVE-JOIN-YIELD-REVIEW.md)
+preserves the bounded verdict and baseline reproduction. Original top-level
+probe sources, results and logs are stored byte-for-byte in the
+[archive](native-join-yield-independent-20261108/original-evidence.zip) with
+[hash index](native-join-yield-independent-20261108/archive-index.json).
+This independent context uses the same model family; it does not establish
+package, consumer capture or live-model acceptance.
+
 Build and 62 focused cases passed, including 23 new yield cases and existing
 organization/provider/runtime tests. Actual local Pi with a scripted provider
 exercised waiting child, child finishing before parent, required failure,
@@ -71,8 +81,9 @@ separate workspace keys; existing token-limit code is TOKEN_BUDGET. No runtime
 limit or product assertion was weakened to make these tests pass.
 
 See [validation record](native-join-yield-validation-20261108.json) for source
-hashes and command. Independent review remains separate and pending at this
-freeze. No external model/auth call or actual desktop acceptance was performed.
+hashes and command. Its pending-review field describes the original author
+freeze; the later independent report above supplies the separate review result.
+No external model/auth call or actual desktop acceptance was performed.
 The held bb9886 package, old real-case workspace and both negative attempts are
 unchanged. New runtime packaging/source identity must be reviewed before a new
 verification workspace uses this behavior; there is no legacy identity rewrite.

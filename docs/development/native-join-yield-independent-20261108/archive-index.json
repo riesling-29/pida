@@ -1,0 +1,72 @@
+{
+  "original_files": [
+    {
+      "path": "baseline-empty.json",
+      "bytes": 434,
+      "sha256": "98092f92dc93213e5903e4f596c0a3b6bd5158e8879cfa5eb9d3dab8b5cf7f15"
+    },
+    {
+      "path": "baseline-nonempty.json",
+      "bytes": 626,
+      "sha256": "c2ab2d8b4732a072e7ccff34a192b8027acb4c3660cdac387f4fd3017ffa9594"
+    },
+    {
+      "path": "baseline-organization-tests.txt",
+      "bytes": 3110,
+      "sha256": "6caff8c7a2bbb268ee781b5719100a3e5d06337535b4a19a9a1763a58a40edfc"
+    },
+    {
+      "path": "baseline-tests.txt",
+      "bytes": 460,
+      "sha256": "09514bd1ffdddf9565cfcf6d300d30f977274dec2adb995bfdc8c38536a37a5d"
+    },
+    {
+      "path": "candidate-regression-tests.txt",
+      "bytes": 11054,
+      "sha256": "d6956198343619434993da737e02fab68a0d8c508a651eb538071473be91dcf7"
+    },
+    {
+      "path": "independent-candidate-tests.txt",
+      "bytes": 2904,
+      "sha256": "06972386b56ed127be576a907072685ffcb338cf2cb6d7e1837d6deba69cc311"
+    },
+    {
+      "path": "INDEPENDENT-NATIVE-JOIN-YIELD-REVIEW.md",
+      "bytes": 6203,
+      "sha256": "7597b792879916bc942506bc521c7ac8c0df29a7fcbb4285aebeb0dc8dc7543c"
+    },
+    {
+      "path": "native-intake.json",
+      "bytes": 5461,
+      "sha256": "2f3475723c531ce2989c6c7db17c2d7f0e1957383106e07c9c48ca1363777cd7"
+    },
+    {
+      "path": "review-join-baseline.test.mjs",
+      "bytes": 3666,
+      "sha256": "a0c8d625515a12cd835e4afd2f668c33542ffe7e47b0c4df50a156491483c576"
+    },
+    {
+      "path": "review-metadata.json",
+      "bytes": 3537,
+      "sha256": "91ebf35e1fcfb15f8a8e831716e78859459ca2e1aaff8ea656e3fb80e69e3cbb"
+    },
+    {
+      "path": "review-native-intake.mjs",
+      "bytes": 2354,
+      "sha256": "24a4c921850322e9d49bac8473045ad06c6f56baa010af5afd3c9f68b435070b"
+    },
+    {
+      "path": "review-native-yield.test.mjs",
+      "bytes": 7259,
+      "sha256": "92787c043d53a8bd2497cdda253ae7504413dcbe5e3a9bd759c8012b66476f30"
+    },
+    {
+      "path": "review-yield-guards.test.mjs",
+      "bytes": 4837,
+      "sha256": "918da9c627d501245cf25ff51870a5269df178bb21bf10f7ffada1bb1c877cf2"
+    }
+  ],
+  "original_manifest_sha256": "32807e30dd2583ab0639a9f7af1f9d3119250e4fbdd576814126b321c582665f",
+  "archive_sha256": "614638f9e0787b8ffda2a4760d009c07b5fb3f3708b925bf72690b62cef00e73",
+  "readable_report": "LF normalized; exact bytes in ZIP"
+}
