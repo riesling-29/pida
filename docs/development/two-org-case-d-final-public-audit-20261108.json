@@ -1,0 +1,179 @@
+{
+  "schema_version": "pida.final-public-evidence-audit/1",
+  "case_id": "5bd55085-d316-4dc3-97cf-091d70a32478",
+  "at": "2026-11-07T17:01:39.236Z",
+  "scope": "Exact listed current public JSON plus owner Markdown report; no images scanned",
+  "all_seed_and_derived_absent": true,
+  "files": [
+    {
+      "path": "evidence/real-case-d-a-accepted.json",
+      "sha256": "511e66a33f810a9afa1d6c3de368cb2c4081b5589701df3ae463e85846c703bb",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-a-capture-readback.json",
+      "sha256": "5c9be61000f43550f1c4547f0fbd3d9db2f241b672507053096c0e3dbbe16fe5",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-a-capture.json",
+      "sha256": "da5b1494ceb0d22007cd35fee01364eb4a4478b7a806afdd8da7194ac4f6f067",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-a-current-graph.json",
+      "sha256": "011775d73497aa12ae556d2608c09fb53e3c8f1d17e487402af687a67450fcee",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-a-first-readback.json",
+      "sha256": "163643679869af3b375824d3b7f5feebbf68df666c93eef7260897f4c24f9698",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-a-forwarded.json",
+      "sha256": "399c05c1def8561f6e8eef4e46f8dc446b6b039575622addbc3835a8c6aaa9e8",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-a-linked-outputs.json",
+      "sha256": "a8b4f7bbaa3439bbac4edbf7b58483b1ed18ae28406e01ad1289cefc6e3ebac1",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-a-linked-report.json",
+      "sha256": "aa14f2ac9ef2dfa798da80a09b38c897a4556e67573f01c138bd228cc916d2a1",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-a-preflight.json",
+      "sha256": "02b4559f7fc68ea3536a692a640f71f3d1f45f68ad6a36d79dd5be292967376f",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-a-reservation.json",
+      "sha256": "13f2e20761952c6a79c9c150c07ec125a3d3654a87e5e411b77d5c3858a95f43",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-after-tree.json",
+      "sha256": "23dd05d5fd476d97eaf0a837fe821a21ce8e7e59717dbb18bce7b5ac2f02ccfe",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-b-accepted.json",
+      "sha256": "e5ca95f8eddf87371f858f4ea01104ff6acf085c0fdc7dc4c15dd981af698762",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-b-capture.json",
+      "sha256": "e0949c327763c63cd4aa34f152756fd91f1a965164fe255e83c0c28b18f8ef6d",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-b-first-readback.json",
+      "sha256": "04b69c32136555dbf941559068375ad082c9c065a8e44c407f306bc41dda1b2e",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-b-linked-outputs.json",
+      "sha256": "b7898671c2456462bc2aa23ba8699d7e07e35d155d94930b9437d30b49ec9e8c",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-b-linked-report.json",
+      "sha256": "718983116be83f8371243b49b0c1d6b0424dcc49ab4ae8b8d797f5095217c33e",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-b-preflight.json",
+      "sha256": "51fec49ac348d0dc317e5ca6d7c17a962bace58424094c8d7578a83a6b13c053",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-b-prepared-contract.json",
+      "sha256": "532fe65deb285e059571fe590cbabc2d56ce2c691f3d3a175360aba97bd2e2c8",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-b-reservation.json",
+      "sha256": "b83eb0ffc3e1923a752116ca15420ace17ad1fc57c970fa7dc6a6b348aab520f",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-final-host-stopped.json",
+      "sha256": "e9c50662478965a60dcdbeae3128e2520c42b4f493a78f251f4e3e6181da3a61",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-handback.json",
+      "sha256": "70e2d6304d418ffc4ad260421084b51c13b0750bed081737377428913b66088b",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-preparation-identities.json",
+      "sha256": "71fdbef93f4bd99e1f0107100e69a19cd1f04386d4eb8819df2461e2f1fa2e1c",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-preparation-launch.json",
+      "sha256": "359d629140c70ab64c856bda64d0079dc3d0fe1e650371857541fd58678d1b69",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-preparation-organizations.json",
+      "sha256": "dbe76c81cfbdb8ae802e318a30e5ef8291b7d7bf7618f0bba78a19f33deac778",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-preparation-profile.json",
+      "sha256": "0cc2321c1fbd741b1ad73c07999a4debe58c8ee1eabacb43854e219309d0abd2",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-prepared-contract.json",
+      "sha256": "71d0e4845e01aaf456557c58a879a77dc84fe1ca7e0fcb1859e37770db40e86e",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "evidence/real-case-d-workspace-selection.json",
+      "sha256": "ed24bab215ce05a9c7906293b8e06dec6e39d4fea4ebe7c2023997978ac8ef6e",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "path": "REAL-CASE-D-TWO-ORG-20261108.md",
+      "sha256": "54fbafe4ecb9726a8fb2ebf8e76b3d8c3627c8ac22d510f17572d394dd2322c5",
+      "seed_present": false,
+      "derived_present": false
+    }
+  ],
+  "private_original_preserved": true,
+  "earlier_correction_record": "two-org-case-d-public-evidence-audit-20261108.json"
+}
