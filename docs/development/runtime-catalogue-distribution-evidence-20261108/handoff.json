@@ -1,6 +1,6 @@
 {
   "source_commit": "0f1b895d72d2f05a7c4fa21a2c9a5070aad71d8f",
-  "status": "Owner packaged probes PASS; independent artifact review pending",
+  "status": "Independent bounded Windows/Linux artifact PASS; parent assembly/GUI/real-provider gates separate",
   "generator_review": {
     "report_sha256": "7769835cb8e545137a249aff0e2262413463da26b4f935e2d0b4b638b5bc697a",
     "archive": "../managed-capabilities-generator-independent-20261108/archive-index.json"
@@ -46,5 +46,11 @@
   },
   "provider_network_calls": 0,
   "old_D_unchanged": true,
-  "probe_scope": "Four actual packaged stock mock scenarios per platform: default smoke, explicit work, global reference work, two-profile catalogue work; fresh/resume/native IDs/receipts and profile mismatch preservation. External source-locked Python; parent packaged bridge and GUI not tested."
+  "probe_scope": "Four actual packaged stock mock scenarios per platform: default smoke, explicit work, global reference work, two-profile catalogue work; fresh/resume/native IDs/receipts and profile mismatch preservation. External source-locked Python; parent packaged bridge and GUI not tested.",
+  "independent_review": {
+    "report_sha256": "e06797b5c2964f6031b9799d3eb0fbfd64fdd1069de9c0ca6d88b68760468dd2",
+    "index_sha256": "77202aa99bb6d8d4172cbf094c5b022df18419cf0da595ab2786e7148a712f96",
+    "archive": "../runtime-catalogue-distribution-independent-20261108/archive-index.json",
+    "scope": "Independent both-platform artifact PASS; packaged parent Python, GUI, real provider excluded."
+  }
 }

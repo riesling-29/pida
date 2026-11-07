@@ -2,7 +2,7 @@
 
 Exact combined source: `0f1b895d72d2f05a7c4fa21a2c9a5070aad71d8f`. This private modified build retains upstream package version0.8.18 but its distribution_id includes the exact source prefix; it is not an untouched upstream release. Existing b7/D archives, cached runtimes and real-case workspaces were not modified or migrated.
 
-The independently accepted policy9cb and corrected catalogue127 source are combined with the independently accepted inventory-capability generator0f1b. Generator report SHA7769835cb8e545137a249aff0e2262413463da26b4f935e2d0b4b638b5bc697a is preserved with initial counterexamples in [generator review archive](managed-capabilities-generator-independent-20261108/archive-index.json). Source acceptance is distinct from the independent artifact gate, which is pending here.
+The independently accepted policy9cb and corrected catalogue127 source are combined with the independently accepted inventory-capability generator0f1b. Generator report SHA7769835cb8e545137a249aff0e2262413463da26b4f935e2d0b4b638b5bc697a is preserved with initial counterexamples in [generator review archive](managed-capabilities-generator-independent-20261108/archive-index.json). Source acceptance is distinct from the independent artifact gate, now PASS within the scope recorded below.
 
 ## Immutable handoff
 
@@ -22,6 +22,8 @@ Reference probes use a separate explicit external Python executable and source-l
 
 An initial Windows probe fixture computed bridge identity before normalizing the external Python path string, so catalogue startup correctly rejected it. The instrumentation now resolves trusted paths before identity computation. No release/runtime byte or guard was changed for that fixture correction. Final full runtime tree checks pass on both platforms.
 
-## Remaining gate
+## Independent artifact acceptance and remaining gates
 
-Independent artifact review must verify exact archives/manifest/sidecar/source/vendor closure and packaged behavior. Sch consumer integration, packaged reference bridge, GUI and any new real provider execution require their own authorization/validation. Retaining D is the no-change alternative; no automatic existing workspace migration is provided. Withdraw this release claim if any pinned byte differs, required sidecar/provenance check fails, actual ready/policy/catalogue mismatches, or a resumed identity changes. Full source and platform identity bound the validity of these checks.
+Independent report e06797b5c2964f6031b9799d3eb0fbfd64fdd1069de9c0ca6d88b68760468dd2 and its listed safe artifacts are preserved byte-for-byte in [final review archive](runtime-catalogue-distribution-independent-20261108/archive-index.json). Both exact archives, full source/vendor/sidecar closures and ordinary extraction were verified independently. Four stock scenarios per platform passed with strengthened nonempty input receipt, agent-instance and selected-profile checks: five native jobs and six reference inclusion events per platform. Ready2/capability2, deadlines, native IDs/token rotation on resume, mismatch preservation and final full trees matched. The review reused the owner probe with documented stronger assertions; original and modified probe hashes are retained. External verified f6 source and Python3.11.9/3.14.4 were used, not the parent's frozen bridge.
+
+ Sch consumer integration, packaged reference bridge, GUI and any new real provider execution require their own authorization/validation. Retaining D is the no-change alternative; no automatic existing workspace migration is provided. Withdraw this release claim if any pinned byte differs, required sidecar/provenance check fails, actual ready/policy/catalogue mismatches, or a resumed identity changes. Full source and platform identity bound the validity of these checks.
