@@ -266,6 +266,14 @@ export class AgentSupervisor {
     await this.authorizeCollaboration(principal, record.envelope, "read");
     return copy(record.receipt);
   }
+  collaborationCapabilities(principal: Principal) {
+    this.usable(); this.principal(principal);
+    if (!principal.permissions.includes("pida:agents")) denied("FORBIDDEN", 403);
+    return { schema_version: "pida.collaboration.capabilities/1", enabled: !!this.options.collaboration,
+      host_id: this.options.collaboration?.hostId ?? null, envelope_schema: "pida.collaboration.envelope/1", receipt_schema: "pida.collaboration.receipt/1",
+      durability_scope: "local-process-restart", reply_mode: "fresh-task-only", supervisor_state_version: 3,
+      policy_mode: this.options.collaboration ? "current-host-check" : "disabled" } as const;
+  }
   /** Derive authority from validated native lineage, never a caller-supplied marker.
    * Includes delegation and earlier attempts (continuation/repair), including persisted v3 work. */
   private collaborationOrigins(job: AgentJob): CollaborationRecord[] {

@@ -1,0 +1,17 @@
+{
+  "schema_version": "schumpeter.pida.authorization.response/1",
+  "request_id": "33333333-3333-4333-8333-333333333333",
+  "phase": "dispatch",
+  "authorized": true,
+  "principal_id": "local-user",
+  "host_id": "host-1",
+  "payload_digest": "b3e9a68120885e6a91cec1062c718899a0cd2e22f5d6c8d46e222df30cfd0edd",
+  "room_revision": 1,
+  "contract_revision": 2,
+  "recipient": {
+    "organization_id": "org-A",
+    "host_id": "host-1",
+    "org_session_id": "11111111-1111-4111-8111-111111111111",
+    "agent_id": "22222222-2222-4222-8222-222222222222"
+  }
+}

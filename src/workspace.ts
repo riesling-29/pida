@@ -4,6 +4,8 @@ import { activateExtensions, assertBusinessTool, assertExtension, ResourceLifeti
 import { composeTools, compositionInventory, compositionRevision, resolveComposition, type WorkspacePreset, type CompositionInventory, type ToolContribution } from "./composition.js";
 import { createAgentTools, agentToolPermissions } from "./agent-tools.js";
 import { AgentSupervisor, type AgentProfile, type AgentPersonaSourceCatalogue } from "./agent-supervisor.js";
+import type { CollaborationPolicy } from "./collaboration.js";
+import type { CredentialStore } from "@earendil-works/pi-ai";
 import { AgentMemoryStore, memoryTools, agentMemoryPermissions } from "./agent-memory.js";
 import { createLocalPersonaProvider, type PersonaProvider } from "./persona-provider.js";
 import { ProcessIntelligence } from "./process-intelligence.js";
@@ -409,6 +411,10 @@ export interface WorkspacePersonaSource {
   create(context: WorkspacePersonaContext): PersonaProvider | Promise<PersonaProvider>;
 }
 export interface CreateWorkspaceOptions {
+  /** Trusted embedding host only; absent leaves external delivery disabled. */
+  collaboration?: CollaborationPolicy;
+  /** Optional host-selected credential store, never an HTTP/model-selected path. */
+  nativeCredentials?: CredentialStore;
   /** Executable factories supplied by the embedding host, never by an HTTP/model request. */
   extensions?: readonly WorkspaceExtension[];
   /** Optional host-installed process backend; never a model-selected module path. */
@@ -554,7 +560,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
         const connector = selected.providerConnector ? await loadProviderConnector(root, selected.providerConnector, selectedEnv) : undefined;
         if (!profile) connectorManifest = connector?.manifest;
         const provider = connector?.provider ?? (selected.provider.kind === "mock" ? mockProvider : selected.provider.kind === "native"
-          ? nativeProvider(selected.provider, selectedEnv, undefined, new ChatGPTCredentialStore(root, selected.stateDir))
+          ? nativeProvider(selected.provider, selectedEnv, undefined, options.nativeCredentials ?? new ChatGPTCredentialStore(root, selected.stateDir))
           : endpointProvider({ id: "workspace", ...selected.provider }, selectedEnv));
         const agentExtensions = await activateExtensions(definitions.filter(d => d.scope === "agent"), { workspaceDir: root, agentId, signal: owner.controller.signal });
         owner.add(() => agentExtensions.close());
@@ -677,6 +683,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
     lifetime.add(closeMain);
     agents = selectedMain.agents ? await AgentSupervisor.open({
       directory: agentDirectory, maxConcurrent: config.agents?.maxConcurrent ?? 3,
+      collaboration: options.collaboration,
       acceptance: { criteria: config.acceptanceChecks ?? [], capture: async (profile, requestPrincipal) => {
         if (!selectedAgent.workbench) throw new PidaError("WORKBENCH_DISABLED", 404);
         return agentWorkbench(profile.id).captureFiles(requestPrincipal);

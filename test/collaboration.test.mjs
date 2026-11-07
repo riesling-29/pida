@@ -101,6 +101,7 @@ test('policy rejects foreign host, sender/mapping, stale revisions and revoked r
     s.start(); assert.equal((await done(s, receipt.job_id)).code, 'COLLABORATION_FORBIDDEN');
     assert.equal(called.length, 1, 'only root invokes model; receive never grants dispatch');
     await s.close(); s = await AgentSupervisor.open({ ...o, collaboration: undefined });
+    assert.equal(s.collaborationCapabilities(owner).enabled, false);
     await assert.rejects(s.receiveCollaboration(owner, e), { code: 'COLLABORATION_DISABLED' });
   } finally { await s.close(); }
 });

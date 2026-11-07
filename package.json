@@ -58,7 +58,9 @@
     "THIRD_PARTY_NOTICES.md",
     "scripts/task.mjs",
     "packs",
-    "scripts/pix-worker.py"
+    "scripts/pix-worker.py",
+    "scripts/vera-dispatch-host-probe.py",
+    "fixtures/vera-dispatch/producer-source-lock.json"
   ],
   "overrides": {
     "@earendil-works/pi-agent-core": "1.2.0",

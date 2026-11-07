@@ -76,6 +76,7 @@ export class PidaClient {
   }
   async listOrganizations(): Promise<{ organizations: import("./organization.js").OrgSession[]; criteria: import("./organization.js").LocalCriterion[] }> { return (await this.request("/v1/organizations")).json(); }
   async receiveCollaboration(input: import("./collaboration.js").CollaborationEnvelope): Promise<import("./collaboration.js").CollaborationReceipt> { return (await this.request("/v1/collaboration/messages", "POST", input)).json(); }
+  async getCollaborationCapabilities(): Promise<ReturnType<import("./agent-supervisor.js").AgentSupervisor["collaborationCapabilities"]>> { return (await this.request("/v1/collaboration/capabilities")).json(); }
   async getCollaborationReceipt(id: string): Promise<import("./collaboration.js").CollaborationReceipt> { return (await this.request("/v1/collaboration/receipts/" + encodeURIComponent(id))).json(); }
   async createOrganization(input: Parameters<import("./agent-supervisor.js").AgentSupervisor["createOrganization"]>[1]): Promise<import("./organization.js").OrgSession> { return (await this.request("/v1/organizations", "POST", input)).json(); }
   async getOrganization(id: string): Promise<Awaited<ReturnType<import("./agent-supervisor.js").AgentSupervisor["getOrganization"]>>> { return (await this.request("/v1/organizations/" + encodeURIComponent(id))).json(); }
