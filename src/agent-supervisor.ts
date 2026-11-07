@@ -68,6 +68,7 @@ interface Active { agentId: string; workspaceKey: string; controller: AbortContr
 const now = () => new Date().toISOString();
 const copy = <T>(value: T): T => structuredClone(value);
 const statuses = new Set(["queued", "running", "completed", "failed", "limited", "cancelled", "interrupted"]);
+const maxStateBytes = 32 * 1024 * 1024;
 const validText = (s: unknown, max: number, empty = false): s is string => typeof s === "string" && s.length <= max && (empty || !!s.trim());
 const validSourceId = (s: unknown): s is string => typeof s === "string" && /^[a-z][a-z0-9._-]{0,63}$/.test(s);
 const errorCode = (e: unknown) => e instanceof PidaError && /^[A-Z][A-Z0-9_]+$/.test(e.code) ? e.code : "AGENT_EXECUTION_FAILED";
@@ -116,7 +117,7 @@ export class AgentSupervisor {
     this.acquireLock();
     try {
       if (existsSync(this.statePath)) {
-        if (lstatSync(this.statePath).size > 32 * 1024 * 1024) denied("AGENT_STATE_INVALID", 500);
+        if (lstatSync(this.statePath).size > maxStateBytes) denied("AGENT_STATE_INVALID", 500);
         this.state = JSON.parse(readFileSync(this.statePath, "utf8"));
         if ((this.state as { version: number }).version === 1) this.state = { ...this.state, version: 3, organization: emptyOrganizations(), collaboration: [] };
         if ((this.state as { version: number }).version === 2) this.state = { ...this.state, version: 3, collaboration: [] };
@@ -242,12 +243,19 @@ export class AgentSupervisor {
     const org = this.collaborationTarget(principal, e);
     this.taskCapacity(1);
     if (this.state.collaboration.length >= 10000) denied("COLLABORATION_LIMIT", 429);
+    const lengths = { jobs: this.state.jobs.length, tasks: this.state.organization.tasks.length, attempts: this.state.organization.attempts.length, receipts: this.state.collaboration.length };
     const id = randomUUID(), job = this.enqueueRecord(e.recipient.agent_id, principal, { input: e.input, requestId: "collab-" + id });
     job.collaborationReceiptId = id;
     this.trackTask(org.id, job);
     const receipt: CollaborationReceipt = { schema_version: "pida.collaboration.receipt/1", receipt_id: id, producer_id: e.producer_id, request_id: e.request_id,
       payload_digest: e.payload_digest, recipient: copy(e.recipient), received_at: now(), job_id: job.id, phase: "job_enqueued", durable: true, durability_scope: "local-process-restart" };
     this.state.collaboration.push({ owner: principal.id, envelope: e, receipt });
+    // Synchronous transaction: no scheduling/await can expose tentative records before this admission check.
+    if (this.recoverableStateBytes() > maxStateBytes) {
+      this.state.jobs.length = lengths.jobs; this.state.organization.tasks.length = lengths.tasks;
+      this.state.organization.attempts.length = lengths.attempts; this.state.collaboration.length = lengths.receipts;
+      denied("COLLABORATION_STORAGE_LIMIT", 429);
+    }
     this.persist(); this.kick(); return copy(receipt);
   }
   async getCollaborationReceipt(id: string, principal: Principal): Promise<CollaborationReceipt> {
@@ -257,9 +265,54 @@ export class AgentSupervisor {
     await this.authorizeCollaboration(principal, record.envelope, "read");
     return copy(record.receipt);
   }
+  /** Derive authority from validated native lineage, never a caller-supplied marker.
+   * Includes delegation and earlier attempts (continuation/repair), including persisted v3 work. */
+  private collaborationOrigins(job: AgentJob): CollaborationRecord[] {
+    const jobs = new Map(this.state.jobs.map(j => [j.id, j])), attempts = new Map(this.state.organization.attempts.map(a => [a.id, a]));
+    const pending = [job.id], seen = new Set<string>(), origins = new Map<string, CollaborationRecord>();
+    while (pending.length) {
+      const id = pending.pop()!; if (seen.has(id)) continue; seen.add(id);
+      const current = jobs.get(id); if (!current) continue;
+      const record = this.state.collaboration.find(r => r.receipt.job_id === id);
+      if (record) origins.set(record.receipt.receipt_id, record);
+      if (current.parentJobId) pending.push(current.parentJobId);
+      const task = this.state.organization.tasks.find(t => t.id === current.organizationTaskId);
+      if (task) for (const attemptId of task.attempts) {
+        const attempt = attempts.get(attemptId)!;
+        if (attempt.jobId === current.id) break;
+        pending.push(attempt.jobId);
+      }
+      if (current.joinId) {
+        const join = this.state.organization.joins.find(j => j.id === current.joinId);
+        for (const result of join?.results ?? []) pending.push(result.jobId);
+      }
+    }
+    return [...origins.values()];
+  }
+  private organizationWorkRevision(orgId: string): string {
+    const tasks = this.state.organization.tasks.filter(t => t.orgId === orgId);
+    const ids = new Set(tasks.map(t => t.id));
+    return canonical({ tasks: tasks.map(t => ({ id: t.id, status: t.status, attempts: t.attempts })),
+      jobs: this.state.jobs.filter(j => ids.has(j.organizationTaskId ?? "")).map(j => ({ id: j.id, status: j.status, attemptId: j.attemptId })),
+      joins: this.state.organization.joins.filter(j => j.orgId === orgId).map(j => ({ id: j.id, revision: j.revision, status: j.status, continuationJobId: j.continuationJobId })) });
+  }
   private persist() {
+    // Never replace readable evidence with a file that the next reader must reject.
+    // Non-admission runtime growth faults this host; reopen uses the last bounded snapshot and normal interrupted recovery.
+    if (this.recoverableStateBytes() > maxStateBytes) { this.faulted = true; denied("AGENT_STATE_LIMIT", 429); }
     try { savePrivate(this.statePath, this.state); }
     catch { this.faulted = true; denied("AGENT_STORAGE_FAILED", 500); }
+  }
+  private recoverableStateBytes(): number {
+    const bytes = (value: unknown) => Buffer.byteLength(JSON.stringify(value));
+    let size = bytes(this.state); const affected = new Set<string>(), at = now();
+    for (const job of this.state.jobs) if (job.status === "running") {
+      const recovered = { ...job, status: "interrupted", code: "AGENT_PROCESS_INTERRUPTED", finishedAt: at };
+      delete recovered.currentTool; size += Math.max(0, bytes(recovered) - bytes(job)); affected.add(job.agentId);
+    }
+    for (const profile of this.state.profiles) if (affected.has(profile.id))
+      size += Math.max(0, bytes({ ...profile, paused: true, needsReconciliation: true, updatedAt: at }) - bytes(profile));
+    return size;
   }
   private usable() { if (this.closed || this.faulted) denied(this.faulted ? "AGENT_STORAGE_FAILED" : "AGENT_SUPERVISOR_CLOSED", 503); }
   private principal(principal: Principal) { if (!principal || !validText(principal.id, 256) || !Array.isArray(principal.permissions)) denied("UNAUTHORIZED", 401); }
@@ -625,6 +678,7 @@ export class AgentSupervisor {
       if (task.id !== org.rootTaskId) { task.status = "completed"; this.persist(); continue; }
       if (state.tasks.some(t => t.orgId === org.id && t.id !== task.id && ["queued", "waiting"].includes(t.status))) continue;
       if (task.receipts.some(r => r.attemptId === attempt.id)) continue;
+      const workRevision = this.organizationWorkRevision(org.id);
       const principal = await this.organizationPrincipal(org.owner), criteria = this.criteria(org.criterionIds);
       const receipt: LocalReceipt = { id: randomUUID(), taskId: task.id, attemptId: attempt.id, jobId: job.id, owner: org.owner, agentId: task.agentId,
         criteriaDigest: org.criteriaDigest, environmentRevision: org.environmentRevision, occurredAt: now(), status: "UNKNOWN", checks: org.criterionIds.map(id => ({ id, required: true, status: "UNKNOWN" })), issuer: "pida-host", scope: "workbench-exact-revision" };
@@ -632,7 +686,7 @@ export class AgentSupervisor {
         try { Object.assign(receipt, evaluateLocal(await this.captureAcceptance(this.owned(task.agentId, principal), principal, Math.min(5000, org.deadlineAt - Date.now())), criteria)); }
         catch { /* unavailable checker/subject is UNKNOWN, not FAIL or PASS */ }
       }
-      if (this.closed || task.attempts.at(-1) !== attempt.id || org.status !== "active") continue;
+      if (this.closed || task.attempts.at(-1) !== attempt.id || org.status !== "active" || this.organizationWorkRevision(org.id) !== workRevision) continue;
       if (Date.now() >= org.deadlineAt) { org.status = "expired"; task.status = "failed"; this.persist(); continue; }
       task.receipts.push(receipt);
       if (receipt.status === "PASS") { task.status = "accepted"; org.status = "accepted"; }
@@ -803,10 +857,11 @@ export class AgentSupervisor {
       }
       signal.throwIfAborted();
       const prompt = context ? `Stored agent memory (context, not new authorization):\n${context}\n\nCurrent user request:\n${job.input}` : job.input;
-      const collaboration = this.state.collaboration.find(r => r.receipt.job_id === job.id);
-      if (collaboration) {
+      for (const collaboration of this.collaborationOrigins(job)) {
         await this.authorizeCollaboration(principal, collaboration.envelope, "dispatch", signal);
         this.collaborationTarget(principal, collaboration.envelope);
+        const origin = this.state.jobs.find(j => j.id === collaboration.receipt.job_id)!;
+        if (!["queued", "running", "completed"].includes(origin.status) || origin.code === "CANCELLED" || origin.result?.recovery) denied("COLLABORATION_ORIGIN_INACTIVE", 409);
         signal.throwIfAborted();
       }
       const result = await runtime.run(profile.sessionId, principal, prompt, event => this.event(job, event), signal, { taskId: job.id });

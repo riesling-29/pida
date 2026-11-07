@@ -1,0 +1,164 @@
+{
+  "reviewedCommit": "50d1ed49294cb8acfabb00badd72da6877e22c30",
+  "baselineCommit": "30fef192b478b1697bb95a22ad7340cf1c485b03",
+  "environment": {
+    "os": "win32",
+    "node": "v24.18.0"
+  },
+  "scope": "Separate-context same-Codex-family independent source and developer test review, no GUI/live model/cross-family acceptance",
+  "sourceManifestVerified": true,
+  "tests": {
+    "focused": {
+      "passed": 30,
+      "failed": 0
+    },
+    "baselineFull": {
+      "tests": 405,
+      "passed": 372,
+      "failed": 24,
+      "cancelled": 1,
+      "skipped": 8
+    },
+    "currentFull": {
+      "tests": 416,
+      "passed": 383,
+      "failed": 24,
+      "cancelled": 1,
+      "skipped": 8
+    },
+    "isolatedVariableFailures": {
+      "baselinePassed": 2,
+      "currentPassed": 2
+    }
+  },
+  "fullSuiteComparison": {
+    "authorFailureNames": [
+      "active supervisor and linked directories or lock files are never unlocked",
+      "actual delegation chain stops at depth two and job summaries are bounded result data",
+      "anthropic: real Pi adapter consumes protocol stream, applies config and restores saved auth",
+      "credential files reject corruption and links without exposing content",
+      "deepseek: real Pi adapter consumes protocol stream, applies config and restores saved auth",
+      "entry-point selection rejects remote imports, escapes, platform paths and symlinks",
+      "file boundaries reject symlinks, hardlinks and binary input",
+      "foreground shell timeout/cancellation are uncertain effects and output is bounded",
+      "google: real Pi adapter consumes protocol stream, applies config and restores saved auth",
+      "large valid memory writes and selective recall complete through the real Pi loop without uncertain effect receipts (mock model)",
+      "manifest schema/path boundaries reject dynamic executables, unsupported validators and symlink scripts",
+      "memory-only SDK sessions use explicit workspace without changing process cwd",
+      "native Pi turns materialize standard OCEL, preserve IDs through restart, and retain HTTP ownership",
+      "openai: real Pi adapter consumes protocol stream, applies config and restores saved auth",
+      "overflow recovery requires a committed smaller compaction and never loops on no progress",
+      "project view authorizes every read and excludes private, linked and out-of-root paths",
+      "real project shell runs tests, reports nonzero exit and strips provider environment",
+      "scan bounds, protected paths, unsafe metadata and links are enforced without leaking file contents",
+      "selected workspace reaches Pi prompt and transcript, including restored legacy cwd",
+      "tool paths reject traversal, symlinks and invalid exports; config rejects unknown fields",
+      "unsafe instruction/skill resources fail closed instead of reading parent/symlink/oversized content",
+      "workspace permissions, principal isolation, traversal, links and total quotas are independently enforced"
+    ],
+    "baselineFailureNames": [
+      "active supervisor and linked directories or lock files are never unlocked",
+      "actual delegation chain stops at depth two and job summaries are bounded result data",
+      "agent HTTP routes enforce identity, ownership and write/tool grants before accessing private state",
+      "anthropic: real Pi adapter consumes protocol stream, applies config and restores saved auth",
+      "credential files reject corruption and links without exposing content",
+      "deepseek: real Pi adapter consumes protocol stream, applies config and restores saved auth",
+      "entry-point selection rejects remote imports, escapes, platform paths and symlinks",
+      "file boundaries reject symlinks, hardlinks and binary input",
+      "foreground shell timeout/cancellation are uncertain effects and output is bounded",
+      "google: real Pi adapter consumes protocol stream, applies config and restores saved auth",
+      "large valid memory writes and selective recall complete through the real Pi loop without uncertain effect receipts (mock model)",
+      "manifest schema/path boundaries reject dynamic executables, unsupported validators and symlink scripts",
+      "memory-only SDK sessions use explicit workspace without changing process cwd",
+      "native Pi turns materialize standard OCEL, preserve IDs through restart, and retain HTTP ownership",
+      "openai: real Pi adapter consumes protocol stream, applies config and restores saved auth",
+      "overflow recovery requires a committed smaller compaction and never loops on no progress",
+      "project view authorizes every read and excludes private, linked and out-of-root paths",
+      "real project shell runs tests, reports nonzero exit and strips provider environment",
+      "scan bounds, protected paths, unsafe metadata and links are enforced without leaking file contents",
+      "selected workspace reaches Pi prompt and transcript, including restored legacy cwd",
+      "tool paths reject traversal, symlinks and invalid exports; config rejects unknown fields",
+      "unborn repository and deleted files are supported with bounded diff output",
+      "unsafe instruction/skill resources fail closed instead of reading parent/symlink/oversized content",
+      "workspace SDK preserves three agents, sourced information, isolated artifacts and jobs across reconnect/restart (mock model; real Pi/tool/HTTP)",
+      "workspace permissions, principal isolation, traversal, links and total quotas are independently enforced"
+    ],
+    "currentFailureNames": [
+      "active supervisor and linked directories or lock files are never unlocked",
+      "actual delegation chain stops at depth two and job summaries are bounded result data",
+      "agent HTTP routes enforce identity, ownership and write/tool grants before accessing private state",
+      "anthropic: real Pi adapter consumes protocol stream, applies config and restores saved auth",
+      "credential files reject corruption and links without exposing content",
+      "deepseek: real Pi adapter consumes protocol stream, applies config and restores saved auth",
+      "entry-point selection rejects remote imports, escapes, platform paths and symlinks",
+      "execution deadline cancels a real command and uncertain state requires host reconciliation",
+      "file boundaries reject symlinks, hardlinks and binary input",
+      "foreground shell timeout/cancellation are uncertain effects and output is bounded",
+      "google: real Pi adapter consumes protocol stream, applies config and restores saved auth",
+      "large valid memory writes and selective recall complete through the real Pi loop without uncertain effect receipts (mock model)",
+      "manifest schema/path boundaries reject dynamic executables, unsupported validators and symlink scripts",
+      "memory-only SDK sessions use explicit workspace without changing process cwd",
+      "native Pi turns materialize standard OCEL, preserve IDs through restart, and retain HTTP ownership",
+      "openai: real Pi adapter consumes protocol stream, applies config and restores saved auth",
+      "overflow recovery requires a committed smaller compaction and never loops on no progress",
+      "project view authorizes every read and excludes private, linked and out-of-root paths",
+      "real project shell runs tests, reports nonzero exit and strips provider environment",
+      "scan bounds, protected paths, unsafe metadata and links are enforced without leaking file contents",
+      "selected workspace reaches Pi prompt and transcript, including restored legacy cwd",
+      "tool paths reject traversal, symlinks and invalid exports; config rejects unknown fields",
+      "unsafe instruction/skill resources fail closed instead of reading parent/symlink/oversized content",
+      "workspace SDK preserves three agents, sourced information, isolated artifacts and jobs across reconnect/restart (mock model; real Pi/tool/HTTP)",
+      "workspace permissions, principal isolation, traversal, links and total quotas are independently enforced"
+    ],
+    "authorNotReproducedOnBaseline": [],
+    "currentOnly": [
+      "execution deadline cancels a real command and uncertain state requires host reconciliation"
+    ],
+    "baselineOnly": [
+      "unborn repository and deleted files are supported with bounded diff output"
+    ],
+    "interpretation": "Every author failure name reproduced on baseline. The two variable current/baseline-only cases passed isolated on both commits. This does not establish full-suite or Windows product acceptance; underlying baseline failures remain."
+  },
+  "blockingFindings": [
+    {
+      "id": "PIDA-REVIEW-1",
+      "severity": "P1",
+      "source": "src/agent-supervisor.ts:806",
+      "description": "Native descendants/continuations of external delivery lose current collaboration policy authorization. Original mapped job gets dispatch check; continuation executes after policy revocation. Owner confirms lineage exclusion unintended.",
+      "probe": "review-probes.mjs",
+      "case": "revoked-continuation"
+    },
+    {
+      "id": "PIDA-REVIEW-2",
+      "severity": "P1",
+      "source": "src/agent-supervisor.ts:628",
+      "description": "New external task admitted while root acceptance awaits capture is acknowledged, but root becomes accepted/PASS from stale pending-task check and delivery fails ORG_ATTEMPT_OBSOLETE without invocation.",
+      "probe": "review-probes.mjs",
+      "case": "acceptance-race"
+    },
+    {
+      "id": "PIDA-REVIEW-3",
+      "severity": "P1",
+      "source": "src/agent-supervisor.ts:251",
+      "description": "Ordinary receive acknowledged durable:true can write above the32MiB reader cap, making valid supervisor impossible to reopen. Synthetic valid453-record seed loaded before final admission; final receipt/reopen use public APIs.",
+      "probe": "review-size-probe.mjs",
+      "case": "acknowledged-state-over-reader-limit",
+      "beforeBytes": 33482833,
+      "afterBytes": 33556914,
+      "readerLimit": 33554432
+    }
+  ],
+  "artifacts": {
+    "review-focused.log": "6e825dc26551beced331a0de94437d00e704211cf85dc06ffe8e2e75ab8011fb",
+    "review-current-full.log": "1fc09ece632650dedba5f364fcead1a57b62dd9ffb415bdc66ef9b123bc27116",
+    "review-variable-failures.log": "031223ecf457ec53d9871a05f0e6ce59df5df4519db4b3b3576fada74fab7985",
+    "review-probes.mjs": "f824fe68603fd051e1220b1037e71039ef104158ad2a4e0e440e18f15daff682",
+    "review-probes.log": "e4741789ba6b26c47455fdfdfbfa05a86b11827ca8fa66309ce33940a003cf7b",
+    "review-size-probe.mjs": "a4141dfe3eea67ddd5ffff9de06161b79d80a5d82b2856dddfaddec6005144dd",
+    "review-size-probe.log": "d06a4e68d7a760a933e9be362c26de4d9dc0a6b2ffe3ff3a9a10e340c4d0a797",
+    "../pida-review-baseline-20261107/review-baseline-full.log": "443e0bcc862c75bac4062077690cc2e7de6c021bcab5f5ac990289961b2c7e53",
+    "../pida-review-baseline-20261107/review-variable-failures.log": "28eec3a737acd40ff877f706c9936fab47de9d9ec891a54a86de44a58fb87e9d"
+  },
+  "verdict": "NEEDS_CHANGES",
+  "validity": "Only exact reviewed commit/source hashes. Re-evaluate after fixes; original failed invariants must be rejected/prevented with independent regression evidence."
+}

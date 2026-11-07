@@ -1,0 +1,19 @@
+# Independent delivery review corrections
+
+Reviewed initial implementation: `50d1ed49294cb8acfabb00badd72da6877e22c30`. [Original independent report](delivery-review-evidence/pida-review-delivery-20261107/review-initial-report.json), SHA256 `9466168565e8749f6c7a1f66bc862957cdd15431591dcdbab8246904574a89b2`, and its probe sources/logs and current/baseline suite outputs are preserved alongside it. This is separate-context same-family review; no cross-family or desktop acceptance is implied.
+
+The reviewer confirmed three P1 counterexamples despite the original focused tests passing:
+
+| Finding | Correction | New regression evidence |
+| --- | --- | --- |
+| Derived native continuation bypassed revoked collaboration policy | Derive origins from persisted native parent, prior task attempts and join-result lineage at dispatch; current policy and origin status checked for every origin. Primary receipt remains bound to its one original job. | Native child and join continuation persisted/reopened, policy revoked, then resumed: no derived model call |
+| Admission during asynchronous root acceptance allowed stale PASS and orphaned new work | Capture organization task/attempt/job/join revision before the first principal/capture await; compare before committing receipt/repair. Discard changed capture and reconcile again after new work settles. | Admission during principal await and capture await: new job completes, acceptance rechecks, only one final root receipt |
+| Durable ACK could grow file above its 32 MiB reader cap | Preflight tentative receive state including recovery-size reserve; synchronously roll back new four records on rejection. Generic persistence also refuses unreadable state, preserving prior disk evidence. | Valid synthetic near-capacity native history; real public receive rejected; exact duplicate stable; changed payload conflicts; restart succeeds; generic oversized profile mutation cannot replace readable disk state |
+
+No state schema migration was needed for derived authority: origins are computed from existing validated native links instead of trusting a new marker. No arbitrary history eviction or reader-limit increase was introduced. Bounded file storage remains a scaling limit. Non-admission runtime growth faults the host rather than promising indefinite progress; last persisted running jobs become interrupted on reopen and do not replay blindly.
+
+Developer verification: `node scripts/task.mjs build` passed. `node --test --test-timeout=20000 test/collaboration-regressions.test.mjs test/collaboration.test.mjs test/organization.test.mjs test/agent-supervisor.test.mjs` passed **35/35**, zero failures/cancellations/skips. [Output](pida-collaboration-fix-focused-output.txt). [Exact correction source hashes](pida-collaboration-fix-source-manifest.json). Source is in [supervisor](../../src/agent-supervisor.ts), regression scenarios in [tests](../../test/collaboration-regressions.test.mjs).
+
+The independent baseline comparison reproduced every failure name from the owner's original full-suite run. Its frozen baseline/current totals were respectively 405/416 tests, 372/383 passed, 24 failed, 1 cancelled and 8 skipped; variable-only cases passed isolated on both. That narrows attribution and does not make full-suite or Windows product acceptance green. Original reports remain unchanged.
+
+Persona consumer edits are separately uncommitted during this correction; this focused commit stages only delivery fixes, documentation and evidence. Re-review of this correction is pending. Withdraw the correction claim if the preserved counterexamples or corresponding regressions still violate current authority, acceptance revision or readable durability. Recheck after source/state policy changes; live service, model and desktop acceptance remain separate.
