@@ -4,9 +4,10 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, readdirSync, statSync, lstatSync, readlinkSync, chmodSync } from 'node:fs';
 import { resolve, join, dirname, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { capabilityPath, createManagedCapabilities, validateManagedCapabilityFiles } from './managed-host-capabilities.mjs';
 const repo = resolve(fileURLToPath(new URL('../', import.meta.url))), options = {};
 for (let i = 2; i < process.argv.length; i += 2) {
-  if (!['--output','--source','--node-archive','--git-directory','--package-tar'].includes(process.argv[i]) || !process.argv[i+1]) throw Error('INVALID_ARGUMENT');
+  if (!['--output','--source','--node-archive','--git-directory','--package-tar','--managed-capabilities'].includes(process.argv[i]) || !process.argv[i+1]) throw Error('INVALID_ARGUMENT');
   options[process.argv[i].slice(2)] = process.argv[i+1];
 }
 if (!options.output || !options.source || !options['node-archive'] || !options['git-directory']) throw Error('OUTPUT_SOURCE_NODE_GIT_REQUIRED');
@@ -80,6 +81,11 @@ if (process.platform === 'linux') {
   modes(gitRoot);
 }
 const packageJson = JSON.parse(readFileSync(join(pida, 'package.json'), 'utf8')), shrinkwrap = JSON.parse(readFileSync(join(pida, 'npm-shrinkwrap.json'), 'utf8'));
+if (options['managed-capabilities']) {
+  const capabilities = createManagedCapabilities(sourceCommit, options['managed-capabilities']);
+  validateManagedCapabilityFiles(runtime, capabilities, sourceCommit);
+  writeFileSync(join(runtime, capabilityPath), JSON.stringify(capabilities, null, 2) + '\n', { flag: 'wx', mode: 0o644 });
+}
 const files = [], licenses = [], dependencies = [];
 const walk = directory => { for (const entry of readdirSync(directory, { withFileTypes: true })) {
   const file = join(directory, entry.name), name = relative(runtime, file).split(sep).join('/'), stat = lstatSync(file);
@@ -105,7 +111,7 @@ const manifest = { schema_version: 'pida.runtime-distribution/1', distribution_i
     abi: JSON.parse(run(buildNode, ['-p', 'JSON.stringify({modules:process.versions.modules,napi:process.versions.napi})'])) },
   package: { name: packageJson.name, version: packageJson.version, archive: packageTar.split(/[\\/]/).at(-1), sha256: hashFile(packageTar), bytes: statSync(packageTar).size, license: packageJson.license },
   source: sourceEvidence,
-  packaging: { script_sha256: hashFile(fileURLToPath(import.meta.url)), platform_lock_sha256: hashFile(join(repo, 'scripts/runtime-platform-lock.json')) },
+  packaging: { managed_capabilities_generator_sha256: hashFile(join(repo, 'scripts/managed-host-capabilities.mjs')), script_sha256: hashFile(fileURLToPath(import.meta.url)), platform_lock_sha256: hashFile(join(repo, 'scripts/runtime-platform-lock.json')) },
   node: { version: lock.nodeVersion, ...nodeLock, included: 'binary + original LICENSE and README; no npm needed at runtime' },
   profile: { optionalDependencies: 'omitted', lifecycleScripts: 'disabled', browserChecks: 'not bundled', persona: 'separate explicit provider; synthetic example is not production canonical memory' },
   dependencies, license_files: licenses, native_addon_paths: files.filter(f => f.path.endsWith('.node')).map(f => f.path),

@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync, lstatSync, readlinkSync } from 'node:fs';
 import { resolve, join, relative, dirname, sep } from 'node:path';
 import { createHash } from 'node:crypto';
+import { capabilityPath, validateManagedCapabilityFiles } from './managed-host-capabilities.mjs';
 const root = resolve(process.argv[2]), expected = process.argv[3];
 if (!/^[a-f0-9]{64}$/.test(expected ?? '')) throw Error('EXPECTED_MANIFEST_HASH_REQUIRED');
 const sha = b => createHash('sha256').update(b).digest('hex'), bytes = readFileSync(join(root,'manifest.json'));
@@ -18,4 +19,9 @@ function walk(directory) { for (const entry of readdirSync(directory)) {
 } }
 walk(root); files.sort((a,b)=>a.path<b.path?-1:1);
 if (files.length !== manifest.file_count || sha(JSON.stringify(files)) !== manifest.tree_sha256 || JSON.stringify(files) !== JSON.stringify(manifest.files)) throw Error('RUNTIME_TREE_MISMATCH');
+const capabilityEntry = manifest.files.find(f => f.path === capabilityPath);
+if (capabilityEntry) {
+  if (capabilityEntry.symlink || capabilityEntry.bytes > 16384) throw Error('MANAGED_CAPABILITIES_INVALID');
+  validateManagedCapabilityFiles(root, JSON.parse(readFileSync(join(root, capabilityPath), 'utf8')), manifest.source_commit);
+}
 console.log(JSON.stringify({status:'PASS',distribution_id:manifest.distribution_id,source_commit:manifest.source_commit,files:files.length,tree_sha256:manifest.tree_sha256}));
