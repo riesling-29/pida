@@ -1,0 +1,14 @@
+{
+  "source_commit": "e9a1d31140bcff34e3c9ef0f82f4b3dbca0ddd68",
+  "platform": "linux-x64",
+  "runtime": "/var/tmp/pida-repository-e9a1d31-20261108/runtime",
+  "archive": "/var/tmp/pida-repository-e9a1d31-20261108/pida-runtime-e9a1d31-linux-x64.tar.gz",
+  "archive_sha256": "581c5a8dd82bfaf2bbe9009bd13f92a92787ace4e69b8cc74bad2bcebe3c314f",
+  "archive_bytes": 79759322,
+  "manifest_sha256": "8b19e5a55fb5f7d5c7b765907f72454b8c12f51a80505e841632f368fecb3b83",
+  "tree_sha256": "15c30e5722c78b32746ac406f1bfe3606bb81c1b3d5c26392094dc2e77e25313",
+  "file_count": 15824,
+  "dependencies": 125,
+  "node_binary_sha256": "41a74efb34cbde5c7632cdac0cf8bd1a14d0b8d73dc1e82755014d9a9ce70f5c",
+  "package_sha256": "e4e5e2688b39f84b5b0b545c211f292c92239aed752628e64e785226dc3a5777"
+}

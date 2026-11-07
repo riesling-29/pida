@@ -4,7 +4,6 @@ import {readFileSync,writeFileSync,mkdirSync,mkdtempSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {join,resolve,dirname} from 'node:path';
 import {pathToFileURL,fileURLToPath} from 'node:url';
-import {createRequire} from 'node:module';
 import {tmpdir} from 'node:os';
 import {spawnSync} from 'node:child_process';
 const [runtimeArg,evidenceArg,expectedManifest]=process.argv.slice(2);
@@ -13,9 +12,16 @@ const bytes=readFileSync(join(runtime,'manifest.json'));assert.equal(sha(bytes),
 const manifest=JSON.parse(bytes),sidecarBytes=readFileSync(join(runtime,'managed-host-capabilities.json')),sidecar=JSON.parse(sidecarBytes);
 assert.equal(sidecar.schema_version,'pida.managed-host.capabilities/2');assert.equal(sidecar.source_commit,manifest.source_commit);assert.equal(sidecar.repository_profile.ready_protocol,'pida.local-host/3');
 assert.equal(manifest.files.find(f=>f.path==='managed-host-capabilities.json').sha256,sha(sidecarBytes));
+// Resolve the package's public ESM export map; CommonJS require.resolve cannot resolve import-only exports.
+const sdk=join(pida,'node_modules/@earendil-works/pi-ai'),sdkExports=JSON.parse(readFileSync(join(sdk,'package.json'))).exports;
+function sdkImport(name) {
+ const path=name==='@earendil-works/pi-ai'?sdkExports['.'].import:sdkExports['./providers/*'].import.replace('*','faux');
+ assert.ok(typeof path==='string'&&path.startsWith('./dist/')&&!path.includes('..'));
+ return pathToFileURL(join(sdk,path)).href;
+}
 const sourcePath=fileURLToPath(new URL('../test/repository-profile.test.mjs',import.meta.url));let source=readFileSync(sourcePath,'utf8');const sourceHash=sha(Buffer.from(source));
 source=source.replace(/from '(\.\.\/(?:dist|examples)\/[^']+)'/g,(_,name)=>'from '+JSON.stringify(pathToFileURL(resolve(pida,name.slice(3))).href))
- .replace(/from '(@earendil-works\/pi-ai(?:\/providers\/faux)?)'/g,(_,name)=>'from '+JSON.stringify(pathToFileURL(createRequire(join(pida,'package.json')).resolve(name)).href))
+ .replace(/from '(@earendil-works\/pi-ai(?:\/providers\/faux)?)'/g,(_,name)=>'from '+JSON.stringify(sdkImport(name)))
  .replace("const sourceRoot=fileURLToPath(new URL('../',import.meta.url));",'const sourceRoot='+JSON.stringify(pida)+';');
 assert.ok(!source.includes("from '../dist/"));
 const privateDir=mkdtempSync(join(tmpdir(),'pdrepo-release-')),testPath=join(privateDir,'repository.test.mjs'),home=join(privateDir,'home');mkdirSync(home);writeFileSync(testPath,source);

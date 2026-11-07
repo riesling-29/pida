@@ -1,0 +1,14 @@
+{
+  "schema_version": "pida.repository.packaged-probe/1",
+  "source_commit": "e9a1d31140bcff34e3c9ef0f82f4b3dbca0ddd68",
+  "platform": "linux",
+  "manifest_sha256": "8b19e5a55fb5f7d5c7b765907f72454b8c12f51a80505e841632f368fecb3b83",
+  "sidecar_sha256": "8f4bd65fe7a74ac6944059bc97158b13f98fd473b95240352cd2e0ff49d8e579",
+  "test_source_sha256": "2c2ed4ede085da958ecac5bf8bcb361490c7f0ddcd15ef181989d026e8817ed7",
+  "adapted_test_sha256": "3cf991fa2133655ca104e1dd4700418c69dff21bf22d8837dfac7432f34dc3ed",
+  "status": "PASS",
+  "exit_code": 0,
+  "error_code": null,
+  "log_sha256": "e87c890bad6a867bd2588b9e3283ade040ae289872495a0eabb7711eb60b6ab8",
+  "scope": "12 offline cases: actual packaged public SDK with explicitly simulated provider usage, stock mock launcher fresh/resume/cap3, fixed Node program and project tool effects. No production model invocation; no real-user project. Full-tree verifier is a separate before/after gate."
+}

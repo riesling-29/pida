@@ -60,7 +60,9 @@ for(const [name,policyId,personaMode]of [['base-smoke','smoke/1','local'],['base
    assert.equal(org.deadlineAt-Date.parse(org.createdAt),expectedPolicy.organization_timeout_ms);assert.equal(org.maxRepairAttempts,0);
    const job=await until(async()=>{const {jobs}=await client.listAgentJobs(agent.id);return jobs.find(j=>!['running','queued'].includes(j.status));});assert.equal(job.status,'completed');
    const bundle=await client.exportAgentJob(agent.id,job.id),inclusions=bundle.events.filter(e=>e.activity==='context_input_included');assert.ok(bundle.events.some(e=>e.activity==='run_finished'));
-   if(personaMode!=='local')for(const event of inclusions){const b=JSON.parse(event.payload.descriptor).personaBinding;assert.equal(b.personaId,'persona:'+id);assert.equal(b.externalContext.taskId,job.id);assert.equal(b.externalContext.attemptId,job.attemptId);assert.equal(b.externalContext.organizationSessionId,org.id);assert.equal(event.payload.authorization,'current-provider-check');}
+   if(personaMode!=='local')assert.ok(inclusions.length>0,'required reference input receipt missing');
+   if(personaMode==='catalogue')assert.equal(agent.personaSourceId,'profile-'+id);
+   if(personaMode!=='local')for(const event of inclusions){const b=JSON.parse(event.payload.descriptor).personaBinding;assert.equal(b.personaId,'persona:'+id);assert.equal(b.externalContext.agentInstanceId,agent.id);assert.equal(b.externalContext.taskId,job.id);assert.equal(b.externalContext.attemptId,job.attemptId);assert.equal(b.externalContext.organizationSessionId,org.id);assert.equal(event.payload.authorization,'current-provider-check');}
    records.push({agent_id:agent.id,source_id:agent.personaSourceId,org_id:org.id,job_id:job.id,attempt_id:job.attemptId,run_id:job.runId,inclusion_events:inclusions.length});
   }
   const token=ready.api_token;await h.close();current=null;

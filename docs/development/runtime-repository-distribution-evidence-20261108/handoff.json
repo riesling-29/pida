@@ -1,0 +1,49 @@
+{
+  "source_commit": "e9a1d31140bcff34e3c9ef0f82f4b3dbca0ddd68",
+  "repository_source": "b5252fba5a66c2c40dca49017a4a4b929a47170a",
+  "status": "Owner Windows/Linux artifact checks PASS; independent artifact gate PENDING",
+  "generator_review_sha256": "5799c15d99a62835a627541398594dd5712716dfbd2e15373b89581220b8407a",
+  "generator_archive": "../repository-sidecar2-independent-20261108/archive-index.json",
+  "platforms": {
+    "windows": {
+      "source_commit": "e9a1d31140bcff34e3c9ef0f82f4b3dbca0ddd68",
+      "platform": "win32-x64",
+      "runtime": "D:\\ChantaResearchGroup\\pida-repository-profile-20261108\\.pida-test-runtime-repository-20261108\\windows\\runtime",
+      "archive": "D:\\ChantaResearchGroup\\pida-repository-profile-20261108\\.pida-test-runtime-repository-20261108\\windows\\pida-runtime-e9a1d31-win32-x64.tar.gz",
+      "archive_sha256": "ed17b770612ae05df9e732e32bc63736aa3eb6fb0af8ec6384ab3f7412422f58",
+      "archive_bytes": 107754846,
+      "manifest_sha256": "f1b9156e6bee986a88666da451b352e006e18c83639408aa8a062b15f62f8ed1",
+      "tree_sha256": "60509d7091c99516f1b008cd3188c262229416d827efbfa07010fb9e2283e209",
+      "file_count": 16150,
+      "dependencies": 125,
+      "node_binary_sha256": "9a4eb5f1c29c6a2e93852ead46b999e284a6a5ca8bab4d4e241d587d025a52de",
+      "package_sha256": "e4e5e2688b39f84b5b0b545c211f292c92239aed752628e64e785226dc3a5777",
+      "delivery_archive": "D:\\ChantaResearchGroup\\pida-repository-profile-20261108\\.pida-test-runtime-repository-20261108\\windows\\pida-runtime-e9a1d31-win32-x64.tar.gz",
+      "extracted_runtime": "D:\\ChantaResearchGroup\\pida-repository-profile-20261108\\.pida-test-runtime-repository-20261108\\windows\\extracted\\runtime",
+      "sidecar_sha256": "8f4bd65fe7a74ac6944059bc97158b13f98fd473b95240352cd2e0ff49d8e579"
+    },
+    "linux": {
+      "source_commit": "e9a1d31140bcff34e3c9ef0f82f4b3dbca0ddd68",
+      "platform": "linux-x64",
+      "runtime": "/var/tmp/pida-repository-e9a1d31-20261108/runtime",
+      "archive": "/var/tmp/pida-repository-e9a1d31-20261108/pida-runtime-e9a1d31-linux-x64.tar.gz",
+      "archive_sha256": "581c5a8dd82bfaf2bbe9009bd13f92a92787ace4e69b8cc74bad2bcebe3c314f",
+      "archive_bytes": 79759322,
+      "manifest_sha256": "8b19e5a55fb5f7d5c7b765907f72454b8c12f51a80505e841632f368fecb3b83",
+      "tree_sha256": "15c30e5722c78b32746ac406f1bfe3606bb81c1b3d5c26392094dc2e77e25313",
+      "file_count": 15824,
+      "dependencies": 125,
+      "node_binary_sha256": "41a74efb34cbde5c7632cdac0cf8bd1a14d0b8d73dc1e82755014d9a9ce70f5c",
+      "package_sha256": "e4e5e2688b39f84b5b0b545c211f292c92239aed752628e64e785226dc3a5777",
+      "delivery_archive": "D:\\ChantaResearchGroup\\pida-repository-profile-20261108\\.pida-test-runtime-repository-20261108\\linux\\pida-runtime-e9a1d31-linux-x64.tar.gz",
+      "extracted_runtime": "\\var\\tmp\\pida-repository-e9a1d31-20261108\\extracted\\runtime",
+      "sidecar_sha256": "8f4bd65fe7a74ac6944059bc97158b13f98fd473b95240352cd2e0ff49d8e579"
+    }
+  },
+  "probe_scripts": {
+    "scripts/probe-repository-distribution.mjs": "4a61276c653db4dba9683d36e5c26caeafb4b23f17e7705afbe1dd022666ff0c",
+    "scripts/probe-managed-capability-distribution.mjs": "01e9eae7c67ef1b1abd774bb2780e8fb4a80f8ef82a7f5e444e7a3e0202ac6e0"
+  },
+  "no_external_model_provider_calls": true,
+  "old_0f_and_D_unchanged": true
+}

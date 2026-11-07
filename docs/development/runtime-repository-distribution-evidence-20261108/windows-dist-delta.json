@@ -1,0 +1,47 @@
+[
+  {
+    "path": "pida/dist/agent-supervisor.d.ts",
+    "old_sha256": "6944cc6125f37afaa5073b2fce787fa27686eb9702e798df0e729aebfeed6d22",
+    "new_sha256": "f7ee5a59e22d8ba71f95c4e539bf8ab175b06066913d1d2c231e1e79022f96ef"
+  },
+  {
+    "path": "pida/dist/agent-supervisor.js",
+    "old_sha256": "cf65c3ffabe6ad0bbc113fd33196a9d05fb3b6d878a7063a4ec4610315df9671",
+    "new_sha256": "4669e864561400a0b94859e93264376285bc749004c48816de72bc6873bc098f"
+  },
+  {
+    "path": "pida/dist/chatgpt-auth.d.ts",
+    "old_sha256": "f14de45df4a96457c6826345ab1b2037d7446c7ca3dea26f5a4c6ce8455d0089",
+    "new_sha256": "a7a7478e1eeaec74f0024a334482dbf938f686da913014123c9c6a4f7b735260"
+  },
+  {
+    "path": "pida/dist/index.d.ts",
+    "old_sha256": "d8ea2e24162f4b2b275464145aee380abea8e4de5fda727d3010a027081a9298",
+    "new_sha256": "bc3e446d495bbc0279c3af93f3da2a5a8b07dd00b85f6b28d96dd41f0489515a"
+  },
+  {
+    "path": "pida/dist/index.js",
+    "old_sha256": "6694262d084736bec5e5a895dfd7560fa291db275fc216d13225dfbe891d640a",
+    "new_sha256": "aaa7e145477b55c6e5b04e26446233d8012350a4124453e65125ff04fb7e831a"
+  },
+  {
+    "path": "pida/dist/repository-profile.d.ts",
+    "old_sha256": null,
+    "new_sha256": "3c02104e3928565290227cc31a14a3570bbb1cb2edb1c5d4bd65fe4fc41b8a10"
+  },
+  {
+    "path": "pida/dist/repository-profile.js",
+    "old_sha256": null,
+    "new_sha256": "c6bcfe4795b6b6c8a66dbc4b89376136926794d907018e91ec737ee3a907c6a0"
+  },
+  {
+    "path": "pida/dist/workspace.d.ts",
+    "old_sha256": "700bffe8ede956b7981f0156302fb311fcd101a185bfe7aaad925112caea9bbb",
+    "new_sha256": "61fc551de1c6e927026818f93404d0fe38d260719dc67efa13eea8907289904f"
+  },
+  {
+    "path": "pida/dist/workspace.js",
+    "old_sha256": "6ef6a31d00b4b4040c4af62c04d69041074486ec492692f4215c4bc9182006b0",
+    "new_sha256": "d88359beec332b5f735ce8dfe0da1a2c21e8f5b89295f9563d3a31a54410cf58"
+  }
+]

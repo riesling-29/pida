@@ -1,0 +1,24 @@
+# Immutable repository-capable Pida distributions - 2026-11-08
+
+Producer source and generator are pinned to `e9a1d31140bcff34e3c9ef0f82f4b3dbca0ddd68`, incorporating independently reviewed repository runtime `b5252fba`. This is a separate private distribution from accepted0f/D. The package remains pida-core0.8.18 with explicit fork source identity in `manifest.distribution_id`; it is not represented as untouched upstream0.8.18.
+
+[Exact handoff](runtime-repository-distribution-evidence-20261108/handoff.json) records full archive/manifest/source/sidecar hashes and native/extracted paths. Sidecar2 is nine keys; top-level defaults remain ready/workspace/admission2, the optional closed repository descriptor declares3. Current schema1-only consumers must refuse2. No Sch consumer/desktop promotion or support is inferred from these producer artifacts.
+
+| Platform | Archive SHA256 | Manifest SHA256 |
+| --- | --- | --- |
+| Windows x64 | ed17b770612ae05df9e732e32bc63736aa3eb6fb0af8ec6384ab3f7412422f58 | f1b9156e6bee986a88666da451b352e006e18c83639408aa8a062b15f62f8ed1 |
+| Linux x64 | 581c5a8dd82bfaf2bbe9009bd13f92a92787ace4e69b8cc74bad2bcebe3c314f | 8b19e5a55fb5f7d5c7b765907f72454b8c12f51a80505e841632f368fecb3b83 |
+
+Both sidecars SHA256 `8f4bd65fe7a74ac6944059bc97158b13f98fd473b95240352cd2e0ff49d8e579`. Shared npm tar SHA256 `e4e5e2688b39f84b5b0b545c211f292c92239aed752628e64e785226dc3a5777`.
+
+Owner checks used ordinary archive extraction. Before/after full inventory verification passed both OS. All628 own package files, including154 compiled dist files, match the frozen source package. All external vendor file entries/bytes/modes,125 dependency records, native-addon path inventory and license inventory match accepted0f for their platform. Official Node24.18, complete Windows MinGit closure and the existing Linux local-Git closure are unchanged. Linux retains the previously disclosed glibc2.38 floor and local-workbench Git coverage; arbitrary Linux distributions/general Git tooling remain unaccepted. [Closure evidence](runtime-repository-distribution-evidence-20261108/source-vendor-closure.json) and exact dist deltas are retained.
+
+On each extracted package,12 synthetic repository cases passed: stock mock launcher mode3 fresh/resume/refusal and exact caps, actual public SDK native baseline failure then separate repair, nested file edits/read/digest, fixed approved Node process, shared-host serialization, cancellation/unknown effects, root/program/approval substitution refusals, unchanged token and repeated-effect guards. The SDK provider is explicitly scripted with controlled usage; it is not stock managed real-model execution or a token-adequacy claim. No user repository or external provider/account call was made.
+
+Four additional stock mock scenarios per OS passed: smoke local, work local, work reference and work two-profile catalogue. These use the real public f6 producer source with external Python (Windows3.11/Linux system Python), not parent-packaged Python or canonical memory. A strengthened rerun explicitly requires nonempty reference inclusion receipts, actual agentInstanceId and selected native personaSourceId equality. Earlier unstrengthened results remain historical. Fresh/resume IDs, token rotation and mismatch workspace preservation passed. Repository+catalogue combined model execution is not claimed by separate scenario coverage.
+
+The first external repository probe failed before a host started because its harness used CommonJS `require.resolve` on the SDK's import-only ESM exports. The corrected external probe resolves the package's public ESM export map. Runtime/package bytes were unchanged; original error and corrected probe hashes/logs are retained. This is a harness correction, not a hidden product fix or rebuild. Probe scripts are not bundled runtime files; their final source commit/hash is separate from the immutable e9a package pin.
+
+Repository behavior and limitations remain [the accepted source contract](MANAGED-REPOSITORY-PROFILE-IMPLEMENTATION-20261108.md): work/1 only, explicit immutable root/fixed program approval, no generic shell, unsandboxed OS-user program privileges and mutable transitive imports, explicit forwarded environment versus Windows-added child names, one-host lease only, no rollback/automatic replay. Native empty-criteria UNKNOWN is not artifact acceptance. Selected live file snapshots remain distinct from native ResultManifest and final text.
+
+Independent artifact review is pending. Withdraw the owner artifact claim on any archive/source/sidecar mismatch, changed vendor closure, altered extracted tree, or failure of the bounded execution/refusal probes. Parent source integration, frozen service, packaging, native UI and genuine repository/model work need their own explicit gates. Accepted0f/D and all prior real-case histories remain unchanged.
