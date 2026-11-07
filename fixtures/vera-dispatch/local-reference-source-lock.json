@@ -1,6 +1,8 @@
 {
   "kind": "local-reference-runtime-source",
   "config_schema": "vera-local-reference/0.1.0",
+  "store_schema": "vera-local-store/0.2.0",
+  "identity_action": "identity",
   "dispatch_protocol": "vera-dispatch/0.1.0",
   "reviewed_dispatch_commit": "c1e3617aa88e6013ea34f76c3f4c41504618f863",
   "runtime_files": {
@@ -9,12 +11,12 @@
     "persona_substrate/provider.py": "c66c325aba711a7e8ca6099605bc5ba9335356f03589a945b85654df33929c6a",
     "persona_substrate/consumer.py": "4ebc076458d7c60880d82473a94452df18e235a4bd1765e3e8dfdcaff5670a4f",
     "persona_substrate/dispatch.py": "3c52e7ce73ae7afa0545f314d9bb6671203dce87d90b938478015bb9c91842cd",
-    "persona_substrate/local_bridge.py": "98f149a6cbbc16c1fe74cb0adb8937fa205f16483ab7615ded48e90d02b4cc5b",
+    "persona_substrate/local_bridge.py": "39229e71424400db523cd903c2215aeaa16b007e630678645f9ffa7c78a0db57",
     "persona_substrate/schemas/contracts.json": "a6a652fc73bbfc00713dc5142d261b903f92f70c129fccdd4f74e136604b5c6f",
     "persona_substrate/schemas/VeraContext.observed.schema.json": "7787fb2611fa43aa534ca1becafe47b14aa6ac3089e21ed5078ac184f70f5dcf",
     "scripts/local_persona_bridge.py": "e5fc3963d6cf79b3d208a9fd3b99eeb89b3e046aa6c41c2994882863601a2310"
   },
-  "source_digest": "6b6800faa1fab3b5f288afeef39e37392e9cf714455e7f00e12b2d3dade605ac",
+  "source_digest": "0f85831175f24aea7237a6a003bdb14972a32cf13a7e76394c3fa9898b3763d6",
   "entrypoint": "scripts/local_persona_bridge.py",
   "embedded_entrypoint": "persona_substrate.local_bridge.main",
   "python": {

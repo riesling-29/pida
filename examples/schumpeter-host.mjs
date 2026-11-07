@@ -91,7 +91,7 @@ try {
   if (args['persona-module']) {
     const module = personaModule;
     if (typeof module.createHostPersona !== 'function') throw Error('HOST_PERSONA_MODULE_INVALID');
-    persona = await module.createHostPersona({ hostId, workspaceDirectory: directory, async taskScope(taskId, agentId) {
+    persona = await module.createHostPersona({ hostId, personaIdentity, workspaceDirectory: directory, async taskScope(taskId, agentId) {
       if (!app?.agents || agentId === 'main') throw Error('HOST_PERSONA_ORGANIZATION_REQUIRED');
       const principal = { id: 'local-user', permissions: [] }, job = app.agents.getJob(taskId, principal);
       if (job.agentId !== agentId) throw Error('HOST_PERSONA_TASK_MISMATCH');

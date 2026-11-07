@@ -1,7 +1,7 @@
 // Explicit app-owned reference identity. No fixture, canonical memory or auto-initialization.
 import { spawn } from 'node:child_process';
 import { readFile, stat } from 'node:fs/promises';
-import { resolve, isAbsolute } from 'node:path';
+import { resolve, isAbsolute, join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { createVeraDispatchPersonaProvider, veraDispatchCapabilities, validVeraDispatchDescription } from '../dist/vera-dispatch-provider.js';
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -13,17 +13,24 @@ async function settings(host) {
   const bytes = await readFile(configPath); if (bytes.length > 65536) throw Error('HOST_PERSONA_CONFIG_INVALID');
   const config = JSON.parse(bytes);
   if (config.schema_version !== 'vera-local-reference/0.1.0' || config.host_id !== host.hostId) throw Error('HOST_PERSONA_CONFIG_INVALID');
+  const marker = JSON.parse(await readFile(join(store, 'reference-store.json'), 'utf8'));
+  if (!marker || Object.keys(marker).length !== 5 || marker.schema_version !== 'vera-local-store/0.2.0'
+    || !/^store:[a-f0-9]{32}$/.test(marker.store_instance_id ?? '') || !/^[a-f0-9]{64}$/.test(marker.config_digest ?? '')
+    || marker.database !== 'reference.sqlite3' || !Number.isSafeInteger(marker.created_at) || marker.created_at < 0) throw Error('HOST_PERSONA_STORE_IDENTITY_INVALID');
+  const storeIdentity = { schema_version: marker.schema_version, store_instance_id: marker.store_instance_id, config_digest: marker.config_digest };
   // The parent verifies the complete packaged producer manifest. This identity also prevents
   // silently switching the configured executable, entry script, store or identity on resume.
   const commandFiles = [];
   for (const argument of [executable, ...prefix]) if (isAbsolute(argument)) {
     const entry = await stat(argument); if (entry.isFile()) commandFiles.push([resolve(argument), hash(await readFile(argument))]);
   }
-  return { executable, prefix, configPath, store, config, identity: hash(JSON.stringify({ executable, prefix, commandFiles, config: hash(bytes), store })) };
+  return { executable, prefix, configPath, store, config, storeIdentity,
+    identity: hash(JSON.stringify({ executable, prefix, commandFiles, config: hash(bytes), store, storeIdentity })) };
 }
 export async function hostPersonaIdentity(host) { return (await settings(host)).identity; }
 export async function createHostPersona(host) {
   const s = await settings(host);
+  if (host.personaIdentity !== undefined && host.personaIdentity !== s.identity) throw Error('HOST_PERSONA_IDENTITY_CHANGED');
   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => /^(PATH|SystemRoot|WINDIR|TEMP|TMP|HOME|USERPROFILE|LANG|LC_ALL)$/i.test(key)));
   const child = spawn(s.executable, [...s.prefix, 'serve', '--config', s.configPath, '--store', s.store], { env, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
   let ended = false, sequence = 0, buffered = '', closing;
@@ -57,7 +64,11 @@ export async function createHostPersona(host) {
     child.stdin.write(JSON.stringify({ id, action, request }) + '\n', error => { if (error && pending.delete(id)) { cleanup(); reject(Error('HOST_PERSONA_PROCESS_FAILED')); } });
   });
   const close = () => closing ??= (async () => { child.stdin.end(); const timer = setTimeout(() => child.kill(), 3000); try { await closed; } finally { clearTimeout(timer); } })();
-  try { if (!validVeraDispatchDescription(await invoke('describe', {}, AbortSignal.timeout(4000)))) throw Error('VERA_DISPATCH_PROFILE_UNSUPPORTED'); } catch (error) { await close(); throw error; }
+  try {
+    const identity = await invoke('identity', {}, AbortSignal.timeout(4000));
+    if (!identity || Object.keys(identity).length !== 3 || Object.entries(s.storeIdentity).some(([key, value]) => identity[key] !== value)) throw Error('HOST_PERSONA_STORE_IDENTITY_MISMATCH');
+    if (!validVeraDispatchDescription(await invoke('describe', {}, AbortSignal.timeout(4000)))) throw Error('VERA_DISPATCH_PROFILE_UNSUPPORTED');
+  } catch (error) { await close(); throw error; }
   return { mode: 'vera-local-reference/0.1.0', close,
     async personaProvider(context) {
       const selections = new WeakMap();

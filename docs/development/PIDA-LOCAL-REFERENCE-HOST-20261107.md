@@ -4,8 +4,8 @@ This unit connects an app-owned reference Persona store to the existing public
 `vera-dispatch/0.1.0` consumer. It does not recover historical continuity source,
 read canonical Vera data, import fixtures at runtime, or add learning/writeback.
 
-Producer: `0d9714c1ac84c36082491ee2c264706a16fd14b5`, runtime source digest
-`6b6800faa1fab3b5f288afeef39e37392e9cf714455e7f00e12b2d3dade605ac`.
+Current producer: `f6edd022d4389237fcee5d6c0a4db8a0d0b13399`, runtime source digest
+`0f85831175f24aea7237a6a003bdb14972a32cf13a7e76394c3fa9898b3763d6`.
 The nine-file [source lock](../../fixtures/vera-dispatch/local-reference-source-lock.json)
 is distinct from the old synthetic dispatch lock. The parent assembly must verify
 the complete producer export against this lock before enabling it. A Python
@@ -47,13 +47,31 @@ The generic standalone consumer is unchanged.
 
 Before reopening, the host includes the module's readonly identity digest in its
 existing manifest check. That identity binds command argv, executable/absolute
-entry-file bytes, exact config bytes and store path. Complete producer dependency
+entry-file bytes, exact config bytes, store path and immutable store instance ID.
+The `vera-local-store/0.2.0` completion marker has exactly schema_version,
+store_instance_id, config_digest, database and created_at. The provider stores
+and validates the same marker in SQLite metadata. After opening, the helper's
+public `identity` handshake must echo the exact schema/store ID/config digest
+before the host is ready. The launcher also passes its preflight identity to the
+module, preventing a different configuration snapshot during startup.
+Complete producer dependency
 source verification is still the parent assembly's responsibility. A changed
 configuration/source has no automatic migration. JSONL responses are bounded,
 requests time out, malformed data closes the bridge, and EOF/host shutdown closes
 the owned process. No raw provider stderr, context text or credentials are logged.
 
 ## Evidence and limits
+
+The initial consumer `7997d51` used producer `0d9714c` (digest `6b6800fa...605ac`).
+Independent review found a same-path fresh-store replacement could change
+binding lineage without changing the host fingerprint. That initial candidate
+is superseded for recovery claims. The focused store-identity correction uses
+producer `f6edd02` and [additional actual-host evidence](pida-local-reference-store-fix-20261107.txt):
+same-path new initialization is rejected before host state mutation; restoring
+the original instance restores same-job resume. Old marker versions are rejected
+without migration. A complete same-instance backup rollback is not detected by
+this local instance anchor; no monotonic anti-rollback or external recovery
+anchor is claimed.
 
 [Focused public-port/native-host test](pida-local-reference-host-tests-20261107.txt)
 uses the exact nine-file source export and new synthetic reference configuration.

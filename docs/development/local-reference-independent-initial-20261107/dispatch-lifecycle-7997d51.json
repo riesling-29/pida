@@ -1,0 +1,30 @@
+﻿[
+  {
+    "scenario": "revoke",
+    "status": "PASS",
+    "modelCalls": 1,
+    "inputReceipts": 1,
+    "code": "PERSONA_INPUT_NOT_AUTHORIZED",
+    "scope": "real producer and Pi; synthetic negative-test organization/attempt scope"
+  },
+  {
+    "scenario": "expire",
+    "status": "PASS",
+    "modelCalls": 1,
+    "inputReceipts": 1,
+    "code": "PERSONA_INPUT_NOT_AUTHORIZED",
+    "scope": "real producer and Pi; synthetic negative-test organization/attempt scope"
+  },
+  {
+    "scenario": "missing-store",
+    "status": "PASS",
+    "code": "HOST_PERSONA_PROCESS_CLOSED",
+    "elapsedMs": 65
+  },
+  {
+    "scenario": "malformed-child",
+    "status": "PASS",
+    "code": "HOST_PERSONA_RESPONSE_INVALID",
+    "elapsedMs": 109
+  }
+]
