@@ -51,6 +51,7 @@
     }
   },
   "files": [
+    "npm-shrinkwrap.json",
     "dist",
     "examples",
     "docs",
