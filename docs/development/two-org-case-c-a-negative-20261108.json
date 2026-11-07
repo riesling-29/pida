@@ -1,0 +1,267 @@
+{
+  "schema_version": "pida.real-case-a-observation/2",
+  "case_id": "4db965ff-29cd-440b-ada0-e8b5b36a9579",
+  "runtime_source": "2b787fd4c234747da22726ec03a3e4c6619ae95f",
+  "host_id": "desktop-39bec59bcaaa4de2",
+  "scope": "Actual authorized A once; no capture/acceptance/B/retry",
+  "native_org_id": "8be91bd0-3177-4ade-be3e-ad29940ea087",
+  "native_org_status": "unknown",
+  "request_counts": {
+    "new_case": 6,
+    "prior_two_org": 5,
+    "historical_smoke": 1,
+    "all_recorded": 12
+  },
+  "runs": [
+    {
+      "job_id": "620bb137-4b35-4f26-b09a-f95016a8d9fc",
+      "agent_id": "ca5f321d-bbd6-425c-9b0c-34cf521338e3",
+      "task_id": "3b8c6112-2e3a-4ce2-ae55-43f764b6ce87",
+      "attempt_id": "5cdd422f-0649-4fc7-9f9a-97bcafe85e13",
+      "run_id": "fcb6114e-a1d0-4013-ab2e-51d62daa5e6e",
+      "session_id": "01a1b6d6-2cff-7772-81b9-44f1c4c7759f",
+      "status": "completed",
+      "code": "AGENT_JOIN_YIELDED",
+      "result_chars": 0,
+      "result_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "model_requests": 3,
+      "logical_input_inclusions": [
+        {
+          "request_id": "94e63ded-6ef4-41c9-8aac-78f51295437f",
+          "authorization": "current-provider-check",
+          "exact_native_ids": true
+        },
+        {
+          "request_id": "db11f1e4-72c2-4ac9-8b14-11c91db7f6e1",
+          "authorization": "current-provider-check",
+          "exact_native_ids": true
+        },
+        {
+          "request_id": "cd9587e2-2658-428b-a4e6-a57e7916e471",
+          "authorization": "current-provider-check",
+          "exact_native_ids": true
+        }
+      ],
+      "artifact_ref_paths": []
+    },
+    {
+      "job_id": "e6580ae0-8f0f-456c-9de8-033c9edb2dfd",
+      "agent_id": "373f7777-f041-4e66-8b5f-d46a6b19b254",
+      "task_id": "fd978a87-bf65-40a2-962f-590a56cf1aab",
+      "attempt_id": "adfc652e-8809-4ba4-8069-5ba87950e42b",
+      "run_id": "c6b2a07e-36d5-4a8e-9cc4-8395e1436f41",
+      "session_id": "01a1b6d6-48ca-7772-81b9-44f375fe92b8",
+      "status": "completed",
+      "code": null,
+      "result_chars": 68,
+      "result_sha256": "ee953cc72fe9f7e1fce65d34d7be3ee8240a09649b1e00efc6eb18606f457fd8",
+      "model_requests": 1,
+      "logical_input_inclusions": [
+        {
+          "request_id": "4648802e-9d81-44d9-92c0-37ee4b75e2ba",
+          "authorization": "current-provider-check",
+          "exact_native_ids": true
+        }
+      ],
+      "artifact_ref_paths": []
+    },
+    {
+      "job_id": "97babb26-d071-43c9-8c0b-17b8dcaba0ea",
+      "agent_id": "ca5f321d-bbd6-425c-9b0c-34cf521338e3",
+      "task_id": "3b8c6112-2e3a-4ce2-ae55-43f764b6ce87",
+      "attempt_id": "9e52bc73-12e4-4375-8ab2-ba908709f38d",
+      "run_id": "969d5a49-e13c-4ea5-9973-0cf175a801a1",
+      "session_id": "01a1b6d6-2cff-7772-81b9-44f1c4c7759f",
+      "status": "failed",
+      "code": "INVALID_PATH",
+      "result_chars": 178,
+      "result_sha256": "9ff2a88f0fd9696f5a8e2b9b221dee97950ef7fd27b67f3c03d6bea6c8ec4a9b",
+      "model_requests": 2,
+      "logical_input_inclusions": [
+        {
+          "request_id": "d016323d-6a5d-48a4-8563-874670b49187",
+          "authorization": "current-provider-check",
+          "exact_native_ids": true
+        },
+        {
+          "request_id": "3eb8fec9-e70d-43da-af8a-46b64310df98",
+          "authorization": "current-provider-check",
+          "exact_native_ids": true
+        }
+      ],
+      "artifact_ref_paths": []
+    }
+  ],
+  "joins": [
+    {
+      "id": "5df4cb50-7bf3-42f3-8528-bc9c80ad3216",
+      "status": "ready",
+      "code": null,
+      "parent_job_id": "620bb137-4b35-4f26-b09a-f95016a8d9fc",
+      "continuation_job_id": "97babb26-d071-43c9-8c0b-17b8dcaba0ea",
+      "required": [
+        "e6580ae0-8f0f-456c-9de8-033c9edb2dfd"
+      ]
+    }
+  ],
+  "positive_boundaries": {
+    "initial_yield_actual_empty": true,
+    "child_json_case_matches": true,
+    "child_matches_private_oracle": true,
+    "child_assignment_audit": {
+      "schema_version": "pida.synthetic-tool-audit/1",
+      "source_sha256": "7283439fd82a20da2a9e879fb53b1b37a7846fcc8fe4f9f840bd5af715657cf1",
+      "tool_calls": [
+        {
+          "tool_call_id": "call_30d4cdab751149dcbde2a519f0a0599d|fc_04a49d502045e420016aef5177f53487d0a9adccababc9f0d2",
+          "tool_name": "agent_delegate",
+          "arguments_sha256": "7f05e77e1adcacb581823e5fb2c88f817b2833815d51fad0c1c4002bb91f6c4c",
+          "delegation_contains_raw_seed": false,
+          "delegation_contains_expected_answer": false,
+          "scope": "child own-Persona proof weakens if either flag is true"
+        },
+        {
+          "tool_call_id": "call_df77f3fb4d94410c8d04d1a0d94674ed|fc_04a49d502045e420016aef517e1cd487d0b4b8444226d7adc2",
+          "tool_name": "agent_join",
+          "arguments_sha256": "02dc79c41e42d6d9a004da785103e750ea987942ec1300f2df9c2fa8f6e8d82b",
+          "delegation_contains_raw_seed": false,
+          "delegation_contains_expected_answer": false,
+          "scope": "model-derived output is allowed; not independent harness injection"
+        },
+        {
+          "tool_call_id": "call_68a36b5b77044f4c8da7777c8d1aeee5|fc_04a49d502045e420016aef518885f887d09e64e0c5720a6a5e",
+          "tool_name": "workspace_write",
+          "arguments_sha256": "567a97b374adb6d6e2fb99c4b5af3491451f0311022541387d73300820942605",
+          "delegation_contains_raw_seed": false,
+          "delegation_contains_expected_answer": false,
+          "scope": "model-derived output is allowed; not independent harness injection"
+        }
+      ],
+      "child_assignment_check": "NO_VALUE_IN_OBSERVED_ASSIGNMENT",
+      "limits": [
+        "Only explicitly supplied fresh synthetic Pi JSONL; no canonical log discovery.",
+        "No raw tool arguments or Persona seed included in this result.",
+        "Absence in observed assignment does not prove model causality."
+      ]
+    },
+    "one_actual_continuation": true
+  },
+  "failure": {
+    "code": "INVALID_PATH",
+    "legitimate_requested_path": "artifacts/organization-a-result.json",
+    "path_matches_goal": true,
+    "tool_content_sha256": "9ff2a88f0fd9696f5a8e2b9b221dee97950ef7fd27b67f3c03d6bea6c8ec4a9b",
+    "final_reported_json_matches_oracle": true,
+    "final_reported_child_ids_match": true,
+    "final_text_equals_attempted_file_bytes": true,
+    "file_created_claim": false,
+    "attribution": "Frozen Windows Pi workbench adapter rejects nested relative paths after guard due to backslash reintroduction; isolated public tool replay confirms. Not a model invalid-path claim."
+  },
+  "public_evidence_leak_scan": [
+    {
+      "name": "real-case-c-a-afterhash.json",
+      "sha256": "59ce15926ddc88695d8f8400b700d65765335968fc38b1854569ecf6ec45eadc",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-c-a-current-graph.json",
+      "sha256": "d9e6fc5935edfa5906bfd24252a8022f9a9331e7444f77e0ff852498c6efdbeb",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-c-a-first-readback.json",
+      "sha256": "7fd1deb438fb9089b4241b97aa900707a76d2dfe11b187652718a0d2b300aa84",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-c-a-host-stopped.json",
+      "sha256": "d831f4e119d41574e8ca0f3f5414961e9b784a6e489c11c06a7449f64b1825ec",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-c-a-preflight.json",
+      "sha256": "d5be01c21b7ee4c185ab46b19fc92b994a8ce7fddb8a243f219583a29b2a1792",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-c-a-process-handback.json",
+      "sha256": "ecedbbff3cab8fd5af5c61c64ab12150f125579b4f8a642d30d4828e8a92f01f",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-c-a-reservation.json",
+      "sha256": "35ec569c3442b7059097230ec2c9b878f18a3b2f5dfbd6404a05707ce2621f32",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-c-preparation-identities.json",
+      "sha256": "6da7998274b0b4d7d1d1f06f367f11b09aabb0cf66fe88c45a54c0458e911f0f",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-c-preparation-launch.json",
+      "sha256": "94f315f378699a241f0f7ffbdbc248b89ee6831ea46198da5a479fb41995660f",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-c-preparation-organizations.json",
+      "sha256": "d18b33bf0d368862abe1d459068285978f1a5f6913536935b32badd5060edcff",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-c-preparation-profile.json",
+      "sha256": "59f9ca3bde9b3562477ee05e2ddb6ad5a9e934e893988c91ce5b5f2c4d7a3687",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-c-prepared-contract.json",
+      "sha256": "89ad50f9248454a83402c0b41c9c3e989ed466344ff6805f67576c8c72175232",
+      "seed_present": false,
+      "expected_answer_present": false
+    },
+    {
+      "name": "real-case-c-workspace-selection.json",
+      "sha256": "27946845a13a07f5590ccb147d7e17c2b76b9f752f5d2ee761bc2d8ae6b0688f",
+      "seed_present": false,
+      "expected_answer_present": false
+    }
+  ],
+  "raw_evidence_hashes": {
+    "supervisor.json": "6943a83c9697cdc1d2464e07767bc01edfeb7d5025a753a45071dcd1e4621b3e",
+    "fcb6114e-a1d0-4013-ab2e-51d62daa5e6e-health.json": "3057733c629b0d676ebb9060bffa96a928dc024aae19062b3d33c2e7c8c143f3",
+    "fcb6114e-a1d0-4013-ab2e-51d62daa5e6e-jsonl": "1aee185e8efbcf080d564c6008b01b870fc9bee7998749a2530d2bae5e92850d",
+    "fcb6114e-a1d0-4013-ab2e-51d62daa5e6e-manifest.json": "22a8f24ae0f59963bab69b19ed98adb8085f65ca1701176b6d77ca469b58fa20",
+    "fcb6114e-a1d0-4013-ab2e-51d62daa5e6e-ocel.json": "2c229f4e5152ee12705890133ebf4ed4a2a100784807943166b917e37b2a34af",
+    "fcb6114e-a1d0-4013-ab2e-51d62daa5e6e-ocel.meta.json": "98f1807739e4e6b867ae8a0a0e7764e1a620acaefff94e11025b2d8d4045d88b",
+    "ca5f321d-bbd6-425c-9b0c-34cf521338e3-pi.jsonl": "7283439fd82a20da2a9e879fb53b1b37a7846fcc8fe4f9f840bd5af715657cf1",
+    "c6b2a07e-36d5-4a8e-9cc4-8395e1436f41-health.json": "3057733c629b0d676ebb9060bffa96a928dc024aae19062b3d33c2e7c8c143f3",
+    "c6b2a07e-36d5-4a8e-9cc4-8395e1436f41-jsonl": "301df8dde73a8ea7295f027733e8198ec7fa2c663d7ed7ff94ef5b943d5bb236",
+    "c6b2a07e-36d5-4a8e-9cc4-8395e1436f41-manifest.json": "4bfd9f376365279613a120ff5f77eb0173ca3a0d0f5b90c0e9561cd29cbdda5b",
+    "c6b2a07e-36d5-4a8e-9cc4-8395e1436f41-ocel.json": "d0a994cd44d5c73a5d0725adac7e3150233f987e1bef0ea9cb71705e05825ff8",
+    "c6b2a07e-36d5-4a8e-9cc4-8395e1436f41-ocel.meta.json": "a1943e3288a4fd17499e7698f0b56872281253505df0631460fe3987b5414853",
+    "373f7777-f041-4e66-8b5f-d46a6b19b254-pi.jsonl": "96cf6749b61bd6ed81177aa231693c02dbe177c25d35f8e5f8cb194a7187a421",
+    "969d5a49-e13c-4ea5-9973-0cf175a801a1-health.json": "3057733c629b0d676ebb9060bffa96a928dc024aae19062b3d33c2e7c8c143f3",
+    "969d5a49-e13c-4ea5-9973-0cf175a801a1-jsonl": "25abafd64840d4019d795468d5af699b5e990f90637127fdf5216aed84432596",
+    "969d5a49-e13c-4ea5-9973-0cf175a801a1-manifest.json": "d78f416e99e0117dbb26eccb834311682829d0f9bcb732aef70728b634103f51",
+    "969d5a49-e13c-4ea5-9973-0cf175a801a1-ocel.json": "7256abda4d6fbd138fa657e11aac87a258438feb7e2b07c3099dd38eb02f230c",
+    "969d5a49-e13c-4ea5-9973-0cf175a801a1-ocel.meta.json": "aea173da3bc8d613cad095177e1bbd25d6da2f03e39bbe2220bbcb71a6edf47c"
+  },
+  "cost": "UNKNOWN",
+  "limits": [
+    "Logical input inclusion/current-provider-check is not an exact provider-wire capture.",
+    "Child oracle match and no value in observed assignment are bounded evidence, not internal causal proof.",
+    "Final text is reported data from a failed run; no artifact or acceptance claimed.",
+    "No new provider/auth requests during audit; only this new synthetic workspace and designated public evidence read."
+  ]
+}
