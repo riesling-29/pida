@@ -5,7 +5,7 @@ import { createInterface } from 'node:readline';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 import { createCollaborationPolicyClient } from '../dist/collaboration-policy-client.js';
 import { collaborationDigest } from '../dist/collaboration.js';
@@ -20,7 +20,7 @@ function pipe(child, readyType) {
   child.once('error', readyReject);
   const closed = new Promise(resolve => child.once('close', code => { exited = true; clearTimeout(timer); readyReject(Error('child exit: ' + code + ':' + stderr)); for (const p of pending.values()) p.reject(Error('child closed')); pending.clear(); resolve(code); }));
   createInterface({ input: child.stdout }).on('line', line => { const message = JSON.parse(line); if (message.type === readyType) { clearTimeout(timer); readyResolve(message); } else { const p = pending.get(message.id); if (p) { pending.delete(message.id); p.resolve(message); } } });
-  return { ready, child, command(value) { return new Promise((resolve, reject) => { if (exited) return reject(Error('closed')); const id = ++seq; pending.set(id, { resolve, reject }); child.stdin.write(JSON.stringify({ id, ...value }) + '\n'); }); }, async close() { child.stdin.end(); const timer = setTimeout(() => child.kill(), 3000); try { return await closed; } finally { clearTimeout(timer); } } };
+  return { ready, child, closed, command(value) { return new Promise((resolve, reject) => { if (exited) return reject(Error('closed')); const id = ++seq; pending.set(id, { resolve, reject }); child.stdin.write(JSON.stringify({ id, ...value }) + '\n'); }); }, async close() { child.stdin.end(); const timer = setTimeout(() => child.kill(), 3000); try { return await closed; } finally { clearTimeout(timer); } } };
 }
 async function policyServer(t) {
   const p = pipe(spawn(process.env.PYTHON ?? 'python', ['-I', '-B', join(root, 'test/fixtures/collaboration-policy-server.py')], { env: { ...process.env, POLICY_FIXTURE_TOKEN: token }, stdio: ['pipe', 'pipe', 'pipe'] }), 'ready');
@@ -33,6 +33,21 @@ test('trusted endpoint is literal loopback, credential-free URL and exact path o
   for (const url of ['https://example.com/v1/pida-authorization', 'http://localhost/v1/pida-authorization', 'http://user:secret@127.0.0.1/v1/pida-authorization', 'http://127.0.0.1/other', 'http://127.0.0.1/v1/pida-authorization?token=x'])
     assert.throws(() => createCollaborationPolicyClient({ hostId: 'host-1', authorizationUrl: url, token: () => token }), { code: 'COLLABORATION_POLICY_CONFIG_INVALID' });
   assert.throws(() => createCollaborationPolicyClient({ hostId: 'host-1\n', authorizationUrl: 'http://127.0.0.1/v1/pida-authorization', token: () => token }), { code: 'COLLABORATION_POLICY_CONFIG_INVALID' });
+});
+
+for (const fault of ['reject', 'hang']) test(`parent EOF closes HTTP and Persona even when runtime close ${fault}s`, async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'pida-close-'));
+  const host = pipe(spawn(process.execPath, ['--import', pathToFileURL(join(root, 'test/fixtures/host-close-fault.mjs')).href,
+    join(root, 'examples/schumpeter-host.mjs'), '--workspace', directory, '--host-id', 'close-host',
+    '--persona-module', join(root, 'test/fixtures/host-close-persona.mjs')], {
+    env: { ...process.env, PIDA_SCHUMPETER_AUTH_URL: 'http://127.0.0.1:9/v1/pida-authorization', PIDA_SCHUMPETER_AUTH_TOKEN: token, PIDA_TEST_CLOSE_FAULT: fault },
+    stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true }), 'pida-host-ready');
+  t.after(async () => { await host.close(); await rm(directory, { recursive: true, force: true }); });
+  const ready = await host.ready; host.child.stdin.end();
+  await delay(150);
+  await assert.rejects(fetch(ready.base_url + '/health', { signal: AbortSignal.timeout(1000) }));
+  assert.equal(await readFile(join(directory, 'persona-closed.txt'), 'utf8'), 'closed');
+  assert.equal(await host.closed, 1, 'bounded shutdown retains a failure exit status');
 });
 
 test('actual Python policy independently verifies Unicode digest, current grant and strict nonce/echo binding', async t => {

@@ -16,11 +16,32 @@ for (let i = 2; i < process.argv.length; i += 2) {
   if (!['--workspace', '--host-id', '--provider-workspace', '--persona-module'].includes(process.argv[i]) || !process.argv[i + 1]) throw Error('INVALID_HOST_ARGUMENT');
   args[process.argv[i].slice(2)] = process.argv[i + 1];
 }
-let app, persona, shuttingDown = false;
-async function shutdown() {
-  if (shuttingDown) return; shuttingDown = true;
-  if (app) { await app.close(); app.server.closeAllConnections(); if (app.server.listening) await new Promise(r => app.server.close(r)); }
-  await persona?.close?.();
+let app, persona, shutdownPromise;
+function shutdown() {
+  return shutdownPromise ??= (async () => {
+    // Stop accepting first. A rejected or stuck runtime must not retain its HTTP listener.
+    const actions = [];
+    if (app) {
+      actions.push(new Promise((resolve, reject) => {
+        if (!app.server.listening) return resolve();
+        app.server.close(error => error ? reject(error) : resolve()); app.server.closeAllConnections();
+      }));
+      actions.push(Promise.resolve().then(() => app.close()));
+    }
+    actions.push(Promise.resolve().then(() => persona?.close?.()));
+    let timer;
+    try {
+      const results = await Promise.race([Promise.allSettled(actions), new Promise((_, reject) => {
+        timer = setTimeout(() => reject(Error('HOST_SHUTDOWN_TIMEOUT')), 5000);
+      })]);
+      if (results.some(result => result.status === 'rejected')) throw Error('HOST_SHUTDOWN_FAILED');
+    } finally { clearTimeout(timer); }
+  })();
+}
+function stop() {
+  void shutdown().then(() => process.exit(0), error => {
+    process.stderr.write(error.message === 'HOST_SHUTDOWN_TIMEOUT' ? 'HOST_SHUTDOWN_TIMEOUT\n' : 'HOST_SHUTDOWN_FAILED\n'); process.exit(1);
+  });
 }
 try {
   if (!args.workspace || !args['host-id']) throw Error('HOST_ARGUMENT_REQUIRED');
@@ -72,10 +93,10 @@ try {
   process.stdout.write(JSON.stringify({ type: 'pida-host-ready', protocol: 'pida.local-host/1', host_id: hostId,
     base_url: 'http://127.0.0.1:' + app.server.address().port, api_token: apiToken, principal_id: 'local-user', capabilities,
     provider_mode: config.provider.kind === 'mock' ? 'mock' : 'configured-native-chatgpt', persona_mode: persona?.mode ?? 'pida-local' }) + '\n');
-  process.stdin.resume(); process.stdin.once('end', () => { void shutdown().catch(() => { process.exitCode = 1; }); });
-  for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => { void shutdown().catch(() => { process.exitCode = 1; }); });
+  process.stdin.resume(); process.stdin.once('end', stop);
+  for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, stop);
 } catch (error) {
   await shutdown().catch(() => {});
   const code = /^[A-Z][A-Z0-9_]{1,100}$/.test(error.code ?? error.message ?? '') ? error.code ?? error.message : 'PIDA_HOST_START_FAILED';
-  process.stderr.write(code + '\n'); process.exitCode = 1;
+  process.stderr.write(code + '\n'); process.exit(1);
 }

@@ -1,0 +1,13 @@
+✔ trusted endpoint is literal loopback, credential-free URL and exact path only (1.0278ms)
+✔ parent EOF closes HTTP and Persona even when runtime close rejects (729.6108ms)
+✔ parent EOF closes HTTP and Persona even when runtime close hangs (5591.3587ms)
+✔ actual Python policy independently verifies Unicode digest, current grant and strict nonce/echo binding (724.8913ms)
+✔ supported local-host process (local) uses Python current policy, capability/readback and exact native job mapping (2023.1334ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9632.3648
