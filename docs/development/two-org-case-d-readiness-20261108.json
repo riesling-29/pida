@@ -1,0 +1,49 @@
+{
+  "state": "READY_FOR_ROOT_RELEASE_NOT_EXECUTED",
+  "case_id": "5bd55085-d316-4dc3-97cf-091d70a32478",
+  "plan_sha256": "abd19c404fb613b54b9b10947819329ebb2c12458ce7d9d3d5644b85b31d714b",
+  "goal_a_sha256": "1fddb2b18e84a6f90d7545fd6077d588a5f81302bf787ffdbd529509737e6bf1",
+  "runtime_source_match": true,
+  "runtime_source": "b7f7d523c6fede56d508575a6bb78afa343e5566",
+  "source_digest": "9841b860b1bfb16e98e25dfee535a7b7dc06b1020ccce1f29d812567263acdfa",
+  "provider_probe_performed": false,
+  "observer_sha256": "522704a112c6f973be78d608c17e56fb39458a9da8f6b5f3752646a9c7b035d4",
+  "observer_fixture_checks": {
+    "scope": "synthetic fixture only; no actualhost/provider",
+    "observer_sha256": "522704a112c6f973be78d608c17e56fb39458a9da8f6b5f3752646a9c7b035d4",
+    "new_requests": 0,
+    "prior_two_org": 11,
+    "historical_smoke": 1,
+    "all_prior_actual": 12,
+    "active_ms": 0,
+    "read_only": true
+  },
+  "baseline": {
+    "at": "2026-11-07T16:48:01.283Z",
+    "case_id": "5bd55085-d316-4dc3-97cf-091d70a32478",
+    "host_id": "desktop-c70db42530f74e03",
+    "stage": "A",
+    "observed_requests": 0,
+    "prior_two_org_requests": 11,
+    "historical_smoke_requests": 1,
+    "two_org_validation_lifetime": 11,
+    "all_recorded_validation_requests": 12,
+    "count_complete": true,
+    "gaps": [],
+    "jobs": [],
+    "organizations": [],
+    "active_case_ms": 0,
+    "stop_reasons": [],
+    "controls": "Read-only observer; shell alone invokes Stop once if instructed. No automatic effects/replays. Request threshold is observational, not a hard billing cap."
+  },
+  "limits": [
+    "A and B are held until separate root RELEASE; desktop_shell is sole submitter.",
+    "Native empty-criteria verification UNKNOWN is distinct from unknown effects; no native acceptance claimed.",
+    "Observed request threshold is not a hard billing cap; actual cost is unknown."
+  ],
+  "withdrawal_conditions": [
+    "Any changed host/source/profile/goal identity invalidates readiness.",
+    "Unexpected job/agent, observation gap or failed native effect stops the case without automatic retry."
+  ],
+  "validity": "Exact recorded fresh workspace and source only, until state or configuration changes."
+}
