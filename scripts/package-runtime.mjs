@@ -64,6 +64,21 @@ const install = run(buildNode, [npm, 'ci', '--omit=dev', '--omit=optional', '--i
 writeFileSync(join(output, 'production-install.log'), install);
 if (existsSync(join(pida, 'node_modules/typescript'))) throw Error('DEV_COMPILER_IN_RUNTIME');
 cpSync(resolve(options['git-directory']), join(runtime, 'git'), { recursive: true, dereference: false });
+if (process.platform === 'linux') {
+  // Windows staging files may appear as 0777 through drvfs. Archive ordinary
+  // Linux modes, so normal tar extraction under umask 022 preserves the manifest.
+  const gitRoot = join(runtime, 'git'), executables = new Set(['bin/git', 'libexec/git-core/git']);
+  for (const name of executables) if (!statSync(join(gitRoot, name)).isFile()) throw Error('GIT_EXECUTABLE_MISSING');
+  const modes = directory => {
+    chmodSync(directory, 0o755);
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const file = join(directory, entry.name);
+      if (entry.isDirectory()) modes(file);
+      else if (entry.isFile()) chmodSync(file, executables.has(relative(gitRoot, file).split(sep).join('/')) ? 0o755 : 0o644);
+    }
+  };
+  modes(gitRoot);
+}
 const packageJson = JSON.parse(readFileSync(join(pida, 'package.json'), 'utf8')), shrinkwrap = JSON.parse(readFileSync(join(pida, 'npm-shrinkwrap.json'), 'utf8'));
 const files = [], licenses = [], dependencies = [];
 const walk = directory => { for (const entry of readdirSync(directory, { withFileTypes: true })) {
@@ -90,6 +105,7 @@ const manifest = { schema_version: 'pida.runtime-distribution/1', distribution_i
     abi: JSON.parse(run(buildNode, ['-p', 'JSON.stringify({modules:process.versions.modules,napi:process.versions.napi})'])) },
   package: { name: packageJson.name, version: packageJson.version, archive: packageTar.split(/[\\/]/).at(-1), sha256: hashFile(packageTar), bytes: statSync(packageTar).size, license: packageJson.license },
   source: sourceEvidence,
+  packaging: { script_sha256: hashFile(fileURLToPath(import.meta.url)), platform_lock_sha256: hashFile(join(repo, 'scripts/runtime-platform-lock.json')) },
   node: { version: lock.nodeVersion, ...nodeLock, included: 'binary + original LICENSE and README; no npm needed at runtime' },
   profile: { optionalDependencies: 'omitted', lifecycleScripts: 'disabled', browserChecks: 'not bundled', persona: 'separate explicit provider; synthetic example is not production canonical memory' },
   dependencies, license_files: licenses, native_addon_paths: files.filter(f => f.path.endsWith('.node')).map(f => f.path),
