@@ -1,0 +1,21 @@
+{
+  "schema_version": "schumpeter.pida.authorization.response/2",
+  "request_id": "nonce-golden-1",
+  "phase": "admit",
+  "authorized": true,
+  "principal_id": "local-user",
+  "host_id": "host-1",
+  "admission_digest": "a1712127fa0457c6668d766858d7974618410d0dbdf706b5d5ead12aade24e71",
+  "definition_digest": "b019e1eb3f96a9fc0a3cd3572231f1a201e3c2e5a4e87064d565af3f4b80ccd4",
+  "payload_digest": "b3e9a68120885e6a91cec1062c718899a0cd2e22f5d6c8d46e222df30cfd0edd",
+  "reservation_id": "reservation-golden-1",
+  "room_revision": 1,
+  "contract_revision": 2,
+  "recipient": {
+    "organization_id": "org-A",
+    "host_id": "host-1",
+    "org_session_id": "11111111-1111-4111-8111-111111111111",
+    "agent_id": "22222222-2222-4222-8222-222222222222"
+  },
+  "reservation_state": "reserved"
+}
