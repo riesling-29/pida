@@ -24,9 +24,14 @@ organization-scoped token: the private local-user credential can access all its
 host's native agents. The parent should place the terminal in a host management
 view; any PTY display ownership is distinct from runtime authority.
 
-All HTTP mutations are rejected locally with a definite 403 before a network
-request. The inherited menu/editor may show actions, but selecting them gives
-`HOST_OBSERVATION_ONLY_USE_SCHUMPETER_TASK_CONTROLS`; it does not create uncertain
+Only audited noninitializing reads are allowed: host capabilities/info, native
+agent overview/list/profile, and native job list/detail. All HTTP mutations and
+other GET detail routes are rejected locally with a definite 403 before a network
+request. Files, tools, export, recovery and memory detail routes can lazily create
+runtime/workbench state and are not available in this terminal. Use Schumpeter's
+separate authorized detail/task controls. The inherited menu/editor may show actions, but selecting them gives
+`HOST_OBSERVATION_ONLY_USE_SCHUMPETER_TASK_CONTROLS` or
+`HOST_OBSERVATION_DETAIL_UNAVAILABLE_USE_SCHUMPETER`; it does not create uncertain
 delivery state. This UI guard is not server-side credential scoping. Existing
 generic standalone pida TUI behavior is unchanged. Native TUI submit normally
 creates a generic job without an OrgAttempt, so it cannot truthfully dispatch
@@ -46,6 +51,15 @@ work subsequently completing under the original owner client. It also checks
 separate layout persistence/path rejection. The policy endpoint denies external
 collaboration; the native mock job is created by the test's explicit owner client.
 No real model call is made.
+
+The initial `495f6f6` method-only GET guard was superseded after independent
+review reproduced lazy workbench initialization from a Files inspection. Its
+four-file assertion did not cover new paths. The
+[focused correction evidence](pida-observation-tui-read-fix-20261107.txt) checks
+the **entire managed tree**, including directories and bytes, after a never-used
+agent's Files inspection and denied Files/Tools/Export/Memory/Recovery requests.
+None of those detail requests reaches HTTP. The existing native APIs keep their
+original semantics; this correction narrows the client rather than changing them.
 
 This developer test does not establish an actual full-screen PTY rendering or
 desktop keyboard/resize acceptance. The parent assembly must run that gate on

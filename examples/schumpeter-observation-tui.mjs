@@ -19,6 +19,11 @@ export async function connectObservationTui(environment, fetchImplementation = f
     if ((init.method ?? 'GET') !== 'GET') throw new PidaClientError('HOST_OBSERVATION_ONLY_USE_SCHUMPETER_TASK_CONTROLS', 403);
     const target = new URL(url);
     if (target.origin !== endpoint.origin || !target.pathname.startsWith('/v1/') || target.username || target.password) throw Error('TUI_ENDPOINT_INVALID');
+    const safe = ['/v1/info', '/v1/collaboration/capabilities', '/v1/agents', '/v1/agents/overview'].includes(target.pathname)
+      || /^\/v1\/agents\/[a-f0-9-]{36}(?:\/jobs(?:\/[a-f0-9-]{36})?)?$/.test(target.pathname);
+    // Some existing GET endpoints lazily create an agent runtime/workbench. Do not
+    // equate HTTP method with a no-write guarantee or open those detail views here.
+    if (!safe || target.search || target.hash) throw new PidaClientError('HOST_OBSERVATION_DETAIL_UNAVAILABLE_USE_SCHUMPETER', 403);
     return fetchImplementation(url, { ...init, redirect: 'error', signal: AbortSignal.any([lifetime.signal, AbortSignal.timeout(10000), ...(init.signal ? [init.signal] : [])]) });
   } });
   try {

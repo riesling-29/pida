@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, readdirSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, lstatSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,6 +13,15 @@ import { AgentWorkspaceController } from '../dist/agent-workspace-controller.js'
 import { connectObservationTui, observationLayoutStore } from '../examples/schumpeter-observation-tui.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
+function tree(root) {
+  const rows = [];
+  function walk(directory, prefix = '') { for (const name of readdirSync(directory).sort()) {
+    const path = join(directory,name), relative = prefix + name, stat = lstatSync(path);
+    if (stat.isDirectory()) { rows.push([relative,'directory']); walk(path,relative+'/'); }
+    else rows.push([relative,stat.size,hash(path)]);
+  } }
+  walk(root); return rows;
+}
 test('actual host observation client is host-wide, emits no writes, detaches without cancelling queued work', async t => {
   const directory = mkdtempSync(join(tmpdir(), 'pdt-')), workspace = join(directory, 'work');
   const policy = createServer((_q, r) => { r.writeHead(403); r.end(); }); await new Promise(r => policy.listen(0, '127.0.0.1', r)); t.after(() => new Promise(r => policy.close(r)));
@@ -24,10 +33,11 @@ test('actual host observation client is host-wide, emits no writes, detaches wit
     child.once('close', () => { clearTimeout(timer); rej(Error(stderr)); }); createInterface({ input: child.stdout }).on('line', line => { const r = JSON.parse(line); if (r.type === 'pida-host-ready') { clearTimeout(timer); res(r); } }); });
   const owner = new PidaClient({ baseUrl: ready.base_url, token: () => ready.api_token });
   const agent = await owner.createAgent({ name: 'native observed root' }); await owner.pauseAgent(agent.id);
+  const unused = await owner.createAgent({ name: 'never initialized' }); await owner.pauseAgent(unused.id);
   const org = await owner.createOrganization({ requestId: 'observed-org', goal: 'Synthetic later execution.', agentId: agent.id, participants: [agent.id], criterionIds: [] });
   const queued = (await owner.listAgentJobs(agent.id)).jobs[0]; assert.equal(queued.status, 'queued');
   const protectedFiles = ['pida.config.json','.pida-host.json','.env','.pida/agents-service/supervisor.json'].map(p => join(workspace,p));
-  const before = protectedFiles.map(hash), calls = [];
+  const before = protectedFiles.map(hash), beforeTree = tree(workspace), calls = [];
   const env = { PIDA_TUI_BASE_URL: ready.base_url, PIDA_TUI_TOKEN: ready.api_token, PIDA_TUI_HOST_ID: ready.host_id };
   const connection = await connectObservationTui(env, (url, init) => { calls.push({ path: new URL(url).pathname, method: init.method ?? 'GET' }); return fetch(url, init); });
   assert.equal(connection.profile.scope, 'host-wide'); assert.equal(connection.profile.input, 'disabled');
@@ -40,7 +50,16 @@ test('actual host observation client is host-wide, emits no writes, detaches wit
   for (const action of [() => connection.client.createAgent({ name:'forbidden' }), () => connection.client.cancelOrganization(org.id), () => connection.client.resumeAgent(agent.id)])
     await assert.rejects(action(), { code:'HOST_OBSERVATION_ONLY_USE_SCHUMPETER_TASK_CONTROLS', status:403 });
   assert.ok(calls.length > 2); assert.ok(calls.every(c => c.method === 'GET'));
+  const beforeDetails = calls.length;
+  for (const action of [() => connection.client.getAgentWorkbench(unused.id), () => connection.client.readAgentFile(unused.id,'README.md'),
+    () => connection.client.getAgentMemory(unused.id), () => connection.client.getAgentJobTools(agent.id,queued.id),
+    () => connection.client.exportAgentJob(agent.id,queued.id), () => connection.client.getAgentJobRecovery(agent.id,queued.id)])
+    await assert.rejects(action(), {code:'HOST_OBSERVATION_DETAIL_UNAVAILABLE_USE_SCHUMPETER',status:403});
+  assert.equal(calls.length,beforeDetails);
+  controller.bind(pane.id,{agentId:unused.id,view:'files'}); await controller.refresh(); await controller.inspect(pane.id);
+  assert.match(controller.message(pane.id),/HOST_OBSERVATION_DETAIL_UNAVAILABLE/);
   controller.close(); connection.close(); await new Promise(r => setTimeout(r,30));
+  assert.deepEqual(tree(workspace),beforeTree,'full tree includes unused-agent lazy initialization paths');
   assert.deepEqual(protectedFiles.map(hash), before); assert.equal((await owner.listAgentJobs(agent.id)).jobs[0].status, 'queued');
   assert.equal((await fetch(ready.base_url + '/health')).status,200);
   await assert.rejects(connectObservationTui({ ...env, PIDA_TUI_HOST_ID: 'wrong-host' }), /TUI_HOST_MISMATCH/);
