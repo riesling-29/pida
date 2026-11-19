@@ -1,0 +1,276 @@
+{
+  "schema_version": "pida.real-case-workflow/1",
+  "case_id": "5bd55085-d316-4dc3-97cf-091d70a32478",
+  "at": "2026-11-07T16:58:33.618Z",
+  "runtime_source": "b7f7d523c6fede56d508575a6bb78afa343e5566",
+  "host_id": "desktop-c70db42530f74e03",
+  "scope": "Actual Windows desktop submitted once per organization; source-owner evidence, independent workflow/PIX review pending.",
+  "execution": {
+    "persistent_organizations": 2,
+    "native_goal_sessions": 2,
+    "executed_agents": 3,
+    "native_jobs": 4,
+    "all_jobs_completed": true,
+    "A": {
+      "org_id": "29569444-4941-4096-8cfc-8d79cbd88814",
+      "initial": "6080e981-de8a-4d5e-a14b-571088764a70",
+      "child": "6745cb3d-3859-4e6f-bfd7-6b99a89903a4",
+      "continuation": "05863fc6-c183-42e4-aaab-e9fe4352cbbb",
+      "requests": 6
+    },
+    "B": {
+      "org_id": "92330d94-e275-40ab-a216-56d39bd1d946",
+      "job": "d50e906c-141f-4a57-a6cf-c7f8ea37c54f",
+      "requests": 2
+    },
+    "native_verification": "UNKNOWN for both goal sessions because native acceptance criteria were empty; no native accepted claim.",
+    "active_case_ms": 39672,
+    "request_counts": {
+      "this_case": 8,
+      "earlier_two_org_cases": 11,
+      "historical_single_smoke": 1,
+      "all_recorded": 20
+    },
+    "cost": "UNKNOWN"
+  },
+  "artifacts": {
+    "A": {
+      "terminal_result": {
+        "job_id": "05863fc6-c183-42e4-aaab-e9fe4352cbbb",
+        "sha256": "c7a211825563be87603fa099e9f37f719281329d6cc31f8eff9c9936db8513ea",
+        "bytes": 178
+      },
+      "file": {
+        "path": "artifacts/organization-a-result.json",
+        "artifact_id": "9262d4a5bfb4d0ad2ade988a0c83c89d784a3623a24f05d4312cf98dac885ffb",
+        "sha256": "c7a211825563be87603fa099e9f37f719281329d6cc31f8eff9c9936db8513ea",
+        "bytes": 178,
+        "manifest_join_verified": true,
+        "capture_method": "Read-only exact fresh local file bytes matched final run manifest; not a public API or published artifact revision."
+      }
+    },
+    "B": {
+      "terminal_result": {
+        "job_id": "d50e906c-141f-4a57-a6cf-c7f8ea37c54f",
+        "sha256": "041a45360b91254330753a5f1770c25c294037041df3050e49c975df39590cb5",
+        "bytes": 299
+      },
+      "file": {
+        "path": "artifacts/organization-b-answer.json",
+        "id": "fff718e304584fa5c6dbdb21447ac3a031b1443cea406c98320427a578e16ce8",
+        "sha256": "041a45360b91254330753a5f1770c25c294037041df3050e49c975df39590cb5",
+        "bytes": 299
+      }
+    },
+    "terminal_text_and_files_separately_read": true
+  },
+  "context": {
+    "A_child_oracle_match": true,
+    "observed_assignment_seed_and_answer_absent": true,
+    "all_eight_logical_inclusions_exact_native_current_provider_check": true,
+    "B_uses_actual_A_data": true,
+    "B_independent_persona_proof_claim": false,
+    "profile_count": 1
+  },
+  "coordination": {
+    "publication_actor": "operator",
+    "agent_message_sending_claim": false,
+    "A_publication_to_B_source_revision": 4,
+    "A_acceptance_revision": 5,
+    "acceptance": [
+      {
+        "organization": "A",
+        "contract_id": "c70e1249-05ff-594c-b184-7a2bdd6ceb05",
+        "publication_revision": 4,
+        "acceptance_revision": 5,
+        "submission_number": 1,
+        "submission_digest": "sha256:8c293a553645bff218fc3e5a2d1581ad9fa249a07290da2f39e7fc9b8fa1f5dd",
+        "verdict": "PASS",
+        "declared_scope": "One declared case-marker criterion; independent private oracle and native provenance audit separate"
+      },
+      {
+        "organization": "B",
+        "contract_id": "67ffbee0-f341-514c-be2b-68919c9fe219",
+        "publication_revision": 4,
+        "acceptance_revision": 5,
+        "submission_number": 1,
+        "submission_digest": "sha256:bc54a8d782b6e9b99cf6e44ca0fc137d5bc9c210223f4f45d2db423135c4d46e",
+        "verdict": "PASS",
+        "declared_scope": "Declared /received equals true at exact captured B revision; independent private source-data/native file audit separate"
+      }
+    ]
+  },
+  "evidence": {
+    "A": {
+      "path": "two-org-case-d-a-observed-20261108.json",
+      "sha256": "29b6fbf5b6facecba46c0e29aa00b0e5f47c0aca8e03144ddd288a2cda7bd763"
+    },
+    "B": {
+      "path": "two-org-case-d-b-observed-20261108.json",
+      "sha256": "70373732f44b89cd40edfec2222228035b7cc5e624aa2ba6cad915f097b0ceb0"
+    },
+    "source_inventory": {
+      "path": "two-org-case-d-source-inventory-20261108.json",
+      "sha256": "af4e661cef6b746deeff4eb0d30c9b9bdcac7e6da32e2a10de63bd7f8c64286d"
+    },
+    "operator_records": {
+      "real-case-d-a-capture.json": {
+        "sha256": "da5b1494ceb0d22007cd35fee01364eb4a4478b7a806afdd8da7194ac4f6f067",
+        "path": "D:/ChantaResearchGroup/Schumpeter-shell-d-20261108/desktop-app/evidence/real-case-d-a-capture.json"
+      },
+      "real-case-d-a-accepted.json": {
+        "sha256": "511e66a33f810a9afa1d6c3de368cb2c4081b5589701df3ae463e85846c703bb",
+        "path": "D:/ChantaResearchGroup/Schumpeter-shell-d-20261108/desktop-app/evidence/real-case-d-a-accepted.json"
+      },
+      "real-case-d-a-forwarded.json": {
+        "sha256": "399c05c1def8561f6e8eef4e46f8dc446b6b039575622addbc3835a8c6aaa9e8",
+        "path": "D:/ChantaResearchGroup/Schumpeter-shell-d-20261108/desktop-app/evidence/real-case-d-a-forwarded.json"
+      },
+      "real-case-d-b-capture.json": {
+        "sha256": "e0949c327763c63cd4aa34f152756fd91f1a965164fe255e83c0c28b18f8ef6d",
+        "path": "D:/ChantaResearchGroup/Schumpeter-shell-d-20261108/desktop-app/evidence/real-case-d-b-capture.json"
+      },
+      "real-case-d-b-accepted.json": {
+        "sha256": "e5ca95f8eddf87371f858f4ea01104ff6acf085c0fdc7dc4c15dd981af698762",
+        "path": "D:/ChantaResearchGroup/Schumpeter-shell-d-20261108/desktop-app/evidence/real-case-d-b-accepted.json"
+      }
+    }
+  },
+  "privacy": {
+    "prior_derived_value_in_B_readback": "Exact original preserved privately; public whitelist replaced before freeze, historical finding retained.",
+    "current_public_json_scan": [
+      {
+        "name": "real-case-d-a-accepted.json",
+        "sha256": "511e66a33f810a9afa1d6c3de368cb2c4081b5589701df3ae463e85846c703bb",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-a-capture-readback.json",
+        "sha256": "5c9be61000f43550f1c4547f0fbd3d9db2f241b672507053096c0e3dbbe16fe5",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-a-capture.json",
+        "sha256": "da5b1494ceb0d22007cd35fee01364eb4a4478b7a806afdd8da7194ac4f6f067",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-a-current-graph.json",
+        "sha256": "011775d73497aa12ae556d2608c09fb53e3c8f1d17e487402af687a67450fcee",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-a-first-readback.json",
+        "sha256": "163643679869af3b375824d3b7f5feebbf68df666c93eef7260897f4c24f9698",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-a-forwarded.json",
+        "sha256": "399c05c1def8561f6e8eef4e46f8dc446b6b039575622addbc3835a8c6aaa9e8",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-a-preflight.json",
+        "sha256": "02b4559f7fc68ea3536a692a640f71f3d1f45f68ad6a36d79dd5be292967376f",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-a-reservation.json",
+        "sha256": "13f2e20761952c6a79c9c150c07ec125a3d3654a87e5e411b77d5c3858a95f43",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-b-accepted.json",
+        "sha256": "e5ca95f8eddf87371f858f4ea01104ff6acf085c0fdc7dc4c15dd981af698762",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-b-capture.json",
+        "sha256": "e0949c327763c63cd4aa34f152756fd91f1a965164fe255e83c0c28b18f8ef6d",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-b-first-readback.json",
+        "sha256": "04b69c32136555dbf941559068375ad082c9c065a8e44c407f306bc41dda1b2e",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-b-preflight.json",
+        "sha256": "51fec49ac348d0dc317e5ca6d7c17a962bace58424094c8d7578a83a6b13c053",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-b-prepared-contract.json",
+        "sha256": "532fe65deb285e059571fe590cbabc2d56ce2c691f3d3a175360aba97bd2e2c8",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-b-reservation.json",
+        "sha256": "b83eb0ffc3e1923a752116ca15420ace17ad1fc57c970fa7dc6a6b348aab520f",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-preparation-identities.json",
+        "sha256": "71fdbef93f4bd99e1f0107100e69a19cd1f04386d4eb8819df2461e2f1fa2e1c",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-preparation-launch.json",
+        "sha256": "359d629140c70ab64c856bda64d0079dc3d0fe1e650371857541fd58678d1b69",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-preparation-organizations.json",
+        "sha256": "dbe76c81cfbdb8ae802e318a30e5ef8291b7d7bf7618f0bba78a19f33deac778",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-preparation-profile.json",
+        "sha256": "0cc2321c1fbd741b1ad73c07999a4debe58c8ee1eabacb43854e219309d0abd2",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-prepared-contract.json",
+        "sha256": "71d0e4845e01aaf456557c58a879a77dc84fe1ca7e0fcb1859e37770db40e86e",
+        "seed_present": false,
+        "derived_present": false
+      },
+      {
+        "name": "real-case-d-workspace-selection.json",
+        "sha256": "ed24bab215ce05a9c7906293b8e06dec6e39d4fea4ebe7c2023997978ac8ef6e",
+        "seed_present": false,
+        "derived_present": false
+      }
+    ],
+    "raw_seed_or_derived_published_in_this_record": false
+  },
+  "remaining": [
+    "Independent actual workflow review.",
+    "Approved metadata-only linked PIX A3/B1 analysis and independent review.",
+    "Parent package/desktop final evidence and process handback.",
+    "General long-running production tasks are not validated by this bounded case."
+  ],
+  "withdrawal_conditions": [
+    "Any mismatch in native lineage, source hashes, actual file bytes or exact publication/acceptance revisions invalidates the corresponding claim.",
+    "A private oracle or answer found in the child assignment weakens own-Persona evidence."
+  ],
+  "validity": "Exact immutable source/package and this recorded synthetic case only; no guarantee for changed configuration or future inputs."
+}

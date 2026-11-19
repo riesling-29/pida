@@ -1,0 +1,110 @@
+{
+  "schema_version": "pida.desktop-mock-persona-projection/1",
+  "scope": "Offline metadata projection of explicitly named stopped synthetic mock host; no real provider or semantic Persona proof.",
+  "source_files": [
+    {
+      "path": "C:/Users/migeo/AppData/Local/Schumpeter/hosts/3fb183a05c828015/.pida/agents-service/supervisor.json",
+      "sha256": "6ce9bb49e6fe534dc7c38d0ac2c7c2d682739696c3da390754ae490a419d1eef"
+    },
+    {
+      "path": "C:/Users/migeo/AppData/Local/Schumpeter/hosts/3fb183a05c828015/.pida/agents-service/agents/d604c465-59a3-498d-a7ad-4889b83c8a59/runtime/observations/01a1b642-16e4-7555-8af2-e8791e3e9a81/6f198690-ccdb-4fc9-935a-903164c3e552.jsonl",
+      "sha256": "14873348ddf6110f02de7ddc118803b8e5b12bc608786b6239746cb3ff0c7ed1"
+    }
+  ],
+  "validator_files": [
+    {
+      "path": "D:/ChantaResearchGroup/pida/.pida-test-runtime-distribution-20261107/windows-accepted/runtime/pida/dist/integration-contract.js",
+      "sha256": "170cd6865587afe63e2822d2ef99d86308ed80d27dc9af7ed46859c521d1ff31"
+    },
+    {
+      "path": "D:/ChantaResearchGroup/pida/.pida-test-runtime-distribution-20261107/windows-accepted/runtime/pida/dist/run-context.js",
+      "sha256": "5e36928e4483a989b28fae187c7edfaf9d3b660f4f765559e295c7251c58e42a"
+    },
+    {
+      "path": "D:/ChantaResearchGroup/pida/.pida-test-runtime-distribution-20261107/windows-accepted/runtime/pida/dist/private-state.js",
+      "sha256": "a4476582166c944ea96d2c124387167bf2f38833e21e59ba92c52f14f59329b7"
+    }
+  ],
+  "native_ids": {
+    "host_id": "desktop-c4a7ae6beb24434e",
+    "org_session_id": "9e127e5a-27b1-444b-ac2b-5a6d6ad97a66",
+    "agent_id": "d604c465-59a3-498d-a7ad-4889b83c8a59",
+    "job_id": "b1373792-5586-4c15-894d-43380572eef8",
+    "org_task_id": "e27d35bb-306e-4261-8a62-92e8fdd907df",
+    "attempt_id": "e92e9f88-4e7a-447e-a8db-0008b14d55b5",
+    "run_id": "6f198690-ccdb-4fc9-935a-903164c3e552",
+    "session_id": "01a1b642-16e4-7555-8af2-e8791e3e9a81"
+  },
+  "logical_input_receipts": [
+    {
+      "source_id": "25bf0c1b-387d-468f-9b7b-c81abb29c762",
+      "source_event_id": "0e000976-409c-43c0-b5c5-321f99ef75a3",
+      "sequence_number": 6,
+      "request_id": "2347d122-97a0-404c-bbe7-26bd3dcf33f4",
+      "request_attempt": 1,
+      "input_digest": "f9cea2505eead36e29a253724780172626f308492ab852e074ad6027c34ad492",
+      "authorization": "current-provider-check",
+      "inclusion_scope": "pi-logical-context",
+      "checks": {
+        "observation_schema": true,
+        "descriptor_schema": true,
+        "payload_digest": true,
+        "event_job": true,
+        "event_agent": true,
+        "event_run": true,
+        "event_session": true,
+        "binding_job": true,
+        "binding_attempt": true,
+        "binding_run": true,
+        "binding_agent": true,
+        "binding_org": true,
+        "binding_host": true,
+        "current_authorization": true,
+        "logical_scope": true,
+        "digest_scheme": true
+      }
+    },
+    {
+      "source_id": "25bf0c1b-387d-468f-9b7b-c81abb29c762",
+      "source_event_id": "b516113e-2d30-4012-bbbb-011f0628e46c",
+      "sequence_number": 13,
+      "request_id": "ced7e0ae-45c4-40bd-8a1e-39a3a97f040f",
+      "request_attempt": 2,
+      "input_digest": "3d59a128f6d51522c06e440abf924753711594fa3920772adf2257335411881e",
+      "authorization": "current-provider-check",
+      "inclusion_scope": "pi-logical-context",
+      "checks": {
+        "observation_schema": true,
+        "descriptor_schema": true,
+        "payload_digest": true,
+        "event_job": true,
+        "event_agent": true,
+        "event_run": true,
+        "event_session": true,
+        "binding_job": true,
+        "binding_attempt": true,
+        "binding_run": true,
+        "binding_agent": true,
+        "binding_org": true,
+        "binding_host": true,
+        "current_authorization": true,
+        "logical_scope": true,
+        "digest_scheme": true
+      }
+    }
+  ],
+  "source_files_unchanged": true,
+  "excluded": [
+    "context body",
+    "descriptor body",
+    "Persona seed",
+    "credentials",
+    "Pi conversation",
+    "raw provider input"
+  ],
+  "limits": [
+    "Logical input authorization/inclusion only, not serialized provider-wire capture.",
+    "Not a whole-bundle or complete organization validation.",
+    "Offline comparison does not reopen runtime or change existing analysis permission."
+  ]
+}

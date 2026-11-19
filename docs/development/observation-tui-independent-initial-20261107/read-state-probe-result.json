@@ -1,0 +1,68 @@
+{
+  "source": "495f6f6877aa5836ebd9f839462984d8bb806a7b",
+  "workspace": "C:\\Users\\migeo\\AppData\\Local\\Temp\\pdt-review-PEUbds\\host",
+  "connectChanges": [],
+  "inspectChanges": [
+    ".pida/agents-service/agents/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/files/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/COMMIT_EDITMSG",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/config",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/description",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/HEAD",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/hooks/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/hooks/applypatch-msg.sample",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/hooks/commit-msg.sample",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/hooks/fsmonitor-watchman.sample",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/hooks/post-update.sample",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/hooks/pre-applypatch.sample",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/hooks/pre-commit.sample",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/hooks/pre-merge-commit.sample",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/hooks/pre-push.sample",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/hooks/pre-rebase.sample",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/hooks/pre-receive.sample",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/hooks/prepare-commit-msg.sample",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/hooks/push-to-checkout.sample",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/hooks/sendemail-validate.sample",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/hooks/update.sample",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/index",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/info/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/info/exclude",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/logs/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/logs/HEAD",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/logs/refs/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/logs/refs/heads/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/logs/refs/heads/master",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/objects/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/objects/4b/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/objects/4b/825dc642cb6eb9a060e54bf8d69288fbee4904",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/objects/56/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/objects/56/d25f42728469edc178f253ee1bc3540ccb49bf",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/objects/info/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/objects/pack/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/refs/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/refs/heads/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/refs/heads/master",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/history.git/refs/tags/",
+    ".pida/agents-service/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench/3477cdab157537bd83c95a3c0b0e4883dbbfa65cefd31ab328c5a302fbf4a8bf/skills/"
+  ],
+  "calls": [
+    {
+      "path": "/v1/collaboration/capabilities",
+      "method": "GET"
+    },
+    {
+      "path": "/v1/info",
+      "method": "GET"
+    },
+    {
+      "path": "/v1/agents/943ff743-221a-4c5c-9df6-25f22aff1a4b/workbench",
+      "method": "GET"
+    }
+  ],
+  "files": 0,
+  "historyEntries": 1
+}

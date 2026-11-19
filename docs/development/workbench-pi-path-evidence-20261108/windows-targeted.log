@@ -1,0 +1,37 @@
+✔ native applied join waiting: exact result and continuation remain durable (472.2996ms)
+✔ native applied join child-first: exact result and continuation remain durable (379.5109ms)
+✔ native applied join required-failure: exact result and continuation remain durable (469.0447ms)
+✔ native applied join nonempty: exact result and continuation remain durable (483.613ms)
+✔ yield waiting for paused child survives restart and creates exactly one continuation (376.7202ms)
+✔ empty response cannot yield from tool name and marker only (20.9147ms)
+✔ empty response cannot yield from false (19.956ms)
+✔ empty response cannot yield from throw (30.1584ms)
+✔ empty response cannot yield from thenable (33.7315ms)
+✔ empty response cannot yield from truthy object (15.0981ms)
+✔ empty response cannot yield from read effect (31.9642ms)
+✔ empty response cannot yield from not applied (15.8748ms)
+✔ empty response cannot yield from unknown effect (4.6282ms)
+✔ empty response cannot yield from failed outcome (16.6314ms)
+✔ handoff rechecked after asynchronous work review: cancel (18.5376ms)
+✔ handoff rechecked after asynchronous work review: stale (14.8122ms)
+✔ handoff rechecked after asynchronous work review: deadline (380.5779ms)
+✔ native proof rejects foreign membership (207.8699ms)
+✔ native proof rejects stale membership (168.7231ms)
+✔ native proof rejects cancelled-join membership (184.6904ms)
+✔ host yield never overrides provider failure (10.4661ms)
+✔ host yield never overrides unknown usage (15.0044ms)
+✔ host yield never overrides token guard (5.4748ms)
+✔ Pi nested write/read/edit preserves logical forward-slash paths and exact bytes (427.775ms)
+✔ flat Pi paths, direct nested API and independent owner remain unchanged (452.6629ms)
+✔ traversal, absolute, drive and backslash inputs remain denied by all Pi file tools (78.8471ms)
+✔ directory symlink or Windows junction cannot redirect Pi read/write/edit outside owned files (223.5395ms)
+✔ hardlinked files remain denied before Pi writes or edits (221.188ms)
+✔ actual local Pi runtime nested file flow completes with run-captured artifact (553.9656ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3943.6044

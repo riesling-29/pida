@@ -1,0 +1,17 @@
+{
+  "scope": "Preparation-only final JSON reply/result-capture compatibility; runtime distribution unchanged",
+  "command": "node --test test/two-org-smoke-preparation.test.mjs",
+  "passed": 3,
+  "failed": 0,
+  "paid_calls": 0,
+  "checks": [
+    "A continuation and B require complete same JSON data in final reply",
+    "Result-based B goal labels result SHA/publication revision/job identity separately from file",
+    "Path-only and changed-byte result rejected",
+    "Existing oracle isolation/artifact guards and scripted native chain preserved"
+  ],
+  "source_sha256": {
+    "test\\helpers\\two-org-smoke.mjs": "4473da8a5b248539124efb601e8ced835ce202429cb5fb0c73766bf1aa843e3f",
+    "test\\two-org-smoke-preparation.test.mjs": "1dd0b7a5c6f12b7013bb92ec4fb73acac9620538b3951647533a4cd67c41a1b5"
+  }
+}

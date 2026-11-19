@@ -1,0 +1,16 @@
+{
+  "source": "127611e346be6be6709ba6db59132934a7913c3a",
+  "scope": "Bounded producer catalogue/managed host source PASS; no package/GUI/model/Linux acceptance.",
+  "archive_sha256": "68a775d46ea9260364cc678cb9a2a5284e81ab52520de43f826edef0386c8408",
+  "files": {
+    "FINAL-REVIEW.md": "2759be1960d5ca38f31fd93a6fadfdad2826947f0a28986c27cf90c40ef79a75",
+    "final-manifest.json": "5f28711874f2158bb3416cec94611b2785aae5c05667ff4d246a6d654a5cc2ba",
+    "INITIAL-REVIEW.md": "05244a0fee62defb2aebf75e4557da0db797350bd940792bbfbbbcd4a8ef7a10",
+    "initial-manifest.json": "615315d86d636d2d17024d571c8498cdb1cac7fa77216c42b376e2f002584fbb",
+    "adversarial-8aa225e.txt": "13ce6a9af6e31ab50db9476a4dce6c2313802ec7e4141de417b12d9fd83484f4",
+    "corrected-127611e.txt": "f8587e19e6567d3a81c86d5efd51e8622fc8a70701f5e13fe4b8d92c1438e2ff",
+    "independent-catalogue-review.test.mjs": "6707b8275c79e24e05dcd635175823ac5ba8e8e86e641a4aa09426d4fb99a65a",
+    "independent-catalogue-lifecycle.test.mjs": "f74c1ea260374a9bc004ddc79f6f708feb34fdb495c2f059df45383f414a7788",
+    "lifecycle-tail.mjs": "0b6f746551bce92e4c3a1d2432126919724e758d5699fa28f1d8e3abb5ce301c"
+  }
+}

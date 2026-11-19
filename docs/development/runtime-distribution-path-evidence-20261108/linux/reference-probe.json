@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "platform": "linux",
+  "node": "v24.18.0",
+  "git": "git version 2.53.0",
+  "isolated_runtime": "/tmp/pdr-AKpu8J/runtime",
+  "source_checkout_required": false,
+  "developer_node_modules_required": false,
+  "credentials_used": false,
+  "provider": "mock",
+  "persona": "vera-local-reference/0.1.0",
+  "organization_id": "3793fafa-b480-4736-8bc1-32157d55c0d2",
+  "job_id": "fa2ffcad-838b-4bcf-a360-f70cfe772fc4",
+  "attempt_id": "cae16f28-fc5b-4851-89ad-392022663875",
+  "events": 16,
+  "terminal_event": true,
+  "resume_same_job": true,
+  "transport_token_rotated": true,
+  "limits": [
+    "No live model, desktop UI, remote Git or general Linux ABI acceptance.",
+    "Explicit external Python reference export; parent frozen Python assembly not tested."
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "source_commit": "e9a1d31140bcff34e3c9ef0f82f4b3dbca0ddd68",
+  "platform": "win32-x64",
+  "runtime": "D:\\ChantaResearchGroup\\pida-repository-profile-20261108\\.pida-test-runtime-repository-20261108\\windows\\runtime",
+  "archive": "D:\\ChantaResearchGroup\\pida-repository-profile-20261108\\.pida-test-runtime-repository-20261108\\windows\\pida-runtime-e9a1d31-win32-x64.tar.gz",
+  "archive_sha256": "ed17b770612ae05df9e732e32bc63736aa3eb6fb0af8ec6384ab3f7412422f58",
+  "archive_bytes": 107754846,
+  "manifest_sha256": "f1b9156e6bee986a88666da451b352e006e18c83639408aa8a062b15f62f8ed1",
+  "tree_sha256": "60509d7091c99516f1b008cd3188c262229416d827efbfa07010fb9e2283e209",
+  "file_count": 16150,
+  "dependencies": 125,
+  "node_binary_sha256": "9a4eb5f1c29c6a2e93852ead46b999e284a6a5ca8bab4d4e241d587d025a52de",
+  "package_sha256": "e4e5e2688b39f84b5b0b545c211f292c92239aed752628e64e785226dc3a5777"
+}

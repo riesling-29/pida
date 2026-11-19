@@ -1,0 +1,48 @@
+{
+  "source_commit": "e9a1d31140bcff34e3c9ef0f82f4b3dbca0ddd68",
+  "original_index_sha256": "23c159c786edcf992b51bf5a55d1ce194b13929f37307673d15f2f16b492281f",
+  "archive_sha256": "2fc7ae54356a57f09838243ecaea6cfeccdddfa0dd5f7d021576c50f1abecd21",
+  "originals": [
+    {
+      "name": "INDEPENDENT-SOURCE-REVIEW.md",
+      "bytes": 6457,
+      "sha256": "5799c15d99a62835a627541398594dd5712716dfbd2e15373b89581220b8407a"
+    },
+    {
+      "name": "legacy-equivalence.json",
+      "bytes": 153,
+      "sha256": "2d21198dcb356259449fc789cc65bba5b914b3ee00cda5670c397ec50f206949"
+    },
+    {
+      "name": "legacy-equivalence.mjs",
+      "bytes": 749,
+      "sha256": "a6ae02472a4eb15ee5fb97b0a061aff060f56bfa83cbe74caecae87dd7eb3629"
+    },
+    {
+      "name": "linux-probe.json",
+      "bytes": 152447,
+      "sha256": "3bd40ca42e0e7483712198566b7dbd9ba75fed22761af2a2b05289db63703165"
+    },
+    {
+      "name": "npm-dry-run.json",
+      "bytes": 986,
+      "sha256": "daf3904a172fcd144ba94fbd2605c13aa505296f93986c345937315d4f9a273d"
+    },
+    {
+      "name": "probe.mjs",
+      "bytes": 7602,
+      "sha256": "0945645b1618c11184985ef78b54047c3f887df0a0e723b98648283bca21481e"
+    },
+    {
+      "name": "source-hashes.json",
+      "bytes": 1030,
+      "sha256": "cc0c4bda5b1511552f52dbfd21e95c08238c071aed804361bc02fb47863a6c28"
+    },
+    {
+      "name": "windows-probe.json",
+      "bytes": 151582,
+      "sha256": "1d5430678295e6d65d6b125df81b7e60bc98f15969f66fdf70759283654ed639"
+    }
+  ],
+  "verdict": "Independent source-only PASS"
+}

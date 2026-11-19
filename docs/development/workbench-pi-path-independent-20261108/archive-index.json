@@ -1,0 +1,57 @@
+{
+  "original_entries": [
+    {
+      "name": "INDEPENDENT-SOURCE-REVIEW.md",
+      "bytes": 6331,
+      "sha256": "6246f3e7d74f3628585b4cc7dbe4a96f8a5f8bcbe10529976a8461f2cde2741e"
+    },
+    {
+      "name": "linux-baseline.json",
+      "bytes": 164345,
+      "sha256": "219a410a27e104b3943a7bb9e3a410f9c81cdf2a4b8a4ca18f9964fe165c6d90"
+    },
+    {
+      "name": "linux-fixed.json",
+      "bytes": 164352,
+      "sha256": "dd262945137103daaf488b9f15c91845cc5a8248e880bc7bdebfb77dd42b0293"
+    },
+    {
+      "name": "linux-held-package-unchanged.json",
+      "bytes": 242,
+      "sha256": "99112b99b5dd7b706ff9d912cd0fa617ebde810835c95226559ddc98fd469701"
+    },
+    {
+      "name": "metadata.json",
+      "bytes": 2476,
+      "sha256": "b417c785d39e15db7e869eeecf9da35fab95047dbfe06eb755c5c275cb44c961"
+    },
+    {
+      "name": "metadata.py",
+      "bytes": 2151,
+      "sha256": "3b8bf9be3392e3330e07851644238998fe07eedc2d3e3b756a499c11d3cfd301"
+    },
+    {
+      "name": "probe.mjs",
+      "bytes": 6887,
+      "sha256": "06e50d1df800a5b96bd648b35d81519c375aae9300c23edd59d99b0a25bac3b6"
+    },
+    {
+      "name": "windows-baseline.json",
+      "bytes": 104585,
+      "sha256": "c23a3f7efc1da41e4e183795048a878880094300e34434302806b7bba9c8b505"
+    },
+    {
+      "name": "windows-fixed.json",
+      "bytes": 164324,
+      "sha256": "32aa9d54808c75814f2f5c8e68bec8c967492f255e8d61ce388356ef17c8229e"
+    },
+    {
+      "name": "windows-held-package-unchanged.json",
+      "bytes": 242,
+      "sha256": "a380ce05acb851e69533ea0becf516d5929a44ef5ee874f852cfcc80072fd44f"
+    }
+  ],
+  "original_manifest_sha256": "3da66b20afb89e02ffd7c537f8b7a8da02aa75efc27ea5bcad13d6bf492ab322",
+  "archive_sha256": "e927b42cc189e51939fd07e3b433a782ecea77306b369491c6ecf2ba9354b5fc",
+  "readable_report": "LF normalized, exact original bytes in ZIP"
+}

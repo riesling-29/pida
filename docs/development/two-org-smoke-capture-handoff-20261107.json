@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "tests": {
+    "passed": 3,
+    "failed": 0
+  },
+  "fixture_files": [
+    {
+      "path": "D:\\ChantaResearchGroup\\pida\\.pida-test-linked-capture-r2-20261107\\capture.json",
+      "sha256": "d5291e1a806632e70d642b35ae4a014ac0736ca88801866b9389e1c9f4849526"
+    },
+    {
+      "path": "D:\\ChantaResearchGroup\\pida\\.pida-test-linked-capture-r2-20261107\\provenance.json",
+      "sha256": "f5f559145cdae8c2939b589d488447c11b077ee42a89218a961159043e699594"
+    }
+  ],
+  "source_inventory_verified": 151,
+  "runtime_package_changed": false,
+  "paid_calls": 0,
+  "history": "First optional-export run failed after native execution because evidence inventory incorrectly named package-lock.json. Corrected to actual npm-shrinkwrap.json; fresh r2 directory succeeds. Initial partial output retained, not an accepted fixture.",
+  "scope": "Scripted Pi via public SDK, not HTTP or real provider. Raw fixture remains outside tracked metadata evidence."
+}

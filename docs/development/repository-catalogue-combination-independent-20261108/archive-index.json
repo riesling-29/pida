@@ -1,0 +1,20 @@
+{
+  "original_files": {
+    "independent-checks.json": "b5f31a075f0f6ac44d070b1071c6bcfbdd94fc746403bc9185a0626647cd8891",
+    "INDEPENDENT-COMBINATION-REVIEW.md": "b81d02fc81170aa9d92d8412589826b922101a0a49e796b13d8ca8446fca8c9c",
+    "index-evidence.py": "4f862db2e5805e6cb236bc0e62ef987dd0c958a9ee30a0f591fc69ba2598c8c8",
+    "linux/result.json": "429f4aa3d8ff60a3b9ae3ad9237129277307e7185442ad4fb762e84d21d60e90",
+    "linux-after-verifier.json": "99e26b1816083be2f7e372a9e7884ec43b76a02526a86d7b282b28ec4f47ce4b",
+    "linux-before-verifier.json": "2497cb888adf228a7378f8c3ee112b57679ead2cf9121f49e97b0cecb156e0d8",
+    "linux.log": "ab611cb0bbfd1ffd4d3cd2b4e39711c987247f01df689c878681515a1eeb1807",
+    "probe.mjs": "4ea6b42fa03df5a2422ff236934ea3620c91cfd7064cc85f77def31017c640a6",
+    "windows/result.json": "c5300d8821b41ebe7b3252a6750267db7decc47b7ea0b5f3732fed529e08fa1d",
+    "windows-after-verifier.json": "aa9d30fff54a9de3e71f5badd1dcd3fd9fcc43ffdb35d519b782d32763ae2126",
+    "windows-before-verifier.json": "ed0b5774bab24f65a24279618ec1ec777b7c2d8e0c2478322eea1bca6549e42c",
+    "windows.log": "ef981a57be8b0d3011b7497524f53e9b32a0b6abf32362f490a18368acbbc035",
+    "evidence-index.json": "0619344f0e89c48063c9d32c368f09f6c2d06782a5285f17e7c0e8605bf5ce4e"
+  },
+  "archive_sha256": "b4c85dd5c7d0556f7086d37701b8c2ca2613a34a93e0d8778e4a7adc1ff4d556",
+  "readable_report_sha256": "b81d02fc81170aa9d92d8412589826b922101a0a49e796b13d8ca8446fca8c9c",
+  "note": "Only recursive manifest-listed safe artifacts plus manifest; exact original bytes in ZIP. Readable report LF only."
+}

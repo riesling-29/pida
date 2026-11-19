@@ -1,0 +1,69 @@
+{
+  "schema_version": "pida.real-case-readiness/1",
+  "checked_at": "2026-11-07T15:01:16.909Z",
+  "case_id": "0227453a-4ceb-4edf-a27b-6ad701d4a9be",
+  "state": "READY_FOR_GATED_PROVISIONING_MODEL_HOLD",
+  "preparation_source": "56236d289dbf98aa0119d3228ef68bcfeb15c72f",
+  "runtime_application_source": "bb9886ffc3a2a815e3c255b7dbfc83b4b4bac5e3",
+  "desktop_candidate_source_reported_by_root": "3b220d0",
+  "desktop_candidate_independently_verified_here": false,
+  "private_case_files_consistent": true,
+  "private_seed_replaced": false,
+  "seed_or_description_published": false,
+  "source_files": [
+    {
+      "path": "test/helpers/two-org-smoke.mjs",
+      "sha256": "4473da8a5b248539124efb601e8ced835ce202429cb5fb0c73766bf1aa843e3f"
+    },
+    {
+      "path": "test/two-org-smoke-preparation.test.mjs",
+      "sha256": "1dd0b7a5c6f12b7013bb92ec4fb73acac9620538b3951647533a4cd67c41a1b5"
+    }
+  ],
+  "native_profiles": null,
+  "host_id": null,
+  "provider_credential_status": "not refreshed or rechecked; prior presence is historical, not current authentication proof",
+  "calls": {
+    "provider": 0,
+    "refresh": 0,
+    "admission": 0,
+    "gui_launch": 0
+  },
+  "provisioning": {
+    "submitter": "desktop_shell only",
+    "requires": "Final mock/integrity gates and root-authorized provisioning; separate RELEASE before model work",
+    "workspace": "Fresh unique desktop workspace with ordinary delivered-app per-user state, stable versioned cache and normal managed-host paths",
+    "ephemeral_LOCALAPPDATA_override": false,
+    "private_description_file": "D:/ChantaResearchGroup/pida/.pida-test-final-real-case-20261107/persona-description.txt",
+    "profiles": "One selected reference Persona across fresh A-root/A-worker/B-worker identities; no stale mock IDs"
+  },
+  "monitor": {
+    "native_goal_count": 2,
+    "expected_jobs": 4,
+    "profiles": 3,
+    "org_timeout_ms_each": 60000,
+    "max_repair_attempts": 0,
+    "run_timeout_ms": 20000,
+    "requested_join_ms": 45000,
+    "join_cap": "remaining native organization deadline",
+    "expected_model_requests": 8,
+    "estimate_only": true,
+    "poll_ms": 500,
+    "stop_when_observed_requests_greater_than": 12,
+    "hard_total_request_cap": false,
+    "case_active_wall_ms": 180000,
+    "request_dedup_key": [
+      "source_id",
+      "source_event_id"
+    ],
+    "count_scope": "Actual model_request events across all known A root/child/continuation and B runs; missing exports mean UNKNOWN, not zero",
+    "unexpected_job_agent_or_unknown_effect": "stop; parent cancel once/read back, terminate dedicated host if unsettled, no effect replay",
+    "cost": "unknown"
+  },
+  "notes": [
+    "Readiness probe initially used slash key against historical Windows-backslash source inventory; corrected lookup; both exact source hashes match. No source drift.",
+    "No runtime/test suite rerun for this documentation-only readiness check.",
+    "Private seed remains out of native goals, criteria, room messages and independent incoming tool data.",
+    "A final result and file bytes remain distinct; B consumes actual observed A terminal result through source-specific helper."
+  ]
+}

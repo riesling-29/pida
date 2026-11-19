@@ -1,0 +1,17 @@
+{
+  "original_bytes_preserved": true,
+  "archive_sha256": "122316f4b195c772a419cc6a6c5d497680e772d4ff2df62ece1b943fad2ff037",
+  "files": {
+    "dispatch-lifecycle-11439f4.json": "f87310dc2598991898ce9160389553f9df380b440a733675337d10961be67d4e",
+    "dispatch-lifecycle-7997d51.json": "b20550a5f869c3f272758da19bf987146d9487dc62dee36c99e244046aff3f14",
+    "dispatch-lifecycle-probe-r4.mjs": "2922afc4a01167e10881dd90c305a6ce10555eac8821086ce714338fe9a90d69",
+    "dispatch-lifecycle-probe.mjs": "5d03463c33dbfc66f1533ed6f32f4d9fe7e68047070a811901d3436cd7a9db00",
+    "final-review-manifest.json": "6a4985044f1f7ad714bfeac7e6cfa55495db81268a020c6cd4c7510c4a3ced91",
+    "FINAL-REVIEW.md": "20855e58c7d04b9659cc752867a519565c29067915fe13723ce0177a67125d98",
+    "INITIAL-REVIEW.md": "538367287245fcf47fc0fa55202d5c3f01562f63cd46f0131e30f11c78a99f90",
+    "store-identity-11439f4.json": "1db37e0e014f1818dd07d0325c33fffa496c34fd431032102fc34c8d180e1c09",
+    "store-identity-7997d51.json": "c04756658e99100f050a8abf7a767a2fc60b151c7a014f73a28779a7e70bb5e0",
+    "store-identity-probe-r4.mjs": "d814fe266483c846eda754aa423f76e87578c9491fd54f70e1629add99aa772f",
+    "store-identity-probe.mjs": "18623f022ab1a2c529b579ac27e112665152380c013f6c26477ce110cbf73bd0"
+  }
+}

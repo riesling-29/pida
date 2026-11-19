@@ -1,0 +1,51 @@
+{
+  "schema_version": "pida.real-case-preparation/2",
+  "state": "PREPARATION_ONLY_SETUP_AND_MODEL_HOLD",
+  "case_id": "5bd55085-d316-4dc3-97cf-091d70a32478",
+  "runtime_source": "b7f7d523c6fede56d508575a6bb78afa343e5566",
+  "helper_source": "56236d289dbf98aa0119d3228ef68bcfeb15c72f",
+  "actual_native_identities": null,
+  "provider_config_directory": "D:/pida/my-agent",
+  "provider": {
+    "providerId": "openai",
+    "modelId": "gpt-6-astra",
+    "authMode": "chatgpt",
+    "verification": "existing approved selection; no new auth/provider check"
+  },
+  "prior_cases": [
+    {
+      "case_id": "0227453a-4ceb-4edf-a27b-6ad701d4a9be",
+      "requests": 5,
+      "outcome": "Two failed attempts preserved"
+    },
+    {
+      "case_id": "4db965ff-29cd-440b-ada0-e8b5b36a9579",
+      "requests": 6,
+      "outcome": "Native empty join crossed; continuation nested write failed; no artifact acceptance"
+    }
+  ],
+  "counts": {
+    "historical_single_smoke": 1,
+    "prior_two_org_validation": 11,
+    "all_prior_actual": 12,
+    "new_case": 0
+  },
+  "bounds": {
+    "observed_new_request_stop_threshold": 12,
+    "hard_provider_call_cap": false,
+    "active_case_ms": 180000,
+    "run_ms": 20000,
+    "org_ms": 60000,
+    "provider_retries": 0,
+    "output_retries": 0,
+    "repair_attempts": 0
+  },
+  "native_acceptance": "Current advertised criteria only; empty criteria means verification UNKNOWN even if all expected jobs complete. Distinct from uncertain effects or missing lineage.",
+  "setup": "Wait for root D setup grant. Fresh retained ordinary app-owned workspace and reference store; exact private description transferred only to local Persona textarea, cleared afterward. Then actual three profiles/two organizations/host returned before public goal plan. No private values in goals, criteria, room messages or screenshots.",
+  "release": {
+    "setup": false,
+    "A": false,
+    "B": false,
+    "sole_submitter": "/root/schumpeter_owner/desktop_shell"
+  }
+}

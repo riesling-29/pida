@@ -1,0 +1,116 @@
+{
+  "scope": "Pida local workbench built-in Git commands, not remote/general Git tooling",
+  "platformLockSHA256": "bb970d860a8c9e3255007976fa21240746dbc4d7b171e4eb6ce55c8cf9560fba",
+  "artifact": "/mnt/d/ChantaResearchGroup/pida/.pida-test-runtime-distribution-20261107/git-linux",
+  "packages": [
+    {
+      "name": "git",
+      "version": "1:2.53.0-1ubuntu1",
+      "file": "git_2.53.0-1ubuntu1_amd64.deb",
+      "url": "https://archive.ubuntu.com/ubuntu/pool/main/g/git/git_2.53.0-1ubuntu1_amd64.deb",
+      "sha256": "c3b36d7357dea773eefe6c4f97ebff416e5afee22489dc1f729e31d6f47872e9",
+      "acquisitionURL": "https://archive.ubuntu.com/ubuntu/pool/main/g/git/git_2.53.0-1ubuntu1_amd64.deb",
+      "archiveBytes": 4227374,
+      "controlMetadata": "Package: git\nVersion: 1:2.53.0-1ubuntu1\nArchitecture: amd64\nMaintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>\nOriginal-Maintainer: Jonathan Nieder <jrnieder@gmail.com>\nInstalled-Size: 25264\nDepends: libc6 (>= 2.42), libcurl3t64-gnutls (>= 8.3.0), libexpat1 (>= 2.0.1), libpcre2-8-0 (>= 10.34), zlib1g (>= 1:1.2.2), perl, liberror-perl, git-man (>> 1:2.53.0), git-man (<< 1:2.53.0-.)\nRecommends: ca-certificates, patch, less, ssh-client\nSuggests: gettext-base, git-doc, git-email, git-gui, gitk, gitweb, git-cvs, git-svn\nBreaks: bash-completion (<< 1:1.90-1), cogito (<= 0.18.2+), dgit (<< 5.1~), git-buildpackage (<< 0.6.5), git-el (<< 1:2.32.0~rc2-1~), gitosis (<< 0.2+20090917-7), gitpkg (<< 0.15), guilt (<< 0.33), openssh-client (<< 1:6.8), stgit (<< 0.15), stgit-contrib (<< 0.15)\nProvides: git-completion, git-core\nSection: vcs\nPriority: optional\nMulti-Arch: foreign\nHomepage: https://git-scm.com/\nDescription: fast, scalable, distributed revision control system\n Git is popular version control system designed to handle very large\n projects with speed and efficiency; it is used for many high profile\n open source projects, most notably the Linux kernel.\n .\n Git falls in the category of distributed source code management tools.\n Every Git working directory is a full-fledged repository with full\n revision tracking capabilities, not dependent on network access or a\n central server.\n .\n This package provides the git main components with minimal dependencies.\n Additional functionality, e.g. a graphical user interface and revision\n tree visualizer, tools for interoperating with other VCS's, or a web\n interface, is provided as separate git* packages."
+    },
+    {
+      "name": "libpcre2-8-0",
+      "version": "10.46-1build1",
+      "file": "libpcre2-8-0_10.46-1build1_amd64.deb",
+      "url": "https://archive.ubuntu.com/ubuntu/pool/main/p/pcre2/libpcre2-8-0_10.46-1build1_amd64.deb",
+      "sha256": "3e116766f1a7b149994d4745556023d993d26401223d1595520a991d4ba737fb",
+      "acquisitionURL": "https://archive.ubuntu.com/ubuntu/pool/main/p/pcre2/libpcre2-8-0_10.46-1build1_amd64.deb",
+      "archiveBytes": 256534,
+      "controlMetadata": "Package: libpcre2-8-0\nSource: pcre2\nVersion: 10.46-1build1\nArchitecture: amd64\nMaintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>\nOriginal-Maintainer: Matthew Vernon <matthew@debian.org>\nInstalled-Size: 708\nDepends: libc6 (>= 2.34)\nSection: libs\nPriority: optional\nMulti-Arch: same\nHomepage: https://github.com/PCRE2Project/pcre2\nDescription: New Perl Compatible Regular Expression Library- 8 bit runtime files\n This is PCRE2, the new implementation of PCRE, a library of functions\n to support regular expressions whose syntax and semantics are as\n close as possible to those of the Perl 5 language. New projects\n should use this library in preference to the older library,\n confusingly called pcre3 in Debian.\n .\n This package contains the 8 bit runtime library, which operates on\n ASCII and UTF-8 input."
+    },
+    {
+      "name": "zlib1g",
+      "version": "1:1.3.dfsg+really1.3.1-1ubuntu3.1",
+      "file": "zlib1g_1.3.dfsg+really1.3.1-1ubuntu3.1_amd64.deb",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/main/z/zlib/zlib1g_1.3.dfsg+really1.3.1-1ubuntu3.1_amd64.deb",
+      "sha256": "450d9322ac4e9baea0f9a74548a20fde73b078235c1f5d1fb7084c2638e33cdd",
+      "acquisitionURL": "https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/main/z/zlib/zlib1g_1.3.dfsg+really1.3.1-1ubuntu3.1_amd64.deb",
+      "archiveBytes": 61612,
+      "controlMetadata": "Package: zlib1g\nSource: zlib\nVersion: 1:1.3.dfsg+really1.3.1-1ubuntu3.1\nArchitecture: amd64\nMaintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>\nInstalled-Size: 169\nDepends: libc6 (>= 2.14)\nConflicts: zlib1 (<= 1:1.0.4-7)\nBreaks: libxml2 (<< 2.7.6.dfsg-2), texlive-binaries (<< 2023.20230311.66589-8)\nProvides: libz1\nSection: libs\nPriority: required\nMulti-Arch: same\nHomepage: http://zlib.net/\nDescription: compression library - runtime\n zlib is a library implementing the deflate compression method found\n in gzip and PKZIP.  This package includes the shared library.\nOriginal-Maintainer: Mark Brown <broonie@debian.org>"
+    }
+  ],
+  "copiedLibraries": [
+    {
+      "soname": "libpcre2-8.so.0",
+      "packageRelativeTarget": "usr/lib/x86_64-linux-gnu/libpcre2-8.so.0.14.0",
+      "sha256": "4a6b6b2078685b074869d75cb068664d7da6b3036df7bca0442b1bbbd4ac7e65"
+    },
+    {
+      "soname": "libz.so.1",
+      "packageRelativeTarget": "usr/lib/x86_64-linux-gnu/libz.so.1.3.1",
+      "sha256": "47b61967895b30e8c0c6818dd633ffeb87711cf637c688f981896f0dd84ce23b"
+    }
+  ],
+  "elf": {
+    "libexec/git-core/git": {
+      "needed": [
+        "libpcre2-8.so.0",
+        "libz.so.1",
+        "libc.so.6"
+      ],
+      "glibcVersions": [
+        "GLIBC_2.2.5",
+        "GLIBC_2.3",
+        "GLIBC_2.3.2",
+        "GLIBC_2.3.4",
+        "GLIBC_2.4",
+        "GLIBC_2.6",
+        "GLIBC_2.7",
+        "GLIBC_2.14",
+        "GLIBC_2.17",
+        "GLIBC_2.25",
+        "GLIBC_2.28",
+        "GLIBC_2.32",
+        "GLIBC_2.33",
+        "GLIBC_2.34",
+        "GLIBC_2.38"
+      ],
+      "maximumGLIBC": "GLIBC_2.38"
+    },
+    "lib/libpcre2-8.so.0": {
+      "needed": [
+        "libc.so.6"
+      ],
+      "glibcVersions": [
+        "GLIBC_2.2.5",
+        "GLIBC_2.3",
+        "GLIBC_2.3.4",
+        "GLIBC_2.4",
+        "GLIBC_2.14"
+      ],
+      "maximumGLIBC": "GLIBC_2.14"
+    },
+    "lib/libz.so.1": {
+      "needed": [
+        "libc.so.6"
+      ],
+      "glibcVersions": [
+        "GLIBC_2.2.5",
+        "GLIBC_2.3.4",
+        "GLIBC_2.4",
+        "GLIBC_2.14"
+      ],
+      "maximumGLIBC": "GLIBC_2.14"
+    }
+  },
+  "externalELFInterpreter": "/lib64/ld-linux-x86-64.so.2",
+  "resolvedDependencies": "linux-vdso.so.1 (0x0000769aede88000)\n\tlibpcre2-8.so.0 => /mnt/d/ChantaResearchGroup/pida/.pida-test-runtime-distribution-20261107/git-linux/lib/libpcre2-8.so.0 (0x0000769aed958000)\n\tlibz.so.1 => /mnt/d/ChantaResearchGroup/pida/.pida-test-runtime-distribution-20261107/git-linux/lib/libz.so.1 (0x0000769aed93a000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x0000769aed600000)\n\t/lib64/ld-linux-x86-64.so.2 (0x0000769aede8a000)",
+  "hostGLIBC": "glibc 2.43",
+  "wrapperSHA256": "5da3c56d312517849c3c7e30e32d333693f1d3234ce01147870f267efcbd723e",
+  "sourceNotices": [
+    "share/doc/git/copyright",
+    "share/doc/libpcre2-8-0/copyright",
+    "share/doc/zlib1g/copyright"
+  ],
+  "commonLicenseTextSource": {
+    "path": "/usr/share/common-licenses",
+    "package": "base-files 14ubuntu6.2",
+    "scope": "License texts only, copied from installed Ubuntu base-files; no executable/library copied from host"
+  },
+  "omissions": "Not the full Ubuntu git package: remote helpers, credential programs, Perl, ssh and interactive tooling deliberately outside scope"
+}

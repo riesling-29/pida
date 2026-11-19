@@ -1,0 +1,1631 @@
+[
+  {
+    "id": "pida-core@0.8.18",
+    "name": "pida-core",
+    "version": "0.8.18",
+    "size": 872456,
+    "unpackedSize": 3448561,
+    "shasum": "cd896f6d73bf750f36daca89d975d8345f42ad13",
+    "integrity": "sha512-PCb0/SxLhAQyqyFyKfzJNrPUJ4jV6oO8IT3q/Ph4mHkv7l1TQ2ULrc9RxIFsKDIZgkErQ6+h10fsg1FBp/HyRg==",
+    "filename": "pida-core-0.8.18.tgz",
+    "files": [
+      {
+        "path": "README.md",
+        "size": 24201,
+        "mode": 420
+      },
+      {
+        "path": "THIRD_PARTY_NOTICES.md",
+        "size": 9432,
+        "mode": 420
+      },
+      {
+        "path": "dist/agent-memory.d.ts",
+        "size": 4295,
+        "mode": 420
+      },
+      {
+        "path": "dist/agent-memory.js",
+        "size": 28585,
+        "mode": 420
+      },
+      {
+        "path": "dist/agent-resources.d.ts",
+        "size": 1912,
+        "mode": 420
+      },
+      {
+        "path": "dist/agent-resources.js",
+        "size": 7469,
+        "mode": 420
+      },
+      {
+        "path": "dist/agent-supervisor.d.ts",
+        "size": 9403,
+        "mode": 420
+      },
+      {
+        "path": "dist/agent-supervisor.js",
+        "size": 77711,
+        "mode": 420
+      },
+      {
+        "path": "dist/agent-tools.d.ts",
+        "size": 511,
+        "mode": 420
+      },
+      {
+        "path": "dist/agent-tools.js",
+        "size": 11035,
+        "mode": 420
+      },
+      {
+        "path": "dist/agent-tui.d.ts",
+        "size": 1179,
+        "mode": 420
+      },
+      {
+        "path": "dist/agent-tui.js",
+        "size": 26496,
+        "mode": 420
+      },
+      {
+        "path": "dist/agent-workspace-controller.d.ts",
+        "size": 2722,
+        "mode": 420
+      },
+      {
+        "path": "dist/agent-workspace-controller.js",
+        "size": 14592,
+        "mode": 420
+      },
+      {
+        "path": "dist/chatgpt-auth.d.ts",
+        "size": 2280,
+        "mode": 420
+      },
+      {
+        "path": "dist/chatgpt-auth.js",
+        "size": 12793,
+        "mode": 420
+      },
+      {
+        "path": "dist/cli.d.ts",
+        "size": 31,
+        "mode": 420
+      },
+      {
+        "path": "dist/cli.js",
+        "size": 27815,
+        "mode": 420
+      },
+      {
+        "path": "dist/client.d.ts",
+        "size": 14771,
+        "mode": 420
+      },
+      {
+        "path": "dist/client.js",
+        "size": 29215,
+        "mode": 420
+      },
+      {
+        "path": "dist/codemode.d.ts",
+        "size": 1068,
+        "mode": 420
+      },
+      {
+        "path": "dist/codemode.js",
+        "size": 7225,
+        "mode": 420
+      },
+      {
+        "path": "dist/coding-packs.d.ts",
+        "size": 319,
+        "mode": 420
+      },
+      {
+        "path": "dist/coding-packs.js",
+        "size": 2441,
+        "mode": 420
+      },
+      {
+        "path": "dist/collaboration-policy-client.d.ts",
+        "size": 1148,
+        "mode": 420
+      },
+      {
+        "path": "dist/collaboration-policy-client.js",
+        "size": 3959,
+        "mode": 420
+      },
+      {
+        "path": "dist/collaboration.d.ts",
+        "size": 2334,
+        "mode": 420
+      },
+      {
+        "path": "dist/collaboration.js",
+        "size": 2206,
+        "mode": 420
+      },
+      {
+        "path": "dist/command-tools.d.ts",
+        "size": 307,
+        "mode": 420
+      },
+      {
+        "path": "dist/command-tools.js",
+        "size": 5393,
+        "mode": 420
+      },
+      {
+        "path": "dist/commands.d.ts",
+        "size": 3700,
+        "mode": 420
+      },
+      {
+        "path": "dist/commands.js",
+        "size": 21898,
+        "mode": 420
+      },
+      {
+        "path": "dist/composition.d.ts",
+        "size": 2783,
+        "mode": 420
+      },
+      {
+        "path": "dist/composition.js",
+        "size": 4260,
+        "mode": 420
+      },
+      {
+        "path": "dist/display.d.ts",
+        "size": 1976,
+        "mode": 420
+      },
+      {
+        "path": "dist/display.js",
+        "size": 5479,
+        "mode": 420
+      },
+      {
+        "path": "dist/effects.d.ts",
+        "size": 962,
+        "mode": 420
+      },
+      {
+        "path": "dist/effects.js",
+        "size": 4054,
+        "mode": 420
+      },
+      {
+        "path": "dist/evidence.d.ts",
+        "size": 902,
+        "mode": 420
+      },
+      {
+        "path": "dist/evidence.js",
+        "size": 2277,
+        "mode": 420
+      },
+      {
+        "path": "dist/execution-contract.d.ts",
+        "size": 4356,
+        "mode": 420
+      },
+      {
+        "path": "dist/execution-contract.js",
+        "size": 377,
+        "mode": 420
+      },
+      {
+        "path": "dist/execution-worker.d.ts",
+        "size": 11,
+        "mode": 420
+      },
+      {
+        "path": "dist/execution-worker.js",
+        "size": 3952,
+        "mode": 420
+      },
+      {
+        "path": "dist/extensions.d.ts",
+        "size": 2234,
+        "mode": 420
+      },
+      {
+        "path": "dist/extensions.js",
+        "size": 4692,
+        "mode": 420
+      },
+      {
+        "path": "dist/http.d.ts",
+        "size": 2103,
+        "mode": 420
+      },
+      {
+        "path": "dist/http.js",
+        "size": 41442,
+        "mode": 420
+      },
+      {
+        "path": "dist/index.d.ts",
+        "size": 2080,
+        "mode": 420
+      },
+      {
+        "path": "dist/index.js",
+        "size": 1538,
+        "mode": 420
+      },
+      {
+        "path": "dist/integration-contract.d.ts",
+        "size": 498,
+        "mode": 420
+      },
+      {
+        "path": "dist/integration-contract.js",
+        "size": 12225,
+        "mode": 420
+      },
+      {
+        "path": "dist/mcp.d.ts",
+        "size": 4207,
+        "mode": 420
+      },
+      {
+        "path": "dist/mcp.js",
+        "size": 20708,
+        "mode": 420
+      },
+      {
+        "path": "dist/model-observation.d.ts",
+        "size": 381,
+        "mode": 420
+      },
+      {
+        "path": "dist/model-observation.js",
+        "size": 5884,
+        "mode": 420
+      },
+      {
+        "path": "dist/observation.d.ts",
+        "size": 1556,
+        "mode": 420
+      },
+      {
+        "path": "dist/observation.js",
+        "size": 12958,
+        "mode": 420
+      },
+      {
+        "path": "dist/ocel.d.ts",
+        "size": 1351,
+        "mode": 420
+      },
+      {
+        "path": "dist/ocel.js",
+        "size": 9648,
+        "mode": 420
+      },
+      {
+        "path": "dist/organization.d.ts",
+        "size": 3465,
+        "mode": 420
+      },
+      {
+        "path": "dist/organization.js",
+        "size": 3008,
+        "mode": 420
+      },
+      {
+        "path": "dist/persona-provider.d.ts",
+        "size": 2531,
+        "mode": 420
+      },
+      {
+        "path": "dist/persona-provider.js",
+        "size": 5700,
+        "mode": 420
+      },
+      {
+        "path": "dist/pix-ocel.d.ts",
+        "size": 1664,
+        "mode": 420
+      },
+      {
+        "path": "dist/pix-ocel.js",
+        "size": 4659,
+        "mode": 420
+      },
+      {
+        "path": "dist/pix-port.d.ts",
+        "size": 3408,
+        "mode": 420
+      },
+      {
+        "path": "dist/pix-port.js",
+        "size": 15035,
+        "mode": 420
+      },
+      {
+        "path": "dist/pix-profiles.d.ts",
+        "size": 3347,
+        "mode": 420
+      },
+      {
+        "path": "dist/pix-profiles.js",
+        "size": 8966,
+        "mode": 420
+      },
+      {
+        "path": "dist/private-state.d.ts",
+        "size": 395,
+        "mode": 420
+      },
+      {
+        "path": "dist/private-state.js",
+        "size": 1430,
+        "mode": 420
+      },
+      {
+        "path": "dist/process-executor.d.ts",
+        "size": 1415,
+        "mode": 420
+      },
+      {
+        "path": "dist/process-executor.js",
+        "size": 2514,
+        "mode": 420
+      },
+      {
+        "path": "dist/process-intelligence.d.ts",
+        "size": 5439,
+        "mode": 420
+      },
+      {
+        "path": "dist/process-intelligence.js",
+        "size": 38559,
+        "mode": 420
+      },
+      {
+        "path": "dist/process-profiles.d.ts",
+        "size": 3617,
+        "mode": 420
+      },
+      {
+        "path": "dist/process-profiles.js",
+        "size": 17686,
+        "mode": 420
+      },
+      {
+        "path": "dist/program-catalog.d.ts",
+        "size": 1822,
+        "mode": 420
+      },
+      {
+        "path": "dist/program-catalog.js",
+        "size": 13814,
+        "mode": 420
+      },
+      {
+        "path": "dist/program-output.d.ts",
+        "size": 2473,
+        "mode": 420
+      },
+      {
+        "path": "dist/program-output.js",
+        "size": 13580,
+        "mode": 420
+      },
+      {
+        "path": "dist/program-proxy.d.ts",
+        "size": 1910,
+        "mode": 420
+      },
+      {
+        "path": "dist/program-proxy.js",
+        "size": 22888,
+        "mode": 420
+      },
+      {
+        "path": "dist/program-registry.d.ts",
+        "size": 1816,
+        "mode": 420
+      },
+      {
+        "path": "dist/program-registry.js",
+        "size": 3575,
+        "mode": 420
+      },
+      {
+        "path": "dist/project-tools.d.ts",
+        "size": 688,
+        "mode": 420
+      },
+      {
+        "path": "dist/project-tools.js",
+        "size": 20244,
+        "mode": 420
+      },
+      {
+        "path": "dist/project-view.d.ts",
+        "size": 1466,
+        "mode": 420
+      },
+      {
+        "path": "dist/project-view.js",
+        "size": 16438,
+        "mode": 420
+      },
+      {
+        "path": "dist/protocol.d.ts",
+        "size": 4332,
+        "mode": 420
+      },
+      {
+        "path": "dist/protocol.js",
+        "size": 11,
+        "mode": 420
+      },
+      {
+        "path": "dist/provider-catalog.d.ts",
+        "size": 1411,
+        "mode": 420
+      },
+      {
+        "path": "dist/provider-catalog.js",
+        "size": 7079,
+        "mode": 420
+      },
+      {
+        "path": "dist/provider-connector.d.ts",
+        "size": 2025,
+        "mode": 420
+      },
+      {
+        "path": "dist/provider-connector.js",
+        "size": 8010,
+        "mode": 420
+      },
+      {
+        "path": "dist/provider-settings.d.ts",
+        "size": 2862,
+        "mode": 420
+      },
+      {
+        "path": "dist/provider-settings.js",
+        "size": 18180,
+        "mode": 420
+      },
+      {
+        "path": "dist/providers.d.ts",
+        "size": 2347,
+        "mode": 420
+      },
+      {
+        "path": "dist/providers.js",
+        "size": 10352,
+        "mode": 420
+      },
+      {
+        "path": "dist/run-context.d.ts",
+        "size": 2237,
+        "mode": 420
+      },
+      {
+        "path": "dist/run-context.js",
+        "size": 3636,
+        "mode": 420
+      },
+      {
+        "path": "dist/runtime.d.ts",
+        "size": 11397,
+        "mode": 420
+      },
+      {
+        "path": "dist/runtime.js",
+        "size": 87507,
+        "mode": 420
+      },
+      {
+        "path": "dist/server.d.ts",
+        "size": 11,
+        "mode": 420
+      },
+      {
+        "path": "dist/server.js",
+        "size": 1800,
+        "mode": 420
+      },
+      {
+        "path": "dist/storage.d.ts",
+        "size": 1432,
+        "mode": 420
+      },
+      {
+        "path": "dist/storage.js",
+        "size": 7788,
+        "mode": 420
+      },
+      {
+        "path": "dist/tool-details.d.ts",
+        "size": 396,
+        "mode": 420
+      },
+      {
+        "path": "dist/tool-details.js",
+        "size": 3560,
+        "mode": 420
+      },
+      {
+        "path": "dist/tools.d.ts",
+        "size": 237,
+        "mode": 420
+      },
+      {
+        "path": "dist/tools.js",
+        "size": 927,
+        "mode": 420
+      },
+      {
+        "path": "dist/tui-controller.d.ts",
+        "size": 4129,
+        "mode": 420
+      },
+      {
+        "path": "dist/tui-controller.js",
+        "size": 26613,
+        "mode": 420
+      },
+      {
+        "path": "dist/tui-labels.d.ts",
+        "size": 216,
+        "mode": 420
+      },
+      {
+        "path": "dist/tui-labels.js",
+        "size": 216,
+        "mode": 420
+      },
+      {
+        "path": "dist/tui-nav-bar.d.ts",
+        "size": 561,
+        "mode": 420
+      },
+      {
+        "path": "dist/tui-nav-bar.js",
+        "size": 2798,
+        "mode": 420
+      },
+      {
+        "path": "dist/tui-theme.d.ts",
+        "size": 527,
+        "mode": 420
+      },
+      {
+        "path": "dist/tui-theme.js",
+        "size": 2053,
+        "mode": 420
+      },
+      {
+        "path": "dist/tui-time.d.ts",
+        "size": 51,
+        "mode": 420
+      },
+      {
+        "path": "dist/tui-time.js",
+        "size": 51,
+        "mode": 420
+      },
+      {
+        "path": "dist/tui.d.ts",
+        "size": 1771,
+        "mode": 420
+      },
+      {
+        "path": "dist/tui.js",
+        "size": 22529,
+        "mode": 420
+      },
+      {
+        "path": "dist/ui-check.d.ts",
+        "size": 1497,
+        "mode": 420
+      },
+      {
+        "path": "dist/ui-check.js",
+        "size": 8202,
+        "mode": 420
+      },
+      {
+        "path": "dist/ui-frame.d.ts",
+        "size": 210,
+        "mode": 420
+      },
+      {
+        "path": "dist/ui-frame.js",
+        "size": 2406,
+        "mode": 420
+      },
+      {
+        "path": "dist/ui-templates.d.ts",
+        "size": 853,
+        "mode": 420
+      },
+      {
+        "path": "dist/ui-templates.js",
+        "size": 7205,
+        "mode": 420
+      },
+      {
+        "path": "dist/vendor/deepseek-output.d.ts",
+        "size": 6342,
+        "mode": 420
+      },
+      {
+        "path": "dist/vendor/deepseek-output.js",
+        "size": 12597,
+        "mode": 420
+      },
+      {
+        "path": "dist/vera-contract.d.ts",
+        "size": 9532,
+        "mode": 420
+      },
+      {
+        "path": "dist/vera-contract.js",
+        "size": 12664,
+        "mode": 420
+      },
+      {
+        "path": "dist/vera-dispatch-provider.d.ts",
+        "size": 1487,
+        "mode": 420
+      },
+      {
+        "path": "dist/vera-dispatch-provider.js",
+        "size": 4699,
+        "mode": 420
+      },
+      {
+        "path": "dist/vera-persona-provider.d.ts",
+        "size": 1505,
+        "mode": 420
+      },
+      {
+        "path": "dist/vera-persona-provider.js",
+        "size": 8524,
+        "mode": 420
+      },
+      {
+        "path": "dist/work-surface.d.ts",
+        "size": 1707,
+        "mode": 420
+      },
+      {
+        "path": "dist/work-surface.js",
+        "size": 10459,
+        "mode": 420
+      },
+      {
+        "path": "dist/workbench.d.ts",
+        "size": 6000,
+        "mode": 420
+      },
+      {
+        "path": "dist/workbench.js",
+        "size": 33437,
+        "mode": 420
+      },
+      {
+        "path": "dist/workspace-layout.d.ts",
+        "size": 2100,
+        "mode": 420
+      },
+      {
+        "path": "dist/workspace-layout.js",
+        "size": 8254,
+        "mode": 420
+      },
+      {
+        "path": "dist/workspace-unlock.d.ts",
+        "size": 195,
+        "mode": 420
+      },
+      {
+        "path": "dist/workspace-unlock.js",
+        "size": 3241,
+        "mode": 420
+      },
+      {
+        "path": "dist/workspace.d.ts",
+        "size": 7286,
+        "mode": 420
+      },
+      {
+        "path": "dist/workspace.js",
+        "size": 47895,
+        "mode": 420
+      },
+      {
+        "path": "docs/ARCHITECTURE.md",
+        "size": 9639,
+        "mode": 420
+      },
+      {
+        "path": "docs/AUDIT-FIXES-0.8.18.md",
+        "size": 8431,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/CR-PERSONA-20261103-01.md",
+        "size": 5903,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/CR-PIDA-OCEL-TURN-2026-11-04.md",
+        "size": 2076,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/CR-PIDA-PIX-2026-11-03.md",
+        "size": 13386,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/CR-PIDA-SCHUMPETER-2026-11-03.md",
+        "size": 10953,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/CR-PIDA-SCHUMPETER-BUILD-IDENTITY-2026-11-03.md",
+        "size": 1860,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/incoming/PERSONA-CR-PIDA-001.md",
+        "size": 4077,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/incoming/PERSONA-SITE-RESPONSE-CR-PERSONA-20261103-01.md",
+        "size": 6058,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/incoming/PIX-RESPONSE-CR-PIDA-PIX-2026-11-03.md",
+        "size": 5776,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/incoming/README.md",
+        "size": 1780,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/incoming/SCHUMPETER-CR-PIDA-20261103-01.md",
+        "size": 3626,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/incoming/SCHUMPETER-RESPONSE-CR-PIDA-SCHUMPETER-2026-11-03-01.md",
+        "size": 5586,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/incoming/source-digests.json",
+        "size": 568,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/README.md",
+        "size": 3615,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/responses/PERSONA-CR-PIDA-001.md",
+        "size": 5007,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/responses/PERSONA-SITE-CR-PERSONA-20261103-01.md",
+        "size": 2035,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/responses/PIX-CR-PIDA-PIX-2026-11-03.md",
+        "size": 2979,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/responses/SCHUMPETER-CR-PIDA-20261103-01.md",
+        "size": 4303,
+        "mode": 420
+      },
+      {
+        "path": "docs/change-requests/responses/SCHUMPETER-CURRENT-CONSUMER-20261103.md",
+        "size": 1925,
+        "mode": 420
+      },
+      {
+        "path": "docs/CHATGPT-AUTH.md",
+        "size": 10344,
+        "mode": 420
+      },
+      {
+        "path": "docs/CODEMODE.md",
+        "size": 5812,
+        "mode": 420
+      },
+      {
+        "path": "docs/COLLABORATION-1.md",
+        "size": 9585,
+        "mode": 420
+      },
+      {
+        "path": "docs/COMMANDS.md",
+        "size": 7753,
+        "mode": 420
+      },
+      {
+        "path": "docs/COMPANY-ENDPOINTS.md",
+        "size": 11675,
+        "mode": 420
+      },
+      {
+        "path": "docs/CORE-AND-HOME-HARNESS.md",
+        "size": 19219,
+        "mode": 420
+      },
+      {
+        "path": "docs/CR-FOLLOWUP-PLAN.md",
+        "size": 3779,
+        "mode": 420
+      },
+      {
+        "path": "docs/CR-FOLLOWUP-VALIDATION.md",
+        "size": 8744,
+        "mode": 420
+      },
+      {
+        "path": "docs/CR-INTAKE-VALIDATION.md",
+        "size": 9154,
+        "mode": 420
+      },
+      {
+        "path": "docs/DEEPSEEK-HARNESS-REVIEW.md",
+        "size": 35252,
+        "mode": 420
+      },
+      {
+        "path": "docs/DEEPSEEK-PATCH-VALIDATION.md",
+        "size": 11076,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-crash-capacity-child.mjs",
+        "size": 345,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-deep-lineage.log",
+        "size": 1542,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-deep-lineage.mjs",
+        "size": 4112,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-final-evidence.mjs",
+        "size": 9504,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-final-focused.log",
+        "size": 7984,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-final-generator.mjs",
+        "size": 928,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-final-lineage-corruption.log",
+        "size": 512,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-final-lineage-corruption.mjs",
+        "size": 2974,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-final-report.json",
+        "size": 15955,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-fixed-probes.log",
+        "size": 2190,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-fixed-probes.mjs",
+        "size": 5182,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-fixed-size-probe.log",
+        "size": 406,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-fixed-size-probe.mjs",
+        "size": 4534,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-lineage-corruption.mjs",
+        "size": 2989,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-ocel-baseline-followup.log",
+        "size": 11830,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-recovery-capacity.log",
+        "size": 412,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-final-independent-review-20261107/review-recovery-capacity.mjs",
+        "size": 4632,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-review-evidence/lineage-corruption/review-lineage-corruption.log",
+        "size": 466,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-review-evidence/lineage-corruption/review-lineage-corruption.mjs",
+        "size": 2989,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-review-evidence/pida-review-baseline-20261107/review-baseline-full.log",
+        "size": 138452,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-review-evidence/pida-review-baseline-20261107/review-variable-failures.log",
+        "size": 610,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-review-evidence/pida-review-delivery-20261107/review-current-full.log",
+        "size": 141590,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-review-evidence/pida-review-delivery-20261107/review-evidence.mjs",
+        "size": 3925,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-review-evidence/pida-review-delivery-20261107/review-focused.log",
+        "size": 6780,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-review-evidence/pida-review-delivery-20261107/review-initial-report.json",
+        "size": 11244,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-review-evidence/pida-review-delivery-20261107/review-probes.log",
+        "size": 2114,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-review-evidence/pida-review-delivery-20261107/review-probes.mjs",
+        "size": 4986,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-review-evidence/pida-review-delivery-20261107/review-size-probe.log",
+        "size": 392,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-review-evidence/pida-review-delivery-20261107/review-size-probe.mjs",
+        "size": 3912,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/delivery-review-evidence/pida-review-delivery-20261107/review-variable-failures.log",
+        "size": 610,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/persona-independent-review-evidence-20261107/advance_state-bundle.json",
+        "size": 26692,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/persona-independent-review-evidence-20261107/append_memory-bundle.json",
+        "size": 26690,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/persona-independent-review-evidence-20261107/expire-bundle.json",
+        "size": 26692,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/persona-independent-review-evidence-20261107/INDEPENDENT-REVIEW.md",
+        "size": 4882,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/persona-independent-review-evidence-20261107/normal-bundle.json",
+        "size": 27498,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/persona-independent-review-evidence-20261107/reference-renderer-bundle.json",
+        "size": 27555,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/persona-independent-review-evidence-20261107/result.json",
+        "size": 3760,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/persona-independent-review-evidence-20261107/revise_identity-bundle.json",
+        "size": 26690,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/persona-independent-review-evidence-20261107/revoke-bundle.json",
+        "size": 26690,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/pida-collaboration-fix-focused-output.txt",
+        "size": 7794,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/pida-collaboration-fix-source-manifest.json",
+        "size": 397,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/pida-collaboration-focused-output.txt",
+        "size": 6774,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/PIDA-COLLABORATION-LINEAGE-DELTA-20261107.md",
+        "size": 1795,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/pida-collaboration-lineage-delta-output.txt",
+        "size": 2866,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/PIDA-COLLABORATION-REVIEW-FIX-20261107.md",
+        "size": 3814,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/pida-collaboration-source-manifest.json",
+        "size": 1069,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/pida-collaboration-test-output.txt",
+        "size": 133070,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/PIDA-COLLABORATION-VALIDATION-20261107.md",
+        "size": 3159,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/pida-host-package-dry-run.json",
+        "size": 0,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/pida-host-policy-focused-output.txt",
+        "size": 7034,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/pida-owner-decisions-20261107.tsv",
+        "size": 1348,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/PIDA-OWNER-READINESS-2026-11-07.md",
+        "size": 15304,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/pida-vera-dispatch-focused-output.txt",
+        "size": 3446,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/PIDA-VERA-LIVE-SMOKE-20261107.md",
+        "size": 3790,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107-r3/advance_state-bundle.json",
+        "size": 26688,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107-r3/append_memory-bundle.json",
+        "size": 26688,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107-r3/expire-bundle.json",
+        "size": 26688,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107-r3/normal-bundle.json",
+        "size": 27497,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107-r3/reference-renderer-bundle.json",
+        "size": 27559,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107-r3/result.json",
+        "size": 3760,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107-r3/revise_identity-bundle.json",
+        "size": 26690,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107-r3/revoke-bundle.json",
+        "size": 26690,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107/advance_state-bundle.json",
+        "size": 26688,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107/append_memory-bundle.json",
+        "size": 26689,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107/expire-bundle.json",
+        "size": 26688,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107/normal-bundle.json",
+        "size": 27498,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107/reference-renderer-bundle.json",
+        "size": 27561,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107/result.json",
+        "size": 3760,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107/revise_identity-bundle.json",
+        "size": 26690,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-evidence-20261107/revoke-bundle.json",
+        "size": 26687,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-live-smoke-20261107/observation-bundle.json",
+        "size": 15967,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-live-smoke-20261107/result.json",
+        "size": 2083,
+        "mode": 420
+      },
+      {
+        "path": "docs/development/vera-dispatch-live-smoke-20261107/start.json",
+        "size": 1256,
+        "mode": 420
+      },
+      {
+        "path": "docs/EXECUTION-READINESS.md",
+        "size": 13720,
+        "mode": 420
+      },
+      {
+        "path": "docs/EXTENSIONS.md",
+        "size": 4779,
+        "mode": 420
+      },
+      {
+        "path": "docs/HARNESS-ADOPTION-STRATEGY.md",
+        "size": 9784,
+        "mode": 420
+      },
+      {
+        "path": "docs/images/pida-studio-20261020.jpg",
+        "size": 85183,
+        "mode": 420
+      },
+      {
+        "path": "docs/INTERFACE-DIRECTION.md",
+        "size": 9691,
+        "mode": 420
+      },
+      {
+        "path": "docs/MAGI-ADOPTION-PATCH-PLAN.md",
+        "size": 7742,
+        "mode": 420
+      },
+      {
+        "path": "docs/MAGI-ADOPTION-USAGE.md",
+        "size": 5107,
+        "mode": 420
+      },
+      {
+        "path": "docs/MAGI-ADOPTION-VALIDATION.md",
+        "size": 6302,
+        "mode": 420
+      },
+      {
+        "path": "docs/MANAGED-MCP.md",
+        "size": 6654,
+        "mode": 420
+      },
+      {
+        "path": "docs/MIXED-PERSONA-0.8.9.md",
+        "size": 5231,
+        "mode": 420
+      },
+      {
+        "path": "docs/MULTI-AGENT-0.8.14.md",
+        "size": 6434,
+        "mode": 420
+      },
+      {
+        "path": "docs/MULTI-AGENT-IMPLEMENTATION.md",
+        "size": 5111,
+        "mode": 420
+      },
+      {
+        "path": "docs/MULTI-AGENT-WORKSPACE-DESIGN.md",
+        "size": 15207,
+        "mode": 420
+      },
+      {
+        "path": "docs/ORDERED-DEVELOPMENT-20261105.md",
+        "size": 4637,
+        "mode": 420
+      },
+      {
+        "path": "docs/ORGANIZATION-0.8.17.md",
+        "size": 8610,
+        "mode": 420
+      },
+      {
+        "path": "docs/PERSISTENT-AGENTS.md",
+        "size": 11700,
+        "mode": 420
+      },
+      {
+        "path": "docs/PERSISTENT-CORE-PATCH-PLAN.md",
+        "size": 5720,
+        "mode": 420
+      },
+      {
+        "path": "docs/PERSISTENT-CORE-VALIDATION.md",
+        "size": 8154,
+        "mode": 420
+      },
+      {
+        "path": "docs/PERSONA-PROVIDER.md",
+        "size": 15179,
+        "mode": 420
+      },
+      {
+        "path": "docs/PI-NATIVE-ORG-GAPS.md",
+        "size": 13156,
+        "mode": 420
+      },
+      {
+        "path": "docs/PI-NATIVE-VALIDATION.md",
+        "size": 13530,
+        "mode": 420
+      },
+      {
+        "path": "docs/PIX-CAPABILITIES.md",
+        "size": 7508,
+        "mode": 420
+      },
+      {
+        "path": "docs/PIX-OCEL-0.8.10.md",
+        "size": 11596,
+        "mode": 420
+      },
+      {
+        "path": "docs/PIX-PROFILES.md",
+        "size": 7084,
+        "mode": 420
+      },
+      {
+        "path": "docs/PRIVATE-CONNECTORS.md",
+        "size": 6775,
+        "mode": 420
+      },
+      {
+        "path": "docs/PROCESS-INTELLIGENCE.md",
+        "size": 9599,
+        "mode": 420
+      },
+      {
+        "path": "docs/PROGRAM-OUTPUT.md",
+        "size": 3544,
+        "mode": 420
+      },
+      {
+        "path": "docs/PROGRAM-PROXIES.md",
+        "size": 7034,
+        "mode": 420
+      },
+      {
+        "path": "docs/PROJECT-CODING.md",
+        "size": 5044,
+        "mode": 420
+      },
+      {
+        "path": "docs/RECOVERY.md",
+        "size": 5649,
+        "mode": 420
+      },
+      {
+        "path": "docs/RUNTIME-STABILIZATION.md",
+        "size": 8512,
+        "mode": 420
+      },
+      {
+        "path": "docs/SECURITY.md",
+        "size": 14577,
+        "mode": 420
+      },
+      {
+        "path": "docs/SHARED-WORK-SURFACE-DESIGN.md",
+        "size": 29810,
+        "mode": 420
+      },
+      {
+        "path": "docs/TUI-0.8.8.md",
+        "size": 6502,
+        "mode": 420
+      },
+      {
+        "path": "docs/TUI-0.8.11.md",
+        "size": 5471,
+        "mode": 420
+      },
+      {
+        "path": "docs/TUI-0.8.17.md",
+        "size": 3002,
+        "mode": 420
+      },
+      {
+        "path": "docs/TUI-PATCH-PLAN.md",
+        "size": 2072,
+        "mode": 420
+      },
+      {
+        "path": "docs/TUI-VALIDATION.md",
+        "size": 6812,
+        "mode": 420
+      },
+      {
+        "path": "docs/TUI.md",
+        "size": 9884,
+        "mode": 420
+      },
+      {
+        "path": "docs/UI-CHECKS.md",
+        "size": 4368,
+        "mode": 420
+      },
+      {
+        "path": "docs/UI-STUDIO.md",
+        "size": 8458,
+        "mode": 420
+      },
+      {
+        "path": "docs/UPSTREAM.md",
+        "size": 4355,
+        "mode": 420
+      },
+      {
+        "path": "docs/USER-GUIDE.ko.md",
+        "size": 30286,
+        "mode": 420
+      },
+      {
+        "path": "docs/VALIDATION.md",
+        "size": 21798,
+        "mode": 420
+      },
+      {
+        "path": "docs/VERA-DISPATCH-0.1.md",
+        "size": 5173,
+        "mode": 420
+      },
+      {
+        "path": "docs/WORK-SURFACE-0.8.16.md",
+        "size": 3444,
+        "mode": 420
+      },
+      {
+        "path": "docs/WORKBENCH.md",
+        "size": 9606,
+        "mode": 420
+      },
+      {
+        "path": "docs/WORKSPACE.md",
+        "size": 16844,
+        "mode": 420
+      },
+      {
+        "path": "examples/schumpeter-host.mjs",
+        "size": 6364,
+        "mode": 420
+      },
+      {
+        "path": "examples/vera-dispatch-persona.mjs",
+        "size": 4880,
+        "mode": 420
+      },
+      {
+        "path": "examples/web/agents.js",
+        "size": 28081,
+        "mode": 420
+      },
+      {
+        "path": "examples/web/app.js",
+        "size": 48840,
+        "mode": 420
+      },
+      {
+        "path": "examples/web/commands.js",
+        "size": 11914,
+        "mode": 420
+      },
+      {
+        "path": "examples/web/composition.js",
+        "size": 5315,
+        "mode": 420
+      },
+      {
+        "path": "examples/web/fleet.js",
+        "size": 16748,
+        "mode": 420
+      },
+      {
+        "path": "examples/web/index.html",
+        "size": 35801,
+        "mode": 420
+      },
+      {
+        "path": "examples/web/run-details.js",
+        "size": 3954,
+        "mode": 420
+      },
+      {
+        "path": "examples/web/run-input.js",
+        "size": 3577,
+        "mode": 420
+      },
+      {
+        "path": "examples/web/run-state.js",
+        "size": 7158,
+        "mode": 420
+      },
+      {
+        "path": "examples/web/studio.js",
+        "size": 57484,
+        "mode": 420
+      },
+      {
+        "path": "examples/web/style.css",
+        "size": 47725,
+        "mode": 420
+      },
+      {
+        "path": "fixtures/vera-dispatch/producer-source-lock.json",
+        "size": 1490,
+        "mode": 420
+      },
+      {
+        "path": "package.json",
+        "size": 2038,
+        "mode": 420
+      },
+      {
+        "path": "packs/debugging/SKILL.md",
+        "size": 9531,
+        "mode": 420
+      },
+      {
+        "path": "packs/licenses/superpowers.txt",
+        "size": 1071,
+        "mode": 420
+      },
+      {
+        "path": "packs/pix/SKILL.md",
+        "size": 3397,
+        "mode": 420
+      },
+      {
+        "path": "packs/sources.json",
+        "size": 398,
+        "mode": 420
+      },
+      {
+        "path": "packs/verification/SKILL.md",
+        "size": 3647,
+        "mode": 420
+      },
+      {
+        "path": "scripts/pix-worker.py",
+        "size": 34661,
+        "mode": 420
+      },
+      {
+        "path": "scripts/task.mjs",
+        "size": 1028,
+        "mode": 420
+      },
+      {
+        "path": "scripts/vera-dispatch-host-probe.py",
+        "size": 4067,
+        "mode": 420
+      }
+    ],
+    "entryCount": 323,
+    "bundled": []
+  }
+]

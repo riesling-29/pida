@@ -1,0 +1,14 @@
+✔ agent HTTP routes enforce identity, ownership and write/tool grants before accessing private state (382.3504ms)
+✔ native Pi turns materialize standard OCEL, preserve IDs through restart, and retain HTTP ownership (271.0886ms)
+✔ real project shell runs tests, reports nonzero exit and strips provider environment (604.7015ms)
+✔ foreground shell timeout/cancellation are uncertain effects and output is bounded (1873.8761ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3142.2977
+
+STDERR

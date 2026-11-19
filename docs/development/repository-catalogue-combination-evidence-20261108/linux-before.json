@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "distribution_id": "pida-0.8.18+schumpeter.e9a1d31140bc.linux-x64",
+  "source_commit": "e9a1d31140bcff34e3c9ef0f82f4b3dbca0ddd68",
+  "files": 15824,
+  "tree_sha256": "15c30e5722c78b32746ac406f1bfe3606bb81c1b3d5c26392094dc2e77e25313"
+}

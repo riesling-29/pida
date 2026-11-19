@@ -1,0 +1,158 @@
+import { readRepositoryProfile } from './repository-profile.mjs';
+// Trusted parent-process entrypoint. The ready line is a private credential transport, NOT a log.
+import { mkdir, readdir, writeFile, readFile } from 'node:fs/promises';
+import { existsSync, lstatSync } from 'node:fs';
+import { resolve, join, isAbsolute } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
+import { randomBytes } from 'node:crypto';
+import { once } from 'node:events';
+import { resolveExecutionPolicy } from '../dist/execution-policy.js';
+import { initWorkspace, readConfig, createWorkspace } from '../dist/workspace.js';
+import { createCollaborationPolicyClient } from '../dist/collaboration-policy-client.js';
+import { ChatGPTCredentialStore } from '../dist/chatgpt-auth.js';
+import { validateNativeProvider } from '../dist/provider-catalog.js';
+import { lotStatusTool } from '../dist/tools.js';
+import { unlockWorkspaceState } from '../dist/workspace-unlock.js';
+import { digest, sourceDigest, readHostManifest, validateHostManifest, saveHostFile, acquireHostLock } from './host-workspace.mjs';
+
+const args = {};
+for (let i = 2; i < process.argv.length; i += 2) {
+  if (!['--workspace', '--host-id', '--workspace-mode', '--provider-workspace', '--persona-module', '--execution-policy'].includes(process.argv[i]) || !process.argv[i + 1] || args[process.argv[i].slice(2)] !== undefined) throw Error('INVALID_HOST_ARGUMENT');
+  args[process.argv[i].slice(2)] = process.argv[i + 1];
+}
+let app, persona, shutdownPromise, releaseHostLock;
+function shutdown() {
+  return shutdownPromise ??= (async () => {
+    // Stop accepting first. A rejected or stuck runtime must not retain its HTTP listener.
+    const actions = [];
+    if (app) {
+      actions.push(new Promise((resolve, reject) => {
+        if (!app.server.listening) return resolve();
+        app.server.close(error => error ? reject(error) : resolve()); app.server.closeAllConnections();
+      }));
+      actions.push(Promise.resolve().then(() => app.close()));
+    }
+    actions.push(Promise.resolve().then(() => persona?.close?.()));
+    let timer;
+    try {
+      const results = await Promise.race([Promise.allSettled(actions), new Promise((_, reject) => {
+        timer = setTimeout(() => reject(Error('HOST_SHUTDOWN_TIMEOUT')), 5000);
+      })]);
+      if (results.some(result => result.status === 'rejected')) throw Error('HOST_SHUTDOWN_FAILED');
+    } finally { clearTimeout(timer); releaseHostLock?.(); }
+  })();
+}
+function stop() {
+  void shutdown().then(() => process.exit(0), error => {
+    process.stderr.write(error.message === 'HOST_SHUTDOWN_TIMEOUT' ? 'HOST_SHUTDOWN_TIMEOUT\n' : 'HOST_SHUTDOWN_FAILED\n'); process.exit(1);
+  });
+}
+try {
+  if (!args.workspace || !args['host-id']) throw Error('HOST_ARGUMENT_REQUIRED');
+  const directory = resolve(args.workspace), hostId = args['host-id'];
+  const workspaceMode = args['workspace-mode'] ?? 'fresh';
+  if (!['fresh', 'resume'].includes(workspaceMode)) throw Error('HOST_WORKSPACE_MODE_INVALID');
+  const policy = createCollaborationPolicyClient({ hostId, authorizationUrl: process.env.PIDA_SCHUMPETER_AUTH_URL ?? '', token: () => process.env.PIDA_SCHUMPETER_AUTH_TOKEN ?? '' });
+  const policyToken = process.env.PIDA_SCHUMPETER_AUTH_TOKEN;
+  if (!policyToken || policyToken.length < 32 || /[\r\n]/.test(policyToken)) throw Error('HOST_POLICY_TOKEN_REQUIRED');
+  if (existsSync(directory) && (lstatSync(directory).isSymbolicLink() || !lstatSync(directory).isDirectory())) throw Error('HOST_STATE_UNSAFE');
+  if (workspaceMode === 'fresh' && existsSync(directory) && (await readdir(directory)).length) throw Error('HOST_WORKSPACE_NOT_EMPTY');
+  if (workspaceMode === 'resume' && !existsSync(directory)) throw Error('HOST_MANIFEST_INVALID');
+  const repositoryMode = process.env.PIDA_REPOSITORY_PROFILE !== undefined;
+  const previousManifest = workspaceMode === 'resume' ? readHostManifest(directory) : null;
+  if (previousManifest && (previousManifest.schema_version !== (repositoryMode ? 'pida.local-host.workspace/3' : 'pida.local-host.workspace/2') || typeof previousManifest.execution_policy_id !== 'string')) throw Error('HOST_RESUME_MISMATCH');
+  const executionPolicy = resolveExecutionPolicy(args['execution-policy'] ?? previousManifest?.execution_policy_id ?? 'smoke/1');
+  if (previousManifest && (previousManifest.execution_policy_id !== executionPolicy.id || previousManifest.execution_policy_digest !== executionPolicy.digest)) throw Error('HOST_RESUME_MISMATCH');
+  let nativeCredentials, selectedProvider = { kind: 'mock' }, providerSourceDigest = '';
+  if (args['provider-workspace']) {
+    const providerDirectory = resolve(args['provider-workspace']);
+    if (providerDirectory === directory) throw Error('HOST_PROVIDER_WORKSPACE_MUST_BE_DISTINCT');
+    const approved = JSON.parse(await readFile(join(providerDirectory, 'pida.config.json'), 'utf8'));
+    if (approved.provider?.kind !== 'native' || approved.provider.authMode !== 'chatgpt') throw Error('HOST_PROVIDER_PROFILE_UNSUPPORTED');
+    selectedProvider = { ...approved.provider, thinkingLevel: 'low' }; validateNativeProvider(selectedProvider);
+    providerSourceDigest = digest(JSON.stringify({ provider: selectedProvider, stateDir: approved.stateDir }));
+    nativeCredentials = new ChatGPTCredentialStore(providerDirectory, approved.stateDir);
+    if (!nativeCredentials.status().connected) throw Error('HOST_PROVIDER_CREDENTIAL_UNAVAILABLE');
+  }
+  // Paths only from trusted parent configuration; unknown parent-private locations are checked by that parent.
+  const protectedPaths = [args['provider-workspace'], args['persona-module'], process.env.PIDA_PERSONA_BRIDGE_CONFIG, process.env.PIDA_PERSONA_BRIDGE_STORE, process.env.PIDA_PERSONA_BRIDGE_EXECUTABLE, process.env.PIDA_PERSONA_CATALOGUE].filter(Boolean);
+  if (repositoryMode) {
+    const bridgePrefixes = JSON.parse(process.env.PIDA_PERSONA_BRIDGE_PREFIX_ARGS ?? '[]');
+    if (Array.isArray(bridgePrefixes)) protectedPaths.push(...bridgePrefixes.filter(p => typeof p === 'string' && isAbsolute(p)));
+    if (process.env.PIDA_PERSONA_CATALOGUE) {
+      const bytes = await readFile(process.env.PIDA_PERSONA_CATALOGUE);
+      if (bytes.length > 262144) throw Error('HOST_PERSONA_CATALOGUE_INVALID');
+      const catalogue = JSON.parse(bytes);
+      for (const source of catalogue.sources ?? []) {
+        if (Array.isArray(source.bridge?.prefix_args)) protectedPaths.push(...source.bridge.prefix_args.filter(p => typeof p === 'string' && isAbsolute(p)));
+        for (const key of ['config','store','executable']) if (typeof source.bridge?.[key] === 'string') protectedPaths.push(source.bridge[key]);
+      }
+    }
+  }
+  const repositoryOptions = { hostId, executionPolicyId: executionPolicy.id, workspaceDirectory: directory,
+    runtimeDirectory: fileURLToPath(new URL('../', import.meta.url)), protectedPaths };
+  const repository = repositoryMode ? readRepositoryProfile(repositoryOptions) : null;
+  const expectedManifest = configDigest => ({ schema_version: repository ? 'pida.local-host.workspace/3' : 'pida.local-host.workspace/2',
+    ...(repository ? { repository_profile_id: repository.capability.id, repository_profile_digest: repository.capability.digest } : {}), execution_policy_id: executionPolicy.id, execution_policy_digest: executionPolicy.digest, host_id: hostId, principal_id: 'local-user', node_version: process.versions.node,
+    workspace_directory: directory, source_digest: sourceDigest(fileURLToPath(new URL('../', import.meta.url))), config_digest: configDigest,
+    policy_credential_digest: digest(policyToken), provider_workspace: args['provider-workspace'] ? resolve(args['provider-workspace']) : '',
+    provider_source_digest: providerSourceDigest, persona_module: args['persona-module'] ? resolve(args['persona-module']) : '',
+    persona_module_digest: personaModuleDigest });
+  const personaModule = args['persona-module'] ? await import(pathToFileURL(resolve(args['persona-module'])).href) : null;
+  const personaIdentity = typeof personaModule?.hostPersonaIdentity === 'function' ? await personaModule.hostPersonaIdentity({ hostId }) : '';
+  if (typeof personaIdentity !== 'string' || personaIdentity.length > 256) throw Error('HOST_PERSONA_MODULE_INVALID');
+  const personaModuleDigest = args['persona-module'] ? digest(Buffer.concat([await readFile(resolve(args['persona-module'])), Buffer.from(personaIdentity)])) : '';
+  if (workspaceMode === 'resume') validateHostManifest(directory, expectedManifest(digest(await readFile(join(directory, 'pida.config.json')))));
+  // Stage every required producer handshake before stale-lock recovery can mutate host state.
+  if (args['persona-module']) {
+    const module = personaModule;
+    if (typeof module.createHostPersona !== 'function') throw Error('HOST_PERSONA_MODULE_INVALID');
+    persona = await module.createHostPersona({ hostId, personaIdentity, workspaceDirectory: directory, async taskScope(taskId, agentId) {
+      if (!app?.agents || agentId === 'main') throw Error('HOST_PERSONA_ORGANIZATION_REQUIRED');
+      const principal = { id: 'local-user', permissions: [] }, job = app.agents.getJob(taskId, principal);
+      if (job.agentId !== agentId) throw Error('HOST_PERSONA_TASK_MISMATCH');
+      for (const org of app.agents.listOrganizations(principal)) {
+        const view = await app.agents.getOrganization(org.id, principal);
+        if (view.tasks.some(t => t.id === job.organizationTaskId && t.agentId === agentId)
+          && view.attempts.some(a => a.id === job.attemptId && a.taskId === job.organizationTaskId && a.jobId === job.id))
+          return { organizationSessionId: org.id, organizationTaskId: job.organizationTaskId, attemptId: job.attemptId, jobId: job.id };
+      }
+      throw Error('HOST_PERSONA_ORGANIZATION_REQUIRED');
+    } });
+    const globalProvider = typeof persona?.personaProvider === 'function', catalogue = Array.isArray(persona?.personaSources);
+    if (globalProvider === catalogue || typeof persona?.close !== 'function' || !/^[A-Za-z0-9._/-]{1,100}$/.test(persona.mode ?? '')) throw Error('HOST_PERSONA_MODULE_INVALID');
+  }
+  // Recheck the immutable selection after asynchronous producer readiness, before recovery writes.
+  if (repository && readRepositoryProfile(repositoryOptions).capability.digest !== repository.capability.digest) throw Error('HOST_REPOSITORY_CHANGED');
+  await mkdir(directory, { recursive: true }); releaseHostLock = acquireHostLock(directory);
+  // Repeat validation under exclusive ownership; never rewrite mismatched profiles or their runtime state.
+  if (workspaceMode === 'resume') {
+    validateHostManifest(directory, expectedManifest(digest(await readFile(join(directory, 'pida.config.json')))));
+    try { unlockWorkspaceState(join(directory, '.pida')); } catch { throw Error('HOST_RUNTIME_LOCK_UNVERIFIED'); }
+  } else initWorkspace(directory);
+  const apiToken = randomBytes(32).toString('hex'); process.env.PIDA_API_TOKEN = apiToken;
+  const config = workspaceMode === 'resume' ? readConfig(directory) : { ...readConfig(directory), preset: 'headless', provider: selectedProvider, tools: { directory: 'tools', enabled: [] }, codingPacks: [],
+    agents: { enabled: true, maxConcurrent: 2 }, workbench: { enabled: true }, permissions: ['pida:collaborate', 'workbench:read', 'workbench:write', 'workbench:history'],
+    runtime: { maxRunMs: executionPolicy.run_timeout_ms, maxProviderRetries: 0, maxOutputRetries: 0, autoCompaction: false, maxTotalTokens: 16384 } };
+  if (workspaceMode === 'fresh' && repository) { config.project = repository.project; config.programs = repository.programs; config.permissions.push(...repository.permissions); }
+  if (workspaceMode === 'fresh') await writeFile(join(directory, 'pida.config.json'), JSON.stringify(config, null, 2) + '\n');
+  if (workspaceMode === 'fresh' && config.provider.kind === 'mock') {
+    config.permissions.push('lots:read'); await writeFile(join(directory, 'pida.config.json'), JSON.stringify(config, null, 2) + '\n');
+  }
+  app = await createWorkspace(directory, { executionPolicy, ...(repository ? { repositoryProfile: repository.capability } : {}), collaboration: policy, nativeCredentials,
+    ...(config.provider.kind === 'mock' ? { extensions: [{ id: 'host-synthetic-lot', scope: 'workspace', activate: () => ({ tools: [lotStatusTool] }) }] } : {}),
+    ...(persona ? (persona.personaSources ? { personaSources: persona.personaSources } : { personaProvider: persona.personaProvider }) : {}) });
+  if (workspaceMode === 'fresh') saveHostFile(join(directory, '.pida-host.json'), JSON.stringify(expectedManifest(digest(await readFile(join(directory, 'pida.config.json')))), null, 2) + '\n');
+  saveHostFile(join(directory, '.env'), 'PIDA_API_TOKEN=' + apiToken + '\n');
+  app.server.listen(0, '127.0.0.1'); await once(app.server, 'listening');
+  const capabilities = app.agents.collaborationCapabilities({ id: 'local-user', permissions: ['pida:agents'] });
+  process.stdout.write(JSON.stringify({ type: 'pida-host-ready', protocol: repository ? 'pida.local-host/3' : 'pida.local-host/2', ...(repository ? { repository_profile: repository.capability } : {}), execution_policy: executionPolicy, host_id: hostId,
+    base_url: 'http://127.0.0.1:' + app.server.address().port, api_token: apiToken, principal_id: 'local-user', capabilities,
+    provider_mode: config.provider.kind === 'mock' ? 'mock' : 'configured-native-chatgpt', persona_mode: persona?.mode ?? 'pida-local', workspace_mode: workspaceMode }) + '\n');
+  process.stdin.resume(); process.stdin.once('end', stop);
+  for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, stop);
+} catch (error) {
+  await shutdown().catch(() => {});
+  const code = /^[A-Z][A-Z0-9_]{1,100}$/.test(error.code ?? error.message ?? '') ? error.code ?? error.message : 'PIDA_HOST_START_FAILED';
+  process.stderr.write(code + '\n'); process.exit(1);
+}

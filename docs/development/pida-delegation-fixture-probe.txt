@@ -1,0 +1,31 @@
+{"probe":"depth-limit","status":"limited","code":"RUN_TIMEOUT","textLength":5872,"activity":[{"type":"run_started"},{"type":"turn_started"},{"type":"tool_started"},{"type":"tool_failed","code":"AGENT_DELEGATION_LIMIT"},{"type":"turn_finished"},{"type":"turn_started"},{"type":"provider_attempt_failed","code":"PROVIDER_FAILED"},{"type":"turn_finished"},{"type":"run_finished","code":"RUN_TIMEOUT"}],"all":[[{"status":"limited","code":"RUN_TIMEOUT","textLength":5780}],[{"status":"limited","code":"RUN_TIMEOUT","textLength":5676}],[{"status":"limited","code":"RUN_TIMEOUT","textLength":5872}]]}
+✖ actual delegation chain stops at depth two and job summaries are bounded result data (15131.7239ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 16025.7372
+
+✖ failing tests:
+
+test at test\.pida-test-depth-probe.mjs:65:1
+✖ actual delegation chain stops at depth two and job summaries are bounded result data (15131.7239ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'limited'
+  - 'failed'
+  
+      at TestContext.<anonymous> (file:///D:/ChantaResearchGroup/pida/test/.pida-test-depth-probe.mjs:76:376)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'limited',
+    expected: 'failed',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

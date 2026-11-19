@@ -1,0 +1,25 @@
+{
+  "source_commit": "0f1b895d72d2f05a7c4fa21a2c9a5070aad71d8f",
+  "baseline_source": "b7f7d523c6fede56d508575a6bb78afa343e5566",
+  "sidecar_sha256": "862dea17a42aa001e9e20c810f36a97d3b577d985af908e98d19b676df701973",
+  "vendor_changes": [],
+  "dependencies_identical": true,
+  "dependencies": 125,
+  "own_package_files_verified": 586,
+  "dist_files_verified": 152,
+  "dist_changes": [
+    "pida/dist/agent-supervisor.d.ts",
+    "pida/dist/agent-supervisor.js",
+    "pida/dist/execution-policy.d.ts",
+    "pida/dist/execution-policy.js",
+    "pida/dist/index.d.ts",
+    "pida/dist/index.js",
+    "pida/dist/provider-settings.d.ts",
+    "pida/dist/workspace.d.ts",
+    "pida/dist/workspace.js"
+  ],
+  "new_modules": [
+    "pida/examples/vera-local-reference-catalogue.mjs"
+  ],
+  "scope": "Every own packaged file matches frozen-source/archive build; complete vendor byte/mode/notice inventory unchanged. Independent artifact review pending."
+}

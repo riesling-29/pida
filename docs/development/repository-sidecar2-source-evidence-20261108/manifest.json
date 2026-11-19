@@ -1,0 +1,38 @@
+{
+  "base_repository_source": "b5252fba5a66c2c40dca49017a4a4b929a47170a",
+  "source_files": {
+    "scripts/managed-host-capabilities.mjs": "06102764b2dfb1ee35c7ad3b9d8e70f22c60eeb2ad4c8b354b7fe35383aa3828",
+    "scripts/probe-managed-capability-distribution.mjs": "a02d8c3686e12c92ba1fdb1b5867152ca29b5edf4bb95802eda0f69c958664b1",
+    "scripts/probe-repository-distribution.mjs": "043a5673ca6d7de10e8b0f5b40ff8edb5030c9db9b68adf735b549a3b371a999",
+    "test/managed-host-capabilities.test.mjs": "f25b5eac5154253d078618672879f30e573b7d56b1e5daa50c5521069ac04835",
+    "package.json": "be162537b821fb0a0cf9d71ffa7894a14277fb0ee1799902caff8026c9acd384",
+    "fixtures/repository-profile/managed-descriptor-v1.json": "22d1a2839a8e42deb23a5601be8b7d5ee7ce547a51d2f646f507aeeac2c7d13d"
+  },
+  "windows_tests": 4,
+  "linux_tests": 4,
+  "npm_dry_run_required_files": [
+    {
+      "path": "fixtures/repository-profile/capability-v1.json",
+      "size": 785,
+      "mode": 420
+    },
+    {
+      "path": "fixtures/repository-profile/managed-descriptor-v1.json",
+      "size": 355,
+      "mode": 420
+    },
+    {
+      "path": "examples/repository-profile.mjs",
+      "size": 5500,
+      "mode": 420
+    },
+    {
+      "path": "dist/repository-profile.js",
+      "size": 2697,
+      "mode": 420
+    }
+  ],
+  "npm_dry_run_raw_sha256": "30b7b6e188d2b00a71288ef6d967d5bd8ec50656517f69580daf55cb66c309da",
+  "independent_generator_gate": "PENDING",
+  "artifacts": "NOT_GENERATED"
+}

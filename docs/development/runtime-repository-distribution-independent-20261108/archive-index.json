@@ -1,0 +1,124 @@
+{
+  "source_commit": "e9a1d31140bcff34e3c9ef0f82f4b3dbca0ddd68",
+  "report_sha256": "af7afe74771294a9f4859a57f5a70fcbb49d33109a17c415f023b540e81a65bf",
+  "original_index_sha256": "5a723b73f3a17645ca51efaa37482a84bd809941b48ffd16a143a0014d2c08d6",
+  "archive_sha256": "3304b1aad476e12881256f29b5603144cbfe82425ccb0332a27d7988f8d87f62",
+  "original_files": [
+    {
+      "name": "audit-delta.mjs",
+      "bytes": 2717,
+      "sha256": "8c1847a487e0f5951d8765dfe17674b102dd05e4844194ec2c7199c96635434d"
+    },
+    {
+      "name": "INDEPENDENT-ARTIFACT-REVIEW.md",
+      "bytes": 8958,
+      "sha256": "af7afe74771294a9f4859a57f5a70fcbb49d33109a17c415f023b540e81a65bf"
+    },
+    {
+      "name": "linux-after-verifier.json",
+      "bytes": 242,
+      "sha256": "2497cb888adf228a7378f8c3ee112b57679ead2cf9121f49e97b0cecb156e0d8"
+    },
+    {
+      "name": "linux-before-verifier.json",
+      "bytes": 242,
+      "sha256": "2497cb888adf228a7378f8c3ee112b57679ead2cf9121f49e97b0cecb156e0d8"
+    },
+    {
+      "name": "linux-delta.json",
+      "bytes": 11051,
+      "sha256": "bd77783f14325794dda4a64f9d96e6c3d5e0816e9fb97ea4f1b3278cf41e880a"
+    },
+    {
+      "name": "linux-independent-tree-diff.json",
+      "bytes": 220,
+      "sha256": "6caccd184267b936acd4a60b8278b7ea925979e877e7d75800485be4b1ab80b3"
+    },
+    {
+      "name": "linux-retained.json",
+      "bytes": 3777,
+      "sha256": "2dd8836c2b1628a6609b0da03c0e12231f3409ed6906afc0c865aa6ce0df51d7"
+    },
+    {
+      "name": "metadata.json",
+      "bytes": 5887,
+      "sha256": "5b921f098e2c531285a7cb6af129c3bb061874914ceba3e43f76f9121e8931c2"
+    },
+    {
+      "name": "metadata.py",
+      "bytes": 4124,
+      "sha256": "9003e80a5d54386caa8148fe0bb75c9fd48359c46b6566e94bf50241cd6bd0f9"
+    },
+    {
+      "name": "prepare-reference.py",
+      "bytes": 791,
+      "sha256": "aac62affdb0c69695f1e13b8dce41af8ab013139778b629794dc0de2136244d5"
+    },
+    {
+      "name": "reference-source-provision.json",
+      "bytes": 1531,
+      "sha256": "3d647fdfbb84cf4d4910178c58c8bdac160345a55dc353d66b6e00a65449b527"
+    },
+    {
+      "name": "windows-after-verifier.json",
+      "bytes": 242,
+      "sha256": "ed0b5774bab24f65a24279618ec1ec777b7c2d8e0c2478322eea1bca6549e42c"
+    },
+    {
+      "name": "windows-before-verifier.json",
+      "bytes": 242,
+      "sha256": "ed0b5774bab24f65a24279618ec1ec777b7c2d8e0c2478322eea1bca6549e42c"
+    },
+    {
+      "name": "windows-delta.json",
+      "bytes": 11051,
+      "sha256": "553b472027846f4e0b16348c3cea77f5b8a2e33c00541d49c49fefb64f78f760"
+    },
+    {
+      "name": "windows-retained.json",
+      "bytes": 3777,
+      "sha256": "e95b2fbec3c89508976caa6a0cda9fcdc6f6cdce2aa1e0817365b664aea21b88"
+    },
+    {
+      "name": "linux-repository/repository-probe.json",
+      "bytes": 942,
+      "sha256": "881075a62836ee97ddc54c7cac0d101dc59b873678d7e170c1e7ca914f75a8b3"
+    },
+    {
+      "name": "linux-repository/repository-probe.log",
+      "bytes": 1435,
+      "sha256": "cb247fe62b4fc76bd49dc94d0418beb5d2d3aec7350899569276f59f342dcf70"
+    },
+    {
+      "name": "scripts/author-repository-original.mjs",
+      "bytes": 4179,
+      "sha256": "4a61276c653db4dba9683d36e5c26caeafb4b23f17e7705afbe1dd022666ff0c"
+    },
+    {
+      "name": "scripts/probe-repository.mjs",
+      "bytes": 4556,
+      "sha256": "104244aa3adaff540ca111bdaf3f5c36ef7dcf99d14b1267263afbe918f71c99"
+    },
+    {
+      "name": "scripts/probe-retained.mjs",
+      "bytes": 10861,
+      "sha256": "01e9eae7c67ef1b1abd774bb2780e8fb4a80f8ef82a7f5e444e7a3e0202ac6e0"
+    },
+    {
+      "name": "test/repository-profile.test.mjs",
+      "bytes": 22188,
+      "sha256": "2c2ed4ede085da958ecac5bf8bcb361490c7f0ddcd15ef181989d026e8817ed7"
+    },
+    {
+      "name": "windows-repository/repository-probe.json",
+      "bytes": 942,
+      "sha256": "26dcaaaa1f5a5d27b11ca262caf8dadbf3787774f7abe00a8558798a83ec3534"
+    },
+    {
+      "name": "windows-repository/repository-probe.log",
+      "bytes": 1409,
+      "sha256": "c7d0668cf5cfbcae92f7c2f1378a3da0b3a6756f4307837090f7830192787faa"
+    }
+  ],
+  "verdict": "Independent bounded Windows/Linux artifact PASS; parent/combined repository-catalogue/GUI/real-provider gates separate"
+}

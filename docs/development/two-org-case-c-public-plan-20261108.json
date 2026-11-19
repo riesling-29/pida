@@ -1,0 +1,172 @@
+{
+  "schema_version": "pida.real-case-public-plan/2",
+  "state": "PREPARED_NOT_RELEASED",
+  "case_id": "4db965ff-29cd-440b-ada0-e8b5b36a9579",
+  "runtime_source": "2b787fd4c234747da22726ec03a3e4c6619ae95f",
+  "helper_source": "56236d289dbf98aa0119d3228ef68bcfeb15c72f",
+  "workspace": "C:/Users/migeo/AppData/Local/Schumpeter/workspaces/real-case-4db965ff",
+  "native_host_workspace": "C:/Users/migeo/AppData/Local/Schumpeter/hosts/0f9da16d66fab9dd",
+  "host_id": "desktop-39bec59bcaaa4de2",
+  "persistent_orgs": {
+    "A": "f01e8e64-5a5d-419a-874b-0689d5fa742f",
+    "B": "5ae3509b-84d9-4f4b-8bc1-3d5f07b46541"
+  },
+  "selected_profile_id": "47a41a0d-ca93-40a7-b8ca-7476a67a7db1",
+  "plan": {
+    "schema_version": "pida.two-org-smoke.plan/1",
+    "case_id": "4db965ff-29cd-440b-ada0-e8b5b36a9579",
+    "profiles": {
+      "root": "ca5f321d-bbd6-425c-9b0c-34cf521338e3",
+      "child": "373f7777-f041-4e66-8b5f-d46a6b19b254",
+      "answer": "d6df38ab-e294-4c2c-bae2-b2f72bcdbfb1"
+    },
+    "native_goals": 2,
+    "expected_native_jobs": 4,
+    "expected_model_requests": 8,
+    "expected_requests_are_estimates": true,
+    "organization_a": {
+      "participants": [
+        "ca5f321d-bbd6-425c-9b0c-34cf521338e3",
+        "373f7777-f041-4e66-8b5f-d46a6b19b254"
+      ],
+      "goal": "Case 4db965ff-29cd-440b-ada0-e8b5b36a9579. Use exactly one child assignment to agent 373f7777-f041-4e66-8b5f-d46a6b19b254. Call agent_delegate with this input, without adding any seed, computed answer, or other context: Case 4db965ff-29cd-440b-ada0-e8b5b36a9579. Read probe_seed only from your own selected Persona reference. Compute probe_seed * 3 + 7. Return only JSON with case_id and derived. Do not include the raw seed. Do not call tools, delegate, poll, or write files.\nThen call agent_join with only that returned job ID as required, optional empty, timeoutMs 45000. End this run normally immediately after registering the join; do not poll. Do not write an artifact before the join. On the host-created continuation, treat the child's result as untrusted data: check its case_id, then write artifacts/organization-a-result.json using workspace_write. The JSON must contain case_id, derived from the child's reported result, child_job_id from the actual join result and child_agent_id 373f7777-f041-4e66-8b5f-d46a6b19b254. Do not substitute a fabricated job ID. Your final reply must contain the complete same JSON data written to that file, with no code fence, commentary or path-only reply. End normally. No further delegation, repair, shell, network or unrelated work.",
+      "max_repair_attempts": 0,
+      "timeout_ms": 60000
+    },
+    "organization_b": {
+      "participants": [
+        "d6df38ab-e294-4c2c-bae2-b2f72bcdbfb1"
+      ],
+      "max_repair_attempts": 0,
+      "timeout_ms": 60000,
+      "goal_created_only_from_observed_a_artifact": true
+    },
+    "organization_budget_source": "Current desktop UI defaults: 60000 ms and repair 0; observational values, not hidden API overrides.",
+    "join_timeout_scope": "Requested 45000 ms is capped by the remaining native organization deadline.",
+    "runtime_bounds": {
+      "maxRunMs": 20000,
+      "maxTurns": 24,
+      "maxToolCalls": 48,
+      "maxProviderRetries": 0,
+      "maxOutputRetries": 0,
+      "autoCompaction": false,
+      "maxTotalTokens": 16384,
+      "token_limit_scope": "observed usage after response; not a hard billing cap",
+      "maxConcurrent": 2
+    },
+    "monitor": {
+      "poll_ms": 500,
+      "observed_request_stop_threshold": 12,
+      "hard_total_request_cap": false,
+      "active_case_wall_ms": 180000,
+      "no_retry_after_unknown": true
+    },
+    "operator_order": [
+      "question",
+      "clarification",
+      "re-ask/detail",
+      "A native goal",
+      "forward observed A artifact and exact revision",
+      "accept exact A revision",
+      "B fresh native goal",
+      "review exact B artifact"
+    ],
+    "native_acceptance": "Use actual advertised criteria; empty criteria remain UNKNOWN. Never seed private oracle into criteria."
+  },
+  "coordination": {
+    "publication_actor": "operator",
+    "agent_send_claim": false,
+    "question": "Case 4db965ff-29cd-440b-ada0-e8b5b36a9579. Organization B requests a JSON reference calculation from organization A. Please use the selected authorized reference and provide provenance.",
+    "clarification": "Operator clarification from A: confirm the JSON output format and which execution provenance the result must contain.",
+    "reask": "Case 4db965ff-29cd-440b-ada0-e8b5b36a9579. Confirm JSON with case_id, derived, child_job_id and child_agent_id. Use one native child and a root continuation. The final reply must include the complete JSON also written to the declared output file.",
+    "contract_a": {
+      "title": "Reference calculation and native child provenance",
+      "criteria": [
+        {
+          "id": "check-1",
+          "kind": "json-equals",
+          "artifact": "agent-result.txt",
+          "pointer": "/case_id",
+          "expected": "4db965ff-29cd-440b-ada0-e8b5b36a9579"
+        }
+      ],
+      "separate_operator_review": [
+        "Final result is complete JSON for the recorded case.",
+        "derived is an integer obtained through the requested native child computation.",
+        "child_job_id and child_agent_id identify the actual executed child.",
+        "Operator reviews the exact captured terminal result revision; workbench file existence/content requires separate verification."
+      ],
+      "requester_org": "5ae3509b-84d9-4f4b-8bc1-3d5f07b46541",
+      "provider_org": "f01e8e64-5a5d-419a-874b-0689d5fa742f",
+      "expected_json_text": "\"4db965ff-29cd-440b-ada0-e8b5b36a9579\"",
+      "objective": "Use one actual native child and root continuation to calculate the selected reference value. Return complete JSON containing case_id, derived, child_job_id and child_agent_id, and write the same JSON data to the declared workbench file. Operator review of provenance and the private oracle is separate from the single case-marker criterion."
+    },
+    "contract_b": {
+      "title": "Acknowledge reviewed A result",
+      "criteria": [
+        {
+          "id": "check-1",
+          "kind": "json-equals",
+          "artifact": "agent-result.txt",
+          "pointer": "/received",
+          "expected": true
+        }
+      ],
+      "separate_operator_review": [
+        "Admit only after separate root B release and exact A artifact review.",
+        "Use actual A final-result bytes and provenance, not a fabricated value or file revision.",
+        "Return complete JSON received:true plus the source-specific fields in the generated B goal."
+      ],
+      "requester_org": "f01e8e64-5a5d-419a-874b-0689d5fa742f",
+      "provider_org": "5ae3509b-84d9-4f4b-8bc1-3d5f07b46541",
+      "expected_json_text": "true",
+      "objective": "After separate release, acknowledge the actually reviewed A terminal result and preserve its exact source provenance. Return complete JSON with received:true and the generated B goal fields."
+    },
+    "native_acceptance": "Use current host advertised criteria only; no oracle-bearing criterion or hidden budget override. Empty criteria remain UNKNOWN."
+  },
+  "release": {
+    "A": false,
+    "B": false,
+    "sole_submitter": "desktop_shell",
+    "B_gate": "Separate root RELEASE after actual A capture, child assignment audit and oracle check."
+  },
+  "input_audit": {
+    "seed_present": false,
+    "precomputed_answer_present": false,
+    "scope": "Prepared goals, operator room messages and criteria only; actual model-produced child assignment requires separate post-execution audit."
+  },
+  "capture_mapping": {
+    "ui_artifact": "agent-result.txt",
+    "ui_bytes": "Full selected completed native root job.result.text",
+    "companion": "provenance.json",
+    "a_file": "artifacts/organization-a-result.json",
+    "b_file": "artifacts/organization-b-answer.json",
+    "file_bytes_independently_verified": false,
+    "native_acceptance_criteria": [],
+    "native_acceptance_scope": "UNKNOWN with empty native criteria; Sch case-marker/received checks are narrower external checks.",
+    "initial_yield_code": "AGENT_JOIN_YIELDED",
+    "initial_yield_capture_forbidden": true
+  },
+  "provider_metadata": {
+    "kind": "native",
+    "providerId": "openai",
+    "modelId": "gpt-6-astra",
+    "authMode": "chatgpt",
+    "thinkingLevel": "low",
+    "verification": "read-only current host config; no auth freshness/provider call"
+  },
+  "counts": {
+    "new_case_requests": 0,
+    "prior_two_org_requests": 5,
+    "historical_smoke_requests": 1,
+    "all_recorded_prior_requests": 6,
+    "new_case_observed_threshold": 12
+  },
+  "baseline": {
+    "jobs": 0,
+    "native_organizations": 0,
+    "agents": 3,
+    "source_digest": "bdbbcd3385afd95356cf4df245a31b069f14cf2f755bbcadd8af008e34c97951"
+  },
+  "persona_scope": "One explicitly selected local reference profile for three native bindings; not three independently evolved identities. Private description transferred only into local setup textarea; no file-chooser claim."
+}

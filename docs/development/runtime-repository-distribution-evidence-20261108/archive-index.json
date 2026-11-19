@@ -1,0 +1,95 @@
+{
+  "archive_sha256": "684543e58f968f4ebe72f761f6f4f5f89bc23f8e5511f14ea87e2a9e428885f4",
+  "files": [
+    {
+      "name": "windows/result.json",
+      "sha256": "cb2d1e4c1ee41990c5fac6c2c550f29ddf8e170d1ea8bc4ebabdbc7bbea3f4b0",
+      "bytes": 905
+    },
+    {
+      "name": "windows/verify-before.json",
+      "sha256": "aa9d30fff54a9de3e71f5badd1dcd3fd9fcc43ffdb35d519b782d32763ae2126",
+      "bytes": 480
+    },
+    {
+      "name": "windows/verify-after-r2.json",
+      "sha256": "aa9d30fff54a9de3e71f5badd1dcd3fd9fcc43ffdb35d519b782d32763ae2126",
+      "bytes": 480
+    },
+    {
+      "name": "windows/managed-probe.json",
+      "sha256": "889404fe7dba2bc0ea28a4875cd6d75a0c9b277aa5e2f4b7374d2871ad848438",
+      "bytes": 3777
+    },
+    {
+      "name": "windows/managed-probe-r2.json",
+      "sha256": "688e69f18258a4cc3a3b51e4982b288f5c9ae5183a841b2949f6d267346b9700",
+      "bytes": 3777
+    },
+    {
+      "name": "windows/repository-probe/repository-probe.json",
+      "sha256": "3b34387a96def9d6668bf79bdd4f0a10ade3e95c81130ea9914d05a914231b5e",
+      "bytes": 942
+    },
+    {
+      "name": "windows/repository-probe/repository-probe.log",
+      "sha256": "addab3a856571146d7034c9647a43bb99047e928d01ae54e8cfdcd8ed4d05ee4",
+      "bytes": 1408
+    },
+    {
+      "name": "linux/result.json",
+      "sha256": "499d451c522de8d6c88531dd0e1fd4825465947d289912cc27364c6403689d6f",
+      "bytes": 772
+    },
+    {
+      "name": "linux/verify-before.json",
+      "sha256": "99e26b1816083be2f7e372a9e7884ec43b76a02526a86d7b282b28ec4f47ce4b",
+      "bytes": 238
+    },
+    {
+      "name": "linux/verify-after-r2.json",
+      "sha256": "99e26b1816083be2f7e372a9e7884ec43b76a02526a86d7b282b28ec4f47ce4b",
+      "bytes": 238
+    },
+    {
+      "name": "linux/managed-probe.json",
+      "sha256": "9cce32ee6c3f3b529ade276602abe35fecf46798ac73531d8b9b822536ac4de2",
+      "bytes": 3777
+    },
+    {
+      "name": "linux/managed-probe-r2.json",
+      "sha256": "39c5439a71bd475aa1ab88e9a8753b0b7be4fee0c671e3e841972336e6901d3e",
+      "bytes": 3777
+    },
+    {
+      "name": "linux/repository-probe/repository-probe.json",
+      "sha256": "0472af4328b9265f7b90eae1a7761540451a8fa01d497a3332cef3950409b7b7",
+      "bytes": 942
+    },
+    {
+      "name": "linux/repository-probe/repository-probe.log",
+      "sha256": "e87c890bad6a867bd2588b9e3283ade040ae289872495a0eabb7711eb60b6ab8",
+      "bytes": 1435
+    },
+    {
+      "name": "owner-logs/windows-repository-probe.log",
+      "sha256": "05db65594c18f4d3efeb00625cb8e75b3aab65a330b665484a7f43449359ad2d",
+      "bytes": 2940
+    },
+    {
+      "name": "owner-logs/windows-repository-probe-r2.log",
+      "sha256": "ac793002c5f27c20471bd548b79ce6c6cd2eb48f969ae1f9d772ec7706b6504d",
+      "bytes": 1790
+    },
+    {
+      "name": "owner-logs/distribution-windows-build.log",
+      "sha256": "08f763927056a97c008a3b1a9031eece883766b47071c70a323c9f821f69b816",
+      "bytes": 1716
+    },
+    {
+      "name": "owner-logs/distribution-linux-build.log",
+      "sha256": "43b7b00b0d437a84c4380185d8ff34cbc9300b78051c0106779639f2af4304a0",
+      "bytes": 723
+    }
+  ]
+}

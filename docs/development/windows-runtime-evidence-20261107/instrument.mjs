@@ -1,0 +1,11 @@
+﻿import fs from 'node:fs';
+import cp from 'node:child_process';
+import { syncBuiltinESMExports } from 'node:module';
+const rename=fs.renameSync;
+fs.renameSync=(...args)=>{try{return rename(...args);}catch(e){process.stderr.write(JSON.stringify({op:'rename',code:e.code,path:String(args[1])})+'\n');throw e;}};
+const exec=cp.execFileSync;
+cp.execFileSync=(...args)=>{try{return exec(...args);}catch(e){if(args[0]==='git')process.stderr.write(JSON.stringify({op:'git',args:args[1],status:e.status,stderr:String(e.stderr)})+'\n');throw e;}};
+syncBuiltinESMExports();
+await import('../../../test/ocel.test.mjs');
+await import('../../../test/agents-http.test.mjs');
+await import('../../../test/windows-runtime.test.mjs');

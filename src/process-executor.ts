@@ -38,9 +38,21 @@ export function projectCommandEnvironment(source: NodeJS.ProcessEnv): NodeJS.Pro
   return Object.fromEntries(Object.entries(source).filter(([key, value]) => allowed.has(key.toLowerCase()) && value !== undefined));
 }
 
+/** PowerShell -Command otherwise reduces a failed native process to exit 1.
+ * Keep Pi's driver/cleanup, preserving the final native failure code and explicit script exits.
+ * A successful final PowerShell statement still yields 0; compound scripts can use explicit exit. */
+export function createPidaPowerShellOperations() {
+  const operations = createLocalPowerShellOperations();
+  return {
+    exec(command: string, cwd: string, options: Parameters<typeof operations.exec>[2]) {
+      return operations.exec(`${command}\nif ($?) { exit 0 }\nif ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }\nexit 1`, cwd, options);
+    },
+  };
+}
+
 /** Reuses Pi's installed shell driver, including its cancellation and process-tree cleanup. */
 export function createPiProcessExecutor(shell: "bash" | "powershell"): ProcessExecutor {
-  const operations = shell === "powershell" ? createLocalPowerShellOperations() : createLocalBashOperations();
+  const operations = shell === "powershell" ? createPidaPowerShellOperations() : createLocalBashOperations();
   return {
     capabilities: Object.freeze({ backend: "pi-local", platform: process.platform, pty: false, stdin: false,
       sandboxModes: Object.freeze(["none"] as const), containment: process.platform === "win32" ? "windows-taskkill-best-effort" : "posix-process-group-best-effort",

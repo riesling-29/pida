@@ -1,0 +1,50 @@
+{
+  "schema_version": "pida.real-case-bound-readiness/1",
+  "checked_at": "2026-11-07T15:39:49.496Z",
+  "case_id": "0227453a-4ceb-4edf-a27b-6ad701d4a9be",
+  "host_id": "desktop-123f5cf0317744ab",
+  "workspace": "C:/Users/migeo/AppData/Local/Schumpeter/workspaces/real-case-0227453a",
+  "native_host_workspace": "C:/Users/migeo/AppData/Local/Schumpeter/hosts/49983d3428906cfb",
+  "state": "READY_A_REQUIRES_ROOT_RELEASE_B_SEPARATE_HOLD",
+  "plan_sha256": "ab2d0c4b8ddb4a0f6786ded928dea397c8825ef96a78d3355d254c48df0c6237",
+  "goal_a_sha256": "73f0153e5efd5b7bc4e8d5a7ce03eeee1045cf16fcadc2f1a3badf9ebf043635",
+  "helper_sha256": "4473da8a5b248539124efb601e8ced835ce202429cb5fb0c73766bf1aa843e3f",
+  "observer_path": "D:/ChantaResearchGroup/pida/.pida-test-final-real-case-20261107/observer.mjs",
+  "observer_sha256": "059a3acba04c00efef1a3fe4cfeeb5fdadb6e45ea58f54806bc9f0a0c9892b31",
+  "private_input_audit": {
+    "seed_present": false,
+    "precomputed_answer_present": false,
+    "scope": "Prepared goals, operator room messages and criteria only; actual model-produced child assignment requires separate post-execution audit."
+  },
+  "actual_host_metadata": {
+    "provider": {
+      "kind": "native",
+      "providerId": "openai",
+      "modelId": "gpt-6-astra",
+      "authMode": "chatgpt",
+      "thinkingLevel": "low"
+    },
+    "runtime": {
+      "maxRunMs": 20000,
+      "maxProviderRetries": 0,
+      "maxOutputRetries": 0,
+      "autoCompaction": false,
+      "maxTotalTokens": 16384
+    },
+    "maxConcurrent": 2,
+    "acceptanceChecks": [],
+    "profiles": 3,
+    "jobs": 0,
+    "native_org_sessions": 0
+  },
+  "credential_status": "Not checked/refreshed; configured provider metadata is not current authentication proof.",
+  "observer_preflight": {
+    "read_only": true,
+    "network": false,
+    "jobs": 0,
+    "requests": 0,
+    "stop_reasons": [],
+    "limits": "Local observations only, not enforcement or independent schema validation; parent control required on stop, final exports need validation."
+  },
+  "next": "Root releases A only, activate observer, shell sole UI submission. B goal only after actual A artifact/oracle/audit and separate RELEASE."
+}

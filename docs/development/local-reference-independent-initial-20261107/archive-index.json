@@ -1,0 +1,8 @@
+{
+  "scope": "Original independent JSON bytes preserved in ZIP; adjacent files are LF readable copies",
+  "archive_sha256": "f2b9839825a353963e2a11de22fc33eff4ec804e48d81b97fc250fbad23c8bb0",
+  "original_sha256": {
+    "dispatch-lifecycle-7997d51.json": "b20550a5f869c3f272758da19bf987146d9487dc62dee36c99e244046aff3f14",
+    "store-identity-7997d51.json": "c04756658e99100f050a8abf7a767a2fc60b151c7a014f73a28779a7e70bb5e0"
+  }
+}

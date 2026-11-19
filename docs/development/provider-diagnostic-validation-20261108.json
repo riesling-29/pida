@@ -1,0 +1,18 @@
+{
+  "status": "DEVELOPER_PASS_INDEPENDENT_REVIEW_PENDING",
+  "build": "npm run build",
+  "test_command": "node --test test/provider-diagnostic.test.mjs test/provider-capabilities.test.mjs test/runtime.test.mjs",
+  "passed": 26,
+  "failed": 0,
+  "external_provider_calls": 0,
+  "accepted_runtime_modified": false,
+  "held_workspace_modified": false,
+  "source_files": {
+    "src/provider-diagnostic.ts": "faaf2722b9a56b6fd90930598847ef14ae19ec04751a70695dac2e04ce3a4f65",
+    "src/runtime.ts": "d4a640784d5ad4f22fb8f06ebe09cfa50af9e7d01ff5b81d1451a1dbecc01732",
+    "src/protocol.ts": "ba8ccf1c9c1b7400b431073ca1136122086a5eb0df50b52e648b850c463b95c1",
+    "src/agent-supervisor.ts": "f0c1e45cf927119ed769c9c025f6e7ad7bbc4a4483068da3acf17a62cea05090",
+    "test/provider-diagnostic.test.mjs": "beb65e5d62a58bb9482d98dfd8b6832708286dd0b97e0c288453380a8b8d3491",
+    "test/provider-capabilities.test.mjs": "f9023823ad74df5e7324d0644f8c8e13bd998bc672a57b9469e34c5638f5e007"
+  }
+}

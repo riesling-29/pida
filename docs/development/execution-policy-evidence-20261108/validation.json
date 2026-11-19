@@ -1,0 +1,37 @@
+{
+  "base_runtime": "b7f7d523c6fede56d508575a6bb78afa343e5566",
+  "base_checkout": "a2336d1",
+  "scope": "Isolated source unit; no package/provider/account/current-state changes",
+  "checks": [
+    {
+      "command": "npm run build",
+      "result": "PASS"
+    },
+    {
+      "command": "node --test --test-timeout=30000 test/execution-policy.test.mjs",
+      "pass": 13,
+      "fail": 0
+    },
+    {
+      "command": "node --test --test-timeout=30000 test/execution-policy.test.mjs test/organization-yield.test.mjs test/organization-admission.test.mjs test/organization.test.mjs test/collaboration-policy-client.test.mjs test/provider-diagnostic.test.mjs",
+      "pass": 71,
+      "fail": 0,
+      "skip": 0,
+      "duration_ms": 20079.9968
+    }
+  ],
+  "output_evidence": "Execution tool returned complete final stdout and exit0; no separately retained raw stdout file claimed.",
+  "source_sha256": {
+    "src/execution-policy.ts": "24e9fcc5c8ab280d587240e1f77e6afc7abe4dbc2d079d0519ca487a729df27c",
+    "src/agent-supervisor.ts": "6aa98b434d7fe633cfa0974638ea8d4a5d22a111e267239fac7a548d46c64b87",
+    "src/workspace.ts": "b1009948a02e58dac6d92c63f72cdce11e741cce9a0660fcde4ee6cac9bf5c64",
+    "src/index.ts": "2c95b987c2f1aa08ee241f44ddaf2ecd66413013267edb34ae9751e576360134",
+    "examples/schumpeter-host.mjs": "1063d11b9b2d12650d0673590cb85adc101906fb614da8317bb76cd7139af802",
+    "test/execution-policy.test.mjs": "09b02bdc9288c48212f503089351b550adf6b8754d814a99dba0f195e7875b78",
+    "test/collaboration-policy-client.test.mjs": "dab5db521ebc95b0bb64c9e31325a65f09458a18fb1011c03db5d608ad683fa9",
+    "fixtures/execution-policy/profiles-v1.json": "2f7e4589418453eb1a3d855b4bbaf4c62eb764ab2f61e8a8f47de80d90b3c7db"
+  },
+  "independent_review": "PENDING",
+  "remote_model_calls": 0,
+  "package_builds": 0
+}

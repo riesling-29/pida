@@ -1,0 +1,8 @@
+{
+  "reviewedCommit": "50d1ed49294cb8acfabb00badd72da6877e22c30",
+  "files": {
+    "src/agent-supervisor.ts": "88a9bc400ace1a3ee9b1d6d904cd51ebc18ad48ac4081c3a7bbafced606cfde1",
+    "test/collaboration-regressions.test.mjs": "8bc86127b85a9a48d2344ba55cf9d047c7a65a193ee1747ea21d03f3928ceb1f",
+    "docs/COLLABORATION-1.md": "5a3fd7ae06629dce96ddba1595a844ab76b23b5e08b950bff77f5f5b9e197b40"
+  }
+}

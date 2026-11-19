@@ -1,3 +1,4 @@
+import { validateRepositoryProfileCapability, type RepositoryProfileCapability } from './repository-profile.js';
 import { existsSync, lstatSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { hostname } from "node:os";
@@ -6,6 +7,10 @@ import { PidaError, type PidaRuntime, type Principal } from "./runtime.js";
 import { savePrivate, isId, canonical, sha256 } from "./private-state.js";
 import { emptyOrganizations, validCriteria, criterionDigest, localEnvironment, evaluateLocal, boundedAgentResult, type LocalAcceptanceOptions, type OrganizationState, type OrgSession, type OrgTask, type BatchJoin, type LocalReceipt } from "./organization.js";
 import type { RunResult, StreamEvent, TraceEvent } from "./protocol.js";
+import { collaborationId, collaborationKey, validCollaborationEnvelope, type CollaborationEnvelope, type CollaborationPolicy, type CollaborationReceipt, type CollaborationRecord } from "./collaboration.js";
+import { validOrganizationAdmission, type OrganizationAdmission, type OrganizationAdmissionReceipt, type OrganizationAdmissionRecord } from "./organization-admission.js";
+
+import { validateExecutionPolicy, type ExecutionPolicy } from "./execution-policy.js";
 
 export interface AgentProfile {
   id: string; owner: string; name: string; role: string; persona?: string;
@@ -29,6 +34,8 @@ export interface AgentJob {
   latestText: string; activity: TraceEvent[]; memoryRefs?: string[]; memoryWarning?: string;
   reconciliation?: { at: string; by: string; note?: string };
   organizationTaskId?: string; attemptId?: string; joinId?: string; joinRevision?: number;
+  collaborationReceiptId?: string;
+  organizationAdmissionReceiptId?: string;
 }
 export interface AgentSupervisorOptions {
   directory: string;
@@ -37,6 +44,10 @@ export interface AgentSupervisorOptions {
   maxJobs?: number;
   maxDelegationDepth?: number;
   acceptance?: LocalAcceptanceOptions;
+  /** Optional immutable managed-host policy; absent preserves standalone defaults. */
+  executionPolicy?: Readonly<ExecutionPolicy>;
+  repositoryProfile?: Readonly<RepositoryProfileCapability>;
+  collaboration?: CollaborationPolicy;
   /** Host policy only. Profiles contain no supplied paths, tool grants or provider credentials. */
   createRuntime(profile: AgentProfile, context: { signal: AbortSignal }): Promise<PidaRuntime> | PidaRuntime;
   /** Re-resolved when a job starts. Saved permissions are never replayed. */
@@ -60,11 +71,12 @@ export interface AgentOverview {
   agents: { profile: Omit<AgentProfile, "owner" | "role" | "persona">; jobs: Pick<AgentJob, "id" | "status" | "runId" | "createdAt" | "currentTool" | "lastSignalAt" | "code">[]; admission: AdmissionReason }[];
   personaSources: AgentPersonaSourceCatalogue;
 }
-interface State { version: 2; profiles: AgentProfile[]; jobs: AgentJob[]; organization: OrganizationState }
+interface State { version: 4; profiles: AgentProfile[]; jobs: AgentJob[]; organization: OrganizationState; collaboration: CollaborationRecord[]; organizationAdmissions: OrganizationAdmissionRecord[] }
 interface Active { agentId: string; workspaceKey: string; controller: AbortController; done: Promise<void> }
 const now = () => new Date().toISOString();
 const copy = <T>(value: T): T => structuredClone(value);
 const statuses = new Set(["queued", "running", "completed", "failed", "limited", "cancelled", "interrupted"]);
+const maxStateBytes = 32 * 1024 * 1024;
 const validText = (s: unknown, max: number, empty = false): s is string => typeof s === "string" && s.length <= max && (empty || !!s.trim());
 const validSourceId = (s: unknown): s is string => typeof s === "string" && /^[a-z][a-z0-9._-]{0,63}$/.test(s);
 const errorCode = (e: unknown) => e instanceof PidaError && /^[A-Z][A-Z0-9_]+$/.test(e.code) ? e.code : "AGENT_EXECUTION_FAILED";
@@ -76,7 +88,7 @@ export class AgentSupervisor {
   private readonly statePath: string;
   private readonly lockPath: string;
   private readonly lockValue = JSON.stringify({ pid: process.pid, host: hostname(), nonce: randomUUID() });
-  private state: State = { version: 2, profiles: [], jobs: [], organization: emptyOrganizations() };
+  private state: State = { version: 4, profiles: [], jobs: [], organization: emptyOrganizations(), collaboration: [], organizationAdmissions: [] };
   private readonly runtimes = new Map<string, Promise<PidaRuntime>>();
   private readonly active = new Map<string, Active>();
   private readonly runtimeKeys = new Map<string, string>();
@@ -85,6 +97,8 @@ export class AgentSupervisor {
   private pendingRuntimeLoads = 0;
   private readonly runtimeCreation = new AbortController();
   private readonly maxConcurrent: number;
+  private readonly executionPolicy?: Readonly<ExecutionPolicy>;
+  private readonly repositoryProfile?: Readonly<RepositoryProfileCapability>;
   private started = false;
   private closed = false;
   private closing?: Promise<void>;
@@ -94,13 +108,18 @@ export class AgentSupervisor {
   private organizationTimer?: ReturnType<typeof setTimeout>;
 
   private constructor(private readonly options: AgentSupervisorOptions) {
+    this.executionPolicy = options.executionPolicy === undefined ? undefined : validateExecutionPolicy(options.executionPolicy);
+    this.repositoryProfile = options.repositoryProfile === undefined ? undefined : validateRepositoryProfileCapability(options.repositoryProfile);
+    if (this.repositoryProfile && this.executionPolicy?.id !== 'work/1') throw Error('REPOSITORY_CONFIGURATION_MISMATCH');
     this.directory = resolve(options.directory);
     this.statePath = join(this.directory, "supervisor.json");
     this.lockPath = join(this.directory, "supervisor.lock");
-    this.maxConcurrent = options.maxConcurrent ?? 2;
+    this.maxConcurrent = this.executionPolicy?.max_concurrent ?? options.maxConcurrent ?? 2;
     if (options.acceptance && !validCriteria(options.acceptance.criteria)) denied("ACCEPTANCE_CRITERIA_INVALID");
     if (options.acceptance?.environmentRevision !== undefined && !validText(options.acceptance.environmentRevision, 256)) denied("ACCEPTANCE_ENVIRONMENT_INVALID");
     if (options.acceptance) options.acceptance = { ...options.acceptance, criteria: copy(options.acceptance.criteria) };
+    if (options.collaboration && (!collaborationId(options.collaboration.hostId) || typeof options.collaboration.authorize !== "function")) denied("COLLABORATION_CONFIG_INVALID");
+    if (options.collaboration) options.collaboration = { ...options.collaboration };
     for (const value of [this.maxConcurrent, options.maxAgents ?? 32, options.maxJobs ?? 2000])
       if (!Number.isSafeInteger(value) || value < 1 || value > 10000) denied("AGENT_LIMIT_INVALID");
     const depth = options.maxDelegationDepth ?? 2;
@@ -111,9 +130,11 @@ export class AgentSupervisor {
     this.acquireLock();
     try {
       if (existsSync(this.statePath)) {
-        if (lstatSync(this.statePath).size > 32 * 1024 * 1024) denied("AGENT_STATE_INVALID", 500);
+        if (lstatSync(this.statePath).size > maxStateBytes) denied("AGENT_STATE_INVALID", 500);
         this.state = JSON.parse(readFileSync(this.statePath, "utf8"));
-        if ((this.state as { version: number }).version === 1) this.state = { ...this.state, version: 2, organization: emptyOrganizations() };
+        if ((this.state as { version: number }).version === 1) this.state = { ...this.state, version: 4, organization: emptyOrganizations(), collaboration: [], organizationAdmissions: [] };
+        if ((this.state as { version: number }).version === 2) this.state = { ...this.state, version: 4, collaboration: [], organizationAdmissions: [] };
+        if ((this.state as { version: number }).version === 3) this.state = { ...this.state, version: 4, organizationAdmissions: [] };
         this.validateState();
       }
       for (const job of this.state.jobs) if (job.status === "running") {
@@ -152,7 +173,7 @@ export class AgentSupervisor {
   }
   private validateState() {
     const s = this.state;
-    if (!s || s.version !== 2 || !Array.isArray(s.profiles) || !Array.isArray(s.jobs) || s.profiles.length > 10000 || s.jobs.length > 10000) denied("AGENT_STATE_INVALID", 500);
+    if (!s || s.version !== 4 || !Array.isArray(s.profiles) || !Array.isArray(s.jobs) || s.profiles.length > 10000 || s.jobs.length > 10000) denied("AGENT_STATE_INVALID", 500);
     const ids = new Set<string>(), jobs = new Set<string>(), requests = new Set<string>();
     for (const p of s.profiles) {
       if (!p || !isId(p.id) || ids.has(p.id) || !validText(p.owner, 256) || !validText(p.name, 100) || !validText(p.role, 4000, true)
@@ -165,6 +186,7 @@ export class AgentSupervisor {
       const p = s.profiles.find(p => p.id === j.agentId), key = `${j.agentId}:${j.requestId}`;
       if (!j || !isId(j.id) || jobs.has(j.id) || !p || p.owner !== j.owner || !validText(j.requestId, 128) || requests.has(key)
         || !validText(j.input, 12000) || !statuses.has(j.status) || !Number.isSafeInteger(j.depth) || j.depth < 0 || j.depth > 8
+        || (j.depth === 0) !== (j.parentJobId === undefined)
         || !Array.isArray(j.activity) || j.activity.length > 60 || !validText(j.latestText, 16000, true)
         || (j.sessionId !== undefined && !isId(j.sessionId)) || (j.runId !== undefined && !isId(j.runId))) denied("AGENT_STATE_INVALID", 500);
       jobs.add(j.id); requests.add(key);
@@ -174,10 +196,256 @@ export class AgentSupervisor {
       if (!parent || parent.owner !== j.owner || j.depth !== parent.depth + 1) denied("AGENT_STATE_INVALID", 500);
     }
     this.validateOrganizations();
+    this.validateCollaboration();
+    this.validateOrganizationAdmissions();
+  }
+  private validateCollaboration() {
+    if (!Array.isArray(this.state.collaboration) || this.state.collaboration.length > 10000) denied("COLLABORATION_STATE_INVALID", 500);
+    const keys = new Set<string>(), receiptIds = new Set<string>(), jobIds = new Set<string>();
+    for (const record of this.state.collaboration) {
+      if (!record || !validText(record.owner, 256) || !validCollaborationEnvelope(record.envelope) || !record.receipt) denied("COLLABORATION_STATE_INVALID", 500);
+      const e = record.envelope, r = record.receipt, key = collaborationKey(record.owner, e);
+      const job = this.state.jobs.find(j => j.id === r.job_id), task = this.state.organization.tasks.find(t => t.id === job?.organizationTaskId);
+      const expected = { schema_version: "pida.collaboration.receipt/1", receipt_id: r.receipt_id, producer_id: e.producer_id, request_id: e.request_id,
+        payload_digest: e.payload_digest, recipient: e.recipient, received_at: r.received_at, job_id: r.job_id, phase: "job_enqueued", durable: true, durability_scope: "local-process-restart" };
+      if (!isId(r.receipt_id) || typeof r.received_at !== "string" || !Number.isFinite(Date.parse(r.received_at)) || canonical(r) !== canonical(expected) || keys.has(key) || receiptIds.has(r.receipt_id) || jobIds.has(r.job_id)
+        || !job || job.owner !== record.owner || job.agentId !== e.recipient.agent_id || job.input !== e.input || job.requestId !== "collab-" + r.receipt_id || job.collaborationReceiptId !== r.receipt_id
+        || !task || task.orgId !== e.recipient.org_session_id || (e.reply_to_job_id && !this.state.jobs.some(j => j.id === e.reply_to_job_id && j.owner === record.owner && j.agentId === job.agentId
+          && this.state.organization.tasks.some(t => t.id === j.organizationTaskId && t.orgId === task.orgId)))) denied("COLLABORATION_STATE_INVALID", 500);
+      keys.add(key); receiptIds.add(r.receipt_id); jobIds.add(r.job_id);
+    }
+    for (const job of this.state.jobs) if (job.collaborationReceiptId !== undefined && !jobIds.has(job.id)) denied("COLLABORATION_STATE_INVALID", 500);
+  }
+  private async authorizeCollaboration(principal: Principal, envelope: CollaborationEnvelope, phase: "receive" | "read" | "dispatch", signal?: AbortSignal) {
+    this.usable(); this.principal(principal);
+    if (!principal.permissions.includes("pida:agents") || !principal.permissions.includes("pida:collaborate")) denied("FORBIDDEN", 403);
+    const policy = this.options.collaboration;
+    if (!policy) return denied("COLLABORATION_DISABLED", 503);
+    if (envelope.recipient.host_id !== policy.hostId) denied("COLLABORATION_FORBIDDEN", 403);
+    const stop = AbortSignal.any([AbortSignal.timeout(5000), ...(signal ? [signal] : [])]);
+    stop.throwIfAborted();
+    let abort: (() => void) | undefined;
+    try {
+      const allowed = await Promise.race([Promise.resolve().then(() => policy.authorize({ principal: copy(principal), envelope: copy(envelope), phase, signal: stop })),
+        new Promise<never>((_, reject) => { abort = () => reject(new PidaError("COLLABORATION_FORBIDDEN", 403)); stop.addEventListener("abort", abort, { once: true }); })]);
+      if (allowed !== true || stop.aborted) denied("COLLABORATION_FORBIDDEN", 403);
+    } catch { denied("COLLABORATION_FORBIDDEN", 403); }
+    finally { if (abort) stop.removeEventListener("abort", abort); }
+    this.usable();
+  }
+  private collaborationTarget(principal: Principal, e: CollaborationEnvelope) {
+    this.owned(e.recipient.agent_id, principal);
+    const org = this.state.organization.sessions.find(o => o.id === e.recipient.org_session_id && o.owner === principal.id);
+    if (!org || !org.participants.includes(e.recipient.agent_id)) return denied("COLLABORATION_RECIPIENT_INVALID", 403);
+    if (org.status !== "active" || Date.now() >= org.deadlineAt) denied("COLLABORATION_TARGET_INACTIVE", 409);
+    if (e.reply_to_job_id) {
+      const job = this.ownedJob(e.reply_to_job_id, principal), task = this.state.organization.tasks.find(t => t.id === job.organizationTaskId);
+      if (job.agentId !== e.recipient.agent_id || task?.orgId !== org.id || !["queued", "running", "completed"].includes(job.status) || job.code === "CANCELLED" || job.result?.recovery)
+        denied("COLLABORATION_REPLY_OBSOLETE", 409);
+    }
+    return org;
+  }
+  /** One file commit binds receive evidence, job and task before scheduling or acknowledging. */
+  async receiveCollaboration(principal: Principal, input: CollaborationEnvelope): Promise<CollaborationReceipt> {
+    this.usable(); this.principal(principal); principal = copy(principal);
+    if (!validCollaborationEnvelope(input)) denied("COLLABORATION_ENVELOPE_INVALID");
+    const e = copy(input);
+    await this.authorizeCollaboration(principal, e, "receive");
+    if (this.state.organizationAdmissions.some(r => collaborationKey(r.owner, r.admission.envelope) === collaborationKey(principal.id, e))) denied("COLLABORATION_REQUEST_CONFLICT", 409);
+    const duplicate = this.state.collaboration.find(r => collaborationKey(r.owner, r.envelope) === collaborationKey(principal.id, e));
+    if (duplicate) {
+      if (duplicate.envelope.payload_digest !== e.payload_digest) denied("COLLABORATION_REQUEST_CONFLICT", 409);
+      return copy(duplicate.receipt);
+    }
+    const org = this.collaborationTarget(principal, e);
+    this.taskCapacity(1);
+    if (this.state.collaboration.length >= 10000) denied("COLLABORATION_LIMIT", 429);
+    const lengths = { jobs: this.state.jobs.length, tasks: this.state.organization.tasks.length, attempts: this.state.organization.attempts.length, receipts: this.state.collaboration.length };
+    const id = randomUUID(), job = this.enqueueRecord(e.recipient.agent_id, principal, { input: e.input, requestId: "collab-" + id });
+    job.collaborationReceiptId = id;
+    this.trackTask(org.id, job);
+    const receipt: CollaborationReceipt = { schema_version: "pida.collaboration.receipt/1", receipt_id: id, producer_id: e.producer_id, request_id: e.request_id,
+      payload_digest: e.payload_digest, recipient: copy(e.recipient), received_at: now(), job_id: job.id, phase: "job_enqueued", durable: true, durability_scope: "local-process-restart" };
+    this.state.collaboration.push({ owner: principal.id, envelope: e, receipt });
+    // Synchronous transaction: no scheduling/await can expose tentative records before this admission check.
+    if (this.recoverableStateBytes() > maxStateBytes) {
+      this.state.jobs.length = lengths.jobs; this.state.organization.tasks.length = lengths.tasks;
+      this.state.organization.attempts.length = lengths.attempts; this.state.collaboration.length = lengths.receipts;
+      denied("COLLABORATION_STORAGE_LIMIT", 429);
+    }
+    this.persist(); this.kick(); return copy(receipt);
+  }
+  async getCollaborationReceipt(id: string, principal: Principal): Promise<CollaborationReceipt> {
+    this.usable(); this.principal(principal);
+    const record = this.state.collaboration.find(r => r.receipt.receipt_id === id && r.owner === principal.id);
+    if (!record) return denied("COLLABORATION_RECEIPT_NOT_FOUND", 404);
+    await this.authorizeCollaboration(principal, record.envelope, "read");
+    return copy(record.receipt);
+  }
+  collaborationCapabilities(principal: Principal) {
+    this.usable(); this.principal(principal);
+    if (!principal.permissions.includes("pida:agents")) denied("FORBIDDEN", 403);
+    return { schema_version: "pida.collaboration.capabilities/1", enabled: !!this.options.collaboration,
+      host_id: this.options.collaboration?.hostId ?? null, envelope_schema: "pida.collaboration.envelope/1", receipt_schema: "pida.collaboration.receipt/1",
+      durability_scope: "local-process-restart", reply_mode: "fresh-task-only", supervisor_state_version: 4,
+      policy_mode: this.options.collaboration ? "current-host-check" : "disabled" } as const;
+  }
+  /** Derive authority from validated native lineage, never a caller-supplied marker.
+   * Includes delegation and earlier attempts (continuation/repair), including persisted v3 work. */
+  private collaborationOrigins(job: AgentJob): (CollaborationRecord | OrganizationAdmissionRecord)[] {
+    const jobs = new Map(this.state.jobs.map(j => [j.id, j])), attempts = new Map(this.state.organization.attempts.map(a => [a.id, a]));
+    const pending = [job.id], seen = new Set<string>(), origins = new Map<string, CollaborationRecord | OrganizationAdmissionRecord>();
+    while (pending.length) {
+      const id = pending.pop()!; if (seen.has(id)) continue; seen.add(id);
+      const current = jobs.get(id); if (!current) continue;
+      const record = this.state.collaboration.find(r => r.receipt.job_id === id);
+      if (record) origins.set(record.receipt.receipt_id, record);
+      const admission = this.state.organizationAdmissions.find(r => r.receipt.job_id === id);
+      if (admission) origins.set(admission.receipt.receipt_id, admission);
+      if (current.parentJobId) pending.push(current.parentJobId);
+      const task = this.state.organization.tasks.find(t => t.id === current.organizationTaskId);
+      if (task) for (const attemptId of task.attempts) {
+        const attempt = attempts.get(attemptId)!;
+        if (attempt.jobId === current.id) break;
+        pending.push(attempt.jobId);
+      }
+      if (current.joinId) {
+        const join = this.state.organization.joins.find(j => j.id === current.joinId);
+        for (const result of join?.results ?? []) pending.push(result.jobId);
+      }
+    }
+    return [...origins.values()];
+  }
+  private organizationWorkRevision(orgId: string): string {
+    const tasks = this.state.organization.tasks.filter(t => t.orgId === orgId);
+    const ids = new Set(tasks.map(t => t.id));
+    return canonical({ tasks: tasks.map(t => ({ id: t.id, status: t.status, attempts: t.attempts })),
+      jobs: this.state.jobs.filter(j => ids.has(j.organizationTaskId ?? "")).map(j => ({ id: j.id, status: j.status, attemptId: j.attemptId })),
+      joins: this.state.organization.joins.filter(j => j.orgId === orgId).map(j => ({ id: j.id, revision: j.revision, status: j.status, continuationJobId: j.continuationJobId })) });
+  }
+  private validateOrganizationAdmissions() {
+    if (!Array.isArray(this.state.organizationAdmissions) || this.state.organizationAdmissions.length > 10000) denied("ORGANIZATION_ADMISSION_STATE_INVALID", 500);
+    const keys = new Set(this.state.collaboration.map(r => collaborationKey(r.owner, r.envelope))), reservations = new Set<string>(),
+      receiptIds = new Set(this.state.collaboration.map(r => r.receipt.receipt_id)), jobIds = new Set<string>(), orgIds = new Set<string>();
+    for (const record of this.state.organizationAdmissions) {
+      if (!record || !validText(record.owner, 256) || !validOrganizationAdmission(record.admission) || !record.receipt) denied("ORGANIZATION_ADMISSION_STATE_INVALID", 500);
+      const a = record.admission, e = a.envelope, d = a.definition, r = record.receipt, key = collaborationKey(record.owner, e), reservation = canonical([record.owner, a.reservation_id]);
+      const job = this.state.jobs.find(j => j.id === r.job_id), task = this.state.organization.tasks.find(t => t.id === r.root_task_id), org = this.state.organization.sessions.find(o => o.id === e.recipient.org_session_id);
+      const expected: OrganizationAdmissionReceipt = { schema_version: "pida.organization.admission.receipt/1", receipt_id: r.receipt_id,
+        producer_id: e.producer_id, request_id: e.request_id, payload_digest: e.payload_digest, definition_digest: a.definition_digest, admission_digest: a.admission_digest,
+        reservation_id: a.reservation_id, recipient: e.recipient, received_at: r.received_at, job_id: r.job_id, root_task_id: r.root_task_id, root_attempt_id: r.root_attempt_id,
+        phase: "organization_root_enqueued", durable: true, durability_scope: "local-process-restart" };
+      if (!isId(r.receipt_id) || typeof r.received_at !== "string" || !Number.isFinite(Date.parse(r.received_at)) || canonical(r) !== canonical(expected)
+        || keys.has(key) || reservations.has(reservation) || receiptIds.has(r.receipt_id) || jobIds.has(r.job_id) || orgIds.has(e.recipient.org_session_id)
+        || !job || job.owner !== record.owner || job.agentId !== d.root_agent_id || job.input !== d.goal || job.requestId !== "admission-" + r.receipt_id
+        || job.organizationAdmissionReceiptId !== r.receipt_id || job.collaborationReceiptId !== undefined || job.parentJobId !== undefined
+        || job.organizationTaskId !== r.root_task_id || job.attemptId !== r.root_attempt_id || !task || task.orgId !== e.recipient.org_session_id || task.attempts[0] !== r.root_attempt_id
+        || !org || org.owner !== record.owner || org.requestId !== "admission-" + r.receipt_id || org.rootTaskId !== task.id || org.definitionDigest !== a.definition_digest
+        || org.goal !== d.goal || canonical(org.participants) !== canonical(d.participants) || canonical(org.criterionIds) !== canonical(d.criterion_ids)
+        || org.criteriaDigest !== d.criteria_digest || org.environmentRevision !== d.environment_revision || org.maxRepairAttempts !== d.max_repair_attempts
+        || org.deadlineAt !== Date.parse(org.createdAt) + d.timeout_ms
+        || (e.reply_to_job_id && !this.state.jobs.some(j => j.id === e.reply_to_job_id && j.owner === record.owner && j.agentId === d.root_agent_id))) denied("ORGANIZATION_ADMISSION_STATE_INVALID", 500);
+      keys.add(key); reservations.add(reservation); receiptIds.add(r.receipt_id); jobIds.add(r.job_id); orgIds.add(e.recipient.org_session_id);
+    }
+    for (const job of this.state.jobs) if (job.organizationAdmissionReceiptId !== undefined && !jobIds.has(job.id)) denied("ORGANIZATION_ADMISSION_STATE_INVALID", 500);
+  }
+  organizationAdmissionCapabilities(principal: Principal) {
+    this.usable(); this.principal(principal); if (!principal.permissions.includes("pida:agents")) denied("FORBIDDEN", 403);
+    const ids = (this.options.acceptance?.criteria ?? []).map(c => c.id).sort(), criteria = this.criteria(ids);
+    return { schema_version: this.repositoryProfile ? "pida.organization.admission.capabilities/3" : this.executionPolicy ? "pida.organization.admission.capabilities/2" : "pida.organization.admission.capabilities/1",
+      ...(this.repositoryProfile ? { repository_profile: copy(this.repositoryProfile) } : {}),
+      ...(this.executionPolicy ? { execution_policy: copy(this.executionPolicy) } : {}), enabled: typeof this.options.collaboration?.authorizeAdmission === "function",
+      host_id: this.options.collaboration?.hostId ?? null, admission_schema: "pida.organization.admission/1", receipt_schema: "pida.organization.admission.receipt/1",
+      supervisor_state_version: 4, acceptance: { criterion_ids: ids, criteria_digest: criterionDigest(criteria), environment_revision: this.environment(), criteria: copy(criteria) } } as const;
+  }
+  private assertOrganizationBudget(timeout: number, repairs: number) {
+    if (this.executionPolicy && (timeout > this.executionPolicy.organization_timeout_ms || repairs > this.executionPolicy.max_repair_attempts))
+      denied("HOST_EXECUTION_BUDGET_EXCEEDED");
+  }
+  private admissionDefinitionCurrent(a: OrganizationAdmission) {
+    this.assertOrganizationBudget(a.definition.timeout_ms, a.definition.max_repair_attempts);
+    const ids = (this.options.acceptance?.criteria ?? []).map(c => c.id).sort();
+    if (canonical(a.definition.criterion_ids) !== canonical(ids) || a.definition.criteria_digest !== criterionDigest(this.criteria(ids))
+      || a.definition.environment_revision !== this.environment()) denied("ORGANIZATION_ADMISSION_PROFILE_STALE", 409);
+  }
+  private admissionReply(principal: Principal, a: OrganizationAdmission) {
+    const id = a.envelope.reply_to_job_id; if (!id) return;
+    const job = this.ownedJob(id, principal), task = this.state.organization.tasks.find(t => t.id === job.organizationTaskId);
+    if (job.agentId !== a.definition.root_agent_id || !task || task.attempts.at(-1) !== job.attemptId || !["queued", "running", "completed"].includes(job.status)
+      || job.code === "CANCELLED" || job.result?.recovery) denied("ORGANIZATION_ADMISSION_REPLY_OBSOLETE", 409);
+  }
+  private async authorizeAdmission(principal: Principal, admission: OrganizationAdmission, phase: "admit" | "read" | "dispatch", signal?: AbortSignal) {
+    this.usable(); this.principal(principal);
+    if (!principal.permissions.includes("pida:agents") || !principal.permissions.includes("pida:collaborate")) denied("FORBIDDEN", 403);
+    const policy = this.options.collaboration;
+    if (!policy?.authorizeAdmission) return denied("ORGANIZATION_ADMISSION_DISABLED", 503);
+    if (admission.envelope.recipient.host_id !== policy.hostId) denied("ORGANIZATION_ADMISSION_FORBIDDEN", 403);
+    const stop = AbortSignal.any([AbortSignal.timeout(5000), ...(signal ? [signal] : [])]); stop.throwIfAborted();
+    let abort: (() => void) | undefined;
+    try {
+      const allowed = await Promise.race([Promise.resolve().then(() => policy.authorizeAdmission!({ principal: copy(principal), admission: copy(admission), phase, signal: stop })),
+        new Promise<never>((_, reject) => { abort = () => reject(new PidaError("ORGANIZATION_ADMISSION_FORBIDDEN", 403)); stop.addEventListener("abort", abort, { once: true }); })]);
+      if (allowed !== true || stop.aborted) denied("ORGANIZATION_ADMISSION_FORBIDDEN", 403);
+    } catch { denied("ORGANIZATION_ADMISSION_FORBIDDEN", 403); }
+    finally { if (abort) stop.removeEventListener("abort", abort); }
+    this.usable();
+  }
+  async admitOrganization(principal: Principal, input: OrganizationAdmission): Promise<OrganizationAdmissionReceipt> {
+    this.usable(); this.principal(principal); principal = copy(principal);
+    if (!validOrganizationAdmission(input)) denied("ORGANIZATION_ADMISSION_INVALID");
+    const a = copy(input), e = a.envelope, d = a.definition, key = collaborationKey(principal.id, e);
+    this.assertOrganizationBudget(d.timeout_ms, d.max_repair_attempts);
+    await this.authorizeAdmission(principal, a, "admit");
+    const duplicate = this.state.organizationAdmissions.find(r => collaborationKey(r.owner, r.admission.envelope) === key);
+    if (duplicate) { if (duplicate.admission.admission_digest !== a.admission_digest) denied("ORGANIZATION_ADMISSION_CONFLICT", 409); return copy(duplicate.receipt); }
+    if (this.state.collaboration.some(r => collaborationKey(r.owner, r.envelope) === key)
+      || this.state.organizationAdmissions.some(r => r.owner === principal.id && r.admission.reservation_id === a.reservation_id)
+      || this.state.organization.sessions.some(o => o.id === e.recipient.org_session_id)) denied("ORGANIZATION_ADMISSION_CONFLICT", 409);
+    this.admissionDefinitionCurrent(a); this.admissionReply(principal, a);
+    for (const id of d.participants) this.owned(id, principal);
+    if (this.state.organization.sessions.length >= 1000 || this.state.organizationAdmissions.length >= 10000) denied("ORGANIZATION_ADMISSION_LIMIT", 429);
+    this.taskCapacity(1);
+    const lengths = { jobs: this.state.jobs.length, tasks: this.state.organization.tasks.length, attempts: this.state.organization.attempts.length,
+      sessions: this.state.organization.sessions.length, admissions: this.state.organizationAdmissions.length };
+    const receiptId = randomUUID(), job = this.enqueueRecord(d.root_agent_id, principal, { input: d.goal, requestId: "admission-" + receiptId }), task = this.trackTask(e.recipient.org_session_id, job), at = now();
+    job.organizationAdmissionReceiptId = receiptId;
+    const org: OrgSession = { id: e.recipient.org_session_id, owner: principal.id, requestId: "admission-" + receiptId, definitionDigest: a.definition_digest,
+      goal: d.goal, participants: [...d.participants], rootTaskId: task.id, criterionIds: [...d.criterion_ids], criteriaDigest: d.criteria_digest,
+      environmentRevision: d.environment_revision, maxRepairAttempts: d.max_repair_attempts, deadlineAt: Date.parse(at) + d.timeout_ms, createdAt: at, status: "active" };
+    const receipt: OrganizationAdmissionReceipt = { schema_version: "pida.organization.admission.receipt/1", receipt_id: receiptId, producer_id: e.producer_id, request_id: e.request_id,
+      payload_digest: e.payload_digest, definition_digest: a.definition_digest, admission_digest: a.admission_digest, reservation_id: a.reservation_id,
+      recipient: copy(e.recipient), received_at: at, job_id: job.id, root_task_id: task.id, root_attempt_id: job.attemptId!, phase: "organization_root_enqueued", durable: true, durability_scope: "local-process-restart" };
+    this.state.organization.sessions.push(org); this.state.organizationAdmissions.push({ owner: principal.id, admission: a, receipt });
+    if (this.recoverableStateBytes() > maxStateBytes) {
+      this.state.jobs.length = lengths.jobs; this.state.organization.tasks.length = lengths.tasks; this.state.organization.attempts.length = lengths.attempts;
+      this.state.organization.sessions.length = lengths.sessions; this.state.organizationAdmissions.length = lengths.admissions;
+      denied("ORGANIZATION_ADMISSION_STORAGE_LIMIT", 429);
+    }
+    this.persist(); this.kick(); return copy(receipt);
+  }
+  async getOrganizationAdmissionReceipt(id: string, principal: Principal): Promise<OrganizationAdmissionReceipt> {
+    this.usable(); this.principal(principal);
+    const record = this.state.organizationAdmissions.find(r => r.receipt.receipt_id === id && r.owner === principal.id);
+    if (!record) return denied("ORGANIZATION_ADMISSION_RECEIPT_NOT_FOUND", 404);
+    await this.authorizeAdmission(principal, record.admission, "read"); return copy(record.receipt);
   }
   private persist() {
+    // Never replace readable evidence with a file that the next reader must reject.
+    // Non-admission runtime growth faults this host; reopen uses the last bounded snapshot and normal interrupted recovery.
+    if (this.recoverableStateBytes() > maxStateBytes) { this.faulted = true; denied("AGENT_STATE_LIMIT", 429); }
     try { savePrivate(this.statePath, this.state); }
     catch { this.faulted = true; denied("AGENT_STORAGE_FAILED", 500); }
+  }
+  private recoverableStateBytes(): number {
+    const bytes = (value: unknown) => Buffer.byteLength(JSON.stringify(value));
+    let size = bytes(this.state); const affected = new Set<string>(), at = now();
+    for (const job of this.state.jobs) if (job.status === "running") {
+      const recovered = { ...job, status: "interrupted", code: "AGENT_PROCESS_INTERRUPTED", finishedAt: at };
+      delete recovered.currentTool; size += Math.max(0, bytes(recovered) - bytes(job)); affected.add(job.agentId);
+    }
+    for (const profile of this.state.profiles) if (affected.has(profile.id))
+      size += Math.max(0, bytes({ ...profile, paused: true, needsReconciliation: true, updatedAt: at }) - bytes(profile));
+    return size;
   }
   private usable() { if (this.closed || this.faulted) denied(this.faulted ? "AGENT_STORAGE_FAILED" : "AGENT_SUPERVISOR_CLOSED", 503); }
   private principal(principal: Principal) { if (!principal || !validText(principal.id, 256) || !Array.isArray(principal.permissions)) denied("UNAUTHORIZED", 401); }
@@ -395,8 +663,9 @@ export class AgentSupervisor {
       || !Array.isArray(input.criterionIds) || input.criterionIds.length > 32 || new Set(input.criterionIds).size !== input.criterionIds.length
       || this.criteria(input.criterionIds).length !== input.criterionIds.length) denied("ORG_ARGUMENT_INVALID");
     for (const id of input.participants) this.owned(id, principal);
-    const repairs = input.maxRepairAttempts ?? 0, timeout = input.timeoutMs ?? 3600000;
+    const repairs = input.maxRepairAttempts ?? 0, timeout = input.timeoutMs ?? this.executionPolicy?.organization_timeout_ms ?? 3600000;
     if (!Number.isSafeInteger(repairs) || repairs < 0 || repairs > 3 || !Number.isSafeInteger(timeout) || timeout < 1000 || timeout > 86400000) denied("ORG_BUDGET_INVALID");
+    this.assertOrganizationBudget(timeout, repairs);
     const definitionDigest = sha256(canonical(input)), duplicate = this.state.organization.sessions.find(o => o.owner === principal.id && o.requestId === input.requestId);
     if (duplicate) { if (duplicate.definitionDigest !== definitionDigest) denied("ORG_REQUEST_CONFLICT", 409); return copy(duplicate); }
     if (this.state.organization.sessions.length >= 1000) denied("ORG_SESSION_LIMIT", 429);
@@ -409,10 +678,11 @@ export class AgentSupervisor {
   }
   registerJoin(parentJobId: string, principal: Principal, input: { requestId: string; required: string[]; optional?: string[]; timeoutMs?: number }): BatchJoin {
     this.usable(); const parent = this.ownedJob(parentJobId, principal);
-    const optional = input?.optional ?? [], timeout = input?.timeoutMs ?? 3600000;
+    const optional = input?.optional ?? [], timeout = input?.timeoutMs ?? this.executionPolicy?.join_timeout_ms ?? 3600000;
     if (!input || Object.keys(input).some(k => !["requestId", "required", "optional", "timeoutMs"].includes(k)) || !validText(input.requestId, 128)
       || !Array.isArray(input.required) || !Array.isArray(optional) || !input.required.length || input.required.length + optional.length > 16
       || new Set([...input.required, ...optional]).size !== input.required.length + optional.length || !Number.isSafeInteger(timeout) || timeout < 1000 || timeout > 3600000) denied("JOIN_ARGUMENT_INVALID");
+    if (this.executionPolicy && timeout > this.executionPolicy.join_timeout_ms) denied("HOST_EXECUTION_BUDGET_EXCEEDED");
     const payloadDigest = sha256(canonical(input)), state = this.state.organization;
     const duplicate = state.joins.find(j => j.parentJobId === parent.id && j.requestId === input.requestId);
     if (duplicate) { if (duplicate.payloadDigest !== payloadDigest) denied("JOIN_REQUEST_CONFLICT", 409); return copy(duplicate); }
@@ -438,6 +708,31 @@ export class AgentSupervisor {
     const join: BatchJoin = { id: randomUUID(), orgId: org.id, taskId: task.id, parentJobId, requestId: input.requestId, payloadDigest, revision: 1,
       required: [...input.required], optional: [...optional], deadlineAt: Math.min(org.deadlineAt, Date.now() + timeout), failurePolicy: "block", status: "waiting" };
     task.status = "queued"; state.joins.push(join); this.persist(); this.kick(); return copy(join);
+  }
+  /** Read-only terminal handoff proof for the native agent_join host tool.
+   * No result/model marker can create this persisted membership or active lease.
+   */
+  confirmJoinYield(parentJobId: string, principal: Principal, input: { agentId: string; sessionId: string; runId: string; joinId: string; revision: number }): boolean {
+    this.usable(); this.principal(principal);
+    if (!principal.permissions.includes("agent:delegate")) return false;
+    const parent = this.state.jobs.find(j => j.id === parentJobId && j.owner === principal.id);
+    const active = parent && this.active.get(parent.id), profile = this.state.profiles.find(p => p.id === input.agentId && p.owner === principal.id);
+    if (!parent || !active || active.controller.signal.aborted || !profile || active.agentId !== input.agentId
+      || parent.agentId !== input.agentId || parent.status !== "running" || parent.runId !== input.runId
+      || parent.sessionId !== input.sessionId || profile.sessionId !== input.sessionId || parent.result?.recovery) return false;
+    const state = this.state.organization, task = state.tasks.find(t => t.id === parent.organizationTaskId);
+    const attempt = state.attempts.find(a => a.id === parent.attemptId), org = task && state.sessions.find(o => o.id === task.orgId);
+    const join = state.joins.find(j => j.id === input.joinId);
+    if (!task || !attempt || !org || !join || org.owner !== principal.id || task.agentId !== input.agentId
+      || attempt.jobId !== parent.id || attempt.taskId !== task.id || task.attempts.at(-1) !== attempt.id
+      || !["queued", "waiting"].includes(task.status) || org.status !== "active" || Date.now() >= org.deadlineAt
+      || !org.participants.includes(input.agentId) || join.parentJobId !== parent.id || join.taskId !== task.id || join.orgId !== org.id
+      || join.status !== "waiting" || join.revision !== input.revision || Date.now() >= join.deadlineAt || join.continuationJobId) return false;
+    return [...join.required, ...join.optional].every(id => {
+      const child = this.state.jobs.find(j => j.id === id), childTask = child && state.tasks.find(t => t.id === child.organizationTaskId);
+      return !!child && child.owner === principal.id && child.parentJobId === parent.id && !!childTask
+        && childTask.orgId === org.id && childTask.agentId === child.agentId && org.participants.includes(child.agentId);
+    });
   }
   listOrganizations(principal: Principal) { this.principal(principal); return this.state.organization.sessions.filter(o => o.owner === principal.id).map(copy); }
   acceptanceCriteria(principal: Principal) { this.principal(principal); return copy(this.options.acceptance?.criteria ?? []); }
@@ -543,6 +838,7 @@ export class AgentSupervisor {
       if (task.id !== org.rootTaskId) { task.status = "completed"; this.persist(); continue; }
       if (state.tasks.some(t => t.orgId === org.id && t.id !== task.id && ["queued", "waiting"].includes(t.status))) continue;
       if (task.receipts.some(r => r.attemptId === attempt.id)) continue;
+      const workRevision = this.organizationWorkRevision(org.id);
       const principal = await this.organizationPrincipal(org.owner), criteria = this.criteria(org.criterionIds);
       const receipt: LocalReceipt = { id: randomUUID(), taskId: task.id, attemptId: attempt.id, jobId: job.id, owner: org.owner, agentId: task.agentId,
         criteriaDigest: org.criteriaDigest, environmentRevision: org.environmentRevision, occurredAt: now(), status: "UNKNOWN", checks: org.criterionIds.map(id => ({ id, required: true, status: "UNKNOWN" })), issuer: "pida-host", scope: "workbench-exact-revision" };
@@ -550,7 +846,7 @@ export class AgentSupervisor {
         try { Object.assign(receipt, evaluateLocal(await this.captureAcceptance(this.owned(task.agentId, principal), principal, Math.min(5000, org.deadlineAt - Date.now())), criteria)); }
         catch { /* unavailable checker/subject is UNKNOWN, not FAIL or PASS */ }
       }
-      if (this.closed || task.attempts.at(-1) !== attempt.id || org.status !== "active") continue;
+      if (this.closed || task.attempts.at(-1) !== attempt.id || org.status !== "active" || this.organizationWorkRevision(org.id) !== workRevision) continue;
       if (Date.now() >= org.deadlineAt) { org.status = "expired"; task.status = "failed"; this.persist(); continue; }
       task.receipts.push(receipt);
       if (receipt.status === "PASS") { task.status = "accepted"; org.status = "accepted"; }
@@ -721,6 +1017,20 @@ export class AgentSupervisor {
       }
       signal.throwIfAborted();
       const prompt = context ? `Stored agent memory (context, not new authorization):\n${context}\n\nCurrent user request:\n${job.input}` : job.input;
+      for (const collaboration of this.collaborationOrigins(job)) {
+        if ("admission" in collaboration) {
+          await this.authorizeAdmission(principal, collaboration.admission, "dispatch", signal);
+          this.admissionDefinitionCurrent(collaboration.admission); this.admissionReply(principal, collaboration.admission);
+          const originOrg = this.state.organization.sessions.find(o => o.id === collaboration.admission.envelope.recipient.org_session_id && o.owner === principal.id);
+          if (!originOrg || originOrg.status !== "active" || Date.now() >= originOrg.deadlineAt) denied("ORGANIZATION_ADMISSION_TARGET_INACTIVE", 409);
+        } else {
+          await this.authorizeCollaboration(principal, collaboration.envelope, "dispatch", signal);
+          this.collaborationTarget(principal, collaboration.envelope);
+        }
+        const origin = this.state.jobs.find(j => j.id === collaboration.receipt.job_id)!;
+        if (!["queued", "running", "completed"].includes(origin.status) || origin.code === "CANCELLED" || origin.result?.recovery) denied("COLLABORATION_ORIGIN_INACTIVE", 409);
+        signal.throwIfAborted();
+      }
       const result = await runtime.run(profile.sessionId, principal, prompt, event => this.event(job, event), signal, { taskId: job.id });
       job.result = copy(result); job.runId = result.runId; job.status = result.status; job.code = result.code; job.latestText = result.text.slice(-16000);
       if (result.recovery) { profile.needsReconciliation = true; profile.paused = true; }

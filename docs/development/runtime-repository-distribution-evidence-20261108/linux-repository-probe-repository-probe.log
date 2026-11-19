@@ -1,0 +1,20 @@
+✔ closed private binding and public projection accept only fixed approved Node scope (119.173578ms)
+✔ closed fields, UUID types, digest, root identity, protected paths and unsafe aliases refuse (112.917143ms)
+✔ unsafe runner schema and changed approval never create a managed workspace (330.043617ms)
+✔ actual mode3 fresh/resume, caps and queued identity; changed bindings refuse without any workspace writes (2840.097648ms)
+✔ repository requires work selection before initialization; mode2 remains opt-in independent (1336.183196ms)
+✔ actual native baseline failure then distinct repair goal edits, checks and reads exact live file (580.308883ms)
+✔ same-run fixed write-effect checker replay stays blocked after later edit (363.761682ms)
+✔ fixed runner rejects model arguments, changed entrypoint and inherited credential environment; cancellation stays unknown (305.751805ms)
+✔ unmodified faux usage estimate still enforces managed token ceiling (360.719759ms)
+✔ shared project run lease serializes two native agents inside this one host (695.974147ms)
+✔ project tools retain boundary checks; explicit native cancellation retains unknown effects and no replay (394.231765ms)
+✔ root replacement on resume refuses before managed recovery; exact config privileges remain pinned (1528.989794ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9390.821972

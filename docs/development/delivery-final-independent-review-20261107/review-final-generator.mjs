@@ -1,0 +1,11 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+import assert from 'node:assert/strict';
+let text=readFileSync('review-lineage-corruption.mjs','utf8');
+const start=text.indexOf('  s=await AgentSupervisor.open(opts);s.start();await s.resume(b.id,owner);const result=await done(s,child.id);');
+const end=text.indexOf('\n}finally{await s.close();rmSync(path,{recursive:true,force:true});}');
+assert.ok(start>0&&end>start);
+text=text.slice(0,start)+`  const raw=readFileSync(file,'utf8');
+  await assert.rejects(AgentSupervisor.open(opts),{code:'AGENT_STATE_INVALID'});
+  assert.equal(readFileSync(file,'utf8'),raw);assert.deepEqual(calls,['external']);
+  console.log(JSON.stringify({case:'missing-native-parent-link',changedFields:['jobs.child.parentJobId deleted'],depth:record.depth,reopen:'AGENT_STATE_INVALID',filePreserved:true,calls,phases}));`+text.slice(end);
+writeFileSync('review-final-lineage-corruption.mjs',text);

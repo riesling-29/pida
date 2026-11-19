@@ -1,0 +1,93 @@
+{
+  "source": "0f1b895d72d2f05a7c4fa21a2c9a5070aad71d8f",
+  "scope": "Independent both-platform artifact PASS; packaged parent Python, GUI, real provider excluded.",
+  "archive_sha256": "17bc590d73b83d5f8f695abc8ab3d3837da1ab95cad0daa2759a54acdfcb0aef",
+  "original_index_sha256": "77202aa99bb6d8d4172cbf094c5b022df18419cf0da595ab2786e7148a712f96",
+  "files": [
+    {
+      "name": "audit-delta.mjs",
+      "bytes": 2715,
+      "sha256": "137d863aab19000edb60c83547f9b18082e63f1733651f23215bfebfc59ef4b3"
+    },
+    {
+      "name": "author-probe-original.mjs",
+      "bytes": 10556,
+      "sha256": "a86fb1387943820256b0c28be057233c8e00cfb882d48b9deecb31cc70e8b5fa"
+    },
+    {
+      "name": "INDEPENDENT-ARTIFACT-REVIEW.md",
+      "bytes": 8213,
+      "sha256": "e06797b5c2964f6031b9799d3eb0fbfd64fdd1069de9c0ca6d88b68760468dd2"
+    },
+    {
+      "name": "linux-after-verifier.json",
+      "bytes": 242,
+      "sha256": "0ea6286e8633655c5382b02ae626285c7be46788bcf55b8a41529b6278834d55"
+    },
+    {
+      "name": "linux-before-verifier.json",
+      "bytes": 242,
+      "sha256": "0ea6286e8633655c5382b02ae626285c7be46788bcf55b8a41529b6278834d55"
+    },
+    {
+      "name": "linux-delta.json",
+      "bytes": 13780,
+      "sha256": "dba81fc3cb296cbdfa47b70f5d605a8a618d3204ebd4a101a5ee2ff1f2759ec0"
+    },
+    {
+      "name": "linux-independent-tree-diff.json",
+      "bytes": 217,
+      "sha256": "52868fb78e8f81e893692623ed986d44c2f39f377c85226e63c469b106e900a7"
+    },
+    {
+      "name": "linux-runtime-probe.json",
+      "bytes": 3777,
+      "sha256": "64da6e06c18bc45e22773a64a3c41333767e1dc4dbee6cebe9251184d56f40dd"
+    },
+    {
+      "name": "metadata.json",
+      "bytes": 3606,
+      "sha256": "d8ed324488058fdda25f3fcf5b83b48c3d6ce4a01eb5a7e4089b92ae6aec81f6"
+    },
+    {
+      "name": "metadata.py",
+      "bytes": 3885,
+      "sha256": "ed5dd8260ab87f5060214418c513d9732bcf5c0265e894222f071e98288a0d89"
+    },
+    {
+      "name": "prepare-reference.py",
+      "bytes": 840,
+      "sha256": "22c4a3d5f1987518c5fb2ca817b03b38c47b6020b79779dec6b357d5bf66b7ce"
+    },
+    {
+      "name": "probe.mjs",
+      "bytes": 10794,
+      "sha256": "3564d189d7d32a3f9b7868db2d2cefe2e1e4a9e891bd4bc7a13b45c71321956c"
+    },
+    {
+      "name": "reference-source-provision.json",
+      "bytes": 1607,
+      "sha256": "2b819529895c81d479cec7826816c784d31cdc1cadfe5f83ee48978c44021729"
+    },
+    {
+      "name": "windows-after-verifier.json",
+      "bytes": 242,
+      "sha256": "42e23b456294c1a73d56ec16f4bdaea2957cc9a8b216e9ec13883a293d60ceab"
+    },
+    {
+      "name": "windows-before-verifier.json",
+      "bytes": 242,
+      "sha256": "42e23b456294c1a73d56ec16f4bdaea2957cc9a8b216e9ec13883a293d60ceab"
+    },
+    {
+      "name": "windows-delta.json",
+      "bytes": 13780,
+      "sha256": "c4a3c9f0e7f7bf2f98dbbfd4a60efcacf2b33a9fd23c9d611bf819bb8a38e713"
+    },
+    {
+      "name": "windows-runtime-probe.json",
+      "bytes": 3777,
+      "sha256": "3e2e544bff4371abe886e8d4c90deee4e0d4a1c3a512a422599aac6c05858aca"
+    }
+  ]
+}

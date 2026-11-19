@@ -6,6 +6,7 @@ import { EffectLedger, type EffectReceipt } from "./effects.js";
 import { ObservationArchive, type ObservationSink, type ObservationContext } from "./observation.js";
 import { exportOcel, type OcelExport } from "./ocel.js";
 import { ModelAttemptUsage } from "./model-observation.js";
+import { providerRejectionCode } from "./provider-diagnostic.js";
 import { validatePersonaSnapshot, type PersonaProvider } from "./persona-provider.js";
 import { resultManifest } from "./evidence.js";
 import type { ArtifactSnapshot, ToolEvidence, VerificationResult, ObservationBundle } from "./execution-contract.js";
@@ -86,6 +87,11 @@ export interface BusinessTool<T extends TSchema = TSchema> {
     code?: string;
     recoveryKey?: string;
   };
+  /** Trusted host-only capability, never exposed in the model tool schema/result.
+   * Recheck a durable native handoff synchronously; only literal true permits an
+   * otherwise successful empty final response. No I/O or thenables are supported.
+   */
+  confirmRunYield?(value: unknown, context: ToolContext): boolean;
 }
 export function defineBusinessTool<T extends TSchema>(
   tool: BusinessTool<T>,
@@ -190,6 +196,7 @@ interface ActiveRun {
   turns: number;
   resultFailures: Map<string, string>;
   classifiedCalls: Map<string, string>;
+  yieldChecks?: (() => boolean)[];
   taskId: string;
   tokens: number;
   cost: number;
@@ -435,7 +442,7 @@ export class PidaRuntime {
                 throw new PidaError(code, 409);
               }
             }
-            const task = Promise.resolve().then(() => { combined.throwIfAborted(); return tool.execute(args, {
+            const toolContext: ToolContext = {
               principal: run.principal,
               sessionId: id,
               runId: run.id,
@@ -451,7 +458,8 @@ export class PidaRuntime {
                 const text = outcome.result.content.filter(part => part.type === "text").map(part => part.text).join("\n");
                 return JSON.parse(text);
               } } : {}),
-            }); });
+            };
+            const task = Promise.resolve().then(() => { combined.throwIfAborted(); return tool.execute(args, toolContext); });
             this.pendingTools.set(task, id); (run.pendingTools ??= new Set()).add(task);
             const settled = () => { this.pendingTools.delete(task); run.pendingTools!.delete(task); };
             void task.then(settled, settled);
@@ -466,6 +474,14 @@ export class PidaRuntime {
               try { this.effects.settle(id, receipt.id, state); }
               catch { throw new PidaError("EFFECT_PERSISTENCE_FAILED", 500); }
               if (state === "unknown" && !run.status) { run.status = "failed"; run.code = outcome?.status === "failed" && outcome.code && /^[A-Z][A-Z0-9_]{0,63}$/.test(outcome.code) ? outcome.code : "EFFECT_STATE_UNKNOWN"; }
+              if (state === "applied" && outcome?.status === "completed" && tool.confirmRunYield) {
+                // Capture only the successful host invocation, never a model-supplied flag.
+                // A malformed/noncloneable result supplies no empty-response capability.
+                try {
+                  const valueCopy = structuredClone(value), confirm = tool.confirmRunYield;
+                  (run.yieldChecks ??= []).push(() => confirm(valueCopy, toolContext));
+                } catch { /* ordinary empty-response failure remains the default */ }
+              }
             }
             try {
               const evidence = tool.evidence?.(value);
@@ -739,7 +755,7 @@ export class PidaRuntime {
       if (saved?.lastStatus === "interrupted" && saved.activeRunId && saved.activeTaskId) {
         const previous = { sessionId: id, runId: saved.activeRunId, taskId: saved.activeTaskId };
         this.observations.record(previous, "run_interrupted", { detected_on_restore: true });
-        this.observations.finish(previous, resultManifest({ sessionId: id, runId: saved.activeRunId, taskId: saved.activeTaskId, agentId: this.observations.agentId, status: "interrupted", version: runtimeVersion, verification: [], limits: ["ORIGINAL_END_TIME_UNKNOWN", "RECOVERY_REQUIRES_STATE_INSPECTION"] }));
+        await this.observations.finish(previous, resultManifest({ sessionId: id, runId: saved.activeRunId, taskId: saved.activeTaskId, agentId: this.observations.agentId, status: "interrupted", version: runtimeVersion, verification: [], limits: ["ORIGINAL_END_TIME_UNKNOWN", "RECOVERY_REQUIRES_STATE_INSPECTION"] }));
         record.saved.activeRunId = undefined; record.saved.activeTaskId = undefined;
       }
       try {
@@ -1115,6 +1131,7 @@ export class PidaRuntime {
     const externalAbort = () => stop("cancelled", "CANCELLED");
     signal?.addEventListener("abort", externalAbort, { once: true });
     if (signal?.aborted) externalAbort();
+    const runDeadline = performance.now() + this.limits.runMs;
     const timer = setTimeout(
       () => stop("limited", "RUN_TIMEOUT"),
       this.limits.runMs,
@@ -1182,6 +1199,7 @@ export class PidaRuntime {
         if (!["error", "aborted"].includes(event.message.stopReason)) providerRetryExhausted = false;
         run.outputTruncated = event.message.stopReason === "length";
         const usage = event.message.usage;
+        const rejectionCode = providerRejectionCode(event.message);
         const measured = (run.attempt?.usage ?? new ModelAttemptUsage()).snapshot(usage);
         const tokens = measured.tokens, cost = usage?.cost?.total;
         if (typeof tokens === "number") run.tokens += tokens; else run.usageKnown = false;
@@ -1189,6 +1207,7 @@ export class PidaRuntime {
         else if (this.options.maxCostUsd !== undefined) stop("limited", "USAGE_UNAVAILABLE");
         this.observe(id, run, "model_response", { request_id: run.requestId ?? null, attempt: run.attempts ?? null,
           stop_reason: event.message.stopReason, ...measured,
+          ...(rejectionCode ? { code: rejectionCode } : {}),
           first_output_ms: run.attempt?.firstOutputMs ?? null,
           duration_ms: run.attempt ? Math.max(0, performance.now() - run.attempt.startedAt) : null,
           cost_usd: typeof tokens === "number" && this.options.pricingVerified && Number.isFinite(cost) && cost! >= 0 ? cost! : null });
@@ -1313,6 +1332,24 @@ export class PidaRuntime {
       run.status = "failed";
       run.code = run.resultFailures.values().next().value!;
     }
+    const canYield = () => {
+      if (lastAssistant?.stopReason === "stop" && !run.abort.signal.aborted && !signal?.aborted
+        && performance.now() < runDeadline && !run.resultFailures.size && !run.pendingTools?.size) {
+        try {
+          if (!this.effects.pending(id).length) return (run.yieldChecks ?? []).some(check => {
+            const decision: unknown = check();
+            if (decision && typeof (decision as { then?: unknown }).then === "function") {
+              void Promise.resolve(decision).catch(() => {}); return false;
+            }
+            return decision === true && !run.abort.signal.aborted && !signal?.aborted && performance.now() < runDeadline;
+          });
+        } catch { /* a stale, failed or asynchronous host proof never grants a yield */ }
+      }
+      return false;
+    };
+    const yieldCandidate = !run.status && !text.trim() && canYield();
+    // Do not store a successful handoff in an asynchronously collected work review.
+    // The native proof is rechecked after that boundary, before terminal publication.
     if (!run.status && !text.trim()) { run.status = "failed"; run.code = "EMPTY_RESPONSE"; }
     const result: RunResult = {
       runId: run.id,
@@ -1328,6 +1365,20 @@ export class PidaRuntime {
     } catch { result.recovery = { autoRetry: false, pendingEffectIds: [], action: "repair-effect-ledger" }; }
     if (result.recovery && result.status === "completed") { result.status = "failed"; result.code = "EFFECT_STATE_UNKNOWN"; }
     try { await this.options.workSurface?.finish(run.principal, result); } catch { /* Admission stays inspectable; incomplete review cannot trigger replay. */ }
+    // The work-surface boundary can await; a cancelled/expired/revised native
+    // handoff cannot be persisted as yielded after that boundary.
+    if (yieldCandidate && !result.recovery) {
+      if (canYield()) { result.status = "completed"; result.code = "AGENT_JOIN_YIELDED"; }
+      else if (run.abort.signal.aborted || signal?.aborted) { result.status = "cancelled"; result.code = "CANCELLED"; }
+      else if (performance.now() >= runDeadline) { result.status = "limited"; result.code = "RUN_TIMEOUT"; }
+      else { result.status = "failed"; result.code = "AGENT_JOIN_YIELD_OBSOLETE"; }
+    }
+    // A terminal carrier cannot turn an earlier, recovered rejection into the final cause.
+    // Keep actual assistant output, accounting guard and primary status/code unchanged.
+    const providerCode = providerRejectionCode(lastAssistant);
+    const providerTrace = providerCode && ["failed", "limited"].includes(result.status)
+      && ["USAGE_UNAVAILABLE", "PROVIDER_FAILED", "PROVIDER_RETRY_EXHAUSTED"].includes(result.code ?? "")
+      ? trace("provider_rejected", { code: providerCode }, false, { request_id: run.requestId ?? null, attempt: run.attempts ?? null }) : undefined;
     const finalTrace = trace(
       "run_finished",
       { status: result.status, code: result.code },
@@ -1357,9 +1408,10 @@ export class PidaRuntime {
         ...(this.options.personaProvider?.authority === "external" && !this.options.personaProvider.authorizeInput ? ["PERSONA_AUTHORIZATION_SNAPSHOT_ONLY"] : []),
         ...(this.options.evidenceLimits ?? []), ...(!this.options.pricingVerified ? ["COST_UNKNOWN"] : []), ...(result.recovery ? ["EFFECT_STATE_REQUIRES_RECONCILIATION"] : []), ...(run.evidenceFailed || result.persistenceError ? ["EVIDENCE_OR_STORAGE_INCOMPLETE"] : [])] });
     this.observe(id, run, "run_finished", { status: result.status, code: result.code ?? null, persistence_error: result.persistenceError ?? null });
-    this.observations.finish({ sessionId: id, taskId: run.taskId, runId: run.id }, manifest);
+    await this.observations.finish({ sessionId: id, taskId: run.taskId, runId: run.id }, manifest);
     try { this.options.workSurface?.settle(result); } catch { /* Preserve admission receipt; never replay a run because review storage failed. */ }
     finish();
+    if (providerTrace) emit({ type: "trace", trace: { ...providerTrace } });
     emit({ type: "trace", trace: { ...finalTrace } });
     emit({ type: "result", result });
     return result;

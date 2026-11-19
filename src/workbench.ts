@@ -125,7 +125,8 @@ export class PidaWorkbench {
   }
   private git(area: Area, args: string[], raw = false) {
     try {
-      const output = execFileSync("git", ["--git-dir", area.git, "--work-tree", area.files, "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgsign=false", "-c", "user.name=Pida", "-c", "user.email=pida@localhost", ...args], {
+      // cwd is the owned files directory; short explicit sibling paths also avoid Git for Windows' GIT_DIR size guard.
+      const output = execFileSync("git", ["--git-dir", relative(area.files, area.git), "--work-tree", ".", "-c", "core.longpaths=true", "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgsign=false", "-c", "user.name=Pida", "-c", "user.email=pida@localhost", ...args], {
         cwd: area.files, encoding: "utf8", timeout: 5000, maxBuffer: 4194304,
         env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, HOME: area.root, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null", GIT_TERMINAL_PROMPT: "0" }, stdio: ["ignore", "pipe", "pipe"],
       });
@@ -326,10 +327,13 @@ export class PidaWorkbench {
       return tool(`workspace_${kind}`, `Pi ${kind} tool within your private workbench. Relative text file paths only.`, parameters, kind === "read" ? read : write, async (area, args, signal) => {
         validPath(args.path);
         const guard = (abs: string) => safePath(area.files, relative(area.files, abs).split("\\").join("/"));
+        // Pi supplies native absolute paths; retain the guard, then return to our
+        // forward-slash logical path contract before readText/apply validation.
+        const guardedRelative = (abs: string) => relative(area.files, guard(abs)).split("\\").join("/");
         const operations = {
-          readFile: async (abs: string) => Buffer.from(this.readText(area, relative(area.files, guard(abs)))),
-          access: async (abs: string) => { this.readText(area, relative(area.files, guard(abs))); },
-          writeFile: async (abs: string, text: string) => { this.apply(area, { [relative(area.files, guard(abs))]: text }); },
+          readFile: async (abs: string) => Buffer.from(this.readText(area, guardedRelative(abs))),
+          access: async (abs: string) => { this.readText(area, guardedRelative(abs)); },
+          writeFile: async (abs: string, text: string) => { this.apply(area, { [guardedRelative(abs)]: text }); },
           mkdir: async (abs: string) => { if (abs !== area.files) guard(abs); },
         };
         try {

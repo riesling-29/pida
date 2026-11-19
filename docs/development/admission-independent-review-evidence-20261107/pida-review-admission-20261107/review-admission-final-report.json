@@ -1,0 +1,157 @@
+{
+  "date": "2026-11-07",
+  "reviewer": "/root/pida_delivery_review",
+  "independence": "Distinct context, same Codex family. Isolated checkout; tracked product files untouched. Independent untracked probes and test-only trusted model preload, no implementation changes.",
+  "source": {
+    "reviewedCommit": "30077f3eaeb3812d85f61a39453080dac560547f",
+    "base": "3cfc76bc1efdaa30eed1d227379067858d59e868",
+    "contract": "fd07eb27ee4f7d5c68fc5175118d426d82519ee3",
+    "golden": "836eff826347016164df55db5e23e14ef3aa0669",
+    "baseline": "bbb8e565282b676307c9ed92a8423a19b6c1f12e",
+    "producer": "c1e3617aa88e6013ea34f76c3f4c41504618f863",
+    "manifestFileCount": 18,
+    "producerSourceFileCount": 11,
+    "worktree": "D:\\ChantaResearchGroup\\pida-review-admission-20261107"
+  },
+  "environment": {
+    "os": "Windows win32",
+    "node": "v24.18.0",
+    "python": "3.11.9",
+    "installer": "bun 1.4.2"
+  },
+  "runs": [
+    {
+      "command": "bun install --frozen-lockfile; npm run build",
+      "result": "PASS",
+      "evidence": [
+        "review-admission-install.log",
+        "review-admission-build.log"
+      ]
+    },
+    {
+      "command": "PIDA_TEST_VERA_SOURCE=<hash-verified c1e3617 source-only directory> node --test --test-timeout=30000 test/organization-admission-contract.test.mjs test/organization-admission.test.mjs test/collaboration-policy-client.test.mjs test/collaboration.test.mjs test/collaboration-regressions.test.mjs test/organization.test.mjs test/agent-tools.test.mjs test/workspace-persona-pi.test.mjs",
+      "result": "66 total: 65 pass, 1 fail, 0 cancelled, 0 skipped. Sole failure expects failed but actual limited in depth-chain case.",
+      "evidence": "review-admission-focused.log"
+    },
+    {
+      "command": "node --test --test-timeout=30000 --test-name-pattern='actual delegation chain' test/agent-tools.test.mjs",
+      "result": "Independently reproduced identical limited-versus-failed assertion at line 76 both on frozen bbb8e56 and final 30077f3. Same test bytes verified. Baseline attribution only; unresolved behavior is not accepted as correct.",
+      "evidence": [
+        "review-admission-depth-current.log",
+        "../pida-review-resume-20261107/review-admission-depth-baseline.log"
+      ]
+    },
+    {
+      "command": "node review-admission-generator.mjs; node --test --test-timeout=30000 review-tests/admission-adversaries.test.mjs review-tests/admission-host-chain.test.mjs",
+      "result": "5 independent cases passed before adding historical-collision case. Final generated file additionally contains collision case, run separately below.",
+      "evidence": "review-admission-adversaries.log"
+    },
+    {
+      "command": "node --test --test-timeout=30000 --test-name-pattern='historical foreign' review-tests/admission-adversaries.test.mjs",
+      "result": "1 independent historical ownership/carrier-collision case passed.",
+      "evidence": "review-admission-collisions.log"
+    },
+    {
+      "command": "Source SHA256 checks; git diff --exit-code",
+      "result": "All 18 source manifest entries and 11 exact producer files verified; baseline/current depth test file hashes equal; tracked product source unchanged."
+    }
+  ],
+  "independentProbes": [
+    {
+      "case": "Concurrent admissions under pending authority",
+      "evidence": "No disk or job publication while two independent authorizations wait; resolve in reverse order and both requests receive one identical receipt/job/org. Altered complete definition still conflicts after authorization."
+    },
+    {
+      "case": "Cancellation during pending dispatch policy",
+      "evidence": "Cancel native organization while policy is unresolved; late true result does not reach model. Job cancelled, no run ID/calls; retry returns same immutable receipt without new job."
+    },
+    {
+      "case": "Uncooperative policy timeout",
+      "evidence": "Callback never resolves and ignores signal; internal five-second boundary denies admission, preserves exact persisted bytes and publishes no org/job."
+    },
+    {
+      "case": "Revoke only after child completion",
+      "evidence": "Actual scripted Pi root delegates and joins, child executes and revokes grant; native continuation fails ORGANIZATION_ADMISSION_FORBIDDEN without its model call. Calls are root and child only."
+    },
+    {
+      "case": "Actual Node host + separate Python authority + full root/child/continuation",
+      "evidence": "Test-only --import preload replaces runtime model outputs with faux provider while retaining launcher, policy, tools, permissions and persistence. Neither agent paused. Authoritative reservation remains reserved: two root attempts plus one child all complete, exactly three dispatch checks, join ready, empty acceptance UNKNOWN. Stop/resume retains exact receipt and complete native job/view records without new work."
+    },
+    {
+      "case": "Historical ownership and scoped carrier collision",
+      "evidence": "Proposed session UUID matching other owner historical native organization rejects without changing bytes or creating own job. Existing ordinary delivery carrier cannot become admission, and admission carrier cannot become ordinary delivery; original receipt remains exact."
+    }
+  ],
+  "independentlyExecutedDeveloperScenarios": [
+    "Canonical Unicode golden and closed-domain checks bind complete goal, participants, budgets, current host criteria digest and environment.",
+    "One durable OrgSession/OrgTask/OrgAttempt/root job/admission receipt before scheduling; ACK-loss/restart returns same native mapping and no duplicate root.",
+    "v4 migration from seeded valid v3 preserves prior jobs/organizations/ordinary delivery receipt and adds empty admission collection. This is native state migration, not old host-manifest source migration.",
+    "Near-32-MiB seeded valid state rejects admission, rolls back all five tentative collections, preserves previous bytes/receipt through reopen.",
+    "Current grant revocation blocks root/read/retry; native child/restart and repair attempts retain authority. Corrupt admission/root mapping rejected preserving bytes.",
+    "Separate actual Node/Python local and public Persona modes execute first root while reserved; observed promotion reconciles existing receipt. Fake observed mapping lacking retained reservation denies.",
+    "Actual SIGKILL after durable admission while running and awaiting dispatch policy: reopen retains same receipt/job interrupted without run ID, marks reconciliation required, no replacement attempt.",
+    "Versioned policy /2 exact nonce/phase/principal/host/digests/reservation/recipient/revision/state binding; wrong fields, redirected/malformed/oversized/late response denied. /1 regressions remain covered.",
+    "Prior actual host cleanup rejection/hang and explicit resume tests remain passed within broad command."
+  ],
+  "sourceReview": [
+    "Absent authorizeAdmission disables API even when ordinary delivery enabled; capabilities require authenticated agent permission and return current complete host acceptance profile, not a grant.",
+    "Admission validates closed canonical request, awaits bounded current authority, then rechecks scoped duplicate/collision/profile/ownership/capacity in synchronous segment. Single bounded supervisor write precedes kick and receipt return.",
+    "Dedicated owner-scoped immutable receipt and separate readback route preserve full request digest and native session/task/attempt/job linkage. Existing session UUIDs are not adopted.",
+    "Native parent, earlier attempt and join-result graph supplies admission origins for dispatch; current profile, reply constraints, org active/deadline and origin state checked before runtime.run.",
+    "Loader validates admission-to-root job/task/attempt/org and owner/source/receipt fields; earlier delivery path remains separately validated during v4 migration.",
+    "HTTP admission bound is 128 KiB; SDK routes use full closed object. Policy uses separate /2 six-field request and strict fourteen-field response over existing trusted endpoint."
+  ],
+  "unresolved": [
+    {
+      "severity": "Inherited test/product gate",
+      "finding": "Depth-chain fixture returns limited instead of expected failed; reproduced unchanged baseline and final. No causal runtime correctness conclusion from this attribution. Full suite is not green."
+    }
+  ],
+  "limitations": [
+    "Production Schumpeter persisted reservation authority/launcher/desktop UI and Linux/installer acceptance are not exercised. Python authority is synthetic trusted fixture.",
+    "Full-chain actual-host probe uses explicit test-only model injection; it is a scripted Pi execution proof, not paid provider execution or stock arbitrary-task mock capability.",
+    "SIGKILL case occurs before dispatch authorization returns and before model run; does not establish exactly-once arbitrary external effects. Existing reconciliation remains necessary.",
+    "Near-capacity test seeds historical data; not hundreds of actual prior executions. v3 migration test uses valid synthetic prior-state representation.",
+    "Empty host criteria yield UNKNOWN; completion and durable admission are not independent artifact/enterprise PASS.",
+    "Host source-consistency manifests intentionally reject older compiled-source workspaces; no host source/profile migration added.",
+    "Windows symlink coverage, known deep Git path limits, other baseline/full-suite failures and canonical Persona persistence remain separate open gates.",
+    "No user data, canonical memory, paid calls, GUI, source edits, push/deploy or WMC publication."
+  ],
+  "validity": "Only the exact frozen commit, pinned producer and this Windows environment. Withdraw on counterexample showing duplicate first root, mismatched definition/reservation authorization, native historical adoption, partial state publication on rejected admission, current revoked/cancelled authority reaching a model, lost native lineage after restart, or inappropriate PASS promotion. Relevant source/lifecycle/schema/dependency changes require re-review.",
+  "sourceHashes": {
+    "src/organization-admission.ts": "5d3a6e1ec16db1de42863aad2b664b9bbd67e21c2741a8d71a2379e293544d82",
+    "src/collaboration.ts": "51e76df2c58e496617db792cd404cece7247f09278b062c5608dc2d62c9f3da1",
+    "src/collaboration-policy-client.ts": "9e1036a823d96543d886c2392d009ec2c7af47f91486bfe6c6e7489f95d4cfbd",
+    "src/agent-supervisor.ts": "f0c1e45cf927119ed769c9c025f6e7ad7bbc4a4483068da3acf17a62cea05090",
+    "src/http.ts": "4b21860c5185565b7c603de5fdf4fff54b7d86491451b8cd485f89e1fd5298d3",
+    "src/client.ts": "79b41ce7b758a134adf1e2103643a913ddf78ff19b739eede3f1dc62f9e9a222",
+    "src/index.ts": "5e5e89fde644adfa897e6567b36eae0752465464c85d66ce9f3d5c9a317d8651",
+    "test/organization-admission-contract.test.mjs": "fc8c86a580345c235aa91e52617e2d538d0e8839a93989636022fb933474ab1c",
+    "test/organization-admission.test.mjs": "3a8137353cec44559a3ad996b3c5f3d8727a42078c9c99a98df481e0dbb2a51a",
+    "test/collaboration-policy-client.test.mjs": "b5a311df0408635cc71e4e86a14513544cba1e37ab35a687d8eea7ae1a91aac8",
+    "test/fixtures/collaboration-policy-server.py": "1908d90c620664c9f25a492b30149974d5e2e1085d548ac704ed568d5aa4beab",
+    "test/collaboration.test.mjs": "5d898479b0df575695e17a03b99f67442ff162f31954a788b0bce4e2a2b16ab4",
+    "test/organization.test.mjs": "38c7512f079d20251f7cf6a975f96bb19b40f1176ec95a19f9a680e55a3baa1f",
+    "docs/ORGANIZATION-ADMISSION-1.md": "20761c3bcad616ec2e7bd051b9233726734ebcc7ed0240826228b4520a1ca723",
+    "docs/development/PIDA-ORGANIZATION-ADMISSION-20261107.md": "bbefa2ae6fde6c83086fb4ada0a1043bd89ce6a2cd5569f76435ffc26b330947",
+    "fixtures/organization-admission/admission-v1.json": "b362d4308df80bc9a64f8ec309f8c67fa7fd361cfd4f921768c93daf89f35830",
+    "fixtures/organization-admission/authorization-request-v2.json": "97921890c16db0560bd152001f31bf3bfb258ba78883e1a99d8a015999598f01",
+    "fixtures/organization-admission/authorization-response-v2.json": "98cfad03604be972c077c86dc3eaa996fb4942cec84ff17ad543e5d5fec7a4fd"
+  },
+  "evidenceHashes": {
+    "review-admission-install.log": "01f424a3bd946f78bcd2c3836ed337edbf92f9790bf2082c373f5d9a92dfacf4",
+    "review-admission-build.log": "6d3803c3d83c3545712565477cdcbf4759bfe23f04c1c98ee2063daf998b069b",
+    "review-admission-focused.log": "32448545922694cddbcd3f7152801c02cbd94eb865ad686e3d98f47fa984d014",
+    "review-admission-depth-current.log": "397d1d4967dcd3c8669637ac9f80db8565aca201e6a8ced25f6cc8583238fe44",
+    "../pida-review-resume-20261107/review-admission-depth-baseline.log": "6712c85e12805f5a78440ff5ffbfa660bf2448c0d566823aff62949904945b6a",
+    "review-admission-adversaries.log": "ed5959f77ad6809908c8c30abc61aa232a1288a6c450774e62dec935073f50ac",
+    "review-admission-collisions.log": "b621f395e4c7643c52d6d713c503ea5dbce33150c318038dfb1242c344702e17",
+    "review-admission-generator.mjs": "4f3e4b243f3f93373cd7dfd8c97e79a6c628778dee2c2904eb3e7e73a73b1c19",
+    "review-admission-additions.txt": "6a20c3afc3fa8864ac55f19cd4ca5e5538bc9929a4faa19ec703915cb59867f0",
+    "review-admission-host-additions.txt": "f50b861af920452ddf055a72eb954d436164f94adb2e37c1481913a613514198",
+    "review-scripted-host.mjs": "9513bf28a3c6590708a8d593daa0ea561e94ee6506e78a716236259ae3aa2223",
+    "review-tests/admission-adversaries.test.mjs": "8e5f403b4f07233b2e4fb0c78541cffdc68a2fe2fb756aadef942bda535002f3",
+    "review-tests/admission-host-chain.test.mjs": "6b7f3d1018720497f35d9a4d12fe63e857fdd517ad61ddde54cc70841d79d324"
+  },
+  "verdict": "BOUNDED PASS for atomic organization first-root admission at 30077f3eaeb3812d85f61a39453080dac560547f. No newly reproduced blocking finding within this unit. Inherited depth-chain failure and production integration/desktop gates remain open."
+}

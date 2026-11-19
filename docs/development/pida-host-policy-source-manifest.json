@@ -1,0 +1,20 @@
+{
+  "baseline": "a3ba7619eea6946873a313871febb100d0220273",
+  "files": {
+    "src/collaboration-policy-client.ts": "e0abf3c6f5fc303332b8d0a78561e2b4864e8997605aa97ac79727b8793bdffe",
+    "src/collaboration.ts": "5813400b1c60e126a5a00b0ae37c72cca8ff7256d63f79144e887c0170a6c976",
+    "src/agent-supervisor.ts": "489803665ee9482c2333c18e7fe1da9a70342e3423edc0487777043bef665d2a",
+    "src/workspace.ts": "32a3dceda200ccba3303f419981556820a9b14dfb68def678f9a6bba7772fdbb",
+    "src/http.ts": "add3ab5704c67a76e161f655a9ce6e64cd7fd8ac3f5a62937276c6b89a09da05",
+    "src/client.ts": "e2a4b6683a30acacac10f0bf847a9c32684cfa4e8fd2b657c649c0e0a28c6829",
+    "src/index.ts": "ab6e70a76d0394475a9daa294b94cf78aa5bb4861bf9bed45fdc1333ff378d9f",
+    "examples/schumpeter-host.mjs": "56f99e89d6318d0def76bf14e26994bb82592379e0a94b9f819db3a006559b1f",
+    "examples/vera-dispatch-persona.mjs": "c623f0e396c69408f86ea9ef7ca53380fef8e70e2c041a7aef0b7d23b0b855d8",
+    "scripts/vera-dispatch-host-probe.py": "f1a92756abe6346bb7da3e88701fcb0d20a9cbe4f8de102792b35c701568016b",
+    "test/collaboration-policy-client.test.mjs": "7c16ed6d1ef48ddde456ffc873e4d5d9f6bfb03bef0fc0f336b2bf17d4277771",
+    "test/fixtures/collaboration-policy-server.py": "365f0025c533107dedda298f8988c045a2880c2db8b27506d58a2715be03acbf",
+    "fixtures/collaboration/authorization-request-v1.json": "c3792f9b191d8fb6298497a4f448c1e2f043ed944ed4a22852d09f15cef7f41a",
+    "fixtures/collaboration/authorization-response-v1.json": "227778c4cf704a1314c22a9196006670e15f21cd58335085d0625345a5468e6d",
+    "package.json": "5f392005c4b3bebd19b9acae97dc92f8d2488f130f2548ae0b438693f160ffa4"
+  }
+}

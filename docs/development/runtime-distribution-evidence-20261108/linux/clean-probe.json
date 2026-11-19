@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "platform": "linux",
+  "node": "v24.18.0",
+  "git": "git version 2.53.0",
+  "isolated_runtime": "/tmp/pdr-7Eb6CG/runtime",
+  "source_checkout_required": false,
+  "developer_node_modules_required": false,
+  "credentials_used": false,
+  "provider": "mock",
+  "persona": "pida-local",
+  "organization_id": "a0c806e7-61a9-4be0-bf5c-e8684c8d6cc7",
+  "job_id": "c62f0464-b453-467f-9b2b-a75f28a043c9",
+  "attempt_id": "bebc4571-b299-46aa-af10-c5dba8b11b7c",
+  "events": 16,
+  "terminal_event": true,
+  "resume_same_job": true,
+  "transport_token_rotated": true,
+  "limits": [
+    "No live model, desktop UI, remote Git or general Linux ABI acceptance.",
+    "No external Persona producer enabled."
+  ]
+}

@@ -1,0 +1,13 @@
+✔ actual Pi loop writes, fails a test, repairs with Pi edit, retests, builds HTML and saves a Pi skill; restart reuses it (511.815573ms)
+✔ QuickJS bridge excludes host APIs, discards failed writes and enforces resource/cancellation limits (1825.423515ms)
+✔ workspace permissions, principal isolation, traversal, links and total quotas are independently enforced (106.507359ms)
+✔ Git restore preserves exact contents and removes later files; failed or empty tests cannot save skills (380.38142ms)
+✔ HTTP/SDK expose authenticated per-user files and status; generated HTML is returned as JSON only (113.762967ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3357.519105

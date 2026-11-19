@@ -1,0 +1,24 @@
+{
+  "nodeVersion": "24.18.0",
+  "node": {
+    "win32-x64": {
+      "archive": "node-v24.18.0-win-x64.zip",
+      "url": "https://nodejs.org/dist/v24.18.0/node-v24.18.0-win-x64.zip",
+      "sha256": "0ae68406b42d7725661da979b1403ec9926da205c6770827f33aac9d8f26e821"
+    },
+    "linux-x64": {
+      "archive": "node-v24.18.0-linux-x64.tar.xz",
+      "url": "https://nodejs.org/dist/v24.18.0/node-v24.18.0-linux-x64.tar.xz",
+      "sha256": "55aa7153f9d88f28d765fcdad5ae6945b5c0f98a36881703817e4c450fa76742"
+    }
+  },
+  "linuxGit": {
+    "distribution": "Ubuntu 26.04 amd64",
+    "scope": "Pida local workbench built-in Git commands, not remote/general Git tooling",
+    "packages": [
+      {"name":"git","version":"1:2.53.0-1ubuntu1","file":"git_2.53.0-1ubuntu1_amd64.deb","url":"https://archive.ubuntu.com/ubuntu/pool/main/g/git/git_2.53.0-1ubuntu1_amd64.deb","sha256":"c3b36d7357dea773eefe6c4f97ebff416e5afee22489dc1f729e31d6f47872e9"},
+      {"name":"libpcre2-8-0","version":"10.46-1build1","file":"libpcre2-8-0_10.46-1build1_amd64.deb","url":"https://archive.ubuntu.com/ubuntu/pool/main/p/pcre2/libpcre2-8-0_10.46-1build1_amd64.deb","sha256":"3e116766f1a7b149994d4745556023d993d26401223d1595520a991d4ba737fb"},
+      {"name":"zlib1g","version":"1:1.3.dfsg+really1.3.1-1ubuntu3.1","file":"zlib1g_1.3.dfsg+really1.3.1-1ubuntu3.1_amd64.deb","url":"https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/main/z/zlib/zlib1g_1.3.dfsg+really1.3.1-1ubuntu3.1_amd64.deb","sha256":"450d9322ac4e9baea0f9a74548a20fde73b078235c1f5d1fb7084c2638e33cdd"}
+    ]
+  }
+}

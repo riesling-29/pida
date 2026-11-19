@@ -1,0 +1,15 @@
+{
+  "handoff.json": "424102ee7b363992ee58a499a474f1dea2dd019186f55ca78383a068c07cbcad",
+  "managed-host-capabilities.json": "862dea17a42aa001e9e20c810f36a97d3b577d985af908e98d19b676df701973",
+  "probe-managed-capability-distribution.mjs": "a86fb1387943820256b0c28be057233c8e00cfb882d48b9deecb31cc70e8b5fa",
+  "linux/closure.json": "7e20766078de0381d011bc59c031dbdf8d7d208eda499af227d7626b56fa33b5",
+  "linux/managed-probe.json": "5be6ebc6fa47cc191a48897034158e4866b76d91c3e45b767071ac5b5459cd61",
+  "linux/result.json": "96d4af750a441e2a97e4714dad1bd17632def6c8b3626881586eaa3593d5ed23",
+  "linux/verify-after.json": "063bbec2747113547605ae169a80e56494ff27b2e9c052f181b92f086004025d",
+  "linux/verify-before.json": "063bbec2747113547605ae169a80e56494ff27b2e9c052f181b92f086004025d",
+  "windows/closure.json": "7e20766078de0381d011bc59c031dbdf8d7d208eda499af227d7626b56fa33b5",
+  "windows/managed-probe.json": "ad11bf77ba7f992c5b853286d32cc0e6b6bb51dee4251df1cb97c0b04da5b978",
+  "windows/result.json": "1fbcd8abfc8e2d8adf89a2c3d49c4a20622ed4223f0ed321b774d6802e159d7b",
+  "windows/verify-after.json": "39720c106d49c6f1e136bd905a2867175d034c97188d1915b810a1222cc03e94",
+  "windows/verify-before.json": "39720c106d49c6f1e136bd905a2867175d034c97188d1915b810a1222cc03e94"
+}

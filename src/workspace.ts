@@ -1,9 +1,15 @@
+import { validateRepositoryProfileCapability, validateRepositoryProgramManifest, type RepositoryProfileCapability } from './repository-profile.js';
+import { inspectProgramProxy } from './program-proxy.js';
+import { canonical as repositoryCanonical, sha256 as repositoryDigest } from './private-state.js';
+import { validateExecutionPolicy, executionRuntimeBounds, type ExecutionPolicy } from "./execution-policy.js";
 import { createProgramRegistry, type ProgramRegistration } from "./program-registry.js";
 import { managedMcpConfigSchema, managedMcpExtension, type ManagedMcpConfig, type ManagedMcpActivation } from "./mcp.js";
 import { activateExtensions, assertBusinessTool, assertExtension, ResourceLifetime, type WorkspaceExtension } from "./extensions.js";
 import { composeTools, compositionInventory, compositionRevision, resolveComposition, type WorkspacePreset, type CompositionInventory, type ToolContribution } from "./composition.js";
 import { createAgentTools, agentToolPermissions } from "./agent-tools.js";
 import { AgentSupervisor, type AgentProfile, type AgentPersonaSourceCatalogue } from "./agent-supervisor.js";
+import type { CollaborationPolicy } from "./collaboration.js";
+import type { CredentialStore } from "@earendil-works/pi-ai";
 import { AgentMemoryStore, memoryTools, agentMemoryPermissions } from "./agent-memory.js";
 import { createLocalPersonaProvider, type PersonaProvider } from "./persona-provider.js";
 import { ProcessIntelligence } from "./process-intelligence.js";
@@ -409,6 +415,14 @@ export interface WorkspacePersonaSource {
   create(context: WorkspacePersonaContext): PersonaProvider | Promise<PersonaProvider>;
 }
 export interface CreateWorkspaceOptions {
+  /** Trusted managed-host policy. Does not change standalone config schema or grants. */
+  executionPolicy?: Readonly<ExecutionPolicy>;
+  /** Trusted managed repository attestation; not an HTTP/model tool grant. */
+  repositoryProfile?: Readonly<RepositoryProfileCapability>;
+  /** Trusted embedding host only; absent leaves external delivery disabled. */
+  collaboration?: CollaborationPolicy;
+  /** Optional host-selected credential store, never an HTTP/model-selected path. */
+  nativeCredentials?: CredentialStore;
   /** Executable factories supplied by the embedding host, never by an HTTP/model request. */
   extensions?: readonly WorkspaceExtension[];
   /** Optional host-installed process backend; never a model-selected module path. */
@@ -424,7 +438,24 @@ export interface CreateWorkspaceOptions {
 }
 
 export async function createWorkspace(directory: string, options: CreateWorkspaceOptions = {}) {
+  const executionPolicy = options.executionPolicy === undefined ? undefined : validateExecutionPolicy(options.executionPolicy);
   const root = resolve(directory), config = readConfig(root), env = providerEnvironment(root, config);
+  const repositoryProfile = options.repositoryProfile === undefined ? undefined : validateRepositoryProfileCapability(options.repositoryProfile);
+  if (repositoryProfile) {
+    const registration = config.programs?.[0];
+    if (executionPolicy?.id !== 'work/1' || !config.project?.enabled || config.project.trustedHost !== false
+      || config.tools.enabled.length || config.codingPacks?.length || config.permissions.includes('project:execute')
+      || config.permissions.includes('workbench:execute') || config.programs?.length !== 1 || !registration?.enabled
+      || registration.id !== repositoryProfile.program.id || resolve(root, registration.root) !== resolve(root, config.project.root)
+      || ![...repositoryProfile.project_permissions, repositoryProfile.program.permission].every(p => config.permissions.includes(p)))
+      throw Error('REPOSITORY_CONFIGURATION_MISMATCH');
+    const inspected = inspectProgramProxy(resolve(root, registration.root), resolve(root, registration.manifest));
+    validateRepositoryProgramManifest(inspected.manifest);
+    if (repositoryDigest(repositoryCanonical(registration.approval)) !== repositoryProfile.program.approval_digest
+      || repositoryDigest(repositoryCanonical(inspected.approval)) !== repositoryProfile.program.approval_digest
+      || inspected.manifest.timeoutMs !== repositoryProfile.program.timeout_ms || inspected.manifest.effect !== 'write')
+      throw Error('REPOSITORY_CONFIGURATION_MISMATCH');
+  }
   if (options.personaProvider && options.personaSources !== undefined) throw new PidaError("PERSONA_SOURCE_CONFIG_CONFLICT", 400);
   const registeredPersonaSources = new Map<string, WorkspacePersonaSource>();
   if (options.personaSources !== undefined && (!Array.isArray(options.personaSources) || options.personaSources.length > 32))
@@ -554,7 +585,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
         const connector = selected.providerConnector ? await loadProviderConnector(root, selected.providerConnector, selectedEnv) : undefined;
         if (!profile) connectorManifest = connector?.manifest;
         const provider = connector?.provider ?? (selected.provider.kind === "mock" ? mockProvider : selected.provider.kind === "native"
-          ? nativeProvider(selected.provider, selectedEnv, undefined, new ChatGPTCredentialStore(root, selected.stateDir))
+          ? nativeProvider(selected.provider, selectedEnv, undefined, options.nativeCredentials ?? new ChatGPTCredentialStore(root, selected.stateDir))
           : endpointProvider({ id: "workspace", ...selected.provider }, selectedEnv));
         const agentExtensions = await activateExtensions(definitions.filter(d => d.scope === "agent"), { workspaceDir: root, agentId, signal: owner.controller.signal });
         owner.add(() => agentExtensions.close());
@@ -621,7 +652,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
           ...(area ? { inspectArtifacts: (p: Principal) => area.captureArtifacts(p) } : {}),
           personaProvider: persona,
           ...(project ? { singleWriter: true } : {}), evidenceLimits,
-          ...(area || profile ? { maxTurns: 24, maxToolCalls: 48, maxRunMs: 180_000 } : {}), ...config.runtime,
+          ...(area || profile ? { maxTurns: 24, maxToolCalls: 48, maxRunMs: 180_000 } : {}), ...config.runtime, ...(executionPolicy ? executionRuntimeBounds(executionPolicy) : {}),
           systemPrompt: config.systemPrompt + (profile ? "\n\nAgent role: " + profile.role : "") + (area ? "\n\n" + workbenchPrompt : "") + packs.prompt + (project ? "\n\n" + project.prompt : "")
             + (profile && store ? "\nUse agent_memory_recall for prior information. Record meaningful changes to understanding with agent_memory_transition and sourced experience with agent_memory_remember. Persona edits belong to the owner. A job status is not an information-state transition." : ""),
         });
@@ -677,6 +708,7 @@ export async function createWorkspace(directory: string, options: CreateWorkspac
     lifetime.add(closeMain);
     agents = selectedMain.agents ? await AgentSupervisor.open({
       directory: agentDirectory, maxConcurrent: config.agents?.maxConcurrent ?? 3,
+      collaboration: options.collaboration, executionPolicy, repositoryProfile,
       acceptance: { criteria: config.acceptanceChecks ?? [], capture: async (profile, requestPrincipal) => {
         if (!selectedAgent.workbench) throw new PidaError("WORKBENCH_DISABLED", 404);
         return agentWorkbench(profile.id).captureFiles(requestPrincipal);

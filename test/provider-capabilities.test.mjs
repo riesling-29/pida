@@ -100,6 +100,8 @@ test("a stream without usage remains unknown and cannot pass a token-budget gate
   assert.equal(result.code, "USAGE_UNAVAILABLE");
   const observed = runtime.exportRun(sessionId, result.runId, owner).events.find(e => e.activity === "model_response").payload;
   assert.equal(observed.usage_status, "unknown"); assert.equal(observed.tokens, null); assert.equal(observed.cache_read_tokens, null);
+  assert.equal(observed.code, undefined);
+  assert.equal(runtime.exportRun(sessionId, result.runId, owner).events.filter(e => e.activity === "provider_rejected").length, 0);
 });
 
 test("Pi Responses → Chat → Responses keeps native reasoning opaque across API switches", async t => {

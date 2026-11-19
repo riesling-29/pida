@@ -1,0 +1,47 @@
+{
+  "startedAt": "2026-11-07T12:10:22.267Z",
+  "provider": "openai",
+  "model": "gpt-6-astra",
+  "authMode": "chatgpt",
+  "thinkingLevel": "low",
+  "protocol": "vera-dispatch/0.1.0",
+  "producerSourceDigest": "7dd9aa5ea22afaab033b62d54864d6849ac038e414ea7cc93fd341828cd731cb",
+  "sourceFiles": {
+    "src/vera-dispatch-provider.ts": "5a6cf0968e69fa2c24630813756a2d49f63a091c63a2e8033057ee308dc849de",
+    "src/vera-persona-provider.ts": "46b007094f107459a7685e578bf32432a6da9fd3a9695e1f4e76a3575adb7610",
+    "src/provider-catalog.ts": "bf605762e85db11090fd9c355a80e886bb0b3a53c7991052548534b2ad19b87c",
+    "src/runtime.ts": "5924418e5e30406830da233df9116cbea9f3c1ed597330a0fd7103284756b7ed",
+    "scripts/vera-dispatch-live-smoke.mjs": "e15abf1f1204556b69033ed70ef3007fde33096f94dc184b7cd84f10ae27031d"
+  },
+  "syntheticWorkspace": "C:\\Users\\migeo\\AppData\\Local\\Temp\\pida-persona-live-mACDCC",
+  "limits": {
+    "runMs": 20000,
+    "turns": 1,
+    "providerRetries": 0,
+    "outputRetries": 0,
+    "streamedTextCharacters": 128,
+    "observedTokenGuard": 2048
+  },
+  "limitsScope": "OAuth endpoint has no hard output-token/billing cap here; wall-time/stream cancellation is cooperative and token guard is post-response.",
+  "actualCostUsd": null,
+  "finishedAt": "2026-11-07T12:10:26.466Z",
+  "status": "completed",
+  "code": null,
+  "runId": "bf18229d-3b96-4c6a-bb86-572e450b3358",
+  "sessionId": "01a1b5ea-bcd1-71cc-971a-7ad21e15fc1f",
+  "observedTextCharacters": 15,
+  "markerMatched": true,
+  "inputReceipts": 1,
+  "authorizationChecks": [
+    {
+      "requestId": "942aca38-01a5-4128-95b9-c755a297cace",
+      "inputDigest": "73f6d49667c28e5588d71fe9afb937184ad812e996f6ade934f0bc5c37f8f574",
+      "bindingId": "binding:d93363ad450a461780401f38535dd347",
+      "contextDigest": "9142179ee09b31748db0f176278ddf5fed4751f96cf5734ce91cdf3f2a29136d"
+    }
+  ],
+  "bundleValid": true,
+  "inputScope": "pi-logical-context",
+  "outcomeScope": "one configured provider task with synthetic public Persona source; no desktop or organization acceptance",
+  "producerExitCode": 0
+}

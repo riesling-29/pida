@@ -1,0 +1,20 @@
+{
+  "base_commit": "1f9c5ebcef8095f008c4a1d472bd86a2e995408e",
+  "scope": "local offline native join yield; independent review pending",
+  "build": "npm run build",
+  "test_command": "node --test test/organization-yield.test.mjs test/organization.test.mjs test/provider-diagnostic.test.mjs test/provider-capabilities.test.mjs test/runtime.test.mjs",
+  "tests": {
+    "pass": 62,
+    "fail": 0,
+    "new_yield_cases": 23
+  },
+  "source_hashes": {
+    "src/runtime.ts": "49052742ea495c1ff618a2d2d3ebde965eba1e4ae870573a8f0a3e96b85210da",
+    "src/agent-supervisor.ts": "482a1a6b0c52be84c37b0521358e0645445bd11b3da0d8c11e7ec31cc228f6d2",
+    "src/agent-tools.ts": "4350e031d78646a1b77335e46846394f28bd0c7254363aaee45f5d088dff9203",
+    "test/organization-yield.test.mjs": "1eadc1d4bc752a229847ee1200154634320721a26b78089e0f77ec3773769c64"
+  },
+  "test_log": "native-join-yield-tests-20261108.log",
+  "external_model_calls": 0,
+  "held_runtime_changed": false
+}

@@ -1,0 +1,145 @@
+{
+  "reviewDate": "2026-11-07",
+  "reviewer": "/root/pida_delivery_review",
+  "independence": "Distinct Codex context, same model family; no cross-family claim. Read-only product review in isolated worktrees; only untracked reviewer probes and evidence written.",
+  "commits": {
+    "initialHost": "ebd22ef6b5922525201d00db849358ebdf787404",
+    "shutdownFix": "cfec67d2083e935360e7437c001b389ce55ae03f",
+    "reviewedFinal": "e98c23e4a1794e144ffaf700aa0b908b90515c7d",
+    "hostUnitBaseline": "a3ba7619eea6946873a313871febb100d0220273",
+    "producer": "c1e3617aa88e6013ea34f76c3f4c41504618f863"
+  },
+  "environment": {
+    "platform": "Windows win32",
+    "node": "v24.18.0",
+    "python": "3.11.9",
+    "dependencyInstall": "bun 1.4.2",
+    "finalWorktree": "D:\\ChantaResearchGroup\\pida-review-host-fix-20261107",
+    "originalWorktree": "D:/ChantaResearchGroup/pida-review-host-20261107"
+  },
+  "verified": [
+    {
+      "command": "npm run build",
+      "result": "PASS at final commit",
+      "evidence": "review-host-final-build.log"
+    },
+    {
+      "command": "PIDA_TEST_VERA_SOURCE=<hash-verified source-only directory> node --test --test-timeout=20000 test/collaboration-policy-client.test.mjs test/collaboration.test.mjs test/collaboration-regressions.test.mjs test/workspace-persona-pi.test.mjs",
+      "result": "34 pass, 0 fail, 0 cancelled, 0 skipped at final commit",
+      "evidence": "review-host-final-focused.log"
+    },
+    {
+      "command": "PIDA_TEST_VERA_SOURCE=<same> node --test --test-timeout=20000 --test-name-pattern=public-fixture review-tests/native-ids.test.mjs",
+      "result": "1 pass; independent assertions of native job/run/OrgAttempt IDs; actual separate Node host and public producer subprocess",
+      "evidence": "review-host-final-native-ids.log"
+    },
+    {
+      "command": "node review-host-probes.mjs",
+      "result": "2 cases pass: actual host to embedded restart preserves mapping and denies revoked dispatch before run; restart without policy remains disabled",
+      "evidence": "review-host-final-probes.log"
+    },
+    {
+      "command": "node review-host-close-fixed.mjs",
+      "result": "1 case pass: injected runtime cleanup rejection after parent EOF exits 1, HTTP unreachable",
+      "evidence": "review-host-final-close-probe.log"
+    },
+    {
+      "command": "git diff --exit-code",
+      "result": "PASS; no tracked product edits in reviewer checkout"
+    },
+    {
+      "command": "SHA256 verification",
+      "result": "All 15 initial host manifest files match frozen ebd22ef. All 11 public producer source files match pinned source lock. Fresh final source hashes recorded below; historical hashes are not presented as final source hashes."
+    },
+    {
+      "command": "npm pack --dry-run --json --ignore-scripts",
+      "result": "PASS at initial ebd22ef: host examples, compiled policy client, Python adapter and producer lock present. Package inventory only, not final release/installer acceptance.",
+      "evidence": "../pida-review-host-20261107/review-host-package.json"
+    }
+  ],
+  "resolvedFindings": [
+    {
+      "severity": "P2",
+      "finding": "Runtime close rejection left actual HTTP host alive after parent EOF.",
+      "original": "ebd22ef6b5922525201d00db849358ebdf787404",
+      "originalEvidence": "../pida-review-host-20261107/review-host-close-failure-r2.log",
+      "fix": "cfec67d2083e935360e7437c001b389ce55ae03f",
+      "evidence": [
+        "review-host-final-close-probe.log",
+        "review-host-final-focused.log"
+      ],
+      "assessment": "Server acceptance stops before independent runtime/Persona cleanup; rejection and hang subprocesses confirm Persona cleanup attempted, HTTP unreachable and bounded nonzero exit."
+    },
+    {
+      "severity": "P2",
+      "finding": "Public Persona example synthesized attempt:<run-id>, so receipt could not establish native OrgAttempt lineage.",
+      "original": "ebd22ef6b5922525201d00db849358ebdf787404",
+      "originalEvidence": "../pida-review-host-20261107/review-host-native-ids.log",
+      "fix": "e98c23e4a1794e144ffaf700aa0b908b90515c7d",
+      "evidence": [
+        "review-host-final-native-ids.log",
+        "review-host-final-focused.log"
+      ],
+      "assessment": "Host verifies actual OrgTask/OrgAttempt/job membership; exact native attempt forwarded to producer and checked on return. Exported taskId is native job ID, separately documented from OrgTask ID; runId equals Pi run. Restricted example rejects main/standalone context in source instead of fabricating membership."
+    }
+  ],
+  "sourceReview": [
+    "Trusted fixed loopback policy URL and token injection; default disabled without host policy; callback cannot choose endpoint.",
+    "WHATWG normalization may canonicalize alternate numeric loopback spelling. Accepted host still literal loopback; documents now state normalized semantics.",
+    "Nonce/phase/principal/host/envelope/digest and exact ten-field ACK comparison; redirect, malformed, oversize, timeout, cancellation and revoked/cross-owner/stale grants fail closed in actual Python fixture tests.",
+    "Capabilities authenticated; HTTP/model payload cannot enable policy injection; embedding restart must inject trusted current policy again.",
+    "Private parent ready pipe carries bearer credential. Trusted parent must protect it; arbitrary trusted module configuration executes with host authority.",
+    "Shutdown idempotently attempts all independent cleanup with five-second bound; native Persona mapping uses actual organization membership."
+  ],
+  "limits": [
+    "Synthetic Python authority fixture is not production Schumpeter persisted authority endpoint. Actual Schumpeter launcher/UI, installer, Linux and paid model acceptance were not exercised.",
+    "Fresh-only example intentionally rejects nonempty workspace. Restart evidence uses embedded createWorkspace, not a supported example resume launcher.",
+    "Public Persona memory is disposable synthetic state from exact pinned source only; no canonical memory or private identity was accessed.",
+    "Node/Python/public producer source remain external runtime dependencies; no bundled installer/cold package install claim.",
+    "Earlier full-suite Windows failures remain separately tracked. Host suite passing does not waive them. Windows runtime fix in final commit ancestry was not independently reviewed by this host review unit.",
+    "Restricted public Persona example supports organization jobs only. Standalone/main rejection is source-reviewed; no general standalone support claim.",
+    "The failed original Windows --import path invocation is not defect evidence; corrected file-URL r2 log is the reproduced evidence.",
+    "No source edits, push, deployment, WMC publication or additional paid calls."
+  ],
+  "validity": "Valid only for stated source commits, pinned producer and tested Windows environment. Withdraw if current-policy binding accepts wrong scope, shutdown retains HTTP/omits cleanup/exceeds its bound, native receipt identifiers differ from actual records, or relevant source/dependency/lifecycle changes invalidate these checks.",
+  "sourceHashesFinal": {
+    "src/collaboration-policy-client.ts": "e0abf3c6f5fc303332b8d0a78561e2b4864e8997605aa97ac79727b8793bdffe",
+    "src/collaboration.ts": "5813400b1c60e126a5a00b0ae37c72cca8ff7256d63f79144e887c0170a6c976",
+    "src/agent-supervisor.ts": "489803665ee9482c2333c18e7fe1da9a70342e3423edc0487777043bef665d2a",
+    "src/workspace.ts": "32a3dceda200ccba3303f419981556820a9b14dfb68def678f9a6bba7772fdbb",
+    "src/http.ts": "add3ab5704c67a76e161f655a9ce6e64cd7fd8ac3f5a62937276c6b89a09da05",
+    "src/client.ts": "e2a4b6683a30acacac10f0bf847a9c32684cfa4e8fd2b657c649c0e0a28c6829",
+    "src/index.ts": "ab6e70a76d0394475a9daa294b94cf78aa5bb4861bf9bed45fdc1333ff378d9f",
+    "examples/schumpeter-host.mjs": "92fa5d889d06c5889c849e5b432a8c284c3625407a7719f9e9807351ccf6e25d",
+    "examples/vera-dispatch-persona.mjs": "e70e4800b49135e62c0f3a336c77eab9763bff6725656863f6314a0feaa385f7",
+    "scripts/vera-dispatch-host-probe.py": "c25f31cd253bd7f65d01d37650891355402beded7c0511778ff82e2b61d2347c",
+    "test/collaboration-policy-client.test.mjs": "102bfc66c7d37203d31c959475f802bde06703815764228cd579950b50411409",
+    "test/fixtures/collaboration-policy-server.py": "365f0025c533107dedda298f8988c045a2880c2db8b27506d58a2715be03acbf",
+    "fixtures/collaboration/authorization-request-v1.json": "c3792f9b191d8fb6298497a4f448c1e2f043ed944ed4a22852d09f15cef7f41a",
+    "fixtures/collaboration/authorization-response-v1.json": "227778c4cf704a1314c22a9196006670e15f21cd58335085d0625345a5468e6d",
+    "package.json": "5f392005c4b3bebd19b9acae97dc92f8d2488f130f2548ae0b438693f160ffa4",
+    "test/fixtures/host-close-fault.mjs": "3b78d12c0bc62e95c5b21a2aa3077df51194f3a08a4a30b18349b56fd694c7d3",
+    "test/fixtures/host-close-persona.mjs": "bcde6ac88f63ead92dc54cdc4a439a78400d4bdf2b88d471b192ed513c7d63b0",
+    "docs/SCHUMPETER-HOST-1.md": "54a40c62bf1952086611618aa8c743aa2be6ce1d87b20d67b76f84c8a796d0d6",
+    "fixtures/vera-dispatch/producer-source-lock.json": "b61dfc276ec176f9ebc1fcaaf6a263202b1e7aff74f3915905ee1ce14259fd58"
+  },
+  "evidenceHashes": {
+    "review-host-final-build.log": "6d3803c3d83c3545712565477cdcbf4759bfe23f04c1c98ee2063daf998b069b",
+    "review-host-final-focused.log": "9153cafe462e88b6ee96fa78b73b7f1be34d211d31bb74744cd6cdbae9eae627",
+    "review-host-final-native-ids.log": "f8991bf62c38c000fba761afe78a55fbe20ccb247fb93c703050da44188793c6",
+    "review-host-final-probes.log": "b6832b1abc3598113bc738ba7184b3eb34a26e628d43147e7cddfc7e7688d6ce",
+    "review-host-final-close-probe.log": "7a4156b32a3b452290d66d058abfa3ff92aec4b183e72ba1367eae5cf6e16f08",
+    "review-host-probes.mjs": "454e5d9bbca4571a6904386e28798e8c0f95dadebb43f851870a2086422c7b8f",
+    "review-host-close-fixed.mjs": "f1ec2496805803089edc3fa65b8f31534fefb465087c03ff49e9f113a26390a2",
+    "review-inject-close.mjs": "15f302937ad1abc530f3cfd68bd7b2cc21b2121d1722ead11cba8b9786644e86",
+    "review-native-id-generator.mjs": "d1050d894df3fab70851ced1a052a2ed118b4f6568d60a196ab4fa8d84d1c964",
+    "review-tests/native-ids.test.mjs": "9d8dcd7991c9bf3f991dbcb75a715574113de372dec5a532e102f13c9b58a7a7",
+    "../pida-review-host-20261107/review-host-focused-local.log": "e6cdcfad808a1199492fd077eaeae116fd822dee64b498706599dca00e1da5a1",
+    "../pida-review-host-20261107/review-host-focused-public.log": "245cb347675f6e546b52c3876a0680b3fda1366e1b2c03d2283c469f1b1eebd6",
+    "../pida-review-host-20261107/review-host-package.json": "c4cce8009ee2662fce74def7bcd782e4990c2711c1f6fc89792b235f8069a671",
+    "../pida-review-host-20261107/review-host-close-failure.mjs": "b0b7890c57fd5abbd25ebdbf0e3ba24fe9c36a91cc694e7886f251fb9732a56f",
+    "../pida-review-host-20261107/review-host-close-failure-r2.log": "df453f8085ac4092d72341d70ffd68c1c18ce82d50c1aa453dac4f17c9740e6a",
+    "../pida-review-host-20261107/review-host-native-ids.log": "d373140160e445cb742ecc7dad684b458aeb8bbedfb459147461f3dc1764049e"
+  },
+  "verdict": "BOUNDED PASS for trusted desktop host/policy and the two reviewed corrections at e98c23e; no remaining reproduced blocking finding in this unit. Full desktop/product/Windows-Linux acceptance remains open."
+}

@@ -1,0 +1,96 @@
+{
+  "baseline": "a3ba7619eea6946873a313871febb100d0220273",
+  "platform": "win32",
+  "node": "v24.18.0",
+  "source": [
+    {
+      "path": "src/observation.ts",
+      "sha256": "fdecd46e1a4a75ff4608090ecd1d89afecbdd83a6c2f346a112958c777d83ebe"
+    },
+    {
+      "path": "src/process-executor.ts",
+      "sha256": "d9f6cca8a691752c66b714c6eb71b5c7abde4a5c20301f857d5c86ec7466d678"
+    },
+    {
+      "path": "src/project-tools.ts",
+      "sha256": "cf0f09b94713f1e3e125d4e02137f3e54781e32bcfcd4299b3a80305193e0df6"
+    },
+    {
+      "path": "src/runtime.ts",
+      "sha256": "0b89c54bd25bd4f9236ce926fef70d77fce49cc39f121b37822ca5943149efff"
+    },
+    {
+      "path": "src/workbench.ts",
+      "sha256": "25e977752c466acee1a8fbd62fb04ff8b9e63806d9f60a7972622eff0825ac6e"
+    },
+    {
+      "path": "test/windows-runtime.test.mjs",
+      "sha256": "1bed5be49203edfe9eaef5915ea78f45eb0ddad2b6adabb9511b2756ba550639"
+    },
+    {
+      "path": "test/fixtures/ocel-sharing-probe.mjs",
+      "sha256": "6e7e7d83c775c33f3208eca731808d6032fe8460e8bf3d4faa4ba3750dd7cdfb"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "docs/development/windows-runtime-evidence-20261107/after-final.log",
+      "sha256": "f00fe4f79360077f0094a7b24cfff816e284fdf22495c345f8c8d10eaf8c79c7"
+    },
+    {
+      "path": "docs/development/windows-runtime-evidence-20261107/after.log",
+      "sha256": "c5265ce966cbfff4d6c3b4c076ee0b471bbf44f68567b0c1ab7806c24b57b89a"
+    },
+    {
+      "path": "docs/development/windows-runtime-evidence-20261107/before.log",
+      "sha256": "4322e62c3d4a3564471bc80e0f8f4af1534b786ce9a11229586d41bdac2455bd"
+    },
+    {
+      "path": "docs/development/windows-runtime-evidence-20261107/deep-path-intermediate.log",
+      "sha256": "ba23d1f11e55f7d545be13879881f2b7bb50ea33c727b40c4b61e4726a42a119"
+    },
+    {
+      "path": "docs/development/windows-runtime-evidence-20261107/diagnostic.log",
+      "sha256": "5c7fdc8d24838c624f57f88b8fe22bec4e9affca34d80d6bf181acc7a4750379"
+    },
+    {
+      "path": "docs/development/windows-runtime-evidence-20261107/git-cwd-probe.log",
+      "sha256": "462025b999f655bfccf2dab756f9c89e78e54948cb884a7e0f5634c03e1144ea"
+    },
+    {
+      "path": "docs/development/windows-runtime-evidence-20261107/git-cwd-probe.mjs",
+      "sha256": "d66795429da80aad23b6f226a4b2ef494d3d7051f835a26fe12d0b29940b5708"
+    },
+    {
+      "path": "docs/development/windows-runtime-evidence-20261107/instrument.mjs",
+      "sha256": "134d5f7776bfa6315e360d044ce86e301533c422ca38b279b0a45b9cf388fde7"
+    },
+    {
+      "path": "docs/development/windows-runtime-evidence-20261107/longpaths-intermediate.log",
+      "sha256": "b3ee692c6dd9f64ee69cb7c7c3961a8da0b7ca9b96e2bfe8ea065b45169cff4b"
+    },
+    {
+      "path": "docs/development/windows-runtime-evidence-20261107/path-boundary.log",
+      "sha256": "574ed3b7f07c2d116ee0f7c4190199f2b22e1dc10dd9d6bef5fc4a7af4c29f8c"
+    },
+    {
+      "path": "docs/development/windows-runtime-evidence-20261107/windows-focused.log",
+      "sha256": "46349c0a3672cfd49ab18f44ed75833b9f7792336a4c0ec856cbf949f71623ec"
+    }
+  ],
+  "checks": {
+    "build": "pass",
+    "focused": {
+      "total": 5,
+      "pass": 5
+    },
+    "relevant": {
+      "total": 55,
+      "pass": 51,
+      "fail": 2,
+      "skip": 2
+    },
+    "remainingFailure": "Existing Windows symlink fixture EPERM",
+    "deepRoot": "history.git/config paths at or beyond Windows limit unsupported"
+  }
+}

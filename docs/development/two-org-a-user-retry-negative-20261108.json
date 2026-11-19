@@ -1,0 +1,260 @@
+{
+  "schema_version": "pida.real-case-user-retry/1",
+  "case_id": "0227453a-4ceb-4edf-a27b-6ad701d4a9be",
+  "scope": "One explicit user-authorized fresh A retry, no automatic third attempt; originalnegative untouched",
+  "runtime_source": "bb9886ffc3a2a815e3c255b7dbfc83b4b4bac5e3",
+  "native_org": "657f8f31-3e86-458b-afe8-83d85b582e7c",
+  "native_org_status": "failed",
+  "records": [
+    {
+      "role": "root",
+      "native_ids": {
+        "job": "196954f5-9514-44de-969a-8c446d7781ce",
+        "agent": "caf248e1-6414-4fd0-ac65-4bc0a6a50e60",
+        "task": "b82cfa23-553a-4096-87a8-0dc941f68c40",
+        "attempt": "ede9d218-fd3d-498b-878f-7c201ba1562f",
+        "run": "3f1d535e-2279-4abf-83ae-0e4f16377bb3",
+        "session": "01a1b6ab-fc84-775e-8963-0f7088df7f5b"
+      },
+      "status": "failed",
+      "code": "EMPTY_RESPONSE",
+      "started_at": "2026-11-07T15:49:21.714Z",
+      "finished_at": "2026-11-07T15:49:32.322Z",
+      "result_bytes": 0,
+      "result_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifact_refs": [],
+      "requests": 3,
+      "responses": [
+        {
+          "request_id": "a6ac1fb8-38e2-4dbd-a827-0f7577f52445",
+          "attempt": 1,
+          "stop_reason": "toolUse",
+          "usage_status": "reported",
+          "tokens": 2660
+        },
+        {
+          "request_id": "3efc6a38-c882-41ef-8412-f150b94ce363",
+          "attempt": 2,
+          "stop_reason": "toolUse",
+          "usage_status": "reported",
+          "tokens": 2935
+        },
+        {
+          "request_id": "98dea7bf-fb9a-432a-a617-b22709a8a95d",
+          "attempt": 3,
+          "stop_reason": "stop",
+          "usage_status": "reported",
+          "tokens": 3222
+        }
+      ],
+      "logical_input_receipts": [
+        {
+          "source_event_id": "fac1e45c-efa5-46a9-bdc1-128a860478fc",
+          "sequence_number": 6,
+          "checks": {
+            "job": true,
+            "agent": true,
+            "attempt": true,
+            "run": true,
+            "org": true,
+            "host": true,
+            "authorization": true,
+            "scope": true
+          }
+        },
+        {
+          "source_event_id": "5e883423-9921-44e6-9d53-48f7b51c3900",
+          "sequence_number": 13,
+          "checks": {
+            "job": true,
+            "agent": true,
+            "attempt": true,
+            "run": true,
+            "org": true,
+            "host": true,
+            "authorization": true,
+            "scope": true
+          }
+        },
+        {
+          "source_event_id": "a326a926-82a6-422b-b24e-26d3956d5390",
+          "sequence_number": 20,
+          "checks": {
+            "job": true,
+            "agent": true,
+            "attempt": true,
+            "run": true,
+            "org": true,
+            "host": true,
+            "authorization": true,
+            "scope": true
+          }
+        }
+      ]
+    },
+    {
+      "role": "child",
+      "native_ids": {
+        "job": "1988f585-dc8c-4774-bd6d-4bf0d161ac61",
+        "agent": "68ec2344-5df3-40be-be45-923f39b88ec0",
+        "task": "a915cf57-c41c-456d-b4dd-519003a18ae6",
+        "attempt": "a9b37e70-fb76-4803-ad88-3c71eada00ae",
+        "run": "446b9eda-2c88-42ea-81ba-a8614e07a199",
+        "session": "01a1b6b3-4dbe-714d-8813-f8e9d150de33"
+      },
+      "status": "completed",
+      "code": null,
+      "started_at": "2026-11-07T15:49:26.574Z",
+      "finished_at": "2026-11-07T15:49:35.770Z",
+      "result_bytes": 68,
+      "result_sha256": "393ccba641689d613631923d52c25f5a3c89a7a9d3f20c2803926c1997ee7466",
+      "artifact_refs": [],
+      "requests": 1,
+      "responses": [
+        {
+          "request_id": "3d0f7534-c9f1-4b63-b0a9-2bbb2ccd9d3a",
+          "attempt": 1,
+          "stop_reason": "stop",
+          "usage_status": "reported",
+          "tokens": 2022
+        }
+      ],
+      "logical_input_receipts": [
+        {
+          "source_event_id": "3c76d6ed-781c-489e-92b6-5c418f527a55",
+          "sequence_number": 6,
+          "checks": {
+            "job": true,
+            "agent": true,
+            "attempt": true,
+            "run": true,
+            "org": true,
+            "host": true,
+            "authorization": true,
+            "scope": true
+          }
+        }
+      ]
+    }
+  ],
+  "join": {
+    "id": "ae77223a-4b0e-40c5-9276-e87eb675a107",
+    "parentJobId": "196954f5-9514-44de-969a-8c446d7781ce",
+    "status": "blocked",
+    "code": "JOIN_REQUIRED_RESULT_UNAVAILABLE",
+    "required": [
+      "1988f585-dc8c-4774-bd6d-4bf0d161ac61"
+    ],
+    "continuationJobId": null
+  },
+  "retry_requests": 4,
+  "prior_requests": 1,
+  "lifetime_observed_requests": 5,
+  "private_child_oracle": {
+    "case_matches": true,
+    "derived_matches": true,
+    "seed_independently_in_root_input": false,
+    "seed_independently_in_child_input": false,
+    "answer_independently_in_child_input": false,
+    "scope": "Observable child output with selected authorized context and no assignment leak; not internal model causality or organization acceptance"
+  },
+  "assignment_audit": {
+    "schema_version": "pida.synthetic-tool-audit/1",
+    "source_sha256": "8d9e8e13ddfe602908364e96d36e87ef6d320b187edbfb2a259a6e217262bcab",
+    "tool_calls": [
+      {
+        "tool_call_id": "call_3af153f71e9244a4b8e4f84e9034eade|fc_0d4d886505d1e50f016aef4884e47087d0a08e4556b08d0a2f",
+        "tool_name": "agent_delegate",
+        "arguments_sha256": "930ecb7a386cc4457016ec734f07990d13ca206e65ff097d4684cb58caea68bc",
+        "delegation_contains_raw_seed": false,
+        "delegation_contains_expected_answer": false,
+        "scope": "child own-Persona proof weakens if either flag is true"
+      },
+      {
+        "tool_call_id": "call_291148c998864ceab7ae0c5a02ef027d|fc_0d4d886505d1e50f016aef4889762087d0a4d8bcf7f1280782",
+        "tool_name": "agent_join",
+        "arguments_sha256": "edd74598498853162100f3367394144abc19f510ed0c559294c6769596571064",
+        "delegation_contains_raw_seed": false,
+        "delegation_contains_expected_answer": false,
+        "scope": "model-derived output is allowed; not independent harness injection"
+      }
+    ],
+    "child_assignment_check": "NO_VALUE_IN_OBSERVED_ASSIGNMENT",
+    "limits": [
+      "Only explicitly supplied fresh synthetic Pi JSONL; no canonical log discovery.",
+      "No raw tool arguments or Persona seed included in this result.",
+      "Absence in observed assignment does not prove model causality."
+    ]
+  },
+  "root_end": {
+    "stop_reason": "stop",
+    "text_empty": true,
+    "after_durable_join": true,
+    "provider_rejection": false
+  },
+  "observed_failure_chain": [
+    "Native agent_delegate and agent_join applied",
+    "Final normal root assistant reply had empty text",
+    "Generic EMPTY_RESPONSE marks parent failed",
+    "Join requires completed parent, blocks before child finishes",
+    "Child later completed; no continuation or rootartifact"
+  ],
+  "billing": "unknown",
+  "B_executed": false,
+  "third_attempt": false,
+  "raw_context_published": false,
+  "source_files": [
+    {
+      "private_copy": ".pida-test-final-real-case-20261107/evidence-a-user-retry/child.observation.health.json",
+      "sha256": "3057733c629b0d676ebb9060bffa96a928dc024aae19062b3d33c2e7c8c143f3"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107/evidence-a-user-retry/child.observation.jsonl",
+      "sha256": "0164c84519197a3e04c12d39456a8b7b542a33a532ae0e4551c3281bd4817496"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107/evidence-a-user-retry/child.observation.manifest.json",
+      "sha256": "664bdc9a2a4c7bc3a5488b667068f10254102a397980be25dcc2ae0ee912b8c4"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107/evidence-a-user-retry/child.observation.ocel.json",
+      "sha256": "f27752ffec2d4ce58f1366e5c7e9bdea95775810ea6e02b8922e8ae95e8c36bd"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107/evidence-a-user-retry/child.observation.ocel.meta.json",
+      "sha256": "9e29585a20f123e07aa0d1e4b840f74ebc6cd6258144f9edbedcb06cb727c59b"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107/evidence-a-user-retry/child.synthetic-pi-session.jsonl",
+      "sha256": "24bd1c99f3272df47d99537b06c5a6cf441e913fe2d2dff7687ef06e4baef8f9"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107/evidence-a-user-retry/root.observation.health.json",
+      "sha256": "3057733c629b0d676ebb9060bffa96a928dc024aae19062b3d33c2e7c8c143f3"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107/evidence-a-user-retry/root.observation.jsonl",
+      "sha256": "cbb716ec6089c47c559aefd169d1c53b796e5b07a418e346cdd80a77cc19c6b5"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107/evidence-a-user-retry/root.observation.manifest.json",
+      "sha256": "a522a89f19ee5b9d8a71d1da8ff0ea36b34a107f4e2a023e08a99cdd70641f0b"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107/evidence-a-user-retry/root.observation.ocel.json",
+      "sha256": "63ca3c90e9027798cedac59de1e168916d32abd811d9c2f4ee34976324725351"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107/evidence-a-user-retry/root.observation.ocel.meta.json",
+      "sha256": "291f9371d751ad21d12a1c943d1d8c373e70d07cb7d74915ecdbc3e7c06feb68"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107/evidence-a-user-retry/root.synthetic-pi-session.jsonl",
+      "sha256": "8d9e8e13ddfe602908364e96d36e87ef6d320b187edbfb2a259a6e217262bcab"
+    },
+    {
+      "private_copy": ".pida-test-final-real-case-20261107/evidence-a-user-retry/supervisor.json",
+      "sha256": "23e7fffee84aa8dfeb0628d243ddeadbb7de37fea0973a55875d93df25670b96"
+    }
+  ]
+}

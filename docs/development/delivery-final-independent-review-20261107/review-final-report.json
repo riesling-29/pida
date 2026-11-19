@@ -1,0 +1,340 @@
+{
+  "reviewedCommit": "5dc1109f54d014ceba4f6067472792b88aa65096",
+  "initialReviewedCommit": "50d1ed49294cb8acfabb00badd72da6877e22c30",
+  "firstCorrectionCommit": "f01ad776612a80980502f63b2bffd945ad0177cc",
+  "baselineCommit": "30fef192b478b1697bb95a22ad7340cf1c485b03",
+  "recordedAt": "2026-11-07T12:14:41.939Z",
+  "reviewer": "pida_delivery_review; separate context, same Codex family",
+  "environment": {
+    "platform": "win32",
+    "node": "v24.18.0"
+  },
+  "scope": "Durable collaboration delivery, derived native authority, acceptance/admission revision, readable-state size and restart recovery. Intervening Persona consumer commit039d8ef3f153e1d8499566223fad876c8f2105b8 is not reviewed or accepted by this report.",
+  "sourceHashes": {
+    "src/agent-supervisor.ts": "f07fd5c34282220992d18cc590d1362f5be176397e9a1334b3d43a4d9ea15187",
+    "src/collaboration.ts": "af264d0477c52b5243c5e3c6dd77713f11aa7cd29ed62062754570f597a941b2",
+    "src/http.ts": "ae8005973ae50aa2876412f7b114e35301bb41b9af7b813a0462f573400c7fd8",
+    "src/client.ts": "4444985dad91a82ab61aa2920878661f1d0baf6dfe8d323da4079d0a3b319334",
+    "src/organization.ts": "d1e2a4bd00fde5f88564c3b05e874ed16057dae0acb7e1fab824c0ae9043d49e",
+    "src/private-state.ts": "21b55bc07bc267f7c51481e20362e0a153ffa7f98569de8e9cb42a1b6cb4a93d",
+    "test/collaboration.test.mjs": "7f7b1d2b04d4270574543e610af58cc1355733ff15f67b2b49109ded99b3fc83",
+    "test/collaboration-regressions.test.mjs": "0dce853a06b953cb05f9ae6d4bf2497dcafbc486e694c0a36527289acc170583",
+    "test/organization.test.mjs": "e6ae029fe8ecb4d9c5380004798314994ea565863d3ea66c473799799971cf25",
+    "test/agent-supervisor.test.mjs": "209f7afc9d45f7d59e8823def8c5440e19e3941fd5ce6198a550ca8d4908019f",
+    "docs/COLLABORATION-1.md": "5a3fd7ae06629dce96ddba1595a844ab76b23b5e08b950bff77f5f5b9e197b40"
+  },
+  "artifacts": {
+    "review-final-focused.log": "81c60a37c153a58750ef28b1b0cce6b5c93a7462575bbfa3bcc557145e1a351b",
+    "review-fixed-probes.log": "b4ca2acc210da3d63327d843925883e5a425b313989950df5033bf6af6522909",
+    "review-fixed-size-probe.log": "9bca12e363a1b72afc7eb90034afe742e586eb79cdf33d544b23e25ab38bd84c",
+    "review-deep-lineage.log": "be1beb95d1a72d53de3e1e91aa900b9a3d3039520ec9d3cc1b460177636f22b8",
+    "review-recovery-capacity.log": "899357a25278768bc5598dc7398de4d5aa9e38a27fff85c63b4942dc1f5a2e26",
+    "review-final-lineage-corruption.log": "12ca29373b2efbfa1a7f1e57e22a504b06c1cc225a6138709868fb2ab7893c68",
+    "review-ocel-baseline-followup.log": "05d60e2a3bfe58a676549dd964f5317d3406ed977eb0fa89ad1e44d1ad26ed66",
+    "review-fixed-probes.mjs": "7cd7e3beb655308c4611943a78e499c15944be89ab48d0962d8328c12c135b6d",
+    "review-fixed-size-probe.mjs": "db74b10cb63be2b46f94ceab60c319919a95318ba819084f0e10d1af45f0bb50",
+    "review-deep-lineage.mjs": "011a73ef4a591d47b2e70e1013bfc6b3b41c08410037f188df64633b55254666",
+    "review-recovery-capacity.mjs": "74e5442a420bd9944474ccf66b2f66dec70a5bdfc5e9592bea686c4217d0d75c",
+    "review-crash-capacity-child.mjs": "e03d0deafd7c1c6f2e3471d994f75c532406d71320676930b42580074cdb73f3",
+    "review-lineage-corruption.mjs": "8625251d27278e435f29cfc65630e0c02cb8a9f98e8f71d293a0f7f12f47d344",
+    "review-final-lineage-corruption.mjs": "7bce0646bd2d9fc3ec1ccba273fccd23016b274e6e9d7c9d0be6c7e63b9ea951",
+    "review-final-generator.mjs": "d03834a2602fa6e91fa3923662a17b3d95286f26e83499b7791c2b8d5fcf7f4a"
+  },
+  "verification": {
+    "build": "PASS",
+    "focusedTests": {
+      "passed": 36,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "independentAdversarialScenarios": [
+      {
+        "case": "revoked-continuation",
+        "receiptJobId": "7a25eac7-24f8-4c2e-8fd0-b57a069659a8",
+        "continuationJobId": "3432a8ca-7964-4474-a11a-20e321c7c8cf",
+        "continuationStatus": "failed",
+        "phases": [
+          {
+            "phase": "receive",
+            "allowed": true
+          },
+          {
+            "phase": "dispatch",
+            "allowed": true
+          },
+          {
+            "phase": "dispatch",
+            "allowed": true
+          },
+          {
+            "phase": "dispatch",
+            "allowed": false
+          }
+        ],
+        "calls": [
+          "external",
+          "child"
+        ]
+      },
+      {
+        "case": "acceptance-race",
+        "organizationStatus": "accepted",
+        "currentAcceptance": "PASS",
+        "receipt": {
+          "schema_version": "pida.collaboration.receipt/1",
+          "receipt_id": "599d6967-fb44-42a4-b2c1-2e938e2b7ad6",
+          "producer_id": "schumpeter",
+          "request_id": "review-request",
+          "payload_digest": "ad2b83f86e6cdf1a52d603beb45a7939f74e560b5727143ecc1db3cd77304702",
+          "recipient": {
+            "organization_id": "org-external",
+            "host_id": "host-1",
+            "org_session_id": "9061b112-2b6f-4f5d-b1fe-5c530022cd6e",
+            "agent_id": "1c83c559-6e08-4343-b40e-7e50afbdc865"
+          },
+          "received_at": "2026-11-07T12:12:06.760Z",
+          "job_id": "ad176bd7-a37a-47a7-9f49-00650ef066c1",
+          "phase": "job_enqueued",
+          "durable": true,
+          "durability_scope": "local-process-restart"
+        },
+        "jobStatus": "completed",
+        "calls": [
+          "worker",
+          "worker"
+        ]
+      },
+      {
+        "case": "acknowledged-state-over-reader-limit",
+        "seededValidRecords": 453,
+        "beforeBytes": 33482833,
+        "afterBytes": 33482833,
+        "readerLimit": 33554432,
+        "admission": "COLLABORATION_STORAGE_LIMIT",
+        "reopenCode": "OK"
+      },
+      {
+        "case": "grandchild-restart",
+        "status": "failed",
+        "code": "COLLABORATION_FORBIDDEN",
+        "calls": [
+          "A",
+          "B"
+        ],
+        "phases": [
+          {
+            "phase": "receive",
+            "allowed": true
+          },
+          {
+            "phase": "dispatch",
+            "allowed": true
+          },
+          {
+            "phase": "dispatch",
+            "allowed": true
+          },
+          {
+            "phase": "dispatch",
+            "allowed": false
+          }
+        ]
+      },
+      {
+        "case": "second-continuation",
+        "status": "failed",
+        "code": "COLLABORATION_FORBIDDEN",
+        "calls": [
+          "A",
+          "B",
+          "A",
+          "B"
+        ],
+        "phases": [
+          {
+            "phase": "receive",
+            "allowed": true
+          },
+          {
+            "phase": "dispatch",
+            "allowed": true
+          },
+          {
+            "phase": "dispatch",
+            "allowed": true
+          },
+          {
+            "phase": "dispatch",
+            "allowed": true
+          },
+          {
+            "phase": "dispatch",
+            "allowed": true
+          },
+          {
+            "phase": "dispatch",
+            "allowed": false
+          }
+        ]
+      },
+      {
+        "case": "cancelled-origin",
+        "status": "failed",
+        "code": "COLLABORATION_ORIGIN_INACTIVE",
+        "calls": [],
+        "phases": [
+          {
+            "phase": "receive",
+            "allowed": true
+          },
+          {
+            "phase": "dispatch",
+            "allowed": true
+          }
+        ]
+      },
+      {
+        "case": "near-capacity-running-crash-recovery",
+        "beforeBytes": 33554182,
+        "runningBytes": 33554264,
+        "recoveredBytes": 33554369,
+        "limit": 33554432,
+        "remainingBytes": 63,
+        "exitCode": 78,
+        "recoveredStatus": "interrupted"
+      },
+      {
+        "case": "missing-native-parent-link",
+        "changedFields": [
+          "jobs.child.parentJobId deleted"
+        ],
+        "depth": 1,
+        "reopen": "AGENT_STATE_INVALID",
+        "filePreserved": true,
+        "calls": [
+          "external"
+        ],
+        "phases": [
+          {
+            "phase": "receive",
+            "allowed": true
+          },
+          {
+            "phase": "dispatch",
+            "allowed": true
+          }
+        ]
+      }
+    ],
+    "trackedSourceEdits": "None in author or review worktrees. Only untracked reviewer probes/logs/reports created in isolated worktrees."
+  },
+  "findings": [
+    {
+      "id": "PIDA-REVIEW-1",
+      "originalSeverity": "P1",
+      "state": "FIXED",
+      "evidence": "Revoked original and second continuation plus restarted grandchild are rejected before another Pi model call. Native parent/prior-attempt/join-result lineage traversed without granting a second receipt."
+    },
+    {
+      "id": "PIDA-REVIEW-2",
+      "originalSeverity": "P1",
+      "state": "FIXED",
+      "evidence": "Fresh admission during async capture executes; stale capture is discarded; only one final root receipt. Owner principal-await regression independently rerun in36-test suite."
+    },
+    {
+      "id": "PIDA-REVIEW-3",
+      "originalSeverity": "P1",
+      "state": "FIXED",
+      "evidence": "Overflow admission429 leaves disk and jobs/tasks/attempts unchanged; exact duplicate/restart remain valid. Actual subprocess crash after running state persisted250bytes below cap recovers interrupted with63bytes headroom."
+    },
+    {
+      "id": "PIDA-REVIEW-4",
+      "state": "FIXED",
+      "scope": "Explicit local persisted-state corruption, not an ordinary network request",
+      "evidence": "Deleting only positive-depth child.parentJobId now rejects AGENT_STATE_INVALID at load and preserves malformed bytes; no child execution."
+    }
+  ],
+  "originalFullSuite": {
+    "reference": "../pida-review-delivery-20261107/review-initial-report.json",
+    "referenceSha256": "9466168565e8749f6c7a1f66bc862957cdd15431591dcdbab8246904574a89b2",
+    "baseline": {
+      "tests": 405,
+      "pass": 372,
+      "fail": 24,
+      "cancelled": 1,
+      "skipped": 8
+    },
+    "initialChange": {
+      "tests": 416,
+      "pass": 383,
+      "fail": 24,
+      "cancelled": 1,
+      "skipped": 8
+    },
+    "interpretation": "Every original author-reported failing name reproduced on baseline. Variable-only command deadline and unborn Git cleanup failures passed isolated on both. No new full suite was rerun for these focused corrections. Full Windows product acceptance remains unproven."
+  },
+  "windowsProductFollowup": [
+    {
+      "priority": "desktop-blocking-path",
+      "issue": "Final materialized OCEL cut is stale",
+      "observed": "test/ocel.test.mjs:44 compares on-disk document to exported final document. Disk lacks terminal run_finished event and reported_status. Both initial baseline/current full runs fail, and isolated test on5dc1109 fails again.",
+      "classification": "Confirmed functional discrepancy; exact root cause not established. Not a POSIX-only assertion.",
+      "minimum": "Trace final ObservationArchive checkpoint error/write ordering; verify final disk/API/HTTP/restart cut+digest agree or explicitly mark materialization unavailable. Required before desktop treats the persisted OCEL file as terminal PIX evidence.",
+      "source": "src/observation.ts:136"
+    },
+    {
+      "priority": "desktop-command-path",
+      "issue": "PowerShell native nonzero exit becomes1instead7",
+      "observed": "test/project-tools.test.mjs:65 expected native process exit7, received1 on baseline/current. Windows command fixture already usesPowerShell quoting; successful command/env isolation checks precede failure.",
+      "classification": "Confirmed actual return-contract mismatch; likelyPowerShell/SDK exit propagation, precise cause unverified.",
+      "minimum": "Run failing native child through chosen desktop project command path; preserve actual native exit or accurately name wrapper exit semantics, and check cancellation/process cleanup.",
+      "source": "src/project-tools.ts:210"
+    },
+    {
+      "priority": "desktop-workspace-path",
+      "issue": "Git-backed agent workspace initialization fails",
+      "observed": "Two agents-http scenarios fail GIT_OPERATION_FAILED in both isolated worktrees, whereas original shorter owner checkout log did not list these two failures.",
+      "classification": "Environment/path-sensitive functional failure. Nested Windows path length is a hypothesis, not established cause.",
+      "minimum": "Capture sanitized Git stderr with actual packaged desktop state path and short-path control; verify init/checkpoint/restart before accepting coding workspace. Do not only shorten test paths to hide unsupported product paths.",
+      "source": "src/workbench.ts:128"
+    },
+    {
+      "priority": "windows-capability-fixtures",
+      "issue": "Symlink privilege andPOSIX mode assertions",
+      "observed": "Multiple symlink creation tests stop atEPERM. Four native-provider tests stop at stat.mode&0777 expectation0600 versus Windows0666 before protocol execution.",
+      "classification": "Unsupported environment capability/POSIX assertion; not evidence that subsequent provider protocol or boundary handling succeeded.",
+      "minimum": "Capability-aware symlink fixtures withLinux negative-path coverage; Windows directory/credential access checks appropriate to chosen storage policy; complete native provider protocol+restore tests beyond mode assertion."
+    },
+    {
+      "priority": "windows-test-assertions",
+      "issue": "Workspace path assertion uses raw path insideJSON",
+      "observed": "Two stabilization tests JSON.stringify(context) then includes(rawWindowsPath). Backslashes inJSON are escaped, so these assertions can reject a correctly supplied path.",
+      "classification": "Source-backed test-assertion defect candidate; actual context fields should be checked before declaring runtime path omission.",
+      "minimum": "Inspect actual structured prompt/transcript cwd onWindows and compare normalized values; preserve restored-workspace behavior check."
+    },
+    {
+      "priority": "reliability-followup",
+      "issue": "Large memory/delegation/compaction timing failures",
+      "observed": "Memory run10s timeout, delegation runs limited at5s, compaction test20s timeout reproduce onbaseline/current. Not independently classified as flaky. Faux provider schedules every chunk withsetTimeout when tokensPerSecond>0, including extremely small computed delays.",
+      "classification": "Unresolved runtime versus synthetic stream pacing. Timing fixture explanation is a hypothesis; no waiver.",
+      "minimum": "For non-streaming semantics tests use deterministic bounded faux delivery or measure isolated pacing; retain separate deadline/cancellation tests. Run actual desktop-sized memory+continuation+compaction scenario before reliability acceptance."
+    },
+    {
+      "priority": "cleanup-followup",
+      "issue": "Variable process/Git cleanup races",
+      "observed": "Current-only command deadline missingpid andbaseline-only unbornGitEBUSY both passed isolated onbothcommits. Foreground shell cleanup also showedEBUSY.",
+      "classification": "Evidence of timing-sensitive test/process cleanup. This does not prove allWindows descendant cleanup correct.",
+      "minimum": "Verify chosen packaged command path releases child processes/file handles after cancel/timeout before workspace close/reopen."
+    }
+  ],
+  "limits": [
+    "No actual external LLM or remote authorization service run",
+    "No native GUI, installer, Linux or desktop product acceptance",
+    "No cross-family verification",
+    "File store remains bounded; generic state growth faults host and requires recovery instead of promising unlimited retention",
+    "No cryptographic guarantee against arbitrary hostile rewrites of trusted local supervisor state"
+  ],
+  "verdict": "PASS for bounded collaboration delivery correction scope; full product acceptance remains pending",
+  "validity": "Only these commits and source hashes. Reopen review if changed authority lineage, admission/acceptance ordering, persistence format/capacity policy, or a counterexample violates these invariants."
+}

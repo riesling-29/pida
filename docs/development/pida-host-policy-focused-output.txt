@@ -1,0 +1,40 @@
+✔ trusted endpoint is literal loopback, credential-free URL and exact path only (1.1315ms)
+✔ actual Python policy independently verifies Unicode digest, current grant and strict nonce/echo binding (751.0423ms)
+✔ supported local-host process (local) uses Python current policy, capability/readback and exact native job mapping (2287.1223ms)
+✔ supported local-host process (public-fixture) uses Python current policy, capability/readback and exact native job mapping (2159.8664ms)
+✔ corrupt persisted delegated depth without parent cannot erase collaboration ancestry (20.6822ms)
+✔ persisted child derives current external grant from native lineage after restart (111.3466ms)
+✔ persisted continuation derives current external grant from native lineage after restart (173.7644ms)
+✔ new admission during async acceptance principal discards the obsolete capture (203.2443ms)
+✔ new admission during async acceptance capture discards the obsolete capture (190.9689ms)
+✔ byte-capacity rejection rolls back admission, preserves prior receipts and reopens; no history eviction (1641.8087ms)
+✔ closed envelope and shared canonical digest golden vector (1.3851ms)
+✔ concurrent delivery, lost ACK and persisted restart reuse the exact receipt/job; changed payload conflicts (19.7496ms)
+✔ actual process exits before/after file replacement and after ACK preserve all-or-nothing job binding (2370.7146ms)
+✔ policy rejects foreign host, sender/mapping, stale revisions and revoked read/dispatch; absence disables delivery (66.668ms)
+✔ cancelled organization returns immutable duplicate history only, rejects new messages and late replies (14.5041ms)
+✔ restart rechecks host dispatch authority instead of replaying the saved grant (68.5103ms)
+✔ reply cancellation while dispatch authorization awaits prevents model invocation (121.2063ms)
+✔ async receive policy cannot bypass cancellation during its await (8.239ms)
+✔ persisted corrupt receipt/job mapping fails closed and preserves file evidence (12.5153ms)
+✔ v2 migration preserves native jobs and creates no fictional receipts (9.8398ms)
+✔ HTTP + SDK enforce dedicated permission and current authority; native organization API still works (62.4676ms)
+✔ local and named Persona workers run concurrently without sharing memory authority (475.7454ms)
+✔ only host-approved sources can be selected and external identity cannot be overwritten at registration (68.4734ms)
+✔ source choice survives restart; a removed external source fails closed while local jobs and old results remain usable (346.1389ms)
+✔ external factory failure is isolated and incompatible routing configurations fail before activation (144.8232ms)
+✔ unlabelled legacy sessions never migrate from external authority to local memory silently (272.9691ms)
+✔ ordinary workspace needs no PIX or Schumpeter and binds main and managed worker before first input (461.9474ms)
+✔ PI tool registration and PIX configuration never grant analysis permission (70.9572ms)
+✔ explicit broken PIX paths degrade analysis to unavailable while normal model runs still work (377.3514ms)
+✔ external contract factory owns main and worker context; local canonical tools and HTTP writes are disabled (220.4488ms)
+✔ legacy empty and long private roles bind without exporting role instruction text (410.1859ms)
+✔ embedded SDK main principals retain isolated canonical memory and context scopes (259.8056ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5777.7013

@@ -1,0 +1,109 @@
+{
+  "status": "PASS",
+  "source_commit": "e9a1d31140bcff34e3c9ef0f82f4b3dbca0ddd68",
+  "manifest_sha256": "f1b9156e6bee986a88666da451b352e006e18c83639408aa8a062b15f62f8ed1",
+  "sidecar_sha256": "8f4bd65fe7a74ac6944059bc97158b13f98fd473b95240352cd2e0ff49d8e579",
+  "platform": "win32",
+  "scenarios": [
+    {
+      "name": "base-smoke",
+      "status": "PASS",
+      "policy_id": "smoke/1",
+      "persona": "local",
+      "records": [
+        {
+          "agent_id": "0137419c-b77d-4439-9a7b-158c78bd6d85",
+          "source_id": "local",
+          "org_id": "3e3f9ec9-6ba2-4697-8c42-06983fdb9bae",
+          "job_id": "f536a67f-8c1e-41e0-9212-885916bf2d4e",
+          "attempt_id": "8b2ea338-1790-4d98-ba1e-0ce2fc7fc248",
+          "run_id": "c8d4911e-0a25-4d0d-bb2d-431e3900d464",
+          "inclusion_events": 2
+        }
+      ],
+      "resume_same_ids": true,
+      "token_rotated": true,
+      "policy_mismatch_no_mutation": true,
+      "catalogue_mismatch_no_mutation": null
+    },
+    {
+      "name": "base-work",
+      "status": "PASS",
+      "policy_id": "work/1",
+      "persona": "local",
+      "records": [
+        {
+          "agent_id": "bfd149eb-3906-40e1-ba42-2e822bb3a649",
+          "source_id": "local",
+          "org_id": "055567b7-0d4d-4cc3-b048-5188eeb149b2",
+          "job_id": "204d510f-a60e-41e3-aea9-483a99a1585a",
+          "attempt_id": "bfb22b5e-7782-4144-bf21-5d86053598e8",
+          "run_id": "4fae19c0-5cbe-489c-a113-3d48873aa099",
+          "inclusion_events": 2
+        }
+      ],
+      "resume_same_ids": true,
+      "token_rotated": true,
+      "policy_mismatch_no_mutation": true,
+      "catalogue_mismatch_no_mutation": null
+    },
+    {
+      "name": "reference-work",
+      "status": "PASS",
+      "policy_id": "work/1",
+      "persona": "reference",
+      "records": [
+        {
+          "agent_id": "8d2692bc-ff88-430f-b237-daafeafce724",
+          "source_id": "workspace",
+          "org_id": "68a54259-8023-4954-b130-a59b1b6fc3a4",
+          "job_id": "823ea0c9-68e5-423e-9802-238ebfc219dc",
+          "attempt_id": "e3e185dc-1146-486d-97aa-c7683d62725a",
+          "run_id": "6e849885-1bc8-459e-ba71-157226efd322",
+          "inclusion_events": 2
+        }
+      ],
+      "resume_same_ids": true,
+      "token_rotated": true,
+      "policy_mismatch_no_mutation": true,
+      "catalogue_mismatch_no_mutation": null
+    },
+    {
+      "name": "catalogue-work",
+      "status": "PASS",
+      "policy_id": "work/1",
+      "persona": "catalogue",
+      "records": [
+        {
+          "agent_id": "cb2af79a-5f4e-451d-856e-7de7356a1b8c",
+          "source_id": "profile-a",
+          "org_id": "beaf77cd-bc8a-4635-831c-147555e7a739",
+          "job_id": "01fd86de-66fa-4a17-aaf9-a8233bd96fbb",
+          "attempt_id": "894e25aa-9edb-4b54-aef2-e931ccba8b64",
+          "run_id": "1aab3748-47db-42d3-8f08-2a6f2783fe79",
+          "inclusion_events": 2
+        },
+        {
+          "agent_id": "a5d8959e-5a17-48e1-bd34-d64cd384353e",
+          "source_id": "profile-b",
+          "org_id": "2cf3ce67-7b20-4891-89ce-d1145a00f26c",
+          "job_id": "4ee0a3d5-b043-496d-b248-42eeadd95f7e",
+          "attempt_id": "21f23c82-81a0-41cc-ad91-ef95e12ea0e2",
+          "run_id": "b2a8fd7f-215a-4f8b-bc94-b4fbad1b6ae9",
+          "inclusion_events": 2
+        }
+      ],
+      "resume_same_ids": true,
+      "token_rotated": true,
+      "policy_mismatch_no_mutation": true,
+      "catalogue_mismatch_no_mutation": true
+    }
+  ],
+  "provider_network_calls": 0,
+  "credentials_used": false,
+  "external_python_reference": true,
+  "limitations": [
+    "No GUI, packaged parent Python, canonical memory, real provider or general Linux ABI acceptance.",
+    "Native criteria remain empty; completion is not native artifact acceptance."
+  ]
+}

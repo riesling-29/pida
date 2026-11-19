@@ -1,0 +1,20 @@
+{
+  "original_bytes_preserved": true,
+  "archive_sha256": "9e7458a9c6170a098923ee3624e97357cf411f51a364f0cad4e9f1c0b62eb3ab",
+  "files": {
+    "windows/result.json": "09826ae57a9c7e5c660608b2feb867f47266d4888c405f6e1c82b5296725bd79",
+    "windows/clean-probe.json": "3c0a3deaf7196821cd53d676671f399d84de5823443d0c12b5bb4503f6876139",
+    "windows/reference-probe.json": "92d5aa933db104cd13f244c5eafd924c44ae0ddfdb64443717013ae4e6fd965d",
+    "windows/manifest.json": "0d63aac8c755d601a4e8bff151ea3648bc4afd00393449c533d0b4600d5d9e6b",
+    "linux/result.json": "9853bc91a86f69c1be5ede9d440eb7452062937ab001feae297c87910fc3409c",
+    "linux/clean-probe.json": "5716e8b0e02870ae35fe2dcda7d1792f020ed3974eaf2862719c953628cb19c4",
+    "linux/reference-probe.json": "b7599e360a8314365061bf328d4666bbc220cf9cfe02b087f6eb073215b8ca8d",
+    "linux/manifest.json": "d98d05da9fe723223d7cd444fa8274f4a660d40018c3246789826d2634daefe6",
+    "node/SHASUMS256.txt": "3927bab574a00ca0560c9583fe19655ba19603a1c5851414e4325d34ac50e469",
+    "build/linux-build-probe.mjs": "6e98d6cc5581287a0cd2849ca36f971387a7a6d8c588a3dea89ea3b50aa03a82",
+    "build/npm-pack.json": "f03e9b80eedec9c974c82dd1006c0d2b87b69a808f56947c697674694537c801",
+    "build/package-source.json": "8722d12a4300fcdc978934b2c367c47e2259ab59660e0a37a21196233fee0ff3",
+    "historical/windows-initial-build.log": "23b791856d0c8385b260a85babf6bd788b628681fe3c549889d4d2fd5db0db62",
+    "historical/initial-npm-pack.json": "ab208b33dd9c9fc0b410a258a3b6adf07d9cf998257b64d7e3e50723d7da8232"
+  }
+}

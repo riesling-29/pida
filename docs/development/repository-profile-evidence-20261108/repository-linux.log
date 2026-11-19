@@ -1,0 +1,46 @@
+✔ JSON envelope preview clipping reports unretained control-byte output as lossy (224.125522ms)
+✔ approved CLI receives validated JSON stdin and fixed literal arguments, without inherited provider secrets (194.884668ms)
+✔ manifest and entrypoint edits require a fresh host approval across calls and reconstructed proxies (547.150009ms)
+✔ exit failure and invalid JSON retain executed effects; JSON output has an explicit limit (573.319852ms)
+✔ verbose text program completes and exposes complete owner-scoped output through the workspace reader (1657.028986ms)
+✔ disk cap and unavailable storage keep text commands running and never advertise incomplete artifacts (380.02363ms)
+✔ timeout and cancellation kill the actual child and report uncertain effects (1246.148921ms)
+✔ manifest schema/path boundaries reject dynamic executables, unsupported validators and symlink scripts (115.561943ms)
+✖ npm proxy executes an installed npm runner with a pinned package script without installing dependencies (117.221215ms)
+✔ actual Pi tool loop invokes the approved program with its declared input schema (216.01186ms)
+✔ actual Pi loop follows a returned artifact reference through the registered output tool (310.679261ms)
+✔ closed private binding and public projection accept only fixed approved Node scope (131.437108ms)
+✔ closed fields, UUID types, digest, root identity, protected paths and unsafe aliases refuse (115.718577ms)
+✔ unsafe runner schema and changed approval never create a managed workspace (333.596993ms)
+✔ actual mode3 fresh/resume, caps and queued identity; changed bindings refuse without any workspace writes (2851.656865ms)
+✔ repository requires work selection before initialization; mode2 remains opt-in independent (1276.986929ms)
+✔ actual native baseline failure then distinct repair goal edits, checks and reads exact live file (585.850549ms)
+✔ same-run fixed write-effect checker replay stays blocked after later edit (352.880651ms)
+✔ fixed runner rejects model arguments, changed entrypoint and inherited credential environment; cancellation stays unknown (297.721046ms)
+✔ unmodified faux usage estimate still enforces managed token ceiling (353.703258ms)
+✔ shared project run lease serializes two native agents inside this one host (688.268502ms)
+✔ project tools retain boundary checks; explicit native cancellation retains unknown effects and no replay (387.783686ms)
+✔ root replacement on resume refuses before managed recovery; exact config privileges remain pinned (1924.383356ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 22
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10295.672918
+
+✖ failing tests:
+
+test at test/program-proxy.test.mjs:159:1
+✖ npm proxy executes an installed npm runner with a pinned package script without installing dependencies (117.221215ms)
+  Error: PROGRAM_NPM_UNAVAILABLE
+      at fail (file:///var/tmp/pida-repository-profile-20261108/dist/program-proxy.js:16:32)
+      at npmRunner (file:///var/tmp/pida-repository-profile-20261108/dist/program-proxy.js:137:12)
+      at inspect (file:///var/tmp/pida-repository-profile-20261108/dist/program-proxy.js:156:22)
+      at inspectProgramProxy (file:///var/tmp/pida-repository-profile-20261108/dist/program-proxy.js:188:23)
+      at TestContext.<anonymous> (file:///var/tmp/pida-repository-profile-20261108/test/program-proxy.test.mjs:163:22)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    code: 'PROGRAM_NPM_UNAVAILABLE'
+  }

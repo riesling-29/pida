@@ -1,0 +1,14 @@
+✔ Pi nested write/read/edit preserves logical forward-slash paths and exact bytes (93.791602ms)
+✔ flat Pi paths, direct nested API and independent owner remain unchanged (73.749263ms)
+✔ traversal, absolute, drive and backslash inputs remain denied by all Pi file tools (15.006786ms)
+✔ directory symlink or Windows junction cannot redirect Pi read/write/edit outside owned files (35.629069ms)
+✔ hardlinked files remain denied before Pi writes or edits (35.699944ms)
+✔ actual local Pi runtime nested file flow completes with run-captured artifact (111.423753ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1286.765522

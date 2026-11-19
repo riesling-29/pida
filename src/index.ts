@@ -11,6 +11,7 @@ export { validateObservationBundle } from "./integration-contract.js";
 export { observationContractRevision } from "./execution-contract.js";
 export * from "./persona-provider.js";
 export * from "./vera-persona-provider.js";
+export * from "./vera-dispatch-provider.js";
 export * from "./process-intelligence.js";
 export * from "./pix-port.js";
 export * from "./ocel.js";
@@ -25,6 +26,9 @@ export { createProjectTools, type ProjectConfig } from "./project-tools.js";
 
 export * from "./agent-memory.js";
 export * from "./agent-supervisor.js";
+export * from "./collaboration.js";
+export * from "./collaboration-policy-client.js";
+export * from "./organization-admission.js";
 export * from "./provider-connector.js";
 export * from "./project-view.js";
 export * from "./agent-tools.js";
@@ -38,3 +42,7 @@ export * from "./commands.js";
 export * from "./process-executor.js";
 
 export { normalizeCodemodeConfig, composePermission, type CodemodeConfig, type ResolvedCodemodeConfig } from "./codemode.js";
+
+export * from "./execution-policy.js";
+
+export * from "./repository-profile.js";

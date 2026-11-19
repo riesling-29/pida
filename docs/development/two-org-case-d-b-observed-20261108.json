@@ -1,0 +1,82 @@
+{
+  "schema_version": "pida.real-case-b-observation/1",
+  "case_id": "5bd55085-d316-4dc3-97cf-091d70a32478",
+  "runtime_source": "b7f7d523c6fede56d508575a6bb78afa343e5566",
+  "host_id": "desktop-c70db42530f74e03",
+  "native_org_id": "92330d94-e275-40ab-a216-56d39bd1d946",
+  "native_org_status": "unknown",
+  "job": {
+    "job_id": "d50e906c-141f-4a57-a6cf-c7f8ea37c54f",
+    "agent_id": "67d8b04c-f8ee-41b9-a5c1-5a4d257cb455",
+    "task_id": "7522dec9-cdc7-4749-bb01-32bc91e73307",
+    "attempt_id": "5489be1b-3d08-4d52-a7cb-cf4883d08ec7",
+    "run_id": "96e07f1c-2949-49aa-a4ef-cedd5c35327b",
+    "session_id": "01a1b6ee-c3ba-74cf-bc54-d8a70288960d",
+    "status": "completed",
+    "code": null,
+    "result_sha256": "041a45360b91254330753a5f1770c25c294037041df3050e49c975df39590cb5",
+    "result_bytes": 299
+  },
+  "request_counts": {
+    "B": 2,
+    "A": 6,
+    "new_case": 8,
+    "prior_two_org": 11,
+    "historical_smoke": 1,
+    "all_recorded": 20
+  },
+  "checks": {
+    "final_result_matches_observed_a_fields": true,
+    "file_matches_observed_a_fields": true,
+    "result_file_bytes_equal": true,
+    "actual_file_manifest_match": true,
+    "raw_seed_in_goal": false,
+    "source_publication_revision_is_four": true,
+    "not_acceptance_revision_five": true,
+    "separate_fresh_native_session": true
+  },
+  "logical_input_inclusions": [
+    {
+      "request_id": "39d88931-b573-40b9-a2db-8ae3d6b2bd4c",
+      "authorization": "current-provider-check",
+      "exact_native_ids": true
+    },
+    {
+      "request_id": "9142547e-b415-48c4-90f3-130d489f2544",
+      "authorization": "current-provider-check",
+      "exact_native_ids": true
+    }
+  ],
+  "file": {
+    "path": "artifacts/organization-b-answer.json",
+    "id": "fff718e304584fa5c6dbdb21447ac3a031b1443cea406c98320427a578e16ce8",
+    "sha256": "041a45360b91254330753a5f1770c25c294037041df3050e49c975df39590cb5",
+    "bytes": 299
+  },
+  "raw_evidence_hashes": {
+    "96e07f1c-2949-49aa-a4ef-cedd5c35327b.health.json": "3057733c629b0d676ebb9060bffa96a928dc024aae19062b3d33c2e7c8c143f3",
+    "96e07f1c-2949-49aa-a4ef-cedd5c35327b.jsonl": "0839b7e86201aef0cde4829f8a80c24554a4b82d6ec47b0f7cffd23f077d54f3",
+    "96e07f1c-2949-49aa-a4ef-cedd5c35327b.manifest.json": "81296b80e6d098eeedc528938d6603d4da86fc219ab985c640d3e917d1c467db",
+    "96e07f1c-2949-49aa-a4ef-cedd5c35327b.ocel.json": "e8e5362c082fce611c8c99a3ff3ea7065215e3ab609fcb223934eaebd4c9e215",
+    "96e07f1c-2949-49aa-a4ef-cedd5c35327b.ocel.meta.json": "02a8b8f08e65565364c4a0b2f4b1a9474d1161de143a5e66491fbb731a00d18f",
+    "organization-b-answer.json": "041a45360b91254330753a5f1770c25c294037041df3050e49c975df39590cb5",
+    "pi.jsonl": "0b0ca7fa821de5ccd3aa46d675b0ee5c4c4527c51466c5c2c01815d6de881582",
+    "submitted-goal.txt": "9d46efd9cb02e2b9d204ab2810e933120524d9c1caa5886c7696c06a6e5e0e26",
+    "supervisor.json": "ac4a9dea9efd68fa0c58f2202da6b24586dc833c4b8fb7efa42d45f6faa7a514"
+  },
+  "public_evidence_audit": {
+    "scope": "Initial scan before publication",
+    "raw_seed_found": false,
+    "derived_answer_found_in": [
+      "real-case-d-b-first-readback.json"
+    ],
+    "action": "Owner notified to preserve exact original privately and publish whitelist projection; correction verified separately."
+  },
+  "scope": "Completed fresh B goal from actual A captured data; Sch B capture/acceptance pending.",
+  "limits": [
+    "B uses observed A output, not independent B Persona causality evidence.",
+    "Native empty-criteria verification remains UNKNOWN.",
+    "File and terminal text separately verified; publication revision not inferred from native file.",
+    "No new provider/auth call during read-only audit; cost UNKNOWN."
+  ]
+}

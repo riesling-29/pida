@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "platform": "win32",
+  "node": "v24.18.0",
+  "git": "git version 2.56.0.windows.4",
+  "isolated_runtime": "C:\\Users\\migeo\\AppData\\Local\\Temp\\pdr-g0CB63\\runtime",
+  "source_checkout_required": false,
+  "developer_node_modules_required": false,
+  "credentials_used": false,
+  "provider": "mock",
+  "persona": "pida-local",
+  "organization_id": "f6272c5e-6aa4-41b8-a46a-618f71d10645",
+  "job_id": "900790bc-23ae-4598-a2a3-c1efaa6d02cf",
+  "attempt_id": "59355b35-25d6-4d56-81a1-982c5a07d113",
+  "events": 16,
+  "terminal_event": true,
+  "resume_same_job": true,
+  "transport_token_rotated": true,
+  "limits": [
+    "No live model, desktop UI, remote Git or general Linux ABI acceptance.",
+    "No external Persona producer enabled."
+  ]
+}

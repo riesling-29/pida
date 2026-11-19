@@ -1,0 +1,22 @@
+{
+  "windows": {
+    "vendor_files": 15521,
+    "vendor_entry_differences": [],
+    "own_source_files_verified": 628,
+    "own_dist_files": 154,
+    "dependencies": 125,
+    "dependency_inventory_unchanged": true,
+    "license_inventory_unchanged": true,
+    "native_addon_paths_unchanged": true
+  },
+  "linux": {
+    "vendor_files": 15195,
+    "vendor_entry_differences": [],
+    "own_source_files_verified": 628,
+    "own_dist_files": 154,
+    "dependencies": 125,
+    "dependency_inventory_unchanged": true,
+    "license_inventory_unchanged": true,
+    "native_addon_paths_unchanged": true
+  }
+}

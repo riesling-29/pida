@@ -1,0 +1,12 @@
+{
+  "previous_source": "2b787fd4c234747da22726ec03a3e4c6619ae95f",
+  "source": "b7f7d523c6fede56d508575a6bb78afa343e5566",
+  "dist_changes": [
+    "pida/dist/workbench.js"
+  ],
+  "dist_workbench_sha256": "043a0eeb21907103d07e70907653e59544f162ffcc68c68495b96c0f118b99a9",
+  "vendor_changes": [],
+  "dependency_inventory_identical": true,
+  "join_runtime_tools_supervisor_byte_identical": true,
+  "reuse_scope": "Prior2b nativejoin source/distribution proof retained; new nestedtool flow tested separately."
+}

@@ -1,0 +1,25 @@
+✖ manifest schema/path boundaries reject dynamic executables, unsupported validators and symlink scripts (105.3483ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 635.5458
+
+✖ failing tests:
+
+test at ..\pida-execution-policy-20261108\test\program-proxy.test.mjs:145:1
+✖ manifest schema/path boundaries reject dynamic executables, unsupported validators and symlink scripts (105.3483ms)
+  Error: EPERM: operation not permitted, symlink 'C:\Users\migeo\AppData\Local\Temp\pida-program-zIOPXS\outside.mjs' -> 'C:\Users\migeo\AppData\Local\Temp\pida-program-zIOPXS\repository\entry.mjs'
+      at async symlink (node:internal/fs/promises:1002:10)
+      at async TestContext.<anonymous> (file:///D:/ChantaResearchGroup/pida-execution-policy-20261108/test/program-proxy.test.mjs:155:3)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    errno: -4048,
+    code: 'EPERM',
+    syscall: 'symlink',
+    path: 'C:\\Users\\migeo\\AppData\\Local\\Temp\\pida-program-zIOPXS\\outside.mjs',
+    dest: 'C:\\Users\\migeo\\AppData\\Local\\Temp\\pida-program-zIOPXS\\repository\\entry.mjs'
+  }

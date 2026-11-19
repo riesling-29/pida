@@ -1,0 +1,15 @@
+{
+  "cwd": "D:/ChantaResearchGroup/pida-review-windows-20261107",
+  "label": "fixed-regressions",
+  "node": "v24.18.0",
+  "args": [
+    "--test",
+    "--test-timeout=30000",
+    "test/windows-runtime.test.mjs",
+    "test/commands.test.mjs"
+  ],
+  "started": "2026-11-07T12:25:47.047Z",
+  "finished": "2026-11-07T12:25:52.176Z",
+  "code": 0,
+  "signal": null
+}

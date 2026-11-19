@@ -1,0 +1,127 @@
+{
+  "case_id": "5bd55085-d316-4dc3-97cf-091d70a32478",
+  "scope": "Public JSON evidence leak correction; raw original preserved privately, no history deletion",
+  "file": "real-case-d-b-first-readback.json",
+  "private_original_sha256": "c8740f64ce74861f74830e3c199c46f1f24ad7df1bbadf1812c3e9f26dc5a8c5",
+  "public_projection_sha256": "04b69c32136555dbf941559068375ad082c9c065a8e44c407f306bc41dda1b2e",
+  "private_original_derived_present": true,
+  "private_original_seed_present": false,
+  "public_json_scan": [
+    {
+      "name": "real-case-d-a-accepted.json",
+      "sha256": "511e66a33f810a9afa1d6c3de368cb2c4081b5589701df3ae463e85846c703bb",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-a-capture-readback.json",
+      "sha256": "5c9be61000f43550f1c4547f0fbd3d9db2f241b672507053096c0e3dbbe16fe5",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-a-capture.json",
+      "sha256": "da5b1494ceb0d22007cd35fee01364eb4a4478b7a806afdd8da7194ac4f6f067",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-a-current-graph.json",
+      "sha256": "011775d73497aa12ae556d2608c09fb53e3c8f1d17e487402af687a67450fcee",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-a-first-readback.json",
+      "sha256": "163643679869af3b375824d3b7f5feebbf68df666c93eef7260897f4c24f9698",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-a-forwarded.json",
+      "sha256": "399c05c1def8561f6e8eef4e46f8dc446b6b039575622addbc3835a8c6aaa9e8",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-a-preflight.json",
+      "sha256": "02b4559f7fc68ea3536a692a640f71f3d1f45f68ad6a36d79dd5be292967376f",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-a-reservation.json",
+      "sha256": "13f2e20761952c6a79c9c150c07ec125a3d3654a87e5e411b77d5c3858a95f43",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-b-capture.json",
+      "sha256": "e0949c327763c63cd4aa34f152756fd91f1a965164fe255e83c0c28b18f8ef6d",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-b-first-readback.json",
+      "sha256": "04b69c32136555dbf941559068375ad082c9c065a8e44c407f306bc41dda1b2e",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-b-preflight.json",
+      "sha256": "51fec49ac348d0dc317e5ca6d7c17a962bace58424094c8d7578a83a6b13c053",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-b-prepared-contract.json",
+      "sha256": "532fe65deb285e059571fe590cbabc2d56ce2c691f3d3a175360aba97bd2e2c8",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-b-reservation.json",
+      "sha256": "b83eb0ffc3e1923a752116ca15420ace17ad1fc57c970fa7dc6a6b348aab520f",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-preparation-identities.json",
+      "sha256": "71fdbef93f4bd99e1f0107100e69a19cd1f04386d4eb8819df2461e2f1fa2e1c",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-preparation-launch.json",
+      "sha256": "359d629140c70ab64c856bda64d0079dc3d0fe1e650371857541fd58678d1b69",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-preparation-organizations.json",
+      "sha256": "dbe76c81cfbdb8ae802e318a30e5ef8291b7d7bf7618f0bba78a19f33deac778",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-preparation-profile.json",
+      "sha256": "0cc2321c1fbd741b1ad73c07999a4debe58c8ee1eabacb43854e219309d0abd2",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-prepared-contract.json",
+      "sha256": "71d0e4845e01aaf456557c58a879a77dc84fe1ca7e0fcb1859e37770db40e86e",
+      "seed_present": false,
+      "derived_present": false
+    },
+    {
+      "name": "real-case-d-workspace-selection.json",
+      "sha256": "ed24bab215ce05a9c7906293b8e06dec6e39d4fea4ebe7c2023997978ac8ef6e",
+      "seed_present": false,
+      "derived_present": false
+    }
+  ],
+  "all_public_json_seed_and_derived_absent": true,
+  "at": "2026-11-07T16:57:37.282Z"
+}

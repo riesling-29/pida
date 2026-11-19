@@ -1,0 +1,9 @@
+{
+  "schema_version": "pida.repository-profile/1",
+  "id": "repository-fixed-node/1",
+  "module": "pida/examples/repository-profile.mjs",
+  "environment_key": "PIDA_REPOSITORY_PROFILE",
+  "ready_protocol": "pida.local-host/3",
+  "workspace_schema": "pida.local-host.workspace/3",
+  "admission_capabilities": "pida.organization.admission.capabilities/3"
+}

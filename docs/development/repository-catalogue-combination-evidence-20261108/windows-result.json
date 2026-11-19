@@ -1,0 +1,108 @@
+{
+  "status": "PASS",
+  "source_commit": "e9a1d31140bcff34e3c9ef0f82f4b3dbca0ddd68",
+  "manifest_sha256": "f1b9156e6bee986a88666da451b352e006e18c83639408aa8a062b15f62f8ed1",
+  "platform": "win32",
+  "stock": {
+    "ready": 3,
+    "admission_capabilities": 3,
+    "persona_mode": "vera-local-reference-catalogue/1",
+    "policy": "work/1",
+    "records": [
+      {
+        "agent_id": "46280801-2d66-47ec-bcae-265a777a5629",
+        "source_id": "profile-a",
+        "org_id": "71a0de55-628a-404a-a5ce-a1a6c922810b",
+        "job_id": "4ac5ec9d-8137-4911-b2cd-df07b913de08",
+        "attempt_id": "8dea3134-b9c5-48da-b558-850d9a23eb08",
+        "run_id": "4ffafbd4-b6e6-4ff6-a0ad-f15ee68796ab",
+        "inclusion_events": 2
+      },
+      {
+        "agent_id": "16d64712-1317-427a-98c8-4cd7615ffd84",
+        "source_id": "profile-b",
+        "org_id": "4feb5ea5-cbad-4917-b2c2-c5fd92caa1e7",
+        "job_id": "31a7a2ed-6af5-4948-8395-52df01fc331a",
+        "attempt_id": "c7da21a3-7572-430c-930f-ab009860ee8e",
+        "run_id": "0101421b-1024-485b-be35-018ea0a63b41",
+        "inclusion_events": 2
+      }
+    ],
+    "resume_ids": true,
+    "token_rotated": true,
+    "catalogue_project_program_refusal_preserves_workspace": true
+  },
+  "sdk": {
+    "provider": "scripted synthetic usage15/response",
+    "records": [
+      {
+        "agent_id": "d8088a0a-e5db-4a25-a3e8-24e5360135b8",
+        "source_id": "profile-a",
+        "org_id": "10f83456-e5c9-4a1b-a889-f6ab0e564b9d",
+        "job_id": "91f29a2e-547d-4db9-ba9e-f9b329e252a1",
+        "attempt_id": "8ae40714-3c67-40dc-a281-9bc9f40dbe5a",
+        "run_id": "04fc92fd-2842-4920-9548-5ae6a627df93",
+        "status": "failed",
+        "code": "PROGRAM_EXIT_FAILED",
+        "inclusion_events": 2
+      },
+      {
+        "agent_id": "74f579f2-a07e-4f43-94f9-96aea4072aa0",
+        "source_id": "profile-b",
+        "org_id": "c0285fee-cea2-4bbe-8077-1765b4c28cd4",
+        "job_id": "9032b60e-31e0-47f7-ae71-6f6a1d8d3b32",
+        "attempt_id": "f9cc7139-cd08-4155-8074-e20d32c28673",
+        "run_id": "fd7fd03b-f5f6-487a-ac25-9a2b625c55e0",
+        "status": "completed",
+        "code": null,
+        "inclusion_events": 4
+      }
+    ],
+    "context_checks": [
+      {
+        "profile": "a",
+        "own": true,
+        "other": false
+      },
+      {
+        "profile": "a",
+        "own": true,
+        "other": false
+      },
+      {
+        "profile": "b",
+        "own": true,
+        "other": false
+      },
+      {
+        "profile": "b",
+        "own": true,
+        "other": false
+      },
+      {
+        "profile": "b",
+        "own": true,
+        "other": false
+      },
+      {
+        "profile": "b",
+        "own": true,
+        "other": false
+      }
+    ],
+    "baseline_failure_preserved": true,
+    "separate_repair": true,
+    "file": {
+      "path": "src/values.json",
+      "bytes": 21,
+      "revision": "06477ac9257b241b603d310043fd539392eabd0ca024e9e79ab512ee73fbdd71",
+      "scope": "selected-project-file-at-capture-time"
+    }
+  },
+  "provider_network_calls": 0,
+  "limitations": [
+    "Native public createOrganization goals; not Sch reservation/consumer proof.",
+    "Stock mock tests do not prove model-driven project tools; separate SDK fixture does.",
+    "No real-provider usage adequacy, sandbox, canonical memory, parent packaged Python, GUI or user repository acceptance."
+  ]
+}

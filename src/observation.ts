@@ -6,6 +6,7 @@ import { observationSchema, type Observation, type ObservationBundle, type Resul
 import { Value } from "typebox/value";
 import { observationJsonSchema, manifestJsonSchema } from "./integration-contract.js";
 import { exportOcel } from "./ocel.js";
+import { setTimeout as delay } from "node:timers/promises";
 
 export interface ObservationContext { sessionId: string; taskId: string; runId: string }
 export interface ObservationSink { write(event: Observation): void | Promise<void> }
@@ -48,7 +49,7 @@ export class ObservationArchive {
     journal.reasons.add(reason);
     const root = this.root(context.sessionId);
     if (root) {
-      try { savePrivate(join(root, context.runId + ".health.json"), { version: 1, reasons: [...journal.reasons] }); }
+      try { savePrivate(join(root, context.runId + ".health.json"), { version: 1, reasons: [...journal.reasons], ...(journal.ocelFailed ? { ocelFailed: true } : {}) }); }
       catch { journal.reasons.add("OBSERVATION_ARCHIVE_IO"); }
     }
   }
@@ -64,8 +65,10 @@ export class ObservationArchive {
         const size = statSync(health).size; journal.found = true;
         if (size > 4096) throw new Error("invalid archive health");
         const saved = JSON.parse(readFileSync(health, "utf8"));
-        if (saved.version !== 1 || !Array.isArray(saved.reasons) || !saved.reasons.every((r: unknown) => lossReasons.includes(r as LossReason))) throw new Error("invalid archive health");
+        if (saved.version !== 1 || !Array.isArray(saved.reasons) || !saved.reasons.every((r: unknown) => lossReasons.includes(r as LossReason))
+          || (saved.ocelFailed !== undefined && typeof saved.ocelFailed !== "boolean")) throw new Error("invalid archive health");
         for (const reason of saved.reasons) journal.reasons.add(reason);
+        journal.ocelFailed = saved.ocelFailed === true;
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== "ENOENT") journal.reasons.add((error as NodeJS.ErrnoException).code ? "OBSERVATION_ARCHIVE_IO" : "OBSERVATION_ARCHIVE_CORRUPT");
       }
@@ -133,16 +136,26 @@ export class ObservationArchive {
     }
     return journal.reasons.size === 0;
   }
-  finish(context: ObservationContext, manifest: ResultManifest): void {
+  async finish(context: ObservationContext, manifest: ResultManifest): Promise<void> {
     const journal = this.journal(context); journal.manifest = structuredClone(manifest); journal.found = true;
     try { const root = this.root(context.sessionId); if (root) {
       if (journal.reasons.size) savePrivate(join(root, context.runId + ".health.json"), { version: 1, reasons: [...journal.reasons] });
-      savePrivate(join(root, context.runId + ".manifest.json"), manifest); this.checkpoint(context); if (!journal.reasons.size && !journal.ocelFailed) this.journals.delete(context.sessionId + "/" + context.runId); } }
+      savePrivate(join(root, context.runId + ".manifest.json"), manifest);
+      let outcome = this.checkpoint(context);
+      // Concurrent readers can briefly deny replacement on Windows. Yield so their async close can finish;
+      // never unlink the old checkpoint or retry validation/permanent failures. Exhaustion stays observable.
+      for (const waitMs of [5, 10, 25, 50, 100]) {
+        if (outcome !== "sharing") break;
+        await delay(waitMs); outcome = this.checkpoint(context);
+      }
+      // Keep projection failure visible after reopen; the complete JSONL/manifest is a separate source claim.
+      savePrivate(join(root, context.runId + ".health.json"), { version: 1, reasons: [...journal.reasons], ocelFailed: !!journal.ocelFailed });
+      if (!journal.reasons.size && !journal.ocelFailed) this.journals.delete(context.sessionId + "/" + context.runId); } }
     catch { this.markLoss(context, journal, "OBSERVATION_MANIFEST_FAILED"); }
   }
   /** Atomic materialized OCEL cut at each actual Pi turn end; JSONL remains the crash-recovery journal. */
-  private checkpoint(context: ObservationContext): void {
-    const root = this.root(context.sessionId); if (!root) return;
+  private checkpoint(context: ObservationContext): "written" | "sharing" | "failed" {
+    const root = this.root(context.sessionId); if (!root) return "written";
     const journal = this.journal(context);
     try {
       journal.ocelFailed = false;
@@ -150,7 +163,11 @@ export class ObservationArchive {
       savePrivate(join(root, context.runId + ".ocel.json"), document);
       savePrivate(join(root, context.runId + ".ocel.meta.json"), metadata);
       journal.ocelFailed = false;
-    } catch { journal.ocelFailed = true; }
+      return "written";
+    } catch (error) {
+      journal.ocelFailed = true;
+      return process.platform === "win32" && ["EPERM", "EACCES", "EBUSY"].includes((error as NodeJS.ErrnoException)?.code ?? "") ? "sharing" : "failed";
+    }
   }
   bundle(sessionId: string, runId: string): ObservationBundle {
     const j = this.journal({ sessionId, runId, taskId: "" });

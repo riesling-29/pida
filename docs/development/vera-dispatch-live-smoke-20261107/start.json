@@ -1,0 +1,27 @@
+{
+  "startedAt": "2026-11-07T12:10:22.267Z",
+  "provider": "openai",
+  "model": "gpt-6-astra",
+  "authMode": "chatgpt",
+  "thinkingLevel": "low",
+  "protocol": "vera-dispatch/0.1.0",
+  "producerSourceDigest": "7dd9aa5ea22afaab033b62d54864d6849ac038e414ea7cc93fd341828cd731cb",
+  "sourceFiles": {
+    "src/vera-dispatch-provider.ts": "5a6cf0968e69fa2c24630813756a2d49f63a091c63a2e8033057ee308dc849de",
+    "src/vera-persona-provider.ts": "46b007094f107459a7685e578bf32432a6da9fd3a9695e1f4e76a3575adb7610",
+    "src/provider-catalog.ts": "bf605762e85db11090fd9c355a80e886bb0b3a53c7991052548534b2ad19b87c",
+    "src/runtime.ts": "5924418e5e30406830da233df9116cbea9f3c1ed597330a0fd7103284756b7ed",
+    "scripts/vera-dispatch-live-smoke.mjs": "e15abf1f1204556b69033ed70ef3007fde33096f94dc184b7cd84f10ae27031d"
+  },
+  "syntheticWorkspace": "C:\\Users\\migeo\\AppData\\Local\\Temp\\pida-persona-live-mACDCC",
+  "limits": {
+    "runMs": 20000,
+    "turns": 1,
+    "providerRetries": 0,
+    "outputRetries": 0,
+    "streamedTextCharacters": 128,
+    "observedTokenGuard": 2048
+  },
+  "limitsScope": "OAuth endpoint has no hard output-token/billing cap here; wall-time/stream cancellation is cooperative and token guard is post-response.",
+  "actualCostUsd": null
+}

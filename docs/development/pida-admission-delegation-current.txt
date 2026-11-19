@@ -1,0 +1,30 @@
+✖ actual delegation chain stops at depth two and job summaries are bounded result data (15105.1646ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15676.1041
+
+✖ failing tests:
+
+test at test\agent-tools.test.mjs:65:1
+✖ actual delegation chain stops at depth two and job summaries are bounded result data (15105.1646ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'limited'
+  - 'failed'
+  
+      at TestContext.<anonymous> (file:///D:/ChantaResearchGroup/pida/test/agent-tools.test.mjs:76:76)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'limited',
+    expected: 'failed',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

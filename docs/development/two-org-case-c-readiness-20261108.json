@@ -1,0 +1,37 @@
+{
+  "state": "READY_FOR_ROOT_RELEASE_NOT_EXECUTED",
+  "case_id": "4db965ff-29cd-440b-ada0-e8b5b36a9579",
+  "plan_sha256": "febef471bdc88aee493f0a7522e66261fedfa9c67e481f32cb7ce917aac24e3f",
+  "goal_a_sha256": "3a6c175d803a7b19d04b5b1422c0d0d895bf9e37d15c966317b9d9a1fa7074f7",
+  "runtime_source_match": true,
+  "source_digest": "bdbbcd3385afd95356cf4df245a31b069f14cf2f755bbcadd8af008e34c97951",
+  "provider_probe_performed": false,
+  "observer_sha256": "9c8e8535a5864a6047bc6efd422658ee731935838aaad5e2ac319a337719e2bc",
+  "observer_fixture_checks": {
+    "scope": "synthetic observer fixtures only; no native host/provider access",
+    "baseline_zero_lifetime_six": true,
+    "event_dedup": true,
+    "unexpected_agent_stops": true,
+    "terminal_partial_unknown_stops": true,
+    "all_observations_read_only": true,
+    "observer_sha256": "9c8e8535a5864a6047bc6efd422658ee731935838aaad5e2ac319a337719e2bc"
+  },
+  "baseline": {
+    "at": "2026-11-07T16:25:52.647Z",
+    "case_id": "4db965ff-29cd-440b-ada0-e8b5b36a9579",
+    "host_id": "desktop-39bec59bcaaa4de2",
+    "stage": "A",
+    "observed_requests": 0,
+    "prior_two_org_requests": 5,
+    "historical_smoke_requests": 1,
+    "two_org_validation_lifetime": 5,
+    "all_recorded_validation_requests": 6,
+    "count_complete": true,
+    "gaps": [],
+    "jobs": [],
+    "organizations": [],
+    "active_case_ms": 0,
+    "stop_reasons": [],
+    "controls": "Read-only observer; shell alone invokes Stop once if instructed. No automatic effects/replays. Request threshold is observational, not a hard billing cap."
+  }
+}

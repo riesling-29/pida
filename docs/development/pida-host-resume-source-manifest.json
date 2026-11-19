@@ -1,0 +1,13 @@
+{
+  "base": "a81fbc9",
+  "scope": "Explicit same-host launcher resume; independent review pending",
+  "files": {
+    "examples/schumpeter-host.mjs": "137b61110c3a0987f7b0d0dfff7b1464ea5769a85bf1064f8f75283d598b4792",
+    "examples/host-workspace.mjs": "62fdfd9573440deb18538034515a8b823524915713528f7ed2c230abe365f5f0",
+    "test/collaboration-policy-client.test.mjs": "2c8543b9bf30425401a3777bae241e678ad6c53b6ad663c98fa97c841e298345",
+    "src/workspace-unlock.ts": "2893aa582d5df968d8f0912d42fe210fcb22e8c84cc829fea66987b1c82af42e",
+    "src/storage.ts": "f6472f169d31ebdaf07b1bf3ada4a93e38b50bae8387555ae3f99fa36c1f8afa",
+    "docs/SCHUMPETER-HOST-1.md": "39eb35382709998fbcb869a0ab18dfa45f9d51b8a1004e37f5529944543f0e3d",
+    "docs/development/PIDA-HOST-RESUME-20261107.md": "4a339c2bd75d93ce8ac9eab0595bb0559edf5ecbcb4373801956afe53402697e"
+  }
+}
