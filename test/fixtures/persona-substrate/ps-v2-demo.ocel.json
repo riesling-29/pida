@@ -1,0 +1,1180 @@
+{
+  "eventTypes": [
+    {
+      "name": "새지시",
+      "attributes": [
+        {
+          "name": "from_state",
+          "type": "string"
+        },
+        {
+          "name": "to_state",
+          "type": "string"
+        },
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "trigger",
+          "type": "string"
+        },
+        {
+          "name": "precision",
+          "type": "string"
+        },
+        {
+          "name": "precision_us",
+          "type": "integer"
+        },
+        {
+          "name": "log_seq",
+          "type": "integer"
+        },
+        {
+          "name": "blocker",
+          "type": "string"
+        },
+        {
+          "name": "report",
+          "type": "boolean"
+        },
+        {
+          "name": "root_task_id",
+          "type": "string"
+        },
+        {
+          "name": "promotion_id",
+          "type": "string"
+        },
+        {
+          "name": "new_goal",
+          "type": "string"
+        },
+        {
+          "name": "new_step",
+          "type": "string"
+        },
+        {
+          "name": "new_artifact_refs",
+          "type": "string"
+        },
+        {
+          "name": "detail_ref",
+          "type": "string"
+        },
+        {
+          "name": "child_task_id",
+          "type": "string"
+        },
+        {
+          "name": "delegate_to",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "단계완료",
+      "attributes": [
+        {
+          "name": "from_state",
+          "type": "string"
+        },
+        {
+          "name": "to_state",
+          "type": "string"
+        },
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "trigger",
+          "type": "string"
+        },
+        {
+          "name": "precision",
+          "type": "string"
+        },
+        {
+          "name": "precision_us",
+          "type": "integer"
+        },
+        {
+          "name": "log_seq",
+          "type": "integer"
+        },
+        {
+          "name": "blocker",
+          "type": "string"
+        },
+        {
+          "name": "report",
+          "type": "boolean"
+        },
+        {
+          "name": "root_task_id",
+          "type": "string"
+        },
+        {
+          "name": "promotion_id",
+          "type": "string"
+        },
+        {
+          "name": "new_goal",
+          "type": "string"
+        },
+        {
+          "name": "new_step",
+          "type": "string"
+        },
+        {
+          "name": "new_artifact_refs",
+          "type": "string"
+        },
+        {
+          "name": "detail_ref",
+          "type": "string"
+        },
+        {
+          "name": "child_task_id",
+          "type": "string"
+        },
+        {
+          "name": "delegate_to",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "오류",
+      "attributes": [
+        {
+          "name": "from_state",
+          "type": "string"
+        },
+        {
+          "name": "to_state",
+          "type": "string"
+        },
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "trigger",
+          "type": "string"
+        },
+        {
+          "name": "precision",
+          "type": "string"
+        },
+        {
+          "name": "precision_us",
+          "type": "integer"
+        },
+        {
+          "name": "log_seq",
+          "type": "integer"
+        },
+        {
+          "name": "blocker",
+          "type": "string"
+        },
+        {
+          "name": "report",
+          "type": "boolean"
+        },
+        {
+          "name": "root_task_id",
+          "type": "string"
+        },
+        {
+          "name": "promotion_id",
+          "type": "string"
+        },
+        {
+          "name": "new_goal",
+          "type": "string"
+        },
+        {
+          "name": "new_step",
+          "type": "string"
+        },
+        {
+          "name": "new_artifact_refs",
+          "type": "string"
+        },
+        {
+          "name": "detail_ref",
+          "type": "string"
+        },
+        {
+          "name": "child_task_id",
+          "type": "string"
+        },
+        {
+          "name": "delegate_to",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "승인",
+      "attributes": [
+        {
+          "name": "from_state",
+          "type": "string"
+        },
+        {
+          "name": "to_state",
+          "type": "string"
+        },
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "trigger",
+          "type": "string"
+        },
+        {
+          "name": "precision",
+          "type": "string"
+        },
+        {
+          "name": "precision_us",
+          "type": "integer"
+        },
+        {
+          "name": "log_seq",
+          "type": "integer"
+        },
+        {
+          "name": "blocker",
+          "type": "string"
+        },
+        {
+          "name": "report",
+          "type": "boolean"
+        },
+        {
+          "name": "root_task_id",
+          "type": "string"
+        },
+        {
+          "name": "promotion_id",
+          "type": "string"
+        },
+        {
+          "name": "new_goal",
+          "type": "string"
+        },
+        {
+          "name": "new_step",
+          "type": "string"
+        },
+        {
+          "name": "new_artifact_refs",
+          "type": "string"
+        },
+        {
+          "name": "detail_ref",
+          "type": "string"
+        },
+        {
+          "name": "child_task_id",
+          "type": "string"
+        },
+        {
+          "name": "delegate_to",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "승인거절",
+      "attributes": [
+        {
+          "name": "from_state",
+          "type": "string"
+        },
+        {
+          "name": "to_state",
+          "type": "string"
+        },
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "trigger",
+          "type": "string"
+        },
+        {
+          "name": "precision",
+          "type": "string"
+        },
+        {
+          "name": "precision_us",
+          "type": "integer"
+        },
+        {
+          "name": "log_seq",
+          "type": "integer"
+        },
+        {
+          "name": "blocker",
+          "type": "string"
+        },
+        {
+          "name": "report",
+          "type": "boolean"
+        },
+        {
+          "name": "root_task_id",
+          "type": "string"
+        },
+        {
+          "name": "promotion_id",
+          "type": "string"
+        },
+        {
+          "name": "new_goal",
+          "type": "string"
+        },
+        {
+          "name": "new_step",
+          "type": "string"
+        },
+        {
+          "name": "new_artifact_refs",
+          "type": "string"
+        },
+        {
+          "name": "detail_ref",
+          "type": "string"
+        },
+        {
+          "name": "child_task_id",
+          "type": "string"
+        },
+        {
+          "name": "delegate_to",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "취소",
+      "attributes": [
+        {
+          "name": "from_state",
+          "type": "string"
+        },
+        {
+          "name": "to_state",
+          "type": "string"
+        },
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "trigger",
+          "type": "string"
+        },
+        {
+          "name": "precision",
+          "type": "string"
+        },
+        {
+          "name": "precision_us",
+          "type": "integer"
+        },
+        {
+          "name": "log_seq",
+          "type": "integer"
+        },
+        {
+          "name": "blocker",
+          "type": "string"
+        },
+        {
+          "name": "report",
+          "type": "boolean"
+        },
+        {
+          "name": "root_task_id",
+          "type": "string"
+        },
+        {
+          "name": "promotion_id",
+          "type": "string"
+        },
+        {
+          "name": "new_goal",
+          "type": "string"
+        },
+        {
+          "name": "new_step",
+          "type": "string"
+        },
+        {
+          "name": "new_artifact_refs",
+          "type": "string"
+        },
+        {
+          "name": "detail_ref",
+          "type": "string"
+        },
+        {
+          "name": "child_task_id",
+          "type": "string"
+        },
+        {
+          "name": "delegate_to",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "범위변경",
+      "attributes": [
+        {
+          "name": "from_state",
+          "type": "string"
+        },
+        {
+          "name": "to_state",
+          "type": "string"
+        },
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "trigger",
+          "type": "string"
+        },
+        {
+          "name": "precision",
+          "type": "string"
+        },
+        {
+          "name": "precision_us",
+          "type": "integer"
+        },
+        {
+          "name": "log_seq",
+          "type": "integer"
+        },
+        {
+          "name": "blocker",
+          "type": "string"
+        },
+        {
+          "name": "report",
+          "type": "boolean"
+        },
+        {
+          "name": "root_task_id",
+          "type": "string"
+        },
+        {
+          "name": "promotion_id",
+          "type": "string"
+        },
+        {
+          "name": "new_goal",
+          "type": "string"
+        },
+        {
+          "name": "new_step",
+          "type": "string"
+        },
+        {
+          "name": "new_artifact_refs",
+          "type": "string"
+        },
+        {
+          "name": "detail_ref",
+          "type": "string"
+        },
+        {
+          "name": "child_task_id",
+          "type": "string"
+        },
+        {
+          "name": "delegate_to",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "재개",
+      "attributes": [
+        {
+          "name": "from_state",
+          "type": "string"
+        },
+        {
+          "name": "to_state",
+          "type": "string"
+        },
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "trigger",
+          "type": "string"
+        },
+        {
+          "name": "precision",
+          "type": "string"
+        },
+        {
+          "name": "precision_us",
+          "type": "integer"
+        },
+        {
+          "name": "log_seq",
+          "type": "integer"
+        },
+        {
+          "name": "blocker",
+          "type": "string"
+        },
+        {
+          "name": "report",
+          "type": "boolean"
+        },
+        {
+          "name": "root_task_id",
+          "type": "string"
+        },
+        {
+          "name": "promotion_id",
+          "type": "string"
+        },
+        {
+          "name": "new_goal",
+          "type": "string"
+        },
+        {
+          "name": "new_step",
+          "type": "string"
+        },
+        {
+          "name": "new_artifact_refs",
+          "type": "string"
+        },
+        {
+          "name": "detail_ref",
+          "type": "string"
+        },
+        {
+          "name": "child_task_id",
+          "type": "string"
+        },
+        {
+          "name": "delegate_to",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "위임요청",
+      "attributes": [
+        {
+          "name": "from_state",
+          "type": "string"
+        },
+        {
+          "name": "to_state",
+          "type": "string"
+        },
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "trigger",
+          "type": "string"
+        },
+        {
+          "name": "precision",
+          "type": "string"
+        },
+        {
+          "name": "precision_us",
+          "type": "integer"
+        },
+        {
+          "name": "log_seq",
+          "type": "integer"
+        },
+        {
+          "name": "blocker",
+          "type": "string"
+        },
+        {
+          "name": "report",
+          "type": "boolean"
+        },
+        {
+          "name": "root_task_id",
+          "type": "string"
+        },
+        {
+          "name": "promotion_id",
+          "type": "string"
+        },
+        {
+          "name": "new_goal",
+          "type": "string"
+        },
+        {
+          "name": "new_step",
+          "type": "string"
+        },
+        {
+          "name": "new_artifact_refs",
+          "type": "string"
+        },
+        {
+          "name": "detail_ref",
+          "type": "string"
+        },
+        {
+          "name": "child_task_id",
+          "type": "string"
+        },
+        {
+          "name": "delegate_to",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "위임회신",
+      "attributes": [
+        {
+          "name": "from_state",
+          "type": "string"
+        },
+        {
+          "name": "to_state",
+          "type": "string"
+        },
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "trigger",
+          "type": "string"
+        },
+        {
+          "name": "precision",
+          "type": "string"
+        },
+        {
+          "name": "precision_us",
+          "type": "integer"
+        },
+        {
+          "name": "log_seq",
+          "type": "integer"
+        },
+        {
+          "name": "blocker",
+          "type": "string"
+        },
+        {
+          "name": "report",
+          "type": "boolean"
+        },
+        {
+          "name": "root_task_id",
+          "type": "string"
+        },
+        {
+          "name": "promotion_id",
+          "type": "string"
+        },
+        {
+          "name": "new_goal",
+          "type": "string"
+        },
+        {
+          "name": "new_step",
+          "type": "string"
+        },
+        {
+          "name": "new_artifact_refs",
+          "type": "string"
+        },
+        {
+          "name": "detail_ref",
+          "type": "string"
+        },
+        {
+          "name": "child_task_id",
+          "type": "string"
+        },
+        {
+          "name": "delegate_to",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "승인요청",
+      "attributes": [
+        {
+          "name": "from_state",
+          "type": "string"
+        },
+        {
+          "name": "to_state",
+          "type": "string"
+        },
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "trigger",
+          "type": "string"
+        },
+        {
+          "name": "precision",
+          "type": "string"
+        },
+        {
+          "name": "precision_us",
+          "type": "integer"
+        },
+        {
+          "name": "log_seq",
+          "type": "integer"
+        },
+        {
+          "name": "blocker",
+          "type": "string"
+        },
+        {
+          "name": "report",
+          "type": "boolean"
+        },
+        {
+          "name": "root_task_id",
+          "type": "string"
+        },
+        {
+          "name": "promotion_id",
+          "type": "string"
+        },
+        {
+          "name": "new_goal",
+          "type": "string"
+        },
+        {
+          "name": "new_step",
+          "type": "string"
+        },
+        {
+          "name": "new_artifact_refs",
+          "type": "string"
+        },
+        {
+          "name": "detail_ref",
+          "type": "string"
+        },
+        {
+          "name": "child_task_id",
+          "type": "string"
+        },
+        {
+          "name": "delegate_to",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "승격",
+      "attributes": [
+        {
+          "name": "from_state",
+          "type": "string"
+        },
+        {
+          "name": "to_state",
+          "type": "string"
+        },
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "trigger",
+          "type": "string"
+        },
+        {
+          "name": "precision",
+          "type": "string"
+        },
+        {
+          "name": "precision_us",
+          "type": "integer"
+        },
+        {
+          "name": "log_seq",
+          "type": "integer"
+        },
+        {
+          "name": "blocker",
+          "type": "string"
+        },
+        {
+          "name": "report",
+          "type": "boolean"
+        },
+        {
+          "name": "root_task_id",
+          "type": "string"
+        },
+        {
+          "name": "promotion_id",
+          "type": "string"
+        },
+        {
+          "name": "new_goal",
+          "type": "string"
+        },
+        {
+          "name": "new_step",
+          "type": "string"
+        },
+        {
+          "name": "new_artifact_refs",
+          "type": "string"
+        },
+        {
+          "name": "detail_ref",
+          "type": "string"
+        },
+        {
+          "name": "child_task_id",
+          "type": "string"
+        },
+        {
+          "name": "delegate_to",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "objectTypes": [
+    {
+      "name": "work_item",
+      "attributes": [
+        {
+          "name": "control",
+          "type": "string"
+        },
+        {
+          "name": "goal",
+          "type": "string"
+        },
+        {
+          "name": "current_step",
+          "type": "string"
+        },
+        {
+          "name": "blocker",
+          "type": "string"
+        },
+        {
+          "name": "last_event",
+          "type": "string"
+        },
+        {
+          "name": "artifact_refs",
+          "type": "string"
+        },
+        {
+          "name": "agent_id",
+          "type": "string"
+        },
+        {
+          "name": "origin_kind",
+          "type": "string"
+        },
+        {
+          "name": "root_task_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "agent",
+      "attributes": []
+    },
+    {
+      "name": "card",
+      "attributes": []
+    },
+    {
+      "name": "request",
+      "attributes": []
+    },
+    {
+      "name": "routine_run",
+      "attributes": []
+    }
+  ],
+  "events": [
+    {
+      "id": "evt_01M75CYDWVJSJFNXC2337625S0",
+      "type": "새지시",
+      "time": "2026-11-11T13:00:00.123Z",
+      "attributes": [
+        {
+          "name": "from_state",
+          "value": "대기"
+        },
+        {
+          "name": "to_state",
+          "value": "진행"
+        },
+        {
+          "name": "agent_id",
+          "value": "Ashlar"
+        },
+        {
+          "name": "trigger",
+          "value": "사용자"
+        },
+        {
+          "name": "precision",
+          "value": "1ms"
+        },
+        {
+          "name": "precision_us",
+          "value": 1000
+        },
+        {
+          "name": "log_seq",
+          "value": 1
+        },
+        {
+          "name": "root_task_id",
+          "value": "tsk_01M75CYDWVJSJFNXC2337625RZ"
+        },
+        {
+          "name": "new_goal",
+          "value": "데모 목표 한 문장"
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "tsk_01M75CYDWVJSJFNXC2337625RZ",
+          "qualifier": "case"
+        },
+        {
+          "objectId": "agent:Ashlar",
+          "qualifier": "actor"
+        }
+      ]
+    },
+    {
+      "id": "evt_01M75CYE0309XH576GRNK2J5GT",
+      "type": "단계완료",
+      "time": "2026-11-11T13:01:00.000Z",
+      "attributes": [
+        {
+          "name": "from_state",
+          "value": "진행"
+        },
+        {
+          "name": "to_state",
+          "value": "진행"
+        },
+        {
+          "name": "agent_id",
+          "value": "Ashlar"
+        },
+        {
+          "name": "trigger",
+          "value": "사용자"
+        },
+        {
+          "name": "precision",
+          "value": "1ms"
+        },
+        {
+          "name": "precision_us",
+          "value": 1000
+        },
+        {
+          "name": "log_seq",
+          "value": 2
+        },
+        {
+          "name": "root_task_id",
+          "value": "tsk_01M75CYDWVJSJFNXC2337625RZ"
+        },
+        {
+          "name": "new_step",
+          "value": "다음 단계"
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "tsk_01M75CYDWVJSJFNXC2337625RZ",
+          "qualifier": "case"
+        },
+        {
+          "objectId": "agent:Ashlar",
+          "qualifier": "actor"
+        }
+      ]
+    },
+    {
+      "id": "evt_01M75CYE1WNPGEKS3ETP60HJBW",
+      "type": "단계완료",
+      "time": "2026-11-11T13:02:00.000Z",
+      "attributes": [
+        {
+          "name": "from_state",
+          "value": "진행"
+        },
+        {
+          "name": "to_state",
+          "value": "진행"
+        },
+        {
+          "name": "agent_id",
+          "value": "Ashlar"
+        },
+        {
+          "name": "trigger",
+          "value": "사용자"
+        },
+        {
+          "name": "precision",
+          "value": "1ms"
+        },
+        {
+          "name": "precision_us",
+          "value": 1000
+        },
+        {
+          "name": "log_seq",
+          "value": 3
+        },
+        {
+          "name": "root_task_id",
+          "value": "tsk_01M75CYDWVJSJFNXC2337625RZ"
+        },
+        {
+          "name": "new_step",
+          "value": "검토 단계"
+        }
+      ],
+      "relationships": [
+        {
+          "objectId": "tsk_01M75CYDWVJSJFNXC2337625RZ",
+          "qualifier": "case"
+        },
+        {
+          "objectId": "agent:Ashlar",
+          "qualifier": "actor"
+        }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "id": "tsk_01M75CYDWVJSJFNXC2337625RZ",
+      "type": "work_item",
+      "attributes": [
+        {
+          "name": "control",
+          "value": "진행",
+          "time": "2026-11-11T13:00:00.123Z"
+        },
+        {
+          "name": "goal",
+          "value": "데모 목표 한 문장",
+          "time": "2026-11-11T13:00:00.123Z"
+        },
+        {
+          "name": "last_event",
+          "value": "새지시",
+          "time": "2026-11-11T13:00:00.123Z"
+        },
+        {
+          "name": "agent_id",
+          "value": "Ashlar",
+          "time": "2026-11-11T13:00:00.123Z"
+        },
+        {
+          "name": "root_task_id",
+          "value": "tsk_01M75CYDWVJSJFNXC2337625RZ",
+          "time": "1970-01-01T00:00:00Z"
+        },
+        {
+          "name": "control",
+          "value": "진행",
+          "time": "2026-11-11T13:01:00.000Z"
+        },
+        {
+          "name": "current_step",
+          "value": "다음 단계",
+          "time": "2026-11-11T13:01:00.000Z"
+        },
+        {
+          "name": "last_event",
+          "value": "단계완료",
+          "time": "2026-11-11T13:01:00.000Z"
+        },
+        {
+          "name": "agent_id",
+          "value": "Ashlar",
+          "time": "2026-11-11T13:01:00.000Z"
+        },
+        {
+          "name": "control",
+          "value": "진행",
+          "time": "2026-11-11T13:02:00.000Z"
+        },
+        {
+          "name": "current_step",
+          "value": "검토 단계",
+          "time": "2026-11-11T13:02:00.000Z"
+        },
+        {
+          "name": "last_event",
+          "value": "단계완료",
+          "time": "2026-11-11T13:02:00.000Z"
+        },
+        {
+          "name": "agent_id",
+          "value": "Ashlar",
+          "time": "2026-11-11T13:02:00.000Z"
+        }
+      ],
+      "relationships": []
+    },
+    {
+      "id": "agent:Ashlar",
+      "type": "agent",
+      "attributes": [],
+      "relationships": []
+    }
+  ]
+}
