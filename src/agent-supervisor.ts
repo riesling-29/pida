@@ -5,7 +5,7 @@ import { hostname } from "node:os";
 import { randomUUID, createHash } from "node:crypto";
 import { PidaError, type PidaRuntime, type Principal } from "./runtime.js";
 import { savePrivate, isId, canonical, sha256 } from "./private-state.js";
-import { emptyWorkSessions, validCriteria, criterionDigest, localEnvironment, evaluateLocal, boundedAgentResult, type LocalAcceptanceOptions, type WorkSessionState, type WorkSession, type WorkTask, type BatchJoin, type LocalReceipt } from "./organization.js";
+import { emptyWorkSessions, isCollectiveId, isOrgId, validHostCollective, participantsShareCollective, type HostCollective, validCriteria, criterionDigest, localEnvironment, evaluateLocal, boundedAgentResult, type LocalAcceptanceOptions, type WorkSessionState, type WorkSession, type WorkTask, type BatchJoin, type LocalReceipt } from "./organization.js";
 import type { RunResult, StreamEvent, TraceEvent } from "./protocol.js";
 import { collaborationId, collaborationKey, validCollaborationEnvelope, type CollaborationEnvelope, type CollaborationPolicy, type CollaborationReceipt, type CollaborationRecord } from "./collaboration.js";
 import { validOrganizationAdmission, type OrganizationAdmission, type OrganizationAdmissionReceipt, type OrganizationAdmissionRecord } from "./organization-admission.js";
@@ -18,6 +18,8 @@ export interface AgentProfile {
   personaSourceId?: string;
   paused: boolean; sessionId?: string; needsReconciliation?: boolean;
   createdAt: string; updatedAt: string;
+  /** HC-09 3.3. Set from host config at registration only. */
+  collectiveId?: string;
 }
 export interface AgentPersonaSource {
   id: string; label: string; authority: "pida-local" | "external" | "host-managed";
@@ -48,6 +50,8 @@ export interface AgentSupervisorOptions {
   executionPolicy?: Readonly<ExecutionPolicy>;
   repositoryProfile?: Readonly<RepositoryProfileCapability>;
   collaboration?: CollaborationPolicy;
+  /** HC-09 host collective (col_/org_ ULIDs). Absent preserves sessions and profiles without collective fields. */
+  collective?: Readonly<HostCollective>;
   /** Host policy only. Profiles contain no supplied paths, tool grants or provider credentials. */
   createRuntime(profile: AgentProfile, context: { signal: AbortSignal }): Promise<PidaRuntime> | PidaRuntime;
   /** Re-resolved when a job starts. Saved permissions are never replayed. */
@@ -99,6 +103,7 @@ export class AgentSupervisor {
   private readonly maxConcurrent: number;
   private readonly executionPolicy?: Readonly<ExecutionPolicy>;
   private readonly repositoryProfile?: Readonly<RepositoryProfileCapability>;
+  private readonly collective?: Readonly<HostCollective>;
   private started = false;
   private closed = false;
   private closing?: Promise<void>;
@@ -116,6 +121,8 @@ export class AgentSupervisor {
     this.lockPath = join(this.directory, "supervisor.lock");
     this.maxConcurrent = this.executionPolicy?.max_concurrent ?? options.maxConcurrent ?? 2;
     if (options.acceptance && !validCriteria(options.acceptance.criteria)) denied("ACCEPTANCE_CRITERIA_INVALID");
+    if (options.collective !== undefined && !validHostCollective(options.collective)) denied("COLLECTIVE_CONFIG_INVALID");
+    this.collective = options.collective && { collectiveId: options.collective.collectiveId, orgId: options.collective.orgId };
     if (options.acceptance?.environmentRevision !== undefined && !validText(options.acceptance.environmentRevision, 256)) denied("ACCEPTANCE_ENVIRONMENT_INVALID");
     if (options.acceptance) options.acceptance = { ...options.acceptance, criteria: copy(options.acceptance.criteria) };
     if (options.collaboration && (!collaborationId(options.collaboration.hostId) || typeof options.collaboration.authorize !== "function")) denied("COLLABORATION_CONFIG_INVALID");
@@ -178,7 +185,7 @@ export class AgentSupervisor {
     for (const p of s.profiles) {
       if (!p || !isId(p.id) || ids.has(p.id) || !validText(p.owner, 256) || !validText(p.name, 100) || !validText(p.role, 4000, true)
         || (p.persona !== undefined && !validText(p.persona, 8000, true)) || (p.personaSourceId !== undefined && !validSourceId(p.personaSourceId))
-        || typeof p.paused !== "boolean" || (p.sessionId !== undefined && !isId(p.sessionId))
+        || typeof p.paused !== "boolean" || (p.sessionId !== undefined && !isId(p.sessionId)) || (p.collectiveId !== undefined && !isCollectiveId(p.collectiveId))
         || typeof p.createdAt !== "string" || typeof p.updatedAt !== "string") denied("AGENT_STATE_INVALID", 500);
       ids.add(p.id);
     }
@@ -403,6 +410,7 @@ export class AgentSupervisor {
       || this.state.organization.sessions.some(o => o.id === e.recipient.org_session_id)) denied("ORGANIZATION_ADMISSION_CONFLICT", 409);
     this.admissionDefinitionCurrent(a); this.admissionReply(principal, a);
     for (const id of d.participants) this.owned(id, principal);
+    this.assertSameCollective(d.participants);
     if (this.state.organization.sessions.length >= 1000 || this.state.organizationAdmissions.length >= 10000) denied("ORGANIZATION_ADMISSION_LIMIT", 429);
     this.taskCapacity(1);
     const lengths = { jobs: this.state.jobs.length, tasks: this.state.organization.tasks.length, attempts: this.state.organization.attempts.length,
@@ -411,7 +419,7 @@ export class AgentSupervisor {
     job.organizationAdmissionReceiptId = receiptId;
     const org: WorkSession = { id: e.recipient.org_session_id, owner: principal.id, requestId: "admission-" + receiptId, definitionDigest: a.definition_digest,
       goal: d.goal, participants: [...d.participants], rootTaskId: task.id, criterionIds: [...d.criterion_ids], criteriaDigest: d.criteria_digest,
-      environmentRevision: d.environment_revision, maxRepairAttempts: d.max_repair_attempts, deadlineAt: Date.parse(at) + d.timeout_ms, createdAt: at, status: "active" };
+      environmentRevision: d.environment_revision, maxRepairAttempts: d.max_repair_attempts, deadlineAt: Date.parse(at) + d.timeout_ms, createdAt: at, status: "active", ...this.sessionCollective() };
     const receipt: OrganizationAdmissionReceipt = { schema_version: "pida.organization.admission.receipt/1", receipt_id: receiptId, producer_id: e.producer_id, request_id: e.request_id,
       payload_digest: e.payload_digest, definition_digest: a.definition_digest, admission_digest: a.admission_digest, reservation_id: a.reservation_id,
       recipient: copy(e.recipient), received_at: at, job_id: job.id, root_task_id: task.id, root_attempt_id: job.attemptId!, phase: "organization_root_enqueued", durable: true, durability_scope: "local-process-restart" };
@@ -489,7 +497,8 @@ export class AgentSupervisor {
     if (input.personaSourceId !== undefined && source.authority !== "pida-local" && input.persona?.trim()) denied("AGENT_PERSONA_SOURCE_CONFLICT");
     if (this.state.profiles.length >= (this.options.maxAgents ?? 32)) denied("AGENT_PROFILE_LIMIT", 429);
     const profile: AgentProfile = { id: randomUUID(), owner: principal.id, name: input.name.trim(), role: input.role ?? "", personaSourceId: source.id,
-      ...(input.persona === undefined ? {} : { persona: input.persona }), paused: false, createdAt: now(), updatedAt: now() };
+      ...(input.persona === undefined ? {} : { persona: input.persona }), paused: false, createdAt: now(), updatedAt: now(),
+      ...(this.collective ? { collectiveId: this.collective.collectiveId } : {}) };
     this.state.profiles.push(profile); this.persist(); return copy(profile);
   }
   list(principal: Principal): AgentProfile[] { this.principal(principal); return this.state.profiles.filter(p => p.owner === principal.id).map(copy); }
@@ -567,7 +576,9 @@ export class AgentSupervisor {
         || !validText(org.environmentRevision, 256) || !Number.isSafeInteger(org.deadlineAt)
         || !Number.isSafeInteger(org.maxRepairAttempts) || org.maxRepairAttempts < 0 || org.maxRepairAttempts > 3
         || !["active", "accepted", "failed", "unknown", "cancelled", "expired"].includes(org.status)
-        || !state.tasks.some(t => t.id === org.rootTaskId && t.orgId === org.id)) denied("ORG_STATE_INVALID", 500);
+        || !state.tasks.some(t => t.id === org.rootTaskId && t.orgId === org.id)
+        || (org.collectiveId === undefined) !== (org.orgId === undefined) || (org.collectiveId !== undefined && (!isCollectiveId(org.collectiveId) || !isOrgId(org.orgId)))
+        || !participantsShareCollective(org.collectiveId, org.participants.map(id => this.state.profiles.find(p => p.id === id)!))) denied("ORG_STATE_INVALID", 500);
     }
     for (const task of state.tasks) {
       const org = state.sessions.find(o => o.id === task.orgId);
@@ -655,6 +666,14 @@ export class AgentSupervisor {
         new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new PidaError("ACCEPTANCE_TIMEOUT", 408)), Math.max(1, timeoutMs)); })]));
     } finally { clearTimeout(timer); }
   }
+  private sessionCollective(): { collectiveId?: string; orgId?: string } {
+    return this.collective ? { collectiveId: this.collective.collectiveId, orgId: this.collective.orgId } : {};
+  }
+  /** HC-09 3.3: every participant shares the session collective, which is this host's collective. */
+  private assertSameCollective(participants: readonly string[]) {
+    const profiles = participants.map(id => this.state.profiles.find(p => p.id === id)!);
+    if (!participantsShareCollective(this.collective?.collectiveId, profiles)) denied("ORG_COLLECTIVE_MISMATCH", 409);
+  }
   createWorkSession(principal: Principal, input: { requestId: string; goal: string; agentId: string; participants: string[]; criterionIds: string[]; maxRepairAttempts?: number; timeoutMs?: number }) {
     this.usable(); this.principal(principal);
     if (!input || Object.keys(input).some(k => !["requestId", "goal", "agentId", "participants", "criterionIds", "maxRepairAttempts", "timeoutMs"].includes(k))
@@ -663,6 +682,7 @@ export class AgentSupervisor {
       || !Array.isArray(input.criterionIds) || input.criterionIds.length > 32 || new Set(input.criterionIds).size !== input.criterionIds.length
       || this.criteria(input.criterionIds).length !== input.criterionIds.length) denied("ORG_ARGUMENT_INVALID");
     for (const id of input.participants) this.owned(id, principal);
+    this.assertSameCollective(input.participants);
     const repairs = input.maxRepairAttempts ?? 0, timeout = input.timeoutMs ?? this.executionPolicy?.organization_timeout_ms ?? 3600000;
     if (!Number.isSafeInteger(repairs) || repairs < 0 || repairs > 3 || !Number.isSafeInteger(timeout) || timeout < 1000 || timeout > 86400000) denied("ORG_BUDGET_INVALID");
     this.assertOrganizationBudget(timeout, repairs);
@@ -673,7 +693,7 @@ export class AgentSupervisor {
     const id = randomUUID(), job = this.enqueueRecord(input.agentId, principal, { input: input.goal, requestId: "org-" + id }), task = this.trackTask(id, job);
     const org: WorkSession = { id, owner: principal.id, requestId: input.requestId, definitionDigest, goal: input.goal, participants: [...input.participants], rootTaskId: task.id,
       criterionIds: [...input.criterionIds], criteriaDigest: criterionDigest(this.criteria(input.criterionIds)), environmentRevision: this.environment(), maxRepairAttempts: repairs,
-      deadlineAt: Date.now() + timeout, createdAt: now(), status: "active" };
+      deadlineAt: Date.now() + timeout, createdAt: now(), status: "active", ...this.sessionCollective() };
     this.state.organization.sessions.push(org); this.persist(); this.kick(); return copy(org);
   }
   registerJoin(parentJobId: string, principal: Principal, input: { requestId: string; required: string[]; optional?: string[]; timeoutMs?: number }): BatchJoin {
@@ -696,10 +716,11 @@ export class AgentSupervisor {
     if (!task) {
       if (state.sessions.length >= 1000) denied("ORG_SESSION_LIMIT", 429);
       if (this.list(principal).length > 32 || children.some(j => j.organizationTaskId)) denied("ORG_PARTICIPANT_LIMIT", 409);
+      this.assertSameCollective(this.list(principal).map(p => p.id));
       const id = randomUUID(); task = this.trackTask(id, parent);
       state.sessions.push({ id, owner: principal.id, requestId: "implicit-" + parent.id, definitionDigest: sha256(parent.id), goal: parent.input,
         participants: this.list(principal).map(p => p.id), rootTaskId: task.id, criterionIds: [], criteriaDigest: criterionDigest([]), environmentRevision: this.environment(),
-        maxRepairAttempts: 0, deadlineAt: Date.now() + timeout, createdAt: now(), status: "active" });
+        maxRepairAttempts: 0, deadlineAt: Date.now() + timeout, createdAt: now(), status: "active", ...this.sessionCollective() });
     }
     const org = state.sessions.find(o => o.id === task!.orgId)!;
     if (org.status !== "active" || Date.now() >= org.deadlineAt) denied("ORG_NOT_ACTIVE", 409);

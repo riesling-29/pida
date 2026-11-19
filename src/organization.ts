@@ -22,6 +22,10 @@ export interface WorkSession {
   participants: string[]; rootTaskId: string; criterionIds: string[]; criteriaDigest: string; environmentRevision: string;
   maxRepairAttempts: number; deadlineAt: number; createdAt: string;
   status: "active" | "accepted" | "failed" | "unknown" | "cancelled" | "expired";
+  /** HC-09 3.3. Copied from the host collective at creation; absent when the host has none. */
+  collectiveId?: string;
+  /** Persistent organization (org_ ULID), not this session. WorkTask.orgId and BatchJoin.orgId keep their stored name and point at the session. */
+  orgId?: string;
 }
 export interface WorkTask {
   id: string; orgId: string; agentId: string; assignmentRevision: 1; inputDigest: string;
@@ -35,6 +39,22 @@ export interface BatchJoin {
   status: "waiting" | "ready" | "blocked" | "cancelled" | "expired"; code?: string;
   continuationJobId?: string;
   results?: { assignmentJobId: string; attemptId: string; jobId: string; inputDigest: string; resultDigest: string; status: string; runId?: string }[];
+}
+/** HC-09 ids: lowercase prefix, underscore, 26 uppercase Crockford ULID characters. Issued by the roster, never minted here. */
+const ulid = "[0-7][0-9A-HJKMNP-TV-Z]{25}";
+const collectivePattern = new RegExp("^col_" + ulid + "$"), orgPattern = new RegExp("^org_" + ulid + "$");
+export const isCollectiveId = (value: unknown): value is string => typeof value === "string" && collectivePattern.test(value);
+export const isOrgId = (value: unknown): value is string => typeof value === "string" && orgPattern.test(value);
+/** Host configuration only. Neither HTTP input nor Schumpeter wire fields can supply it. */
+export interface HostCollective { collectiveId: string; orgId: string }
+export function validHostCollective(value: unknown): value is HostCollective {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const v = value as Record<string, unknown>, keys = Object.keys(v).sort();
+  return keys.length === 2 && keys[0] === "collectiveId" && keys[1] === "orgId" && isCollectiveId(v.collectiveId) && isOrgId(v.orgId);
+}
+/** Every participant belongs to the session collective. Absent matches only absent. */
+export function participantsShareCollective(collectiveId: string | undefined, participants: readonly { collectiveId?: string }[]): boolean {
+  return participants.every(p => p.collectiveId === collectiveId);
 }
 export interface WorkSessionState { sessions: WorkSession[]; tasks: WorkTask[]; attempts: WorkAttempt[]; joins: BatchJoin[] }
 export const emptyWorkSessions = (): WorkSessionState => ({ sessions: [], tasks: [], attempts: [], joins: [] });
