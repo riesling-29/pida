@@ -58,9 +58,9 @@ test('actual scripted Pi chain exports root, child and continuation separately; 
   a.envelope.recipient.agent_id=root.id; a.definition={...a.definition,root_agent_id:root.id,participants:[root.id,child.id],criterion_ids:cap.criterion_ids,criteria_digest:cap.criteria_digest,environment_revision:cap.environment_revision,max_repair_attempts:0};
   a.envelope.payload_digest=collaborationDigest(a.envelope);a.definition_digest=organizationDefinitionDigest(a.definition);a.admission_digest=organizationAdmissionDigest(a);
   const receipt=await supervisor.admitOrganization(owner,a);supervisor.start();let view;
-  for(let i=0;i<500;i++){view=await supervisor.getOrganization(a.envelope.recipient.org_session_id,owner);if(view.organization.status!=='active')break;await new Promise(r=>setTimeout(r,10));}
+  for(let i=0;i<500;i++){view=await supervisor.getWorkSession(a.envelope.recipient.org_session_id,owner);if(view.organization.status!=='active')break;await new Promise(r=>setTimeout(r,10));}
   assert.notEqual(view.organization.status,'active'); assert.equal(view.attempts.length,3);
-  const client={getOrganization:id=>supervisor.getOrganization(id,owner),getAgentJob:(_agent,id)=>supervisor.getJob(id,owner),
+  const client={getWorkSession:id=>supervisor.getWorkSession(id,owner),getAgentJob:(_agent,id)=>supervisor.getJob(id,owner),
     exportAgentJob:async(agent,id)=>{const j=supervisor.getJob(id,owner);return (await supervisor.getRuntime(agent,owner)).exportRun(j.sessionId,j.runId,owner);},
     exportAgentJobOcel:async(agent,id)=>{const j=supervisor.getJob(id,owner);return (await supervisor.getRuntime(agent,owner)).exportRunOcel(j.sessionId,j.runId,owner);}};
   const capture=await captureLinkedOrganization(client,{orgId:view.organization.id,admissionReceipt:receipt});

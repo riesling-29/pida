@@ -14,7 +14,7 @@ const owner={id:'owner',permissions:['pida:agents','agent:delegate','agent:read'
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
 async function until(fn){for(let i=0;i<600;i++){const v=await fn();if(v)return v;await delay(10);}assert.fail('did not settle');}
 const terminal=(s,id)=>until(()=>{const j=s.getJob(id,owner);return !['queued','running'].includes(j.status)&&j;});
-const orgDone=(s,id)=>until(async()=>{const v=await s.getOrganization(id,owner);return v.organization.status!=='active'&&v;});
+const orgDone=(s,id)=>until(async()=>{const v=await s.getWorkSession(id,owner);return v.organization.status!=='active'&&v;});
 function directory(t){const p=mkdtempSync(join(tmpdir(),'pida-yield-'));t.after(()=>rmSync(p,{recursive:true,force:true}));return p;}
 
 for(const mode of ['waiting','child-first','required-failure','nonempty']) test(`native applied join ${mode}: exact result and continuation remain durable`,async t=>{
@@ -31,7 +31,7 @@ for(const mode of ['waiting','child-first','required-failure','nonempty']) test(
   };
   const options={directory:path,workspaceKey:p=>p.id,maxConcurrent:mode==='child-first'?2:1,resolvePrincipal:()=>owner,createRuntime};
   s=await AgentSupervisor.open(options);t.after(()=>s.close());parent=s.register(owner,{name:'root'});child=s.register(owner,{name:'child'});
-  const org=s.createOrganization(owner,{requestId:'yield',goal:'delegate and join',agentId:parent.id,participants:[parent.id,child.id],criterionIds:[],maxRepairAttempts:0});s.start();
+  const org=s.createWorkSession(owner,{requestId:'yield',goal:'delegate and join',agentId:parent.id,participants:[parent.id,child.id],criterionIds:[],maxRepairAttempts:0});s.start();
   const done=await orgDone(s,org.id),jobs=s.jobs(parent.id,owner),initial=jobs[0];
   assert.equal(initial.status,'completed');assert.equal(initial.result.status,'completed');
   assert.equal(initial.result.text,mode==='nonempty'?'Waiting for child.':'');
@@ -52,7 +52,7 @@ for(const mode of ['waiting','child-first','required-failure','nonempty']) test(
   }
   const before=JSON.parse(JSON.stringify(jobs));await s.close();
   s=await AgentSupervisor.open({...options,createRuntime:()=>{throw Error('no replay');}});s.start();await delay(80);
-  assert.deepEqual(s.jobs(parent.id,owner),before);assert.equal((await s.getOrganization(org.id,owner)).joins[0].continuationJobId,done.joins[0].continuationJobId);
+  assert.deepEqual(s.jobs(parent.id,owner),before);assert.equal((await s.getWorkSession(org.id,owner)).joins[0].continuationJobId,done.joins[0].continuationJobId);
 });
 
 test('yield waiting for paused child survives restart and creates exactly one continuation',async t=>{
@@ -66,13 +66,13 @@ test('yield waiting for paused child survives restart and creates exactly one co
   };
   const options={directory:path,maxConcurrent:1,resolvePrincipal:()=>owner,createRuntime};
   s=await AgentSupervisor.open(options);t.after(()=>s.close());parent=s.register(owner,{name:'root'});child=s.register(owner,{name:'child'});s.pause(child.id,owner);
-  const org=s.createOrganization(owner,{requestId:'restart',goal:'join',agentId:parent.id,participants:[parent.id,child.id],criterionIds:[]});s.start();
+  const org=s.createWorkSession(owner,{requestId:'restart',goal:'join',agentId:parent.id,participants:[parent.id,child.id],criterionIds:[]});s.start();
   const initial=await until(()=>s.jobs(parent.id,owner)[0]);assert.equal((await terminal(s,initial.id)).code,'AGENT_JOIN_YIELDED');
-  const waiting=await s.getOrganization(org.id,owner);assert.equal(waiting.joins[0].status,'waiting');assert.equal(waiting.tasks.find(t=>t.id===org.rootTaskId).receipts.length,0);
+  const waiting=await s.getWorkSession(org.id,owner);assert.equal(waiting.joins[0].status,'waiting');assert.equal(waiting.tasks.find(t=>t.id===org.rootTaskId).receipts.length,0);
   await s.close();reopened=true;s=await AgentSupervisor.open(options);s.start();await s.resume(child.id,owner);
   const done=await orgDone(s,org.id);assert.equal(continuations,1);assert.equal(s.jobs(parent.id,owner).length,2);
   assert.equal(s.getJob(initial.id,owner).result.text,'');assert.equal(done.joins[0].status,'ready');
-  for(let i=0;i<4;i++)await s.getOrganization(org.id,owner);assert.equal(continuations,1);
+  for(let i=0;i<4;i++)await s.getWorkSession(org.id,owner);assert.equal(continuations,1);
 });
 
 async function standalone(t,{confirm,extra={},effect='idempotent',state='applied',outcome='completed',last=answer('')}={}){
@@ -110,7 +110,7 @@ for(const mode of ['foreign','stale','cancelled-join'])test(`native proof reject
     f.setResponses(profile.id===parent.id?[
       answer(call('agent_delegate',{agentId:child.id,input:'child'}),{stopReason:'toolUse'}),
       ()=>answer(call('agent_join',{required:[s.jobs(child.id,owner)[0].id]}),{stopReason:'toolUse'}),
-      async()=>{if(mode==='cancelled-join'){const j=(await s.getOrganization(s.listOrganizations(owner)[0].id,owner)).joins[0];await s.cancelJoin(j.id,owner,j.revision);}return answer('');}
+      async()=>{if(mode==='cancelled-join'){const j=(await s.getWorkSession(s.listWorkSessions(owner)[0].id,owner)).joins[0];await s.cancelJoin(j.id,owner,j.revision);}return answer('');}
     ]:[answer('child')]);
     const tools=createAgentTools(s,profile.id);
     if(profile.id===parent.id && mode!=='cancelled-join'){
@@ -121,7 +121,7 @@ for(const mode of ['foreign','stale','cancelled-join'])test(`native proof reject
     return new PidaRuntime({storageDir:join(path,profile.id),provider:()=>({provider:f.provider,modelId:f.getModel().id}),tools,maxRunMs:5000});
   };
   s=await AgentSupervisor.open({directory:path,maxConcurrent:1,resolvePrincipal:()=>owner,createRuntime});t.after(()=>s.close());parent=s.register(owner,{name:'root'});child=s.register(owner,{name:'child'});
-  const org=s.createOrganization(owner,{requestId:'deny',goal:'join',agentId:parent.id,participants:[parent.id,child.id],criterionIds:[]});s.start();
+  const org=s.createWorkSession(owner,{requestId:'deny',goal:'join',agentId:parent.id,participants:[parent.id,child.id],criterionIds:[]});s.start();
   const initial=await until(()=>s.jobs(parent.id,owner)[0]),result=await terminal(s,initial.id);
   assert.notEqual(result.code,'AGENT_JOIN_YIELDED');assert.notEqual(result.status,'completed');
   if(mode!=='cancelled-join'){assert.equal(result.code,'EMPTY_RESPONSE');assert.ok(checks>0);}

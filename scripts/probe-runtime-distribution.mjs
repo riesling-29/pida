@@ -50,7 +50,7 @@ try {
   assert.equal(first.ready.provider_mode, 'mock'); assert.equal(first.ready.persona_mode, reference ? 'vera-local-reference/0.1.0' : 'pida-local');
   assert.equal((await first.client.getOrganizationAdmissionCapabilities()).enabled, true);
   const agent = await first.client.createAgent({ name: 'packaged root' });
-  const org = await first.client.createOrganization({ requestId: 'package-probe', goal: 'Return a synthetic packaging check.', agentId: agent.id, participants: [agent.id], criterionIds: [] });
+  const org = await first.client.createWorkSession({ requestId: 'package-probe', goal: 'Return a synthetic packaging check.', agentId: agent.id, participants: [agent.id], criterionIds: [] });
   let job;
   for (let i = 0; i < 400; i++) { job = (await first.client.listAgentJobs(agent.id)).jobs[0]; if (job && !['queued', 'running'].includes(job.status)) break; await new Promise(r => setTimeout(r, 25)); }
   assert.equal(job.status, 'completed', JSON.stringify(job));
@@ -63,7 +63,7 @@ try {
   }
   const token = first.ready.api_token; await first.close(); current = null;
   const second = await launch('resume'); assert.notEqual(second.ready.api_token, token);
-  assert.equal((await second.client.getOrganization(org.id)).organization.id, org.id);
+  assert.equal((await second.client.getWorkSession(org.id)).organization.id, org.id);
   const restored = (await second.client.listAgentJobs(agent.id)).jobs; assert.equal(restored.length, 1); assert.equal(restored[0].id, job.id); assert.equal(restored[0].attemptId, job.attemptId);
   await second.close(); current = null;
   const result = { status: 'PASS', platform: process.platform, node: spawnSync(node, ['--version'], { env, encoding: 'utf8' }).stdout.trim(), git: git.stdout.trim(),

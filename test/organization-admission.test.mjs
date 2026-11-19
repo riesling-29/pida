@@ -37,7 +37,7 @@ test('one atomic native root precedes ACK; lost ACK/restart returns same receipt
   assert.equal(stored.organization.sessions[0].rootTaskId, receipt.root_task_id); assert.equal(stored.jobs[0].attemptId, receipt.root_attempt_id); assert.deepEqual(calls, []);
   await s.close(); s = await AgentSupervisor.open(o); assert.deepEqual(await s.admitOrganization(owner, a), receipt); s.start();
   assert.equal((await done(s, receipt.job_id)).status, 'completed');
-  await until(async () => (await s.getOrganization(a.envelope.recipient.org_session_id, owner)).organization.status !== 'active');
+  await until(async () => (await s.getWorkSession(a.envelope.recipient.org_session_id, owner)).organization.status !== 'active');
   assert.deepEqual(calls, [agent.id]); await s.close(); s = await AgentSupervisor.open(o); s.start();
   assert.deepEqual(await s.getOrganizationAdmissionReceipt(receipt.receipt_id, owner), receipt); assert.deepEqual(await s.admitOrganization(owner, a), receipt);
   await delay(50); assert.deepEqual(calls, [agent.id]); assert.equal(s.jobs(agent.id, owner).length, 1);
@@ -60,7 +60,7 @@ test('same scoped request altered definition, reservation or native ID conflicts
     const b = fresh(); edit(b); await assert.rejects(s.admitOrganization(owner, sign(b)), { code: 'ORGANIZATION_ADMISSION_PROFILE_STALE' });
   }
   const b = fresh(); b.definition.participants.push(foreign.id); await assert.rejects(s.admitOrganization(owner, sign(b)), { code: 'AGENT_NOT_FOUND' });
-  assert.equal(s.listOrganizations(owner).length, 1); assert.equal(s.jobs(agent.id, owner).length, 1);
+  assert.equal(s.listWorkSessions(owner).length, 1); assert.equal(s.jobs(agent.id, owner).length, 1);
 });
 
 test('current reservation revoked after durable admission blocks dispatch/read/retry, default admission remains disabled', async t => {
@@ -89,7 +89,7 @@ for (const revoke of [false, true]) test(`real Pi first root delegates and joins
     authorizeAdmission: ({ phase }) => { phases.push({ phase, allowed }); return allowed; } } })); t.after(() => s.close());
   root = s.register(owner, { name: 'root' }); child = s.register(owner, { name: 'child' });
   const a = admission(s, root, { participants: [root.id, child.id] }), r = await s.admitOrganization(owner, a); s.start();
-  const result = await until(async () => { const view = await s.getOrganization(a.envelope.recipient.org_session_id, owner); return view.organization.status !== 'active' && view; });
+  const result = await until(async () => { const view = await s.getWorkSession(a.envelope.recipient.org_session_id, owner); return view.organization.status !== 'active' && view; });
   assert.equal(s.getJob(r.job_id, owner).status, 'completed'); assert.equal(result.joins.length, 1);
   if (revoke) { assert.deepEqual(calls, ['root']); assert.equal(s.jobs(child.id, owner)[0].code, 'ORGANIZATION_ADMISSION_FORBIDDEN'); }
   else { assert.deepEqual(calls, ['root', 'child', 'continuation']); assert.equal(result.joins[0].status, 'ready'); assert.equal(s.jobs(root.id, owner).length, 2);
@@ -120,7 +120,7 @@ test('admitted descendant retains reservation authority across restart; cancelle
   const cancelled = admission(s, root); cancelled.envelope.request_id += '-cancel'; cancelled.reservation_id += '-cancel';
   const cancelledReceipt = await s.admitOrganization(owner, sign(cancelled)); await s.cancel(cancelledReceipt.job_id, owner);
   const badReply = admission(s, root); badReply.envelope.request_id += '-badreply'; badReply.reservation_id += '-badreply'; badReply.envelope.reply_to_job_id = cancelledReceipt.job_id;
-  const count = s.listOrganizations(owner).length; await assert.rejects(s.admitOrganization(owner, sign(badReply)), { code: 'ORGANIZATION_ADMISSION_REPLY_OBSOLETE' }); assert.equal(s.listOrganizations(owner).length, count);
+  const count = s.listWorkSessions(owner).length; await assert.rejects(s.admitOrganization(owner, sign(badReply)), { code: 'ORGANIZATION_ADMISSION_REPLY_OBSOLETE' }); assert.equal(s.listWorkSessions(owner).length, count);
 });
 
 test('native repair attempt rechecks original reservation before a second model call', async t => {
@@ -134,7 +134,7 @@ test('native repair attempt rechecks original reservation before a second model 
 
 test('v3 migration preserves existing native and delivery records without fictional admission', async t => {
   const path = directory(t), o = options(path); let s = await AgentSupervisor.open(o); const agent = s.register(owner, { name: 'legacy' });
-  const org = s.createOrganization(owner, { requestId: 'legacy', goal: 'legacy goal', agentId: agent.id, participants: [agent.id], criterionIds: [] });
+  const org = s.createWorkSession(owner, { requestId: 'legacy', goal: 'legacy goal', agentId: agent.id, participants: [agent.id], criterionIds: [] });
   const e = admission(s, agent).envelope; e.recipient.org_session_id = org.id; e.payload_digest = collaborationDigest(e); const r = await s.receiveCollaboration(owner, e); await s.close();
   const file = join(path, 'supervisor.json'), prior = JSON.parse(readFileSync(file, 'utf8')); prior.version = 3; delete prior.organizationAdmissions; writeFileSync(file, JSON.stringify(prior));
   s = await AgentSupervisor.open(o); t.after(() => s.close()); assert.deepEqual(await s.receiveCollaboration(owner, e), r);
@@ -154,7 +154,7 @@ test('admission capacity failure rolls back all five collections and preserves p
   assert.ok(Buffer.byteLength(raw) < limit); writeFileSync(file, raw); s = await AgentSupervisor.open(o);
   const b = admission(s, agent, { goal: '\uac80'.repeat(12000) }); b.envelope.request_id += '-large'; b.reservation_id += '-large'; sign(b);
   const before = readFileSync(file, 'utf8'); await assert.rejects(s.admitOrganization(owner, b), { code: 'ORGANIZATION_ADMISSION_STORAGE_LIMIT' });
-  assert.equal(readFileSync(file, 'utf8'), before); assert.equal(s.jobs(agent.id, owner).length, 1); assert.equal(s.listOrganizations(owner).length, 1);
+  assert.equal(readFileSync(file, 'utf8'), before); assert.equal(s.jobs(agent.id, owner).length, 1); assert.equal(s.listWorkSessions(owner).length, 1);
   assert.deepEqual(await s.admitOrganization(owner, a), r); await s.close(); s = await AgentSupervisor.open(o); assert.deepEqual(await s.admitOrganization(owner, a), r);
   await assert.rejects(s.admitOrganization(owner, b), { code: 'ORGANIZATION_ADMISSION_STORAGE_LIMIT' });
 });

@@ -28,7 +28,7 @@ test('actual native persisted error retains guard, zero unknowns and one safe te
   const directory=mkdtempSync(join(tmpdir(),'pida-diag-')),f=provider([()=>{throw Error(quota);},()=>answer(call('get_lot_status',{lotId:'unexpected'}),{stopReason:'toolUse'})]);
   let toolCalls=0;
   let s=await AgentSupervisor.open({directory,resolvePrincipal:()=>owner,createRuntime:p=>new PidaRuntime({agentId:p.id,storageDir:join(directory,p.id),provider:factory(f),maxProviderRetries:0,maxOutputRetries:0,maxTotalTokens:16384,tools:[{...lotStatusTool,execute:async()=>{toolCalls++;return {};}}]})});
-  t.after(()=>s.close());const agent=s.register(owner,{name:'root'});const org=s.createOrganization(owner,{requestId:'diagnostic-quota',goal:'Synthetic task',agentId:agent.id,participants:[agent.id],criterionIds:[]});s.start();
+  t.after(()=>s.close());const agent=s.register(owner,{name:'root'});const org=s.createWorkSession(owner,{requestId:'diagnostic-quota',goal:'Synthetic task',agentId:agent.id,participants:[agent.id],criterionIds:[]});s.start();
   let job;for(let n=0;n<300;n++){job=s.jobs(agent.id,owner)[0];if(job&& !['queued','running'].includes(job.status))break;await pause();}
   assert.equal(job.status,'limited');assert.equal(job.code,'USAGE_UNAVAILABLE');assert.equal(job.result.text,'');assert.equal(f.state.callCount,1);assert.equal(toolCalls,0);
   const trace=job.activity.filter(e=>e.type==='provider_rejected');assert.equal(trace.length,1);
@@ -40,7 +40,7 @@ test('actual native persisted error retains guard, zero unknowns and one safe te
   assert.equal(response.payload.code,trace[0].code);assert.equal(response.payload.usage_status,'unknown');assert.equal(response.payload.tokens,null);
   assert.equal(terminal.payload.request_id,response.payload.request_id);assert.equal(terminal.payload.attempt,response.payload.attempt);
   assert.ok(!JSON.stringify([job,bundle]).includes(quota));
-  assert.equal((await s.getOrganization(org.id,owner)).organization.status,'unknown');
+  assert.equal((await s.getWorkSession(org.id,owner)).organization.status,'unknown');
   await s.close();s=await AgentSupervisor.open({directory,resolvePrincipal:()=>owner,createRuntime:()=>{throw Error('NO_REEXECUTION');}});
   assert.deepEqual(s.getJob(job.id,owner).activity.filter(e=>e.type==='provider_rejected'),trace);assert.equal(f.state.callCount,1);
 });

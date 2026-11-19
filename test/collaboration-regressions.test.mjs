@@ -21,7 +21,7 @@ function runtimeFactory(path, calls) { return p => { const f = fauxProvider({ to
 test('corrupt persisted delegated depth without parent cannot erase collaboration ancestry', async t => {
   const path = directory(t), file = join(path, 'supervisor.json'), o = { directory: path, resolvePrincipal: () => owner, createRuntime: () => { throw Error('must not dispatch'); }, collaboration: { hostId: 'host-1', authorize: () => true } };
   const s = await AgentSupervisor.open(o), root = s.register(owner, { name: 'root' }), child = s.register(owner, { name: 'child' });
-  const org = s.createOrganization(owner, { requestId: 'org', goal: 'root', agentId: root.id, participants: [root.id, child.id], criterionIds: [] });
+  const org = s.createWorkSession(owner, { requestId: 'org', goal: 'root', agentId: root.id, participants: [root.id, child.id], criterionIds: [] });
   const receipt = await s.receiveCollaboration(owner, envelope(root, org));
   const delegated = s.enqueue(child.id, owner, { requestId: 'child', input: 'child', parentJobId: receipt.job_id }); await s.close();
   const state = JSON.parse(readFileSync(file, 'utf8')); delete state.jobs.find(j => j.id === delegated.id).parentJobId;
@@ -36,7 +36,7 @@ for (const mode of ['child', 'continuation']) test(`persisted ${mode} derives cu
   let s = await AgentSupervisor.open(o);
   try {
     const root = s.register(owner, { name: 'root' }), external = s.register(owner, { name: 'external' }), child = s.register(owner, { name: 'child' }); s.pause(root.id, owner);
-    const org = s.createOrganization(owner, { requestId: 'org', goal: 'root', agentId: root.id, participants: [root.id, external.id, child.id], criterionIds: [] });
+    const org = s.createWorkSession(owner, { requestId: 'org', goal: 'root', agentId: root.id, participants: [root.id, external.id, child.id], criterionIds: [] });
     const receipt = await s.receiveCollaboration(owner, envelope(external, org));
     s.pause(child.id, owner);
     const delegated = s.enqueue(child.id, owner, { requestId: 'child', input: 'child', parentJobId: receipt.job_id }); s.start(); await done(s, receipt.job_id);
@@ -44,7 +44,7 @@ for (const mode of ['child', 'continuation']) test(`persisted ${mode} derives cu
     if (mode === 'continuation') {
       s.pause(external.id, owner); await s.resume(child.id, owner); await done(s, delegated.id);
       const joined = s.registerJoin(receipt.job_id, owner, { requestId: 'join', required: [delegated.id] });
-      target = await until(async () => { const v = await s.getOrganization(org.id, owner); return v.joins.find(j => j.id === joined.id)?.continuationJobId; });
+      target = await until(async () => { const v = await s.getWorkSession(org.id, owner); return v.joins.find(j => j.id === joined.id)?.continuationJobId; });
     }
     await s.close(); allowed = false; s = await AgentSupervisor.open(o); s.start(); await s.resume(mode === 'child' ? child.id : external.id, owner);
     assert.equal((await done(s, target)).code, 'COLLABORATION_FORBIDDEN');
@@ -62,10 +62,10 @@ for (const boundary of ['principal', 'capture']) test(`new admission during asyn
     captures++; if (boundary === 'capture' && captures === 1) { entered.resolve(); await release.promise; } return { 'out.txt': 'ok' };
   } } });
   try {
-    const p = s.register(owner, { name: 'worker' }), org = s.createOrganization(owner, { requestId: 'org', goal: 'root', agentId: p.id, participants: [p.id], criterionIds: ['ok'] });
+    const p = s.register(owner, { name: 'worker' }), org = s.createWorkSession(owner, { requestId: 'org', goal: 'root', agentId: p.id, participants: [p.id], criterionIds: ['ok'] });
     s.start(); await entered.promise; const r = await s.receiveCollaboration(owner, envelope(p, org)); release.resolve();
     assert.equal((await done(s, r.job_id)).status, 'completed');
-    const view = await until(async () => { const v = await s.getOrganization(org.id, owner); return v.organization.status === 'accepted' && v; });
+    const view = await until(async () => { const v = await s.getWorkSession(org.id, owner); return v.organization.status === 'accepted' && v; });
     assert.equal(view.currentAcceptance, 'PASS'); assert.deepEqual(calls, ['worker', 'worker']);
     assert.equal(view.tasks.find(t => t.id === org.rootTaskId).receipts.length, 1, 'no stale receipt or retry intent was committed');
     assert.ok(captures >= 2, 'captured again after changed admitted work settled');
@@ -76,7 +76,7 @@ test('byte-capacity rejection rolls back admission, preserves prior receipts and
   const path = directory(t), file = join(path, 'supervisor.json'), o = { directory: path, resolvePrincipal: () => owner, createRuntime: () => { throw Error('must not dispatch'); }, collaboration: { hostId: 'host-1', authorize: () => true } };
   let s = await AgentSupervisor.open(o);
   try {
-    const p = s.register(owner, { name: 'worker' }), org = s.createOrganization(owner, { requestId: 'org', goal: 'root', agentId: p.id, participants: [p.id], criterionIds: [] });
+    const p = s.register(owner, { name: 'worker' }), org = s.createWorkSession(owner, { requestId: 'org', goal: 'root', agentId: p.id, participants: [p.id], criterionIds: [] });
     const original = envelope(p, org), receipt = await s.receiveCollaboration(owner, original); await s.close();
     const state = JSON.parse(readFileSync(file, 'utf8')), record = state.collaboration[0], job = state.jobs.find(j => j.id === receipt.job_id), task = state.organization.tasks.find(t => t.id === job.organizationTaskId), attempt = state.organization.attempts.find(a => a.jobId === job.id);
     const input = '\uAC80'.repeat(12000), inputDigest = createHash('sha256').update(input).digest('hex');

@@ -58,7 +58,7 @@ const lead = agents.find(agent => agent.name === "개발");
 const reviewer = agents.find(agent => agent.name === "검토");
 if (!lead || !reviewer) throw new Error("개발·검토 에이전트를 먼저 등록하세요.");
 
-const organization = await client.createOrganization({
+const organization = await client.createWorkSession({
   requestId: "answer-task-001",
   goal: "answer.json에 answer: 42를 기록하세요. 필요하면 검토 에이전트에 위임하고 agent_join으로 결과를 모으세요.",
   agentId: lead.id,
@@ -69,7 +69,7 @@ const organization = await client.createOrganization({
 });
 
 console.log(organization.id);
-console.log(await client.getOrganization(organization.id));
+console.log(await client.getWorkSession(organization.id));
 ```
 
 현재는 조직 생성 전용 Web/TUI 화면이 없다. 생성된 개별 실행은 기존 에이전트 작업 목록에 나타나며, 조직 전체의 합류·시도·검사 기록은 위 API로 조회한다. 단순 에이전트 작업에 `agent_join`을 사용하는 경우에는 검사 기준이 없는 조직이 자동으로 생기므로 후속 실행은 가능하지만 독립 수용 결과는 `UNKNOWN`이다.
@@ -91,9 +91,9 @@ console.log(await client.getOrganization(organization.id));
 실제 API에는 유효한 작업 UUID를 넣는다. `agent_join`은 기다리는 도구가 아니다. **부모가 현재 실행을 끝내야** 같은 작업공간의 하위 에이전트가 실행될 수 있다. 성공한 필수 작업과 종료된 선택 작업의 결과가 모이면 호스트가 부모를 이어 실행한다. 필수 실패·취소·중단은 합류를 막으며, 선택 실패는 결과에 남긴다. 알 수 없는 외부 효과나 아직 실행 중인 콜백의 잠금은 합류로 해제하지 않는다.
 
 ```js
-const view = await client.getOrganization(organization.id);
+const view = await client.getWorkSession(organization.id);
 // 조직의 현재 작업과 대기 중인 후속 작업을 취소한다.
-await client.cancelOrganization(organization.id);
+await client.cancelWorkSession(organization.id);
 
 // 특정 합류만 취소할 때는 조회한 revision을 함께 보낸다.
 // await client.cancelJoin(view.joins[0].id, view.joins[0].revision);
@@ -103,7 +103,7 @@ await client.cancelOrganization(organization.id);
 
 ## 4. 판정 읽기
 
-`getOrganization()`은 `organization`, `tasks`, `attempts`, `joins`, `currentAcceptance`를 반환한다.
+`getWorkSession()`은 `organization`, `tasks`, `attempts`, `joins`, `currentAcceptance`를 반환한다.
 
 | 필드 | 의미 |
 | --- | --- |

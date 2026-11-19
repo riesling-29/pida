@@ -5,7 +5,7 @@ import { hostname } from "node:os";
 import { randomUUID, createHash } from "node:crypto";
 import { PidaError, type PidaRuntime, type Principal } from "./runtime.js";
 import { savePrivate, isId, canonical, sha256 } from "./private-state.js";
-import { emptyOrganizations, validCriteria, criterionDigest, localEnvironment, evaluateLocal, boundedAgentResult, type LocalAcceptanceOptions, type OrganizationState, type OrgSession, type OrgTask, type BatchJoin, type LocalReceipt } from "./organization.js";
+import { emptyWorkSessions, isCollectiveId, isOrgId, validHostCollective, participantsShareCollective, type HostCollective, validCriteria, criterionDigest, localEnvironment, evaluateLocal, boundedAgentResult, type LocalAcceptanceOptions, type WorkSessionState, type WorkSession, type WorkTask, type BatchJoin, type LocalReceipt } from "./organization.js";
 import type { RunResult, StreamEvent, TraceEvent } from "./protocol.js";
 import { collaborationId, collaborationKey, validCollaborationEnvelope, type CollaborationEnvelope, type CollaborationPolicy, type CollaborationReceipt, type CollaborationRecord } from "./collaboration.js";
 import { validOrganizationAdmission, type OrganizationAdmission, type OrganizationAdmissionReceipt, type OrganizationAdmissionRecord } from "./organization-admission.js";
@@ -18,6 +18,8 @@ export interface AgentProfile {
   personaSourceId?: string;
   paused: boolean; sessionId?: string; needsReconciliation?: boolean;
   createdAt: string; updatedAt: string;
+  /** HC-09 3.3. Set from host config at registration only. */
+  collectiveId?: string;
 }
 export interface AgentPersonaSource {
   id: string; label: string; authority: "pida-local" | "external" | "host-managed";
@@ -48,6 +50,8 @@ export interface AgentSupervisorOptions {
   executionPolicy?: Readonly<ExecutionPolicy>;
   repositoryProfile?: Readonly<RepositoryProfileCapability>;
   collaboration?: CollaborationPolicy;
+  /** HC-09 host collective (col_/org_ ULIDs). Absent preserves sessions and profiles without collective fields. */
+  collective?: Readonly<HostCollective>;
   /** Host policy only. Profiles contain no supplied paths, tool grants or provider credentials. */
   createRuntime(profile: AgentProfile, context: { signal: AbortSignal }): Promise<PidaRuntime> | PidaRuntime;
   /** Re-resolved when a job starts. Saved permissions are never replayed. */
@@ -71,7 +75,7 @@ export interface AgentOverview {
   agents: { profile: Omit<AgentProfile, "owner" | "role" | "persona">; jobs: Pick<AgentJob, "id" | "status" | "runId" | "createdAt" | "currentTool" | "lastSignalAt" | "code">[]; admission: AdmissionReason }[];
   personaSources: AgentPersonaSourceCatalogue;
 }
-interface State { version: 4; profiles: AgentProfile[]; jobs: AgentJob[]; organization: OrganizationState; collaboration: CollaborationRecord[]; organizationAdmissions: OrganizationAdmissionRecord[] }
+interface State { version: 4; profiles: AgentProfile[]; jobs: AgentJob[]; organization: WorkSessionState; collaboration: CollaborationRecord[]; organizationAdmissions: OrganizationAdmissionRecord[] }
 interface Active { agentId: string; workspaceKey: string; controller: AbortController; done: Promise<void> }
 const now = () => new Date().toISOString();
 const copy = <T>(value: T): T => structuredClone(value);
@@ -88,7 +92,7 @@ export class AgentSupervisor {
   private readonly statePath: string;
   private readonly lockPath: string;
   private readonly lockValue = JSON.stringify({ pid: process.pid, host: hostname(), nonce: randomUUID() });
-  private state: State = { version: 4, profiles: [], jobs: [], organization: emptyOrganizations(), collaboration: [], organizationAdmissions: [] };
+  private state: State = { version: 4, profiles: [], jobs: [], organization: emptyWorkSessions(), collaboration: [], organizationAdmissions: [] };
   private readonly runtimes = new Map<string, Promise<PidaRuntime>>();
   private readonly active = new Map<string, Active>();
   private readonly runtimeKeys = new Map<string, string>();
@@ -99,6 +103,7 @@ export class AgentSupervisor {
   private readonly maxConcurrent: number;
   private readonly executionPolicy?: Readonly<ExecutionPolicy>;
   private readonly repositoryProfile?: Readonly<RepositoryProfileCapability>;
+  private readonly collective?: Readonly<HostCollective>;
   private started = false;
   private closed = false;
   private closing?: Promise<void>;
@@ -116,6 +121,8 @@ export class AgentSupervisor {
     this.lockPath = join(this.directory, "supervisor.lock");
     this.maxConcurrent = this.executionPolicy?.max_concurrent ?? options.maxConcurrent ?? 2;
     if (options.acceptance && !validCriteria(options.acceptance.criteria)) denied("ACCEPTANCE_CRITERIA_INVALID");
+    if (options.collective !== undefined && !validHostCollective(options.collective)) denied("COLLECTIVE_CONFIG_INVALID");
+    this.collective = options.collective && { collectiveId: options.collective.collectiveId, orgId: options.collective.orgId };
     if (options.acceptance?.environmentRevision !== undefined && !validText(options.acceptance.environmentRevision, 256)) denied("ACCEPTANCE_ENVIRONMENT_INVALID");
     if (options.acceptance) options.acceptance = { ...options.acceptance, criteria: copy(options.acceptance.criteria) };
     if (options.collaboration && (!collaborationId(options.collaboration.hostId) || typeof options.collaboration.authorize !== "function")) denied("COLLABORATION_CONFIG_INVALID");
@@ -132,7 +139,7 @@ export class AgentSupervisor {
       if (existsSync(this.statePath)) {
         if (lstatSync(this.statePath).size > maxStateBytes) denied("AGENT_STATE_INVALID", 500);
         this.state = JSON.parse(readFileSync(this.statePath, "utf8"));
-        if ((this.state as { version: number }).version === 1) this.state = { ...this.state, version: 4, organization: emptyOrganizations(), collaboration: [], organizationAdmissions: [] };
+        if ((this.state as { version: number }).version === 1) this.state = { ...this.state, version: 4, organization: emptyWorkSessions(), collaboration: [], organizationAdmissions: [] };
         if ((this.state as { version: number }).version === 2) this.state = { ...this.state, version: 4, collaboration: [], organizationAdmissions: [] };
         if ((this.state as { version: number }).version === 3) this.state = { ...this.state, version: 4, organizationAdmissions: [] };
         this.validateState();
@@ -178,7 +185,7 @@ export class AgentSupervisor {
     for (const p of s.profiles) {
       if (!p || !isId(p.id) || ids.has(p.id) || !validText(p.owner, 256) || !validText(p.name, 100) || !validText(p.role, 4000, true)
         || (p.persona !== undefined && !validText(p.persona, 8000, true)) || (p.personaSourceId !== undefined && !validSourceId(p.personaSourceId))
-        || typeof p.paused !== "boolean" || (p.sessionId !== undefined && !isId(p.sessionId))
+        || typeof p.paused !== "boolean" || (p.sessionId !== undefined && !isId(p.sessionId)) || (p.collectiveId !== undefined && !isCollectiveId(p.collectiveId))
         || typeof p.createdAt !== "string" || typeof p.updatedAt !== "string") denied("AGENT_STATE_INVALID", 500);
       ids.add(p.id);
     }
@@ -195,7 +202,7 @@ export class AgentSupervisor {
       const parent = s.jobs.find(p => p.id === j.parentJobId);
       if (!parent || parent.owner !== j.owner || j.depth !== parent.depth + 1) denied("AGENT_STATE_INVALID", 500);
     }
-    this.validateOrganizations();
+    this.validateWorkSessions();
     this.validateCollaboration();
     this.validateOrganizationAdmissions();
   }
@@ -403,15 +410,16 @@ export class AgentSupervisor {
       || this.state.organization.sessions.some(o => o.id === e.recipient.org_session_id)) denied("ORGANIZATION_ADMISSION_CONFLICT", 409);
     this.admissionDefinitionCurrent(a); this.admissionReply(principal, a);
     for (const id of d.participants) this.owned(id, principal);
+    this.assertSameCollective(d.participants);
     if (this.state.organization.sessions.length >= 1000 || this.state.organizationAdmissions.length >= 10000) denied("ORGANIZATION_ADMISSION_LIMIT", 429);
     this.taskCapacity(1);
     const lengths = { jobs: this.state.jobs.length, tasks: this.state.organization.tasks.length, attempts: this.state.organization.attempts.length,
       sessions: this.state.organization.sessions.length, admissions: this.state.organizationAdmissions.length };
     const receiptId = randomUUID(), job = this.enqueueRecord(d.root_agent_id, principal, { input: d.goal, requestId: "admission-" + receiptId }), task = this.trackTask(e.recipient.org_session_id, job), at = now();
     job.organizationAdmissionReceiptId = receiptId;
-    const org: OrgSession = { id: e.recipient.org_session_id, owner: principal.id, requestId: "admission-" + receiptId, definitionDigest: a.definition_digest,
+    const org: WorkSession = { id: e.recipient.org_session_id, owner: principal.id, requestId: "admission-" + receiptId, definitionDigest: a.definition_digest,
       goal: d.goal, participants: [...d.participants], rootTaskId: task.id, criterionIds: [...d.criterion_ids], criteriaDigest: d.criteria_digest,
-      environmentRevision: d.environment_revision, maxRepairAttempts: d.max_repair_attempts, deadlineAt: Date.parse(at) + d.timeout_ms, createdAt: at, status: "active" };
+      environmentRevision: d.environment_revision, maxRepairAttempts: d.max_repair_attempts, deadlineAt: Date.parse(at) + d.timeout_ms, createdAt: at, status: "active", ...this.sessionCollective() };
     const receipt: OrganizationAdmissionReceipt = { schema_version: "pida.organization.admission.receipt/1", receipt_id: receiptId, producer_id: e.producer_id, request_id: e.request_id,
       payload_digest: e.payload_digest, definition_digest: a.definition_digest, admission_digest: a.admission_digest, reservation_id: a.reservation_id,
       recipient: copy(e.recipient), received_at: at, job_id: job.id, root_task_id: task.id, root_attempt_id: job.attemptId!, phase: "organization_root_enqueued", durable: true, durability_scope: "local-process-restart" };
@@ -489,7 +497,8 @@ export class AgentSupervisor {
     if (input.personaSourceId !== undefined && source.authority !== "pida-local" && input.persona?.trim()) denied("AGENT_PERSONA_SOURCE_CONFLICT");
     if (this.state.profiles.length >= (this.options.maxAgents ?? 32)) denied("AGENT_PROFILE_LIMIT", 429);
     const profile: AgentProfile = { id: randomUUID(), owner: principal.id, name: input.name.trim(), role: input.role ?? "", personaSourceId: source.id,
-      ...(input.persona === undefined ? {} : { persona: input.persona }), paused: false, createdAt: now(), updatedAt: now() };
+      ...(input.persona === undefined ? {} : { persona: input.persona }), paused: false, createdAt: now(), updatedAt: now(),
+      ...(this.collective ? { collectiveId: this.collective.collectiveId } : {}) };
     this.state.profiles.push(profile); this.persist(); return copy(profile);
   }
   list(principal: Principal): AgentProfile[] { this.principal(principal); return this.state.profiles.filter(p => p.owner === principal.id).map(copy); }
@@ -552,7 +561,7 @@ export class AgentSupervisor {
     if (parentTask && trackChild) this.trackTask(parentTask.orgId, job);
     return job;
   }
-  private validateOrganizations() {
+  private validateWorkSessions() {
     const state = this.state.organization;
     if (!state || ![state.sessions, state.tasks, state.attempts, state.joins].every(a => Array.isArray(a) && a.length <= 10000)) denied("ORG_STATE_INVALID", 500);
     const unique = (values: { id: string }[]) => values.every(v => v && isId(v.id)) && new Set(values.map(v => v.id)).size === values.length;
@@ -567,7 +576,9 @@ export class AgentSupervisor {
         || !validText(org.environmentRevision, 256) || !Number.isSafeInteger(org.deadlineAt)
         || !Number.isSafeInteger(org.maxRepairAttempts) || org.maxRepairAttempts < 0 || org.maxRepairAttempts > 3
         || !["active", "accepted", "failed", "unknown", "cancelled", "expired"].includes(org.status)
-        || !state.tasks.some(t => t.id === org.rootTaskId && t.orgId === org.id)) denied("ORG_STATE_INVALID", 500);
+        || !state.tasks.some(t => t.id === org.rootTaskId && t.orgId === org.id)
+        || (org.collectiveId === undefined) !== (org.orgId === undefined) || (org.collectiveId !== undefined && (!isCollectiveId(org.collectiveId) || !isOrgId(org.orgId)))
+        || !participantsShareCollective(org.collectiveId, org.participants.map(id => this.state.profiles.find(p => p.id === id)!))) denied("ORG_STATE_INVALID", 500);
     }
     for (const task of state.tasks) {
       const org = state.sessions.find(o => o.id === task.orgId);
@@ -621,18 +632,18 @@ export class AgentSupervisor {
     for (const job of this.state.jobs) if (job.organizationTaskId && !state.attempts.some(a => a.id === job.attemptId && a.jobId === job.id && a.taskId === job.organizationTaskId)) denied("ORG_STATE_INVALID", 500);
     for (const org of state.sessions) if (org.status === "accepted" && state.tasks.find(t => t.id === org.rootTaskId)?.receipts.at(-1)?.status !== "PASS") denied("ORG_STATE_INVALID", 500);
   }
-  private trackTask(orgId: string, job: AgentJob): OrgTask {
+  private trackTask(orgId: string, job: AgentJob): WorkTask {
     this.taskCapacity(1);
-    const task: OrgTask = { id: randomUUID(), orgId, agentId: job.agentId, assignmentRevision: 1, inputDigest: sha256(job.input), attempts: [], status: "queued", receipts: [] };
+    const task: WorkTask = { id: randomUUID(), orgId, agentId: job.agentId, assignmentRevision: 1, inputDigest: sha256(job.input), attempts: [], status: "queued", receipts: [] };
     this.state.organization.tasks.push(task); this.trackAttempt(task, job, "initial"); return task;
   }
   private taskCapacity(count: number) {
     if (this.state.organization.tasks.length + count > 10000 || this.state.organization.attempts.length + count > 10000) denied("ORG_TASK_LIMIT", 429);
   }
-  private canAttempt(task: OrgTask) {
+  private canAttempt(task: WorkTask) {
     return task.attempts.length < 16 && this.state.organization.attempts.length < 10000 && this.state.jobs.length < (this.options.maxJobs ?? 2000);
   }
-  private trackAttempt(task: OrgTask, job: AgentJob, kind: "initial" | "continuation" | "repair") {
+  private trackAttempt(task: WorkTask, job: AgentJob, kind: "initial" | "continuation" | "repair") {
     if (task.attempts.length >= 16 || this.state.organization.attempts.length >= 10000) denied("ORG_ATTEMPT_LIMIT", 429);
     const attempt = { id: randomUUID(), taskId: task.id, jobId: job.id, kind, number: task.attempts.length + 1 };
     task.attempts.push(attempt.id); task.status = "queued"; job.organizationTaskId = task.id; job.attemptId = attempt.id;
@@ -655,7 +666,15 @@ export class AgentSupervisor {
         new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new PidaError("ACCEPTANCE_TIMEOUT", 408)), Math.max(1, timeoutMs)); })]));
     } finally { clearTimeout(timer); }
   }
-  createOrganization(principal: Principal, input: { requestId: string; goal: string; agentId: string; participants: string[]; criterionIds: string[]; maxRepairAttempts?: number; timeoutMs?: number }) {
+  private sessionCollective(): { collectiveId?: string; orgId?: string } {
+    return this.collective ? { collectiveId: this.collective.collectiveId, orgId: this.collective.orgId } : {};
+  }
+  /** HC-09 3.3: every participant shares the session collective, which is this host's collective. */
+  private assertSameCollective(participants: readonly string[]) {
+    const profiles = participants.map(id => this.state.profiles.find(p => p.id === id)!);
+    if (!participantsShareCollective(this.collective?.collectiveId, profiles)) denied("ORG_COLLECTIVE_MISMATCH", 409);
+  }
+  createWorkSession(principal: Principal, input: { requestId: string; goal: string; agentId: string; participants: string[]; criterionIds: string[]; maxRepairAttempts?: number; timeoutMs?: number }) {
     this.usable(); this.principal(principal);
     if (!input || Object.keys(input).some(k => !["requestId", "goal", "agentId", "participants", "criterionIds", "maxRepairAttempts", "timeoutMs"].includes(k))
       || !validText(input.requestId, 128) || !validText(input.goal, 12000) || !Array.isArray(input.participants) || input.participants.length < 1 || input.participants.length > 32
@@ -663,6 +682,7 @@ export class AgentSupervisor {
       || !Array.isArray(input.criterionIds) || input.criterionIds.length > 32 || new Set(input.criterionIds).size !== input.criterionIds.length
       || this.criteria(input.criterionIds).length !== input.criterionIds.length) denied("ORG_ARGUMENT_INVALID");
     for (const id of input.participants) this.owned(id, principal);
+    this.assertSameCollective(input.participants);
     const repairs = input.maxRepairAttempts ?? 0, timeout = input.timeoutMs ?? this.executionPolicy?.organization_timeout_ms ?? 3600000;
     if (!Number.isSafeInteger(repairs) || repairs < 0 || repairs > 3 || !Number.isSafeInteger(timeout) || timeout < 1000 || timeout > 86400000) denied("ORG_BUDGET_INVALID");
     this.assertOrganizationBudget(timeout, repairs);
@@ -671,9 +691,9 @@ export class AgentSupervisor {
     if (this.state.organization.sessions.length >= 1000) denied("ORG_SESSION_LIMIT", 429);
     this.taskCapacity(1);
     const id = randomUUID(), job = this.enqueueRecord(input.agentId, principal, { input: input.goal, requestId: "org-" + id }), task = this.trackTask(id, job);
-    const org: OrgSession = { id, owner: principal.id, requestId: input.requestId, definitionDigest, goal: input.goal, participants: [...input.participants], rootTaskId: task.id,
+    const org: WorkSession = { id, owner: principal.id, requestId: input.requestId, definitionDigest, goal: input.goal, participants: [...input.participants], rootTaskId: task.id,
       criterionIds: [...input.criterionIds], criteriaDigest: criterionDigest(this.criteria(input.criterionIds)), environmentRevision: this.environment(), maxRepairAttempts: repairs,
-      deadlineAt: Date.now() + timeout, createdAt: now(), status: "active" };
+      deadlineAt: Date.now() + timeout, createdAt: now(), status: "active", ...this.sessionCollective() };
     this.state.organization.sessions.push(org); this.persist(); this.kick(); return copy(org);
   }
   registerJoin(parentJobId: string, principal: Principal, input: { requestId: string; required: string[]; optional?: string[]; timeoutMs?: number }): BatchJoin {
@@ -696,10 +716,11 @@ export class AgentSupervisor {
     if (!task) {
       if (state.sessions.length >= 1000) denied("ORG_SESSION_LIMIT", 429);
       if (this.list(principal).length > 32 || children.some(j => j.organizationTaskId)) denied("ORG_PARTICIPANT_LIMIT", 409);
+      this.assertSameCollective(this.list(principal).map(p => p.id));
       const id = randomUUID(); task = this.trackTask(id, parent);
       state.sessions.push({ id, owner: principal.id, requestId: "implicit-" + parent.id, definitionDigest: sha256(parent.id), goal: parent.input,
         participants: this.list(principal).map(p => p.id), rootTaskId: task.id, criterionIds: [], criteriaDigest: criterionDigest([]), environmentRevision: this.environment(),
-        maxRepairAttempts: 0, deadlineAt: Date.now() + timeout, createdAt: now(), status: "active" });
+        maxRepairAttempts: 0, deadlineAt: Date.now() + timeout, createdAt: now(), status: "active", ...this.sessionCollective() });
     }
     const org = state.sessions.find(o => o.id === task!.orgId)!;
     if (org.status !== "active" || Date.now() >= org.deadlineAt) denied("ORG_NOT_ACTIVE", 409);
@@ -734,9 +755,9 @@ export class AgentSupervisor {
         && childTask.orgId === org.id && childTask.agentId === child.agentId && org.participants.includes(child.agentId);
     });
   }
-  listOrganizations(principal: Principal) { this.principal(principal); return this.state.organization.sessions.filter(o => o.owner === principal.id).map(copy); }
+  listWorkSessions(principal: Principal) { this.principal(principal); return this.state.organization.sessions.filter(o => o.owner === principal.id).map(copy); }
   acceptanceCriteria(principal: Principal) { this.principal(principal); return copy(this.options.acceptance?.criteria ?? []); }
-  async getOrganization(id: string, principal: Principal) {
+  async getWorkSession(id: string, principal: Principal) {
     this.principal(principal); const org = this.state.organization.sessions.find(o => o.id === id && o.owner === principal.id);
     if (!org) return denied("ORG_NOT_FOUND", 404);
     const tasks = this.state.organization.tasks.filter(t => t.orgId === id), root = tasks.find(t => t.id === org.rootTaskId)!, receipt = root.receipts.at(-1);
@@ -764,7 +785,7 @@ export class AgentSupervisor {
     if (!pending) return true;
     try { return !(await pending).hasUnsettledWork(); } catch { return false; }
   }
-  async cancelOrganization(id: string, principal: Principal) {
+  async cancelWorkSession(id: string, principal: Principal) {
     this.usable(); this.principal(principal);
     const org = this.state.organization.sessions.find(o => o.id === id && o.owner === principal.id);
     if (!org) return denied("ORG_NOT_FOUND", 404);
@@ -780,7 +801,7 @@ export class AgentSupervisor {
     await Promise.all(jobs.filter(j => j.status === "running").map(j => this.cancel(j.id, principal)));
     this.kick(); return copy(org);
   }
-  private async reconcileOrganizations() {
+  private async reconcileWorkSessions() {
     if (this.closed || this.faulted || !this.started) return;
     const state = this.state.organization;
     for (const org of state.sessions) if (org.status === "active" && Date.now() >= org.deadlineAt) {
@@ -809,7 +830,7 @@ export class AgentSupervisor {
         return { assignment, task: childTask, attempt, job };
       });
       const successful = (j: AgentJob) => j.status === "completed" && !!j.result && !j.result.recovery && !j.result.persistenceError;
-      const terminalTask = (t: OrgTask) => !["queued", "waiting"].includes(t.status);
+      const terminalTask = (t: WorkTask) => !["queued", "waiting"].includes(t.status);
       if (!successful(parent) || children.some(c => join.required.includes(c.assignment.id) && terminalTask(c.task) && (c.task.status !== "completed" || !successful(c.job)))) {
         join.status = "blocked"; join.code = "JOIN_REQUIRED_RESULT_UNAVAILABLE"; task.status = "failed"; if (org.rootTaskId === task.id) org.status = "failed"; this.persist(); continue;
       }
@@ -960,7 +981,7 @@ export class AgentSupervisor {
   private kick() {
     if (!this.started || this.closed || this.faulted || this.scheduled) return;
     this.scheduled = true;
-    queueMicrotask(() => { void this.reconcileOrganizations().then(() => { this.scheduled = false; this.pump(); }).catch(() => { this.scheduled = false; this.faulted = true; }); });
+    queueMicrotask(() => { void this.reconcileWorkSessions().then(() => { this.scheduled = false; this.pump(); }).catch(() => { this.scheduled = false; this.faulted = true; }); });
   }
   private pump() {
     if (this.closed || this.faulted || !this.started) return;

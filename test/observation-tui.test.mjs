@@ -34,7 +34,7 @@ test('actual host observation client is host-wide, emits no writes, detaches wit
   const owner = new PidaClient({ baseUrl: ready.base_url, token: () => ready.api_token });
   const agent = await owner.createAgent({ name: 'native observed root' }); await owner.pauseAgent(agent.id);
   const unused = await owner.createAgent({ name: 'never initialized' }); await owner.pauseAgent(unused.id);
-  const org = await owner.createOrganization({ requestId: 'observed-org', goal: 'Synthetic later execution.', agentId: agent.id, participants: [agent.id], criterionIds: [] });
+  const org = await owner.createWorkSession({ requestId: 'observed-org', goal: 'Synthetic later execution.', agentId: agent.id, participants: [agent.id], criterionIds: [] });
   const queued = (await owner.listAgentJobs(agent.id)).jobs[0]; assert.equal(queued.status, 'queued');
   const protectedFiles = ['pida.config.json','.pida-host.json','.env','.pida/agents-service/supervisor.json'].map(p => join(workspace,p));
   const before = protectedFiles.map(hash), beforeTree = tree(workspace), calls = [];
@@ -47,7 +47,7 @@ test('actual host observation client is host-wide, emits no writes, detaches wit
   assert.equal(controller.overview.agents[0].profile.id, agent.id);
   controller.setDraft(pane.id, 'This must not reach HTTP'); await controller.submit(pane.id);
   assert.match(controller.message(pane.id), /HOST_OBSERVATION_ONLY/); assert.equal(controller.isUncertain(pane.id), false);
-  for (const action of [() => connection.client.createAgent({ name:'forbidden' }), () => connection.client.cancelOrganization(org.id), () => connection.client.resumeAgent(agent.id)])
+  for (const action of [() => connection.client.createAgent({ name:'forbidden' }), () => connection.client.cancelWorkSession(org.id), () => connection.client.resumeAgent(agent.id)])
     await assert.rejects(action(), { code:'HOST_OBSERVATION_ONLY_USE_SCHUMPETER_TASK_CONTROLS', status:403 });
   assert.ok(calls.length > 2); assert.ok(calls.every(c => c.method === 'GET'));
   const beforeDetails = calls.length;

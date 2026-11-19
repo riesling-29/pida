@@ -54,7 +54,7 @@ test('production reference host: actual native IDs, Unicode context, read-only i
   let host = await launch('fresh'), ready = await host.ready; assert.equal(ready.persona_mode, 'vera-local-reference/0.1.0');
   let client = new PidaClient({ baseUrl: ready.base_url, token: () => ready.api_token });
   const agent = await client.createAgent({ name: 'reference root' });
-  const org = await client.createOrganization({ requestId: 'reference-native', goal: 'Return a synthetic reference check.', agentId: agent.id, participants: [agent.id], criterionIds: [] });
+  const org = await client.createWorkSession({ requestId: 'reference-native', goal: 'Return a synthetic reference check.', agentId: agent.id, participants: [agent.id], criterionIds: [] });
   let job;
   for (let i = 0; i < 400; i++) { job = (await client.listAgentJobs(agent.id)).jobs[0]; if (job && !['queued','running'].includes(job.status)) break; await new Promise(r => setTimeout(r, 25)); }
   assert.equal(job.status, 'completed', JSON.stringify(job));
