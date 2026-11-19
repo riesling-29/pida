@@ -9,6 +9,14 @@ export const personaSubstrateOcelInput = "pida.persona-substrate.ocel-input/1" a
 const MAX_INPUT_BYTES = 2_097_152;
 const TOP_LEVEL_KEYS = ["eventTypes", "objectTypes", "events", "objects"] as const;
 const FORBIDDEN_ATTRIBUTE_NAMES = new Set(["body", "text", "content", "summary", "reason", "prompt", "message"]);
+const MAX_JSON_DEPTH = 64;
+const RFC3339_UTC = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,9})?Z$/;
+
+/** PS contract event types (Persona-Substrate types.EVENT_TYPES). Fixed here, never taken from the input file. */
+export const personaSubstrateEventTypes: readonly string[] = Object.freeze([
+  "새지시", "단계완료", "오류", "승인", "승인거절", "취소", "범위변경", "재개", "위임요청", "위임회신", "승인요청", "승격",
+]);
+const CONTRACT_EVENT_TYPES: ReadonlySet<string> = new Set(personaSubstrateEventTypes);
 
 export interface PersonaSubstrateOcelRead {
   schemaVersion: typeof personaSubstrateOcelInput;
@@ -21,6 +29,7 @@ const fail = (code: string): never => { throw new Error(code); };
 
 function parseJsonUnique(text: string): unknown {
   let index = 0;
+  let depth = 0;
   const invalid = () => fail("PERSONA_SUBSTRATE_OCEL_JSON_INVALID");
   const peek = () => text[index];
   const take = () => text[index++]!;
@@ -56,11 +65,16 @@ function parseJsonUnique(text: string): unknown {
     if (peek() === "0") index++;
     else if (peek()! >= "1" && peek()! <= "9") while (peek()! >= "0" && peek()! <= "9") index++;
     else invalid();
-    if (peek() === ".") { index++; while (peek()! >= "0" && peek()! <= "9") index++; }
+    const digits = () => {
+      const from = index;
+      while (peek()! >= "0" && peek()! <= "9") index++;
+      if (index === from) invalid();
+    };
+    if (peek() === ".") { index++; digits(); }
     if (peek() === "e" || peek() === "E") {
       index++;
       if (peek() === "+" || peek() === "-") index++;
-      while (peek()! >= "0" && peek()! <= "9") index++;
+      digits();
     }
     const slice = text.slice(start, index);
     const value = Number(slice);
@@ -84,11 +98,13 @@ function parseJsonUnique(text: string): unknown {
     if (ch === "-" || (ch! >= "0" && ch! <= "9")) return parseNumber();
     invalid();
   };
+  const enter = () => { if (++depth > MAX_JSON_DEPTH) invalid(); };
   const parseArray = (): unknown[] => {
     if (take() !== "[") invalid();
+    enter();
     skipWs();
     const items: unknown[] = [];
-    if (peek() === "]") { take(); return items; }
+    if (peek() === "]") { take(); depth--; return items; }
     while (true) {
       items.push(parseValue());
       skipWs();
@@ -97,13 +113,15 @@ function parseJsonUnique(text: string): unknown {
       if (ch !== ",") invalid();
       skipWs();
     }
+    depth--;
     return items;
   };
   const parseObject = (): Record<string, unknown> => {
     if (take() !== "{") invalid();
+    enter();
     skipWs();
     const object: Record<string, unknown> = {};
-    if (peek() === "}") { take(); return object; }
+    if (peek() === "}") { take(); depth--; return object; }
     while (true) {
       skipWs();
       const key = parseString();
@@ -111,12 +129,14 @@ function parseJsonUnique(text: string): unknown {
       if (take() !== ":") invalid();
       const value = parseValue();
       if (Object.hasOwn(object, key)) fail("PERSONA_SUBSTRATE_OCEL_JSON_DUPLICATE_KEY");
-      object[key] = value;
+      // defineProperty keeps "__proto__" as an own key instead of calling the prototype setter.
+      Object.defineProperty(object, key, { value, enumerable: true, writable: true, configurable: true });
       skipWs();
       const ch = take();
       if (ch === "}") break;
       if (ch !== ",") invalid();
     }
+    depth--;
     return object;
   };
   skipWs();
@@ -135,8 +155,31 @@ function assertTopLevel(value: unknown): Record<string, unknown> {
 }
 
 function contractEventTypes(document: OcelDocument): Set<string> {
-  return new Set(document.eventTypes.map(type => type.name));
+  const declared = new Set(document.eventTypes.map(type => type.name));
+  for (const name of declared) if (!CONTRACT_EVENT_TYPES.has(name)) fail("PERSONA_SUBSTRATE_OCEL_EVENT_TYPE_INVALID");
+  return declared;
 }
+
+function assertUniqueIds(items: readonly { id: string }[]): void {
+  const seen = new Set<string>();
+  for (const item of items) {
+    if (seen.has(item.id)) fail("PERSONA_SUBSTRATE_OCEL_ID_DUPLICATE");
+    seen.add(item.id);
+  }
+}
+
+function assertUtcTime(value: string): void {
+  const match = RFC3339_UTC.exec(value);
+  if (!match) fail("PERSONA_SUBSTRATE_OCEL_TIME_INVALID");
+  const [year, month, day, hour, minute, second] = match!.slice(1, 7).map(Number) as [number, number, number, number, number, number];
+  const date = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day
+    || date.getUTCHours() !== hour || date.getUTCMinutes() !== minute || date.getUTCSeconds() !== second) {
+    fail("PERSONA_SUBSTRATE_OCEL_TIME_INVALID");
+  }
+}
+
+const forbiddenAttribute = (name: string) => FORBIDDEN_ATTRIBUTE_NAMES.has(name.toLowerCase());
 
 function readLogSeq(event: OcelDocument["events"][number]): number {
   const value = event.attributes.find(attribute => attribute.name === "log_seq")?.value;
@@ -146,24 +189,34 @@ function readLogSeq(event: OcelDocument["events"][number]): number {
 
 function validatePersonaInvariants(document: OcelDocument): void {
   const allowedTypes = contractEventTypes(document);
+  assertUniqueIds(document.events);
+  assertUniqueIds(document.objects);
   const objects = new Map(document.objects.map(object => [object.id, object]));
   let previousLogSeq: number | undefined;
   for (const event of document.events) {
     if (!allowedTypes.has(event.type)) fail("PERSONA_SUBSTRATE_OCEL_EVENT_TYPE_INVALID");
     for (const attribute of event.attributes) {
-      if (FORBIDDEN_ATTRIBUTE_NAMES.has(attribute.name)) fail("PERSONA_SUBSTRATE_OCEL_FORBIDDEN_ATTRIBUTE");
+      if (forbiddenAttribute(attribute.name)) fail("PERSONA_SUBSTRATE_OCEL_FORBIDDEN_ATTRIBUTE");
     }
     const caseLinks = event.relationships.filter(relation => relation.qualifier === "case");
     if (caseLinks.length !== 1) fail("PERSONA_SUBSTRATE_OCEL_CASE_RELATION_INVALID");
     const workItem = objects.get(caseLinks[0]!.objectId);
     if (!workItem || workItem.type !== "work_item") fail("PERSONA_SUBSTRATE_OCEL_CASE_RELATION_INVALID");
+    for (const relation of event.relationships) {
+      if (!objects.has(relation.objectId)) fail("PERSONA_SUBSTRATE_OCEL_RELATION_DANGLING");
+    }
+    assertUtcTime(event.time);
     const logSeq = readLogSeq(event);
     if (previousLogSeq !== undefined && logSeq <= previousLogSeq) fail("PERSONA_SUBSTRATE_OCEL_LOG_SEQ_INVALID");
     previousLogSeq = logSeq;
   }
   for (const object of document.objects) {
     for (const attribute of object.attributes) {
-      if (FORBIDDEN_ATTRIBUTE_NAMES.has(attribute.name)) fail("PERSONA_SUBSTRATE_OCEL_FORBIDDEN_ATTRIBUTE");
+      if (forbiddenAttribute(attribute.name)) fail("PERSONA_SUBSTRATE_OCEL_FORBIDDEN_ATTRIBUTE");
+      assertUtcTime(attribute.time);
+    }
+    for (const relation of object.relationships) {
+      if (!objects.has(relation.objectId)) fail("PERSONA_SUBSTRATE_OCEL_RELATION_DANGLING");
     }
   }
 }
