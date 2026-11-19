@@ -51,7 +51,7 @@ async function embedded(t,f) {
   const open=async()=>{
     bridge=await createHostPersona({hostId:f.hostId,personaIdentity:await hostPersonaIdentity({hostId:f.hostId}),async taskScope(taskId,agentId){
       const job=app.agents.getJob(taskId,principal);assert.equal(job.agentId,agentId);
-      for(const org of app.agents.listOrganizations(principal)){const view=await app.agents.getOrganization(org.id,principal);
+      for(const org of app.agents.listWorkSessions(principal)){const view=await app.agents.getWorkSession(org.id,principal);
         if(view.tasks.some(t=>t.id===job.organizationTaskId&&t.agentId===agentId)&&view.attempts.some(a=>a.id===job.attemptId&&a.jobId===job.id))return {jobId:job.id,attemptId:job.attemptId,organizationTaskId:job.organizationTaskId,organizationSessionId:org.id};}
       throw Error('HOST_PERSONA_ORGANIZATION_REQUIRED');
     }});
@@ -66,7 +66,7 @@ async function run(f,agent,id,calls) {
   const runtime=await f.app.agents.getRuntime(agent.id,principal), faux=fauxProvider({tokensPerSecond:100000});
   faux.setResponses([context=>{calls.push({agent:agent.id,text:JSON.stringify(context)});return answer('Synthetic completion');}]);
   runtime.configureProvider(()=>({provider:faux.provider,modelId:faux.getModel().id}),{mode:'offline-catalogue-fixture',model:'faux'});
-  const org=await f.client.createOrganization({requestId:id,goal:'Check the configured reference.',agentId:agent.id,participants:[agent.id],criterionIds:[]});
+  const org=await f.client.createWorkSession({requestId:id,goal:'Check the configured reference.',agentId:agent.id,participants:[agent.id],criterionIds:[]});
   const job=await until(async()=>{const list=await f.client.listAgentJobs(agent.id);return list.jobs.find(j=>j.organizationTaskId===org.rootTaskId&&!['queued','running'].includes(j.status));});
   return {job,org,bundle:await f.client.exportAgentJob(agent.id,job.id)};
 }
@@ -150,7 +150,7 @@ test('catalogue launcher: closed ready2, actual fresh/resume, reorder stability 
   assert.equal(Object.keys(ready).length,11);assert.equal(ready.protocol,'pida.local-host/2');assert.equal(ready.persona_mode,'vera-local-reference-catalogue/1');assert.equal(ready.execution_policy.id,'smoke/1');
   let client=new PidaClient({baseUrl:ready.base_url,token:()=>ready.api_token});
   const a=await client.createAgent({name:'profile A',personaSourceId:'profile-a'}),b=await client.createAgent({name:'profile B',personaSourceId:'profile-b'});
-  const org=await client.createOrganization({requestId:'catalogue-launcher',goal:'Synthetic reference check',agentId:b.id,participants:[b.id],criterionIds:[]});
+  const org=await client.createWorkSession({requestId:'catalogue-launcher',goal:'Synthetic reference check',agentId:b.id,participants:[b.id],criterionIds:[]});
   const job=await until(async()=>{const {jobs}=await client.listAgentJobs(b.id);return jobs.find(j=>!['queued','running'].includes(j.status));});assert.equal(job.status,'completed');
   included({job,org,bundle:await client.exportAgentJob(b.id,job.id)},b,'persona:b',2);
   assert.equal(await h.close(),0);active=null;

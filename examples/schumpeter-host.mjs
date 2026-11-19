@@ -111,8 +111,8 @@ try {
       if (!app?.agents || agentId === 'main') throw Error('HOST_PERSONA_ORGANIZATION_REQUIRED');
       const principal = { id: 'local-user', permissions: [] }, job = app.agents.getJob(taskId, principal);
       if (job.agentId !== agentId) throw Error('HOST_PERSONA_TASK_MISMATCH');
-      for (const org of app.agents.listOrganizations(principal)) {
-        const view = await app.agents.getOrganization(org.id, principal);
+      for (const org of app.agents.listWorkSessions(principal)) {
+        const view = await app.agents.getWorkSession(org.id, principal);
         if (view.tasks.some(t => t.id === job.organizationTaskId && t.agentId === agentId)
           && view.attempts.some(a => a.id === job.attemptId && a.taskId === job.organizationTaskId && a.jobId === job.id))
           return { organizationSessionId: org.id, organizationTaskId: job.organizationTaskId, attemptId: job.attemptId, jobId: job.id };

@@ -17,18 +17,18 @@ export interface LocalReceipt {
   checks: { id: string; required: boolean; status: "PASS" | "FAIL" | "UNKNOWN" }[];
   issuer: "pida-host"; scope: "workbench-exact-revision";
 }
-export interface OrgSession {
+export interface WorkSession {
   id: string; owner: string; requestId: string; definitionDigest: string; goal: string;
   participants: string[]; rootTaskId: string; criterionIds: string[]; criteriaDigest: string; environmentRevision: string;
   maxRepairAttempts: number; deadlineAt: number; createdAt: string;
   status: "active" | "accepted" | "failed" | "unknown" | "cancelled" | "expired";
 }
-export interface OrgTask {
+export interface WorkTask {
   id: string; orgId: string; agentId: string; assignmentRevision: 1; inputDigest: string;
   attempts: string[]; status: "queued" | "waiting" | "completed" | "accepted" | "failed" | "unknown" | "cancelled";
   receipts: LocalReceipt[];
 }
-export interface OrgAttempt { id: string; taskId: string; jobId: string; kind: "initial" | "continuation" | "repair"; number: number }
+export interface WorkAttempt { id: string; taskId: string; jobId: string; kind: "initial" | "continuation" | "repair"; number: number }
 export interface BatchJoin {
   id: string; orgId: string; taskId: string; parentJobId: string; requestId: string; payloadDigest: string;
   revision: number; required: string[]; optional: string[]; deadlineAt: number; failurePolicy: "block";
@@ -36,8 +36,8 @@ export interface BatchJoin {
   continuationJobId?: string;
   results?: { assignmentJobId: string; attemptId: string; jobId: string; inputDigest: string; resultDigest: string; status: string; runId?: string }[];
 }
-export interface OrganizationState { sessions: OrgSession[]; tasks: OrgTask[]; attempts: OrgAttempt[]; joins: BatchJoin[] }
-export const emptyOrganizations = (): OrganizationState => ({ sessions: [], tasks: [], attempts: [], joins: [] });
+export interface WorkSessionState { sessions: WorkSession[]; tasks: WorkTask[]; attempts: WorkAttempt[]; joins: BatchJoin[] }
+export const emptyWorkSessions = (): WorkSessionState => ({ sessions: [], tasks: [], attempts: [], joins: [] });
 export const localEnvironment = "pida-local-checks/1:node-" + process.versions.node;
 export function validCriteria(criteria: readonly LocalCriterion[]): boolean {
   return Array.isArray(criteria) && criteria.length <= 32 && new Set(criteria.map(c => c?.id)).size === criteria.length && criteria.every(c => c && Object.keys(c).every(k => ["id", "kind", "path", "expected", "required"].includes(k))

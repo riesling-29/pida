@@ -77,7 +77,7 @@ for (const personaMode of process.env.PIDA_TEST_VERA_SOURCE ? ['local', 'public-
   const client = new PidaClient({ baseUrl: ready.base_url, token: () => ready.api_token });
   const cap = await client.getCollaborationCapabilities(); assert.equal(cap.enabled, true); assert.equal(cap.host_id, ready.host_id); assert.equal(cap.reply_mode, 'fresh-task-only');
   const coordinator = await client.createAgent({ name: 'coordinator' }), worker = await client.createAgent({ name: 'worker' }); await client.pauseAgent(coordinator.id);
-  const org = await client.createOrganization({ requestId: 'host-org', goal: 'coordinate', agentId: coordinator.id, participants: [coordinator.id, worker.id], criterionIds: [] });
+  const org = await client.createWorkSession({ requestId: 'host-org', goal: 'coordinate', agentId: coordinator.id, participants: [coordinator.id, worker.id], criterionIds: [] });
   const e = { ...golden, request_id: 'host-task', recipient: { ...golden.recipient, org_session_id: org.id, agent_id: worker.id } }; e.payload_digest = collaborationDigest(e);
   await assert.rejects(client.receiveCollaboration(e), { code: 'COLLABORATION_FORBIDDEN' }); await server.command({ grant: grantFor(e) });
   const receipt = await client.receiveCollaboration(e); assert.deepEqual(await client.receiveCollaboration(e), receipt); assert.deepEqual(await client.getCollaborationReceipt(receipt.receipt_id), receipt);
@@ -89,8 +89,8 @@ for (const personaMode of process.env.PIDA_TEST_VERA_SOURCE ? ['local', 'public-
     assert.equal(binding.providerId, 'pida.vera-dispatch/0.1.0'); assert.equal(binding.externalContext.hostId, 'host-1');
     assert.equal(binding.externalContext.organizationSessionId, org.id); assert.equal(binding.externalContext.agentInstanceId, worker.id);
     assert.equal(binding.externalContext.taskId, job.id, 'Persona taskId denotes exact native runtime job');
-    assert.equal(binding.externalContext.attemptId, job.attemptId, 'actual native OrgAttempt, not a synthetic run prefix');
-    const view = await client.getOrganization(org.id);
+    assert.equal(binding.externalContext.attemptId, job.attemptId, 'actual native WorkAttempt, not a synthetic run prefix');
+    const view = await client.getWorkSession(org.id);
     assert.ok(view.attempts.some(a => a.id === binding.externalContext.attemptId && a.taskId === job.organizationTaskId && a.jobId === job.id));
   }
   await client.pauseAgent(worker.id);
@@ -100,7 +100,7 @@ for (const personaMode of process.env.PIDA_TEST_VERA_SOURCE ? ['local', 'public-
   await client.resumeAgent(worker.id);
   for (let i = 0; i < 100; i++) { job = await client.getAgentJob(worker.id, deniedReceipt.job_id); if (!['queued', 'running'].includes(job.status)) break; await delay(10); }
   assert.equal(job.code, 'COLLABORATION_FORBIDDEN'); assert.equal(job.runId, undefined, 'revocation before dispatch creates no model invocation');
-  await client.cancelOrganization(org.id);
+  await client.cancelWorkSession(org.id);
   // Existing workspace cannot be reused by a fresh-host launcher.
   const second = pipe(spawn(process.execPath, [join(root, 'examples/schumpeter-host.mjs'), '--workspace', directory, '--host-id', 'host-1'], { env: { ...process.env, PIDA_SCHUMPETER_AUTH_URL: server.url, PIDA_SCHUMPETER_AUTH_TOKEN: token }, stdio: ['pipe', 'pipe', 'pipe'] }), 'pida-host-ready');
   await assert.rejects(second.ready, /HOST_WORKSPACE_NOT_EMPTY/); await second.close();
@@ -118,7 +118,7 @@ test('explicit resume preserves native identity and lost ACK dedup; wrong profil
   let client = new PidaClient({ baseUrl: first.base_url, token: () => first.api_token });
   const coordinator = await client.createAgent({ name: 'coordinator' }), worker = await client.createAgent({ name: 'worker' });
   await client.pauseAgent(coordinator.id); await client.pauseAgent(worker.id);
-  const org = await client.createOrganization({ requestId: 'resume-org', goal: 'coordinate', agentId: coordinator.id, participants: [coordinator.id, worker.id], criterionIds: [] });
+  const org = await client.createWorkSession({ requestId: 'resume-org', goal: 'coordinate', agentId: coordinator.id, participants: [coordinator.id, worker.id], criterionIds: [] });
   const e = { ...golden, request_id: 'lost-ack', recipient: { ...golden.recipient, org_session_id: org.id, agent_id: worker.id } }; e.payload_digest = collaborationDigest(e);
   await server.command({ grant: grantFor(e) });
   const response = await fetch(first.base_url + '/v1/collaboration/messages', { method: 'POST', headers: { Authorization: 'Bearer ' + first.api_token, 'Content-Type': 'application/json' }, body: JSON.stringify(e) });
@@ -143,7 +143,7 @@ test('explicit resume preserves native identity and lost ACK dedup; wrong profil
   await assert.rejects(new PidaClient({ baseUrl: reopened.base_url, token: () => first.api_token }).getCollaborationCapabilities());
   const receipt = await client.receiveCollaboration(e); assert.equal(receipt.job_id, originalJobs[0].id);
   assert.deepEqual(await client.receiveCollaboration(e), receipt); assert.equal((await client.listAgentJobs(worker.id)).jobs.length, 1);
-  assert.equal((await client.getOrganization(org.id)).organization.id, org.id);
+  assert.equal((await client.getWorkSession(org.id)).organization.id, org.id);
   const changed = { ...e, input: 'changed' }; changed.payload_digest = collaborationDigest(changed);
   await assert.rejects(client.receiveCollaboration(changed), { code: 'COLLABORATION_REQUEST_CONFLICT' });
   await server.command({ grant: null }); await assert.rejects(client.getCollaborationReceipt(receipt.receipt_id), { code: 'COLLABORATION_FORBIDDEN' });
@@ -209,7 +209,7 @@ for (const personaMode of process.env.PIDA_TEST_VERA_SOURCE ? ['local', 'public-
   let job; for (let i = 0; i < 200; i++) { job = (await client.listAgentJobs(agent.id)).jobs[0]; if (job && !['queued', 'running'].includes(job.status)) break; await delay(10); }
   assert.equal(job.status, 'completed', JSON.stringify({ status: job.status, code: job.code }));
   const receipt = await client.admitOrganization(a); assert.equal(receipt.job_id, job.id); assert.equal(receipt.root_task_id, job.organizationTaskId); assert.equal(receipt.root_attempt_id, job.attemptId);
-  const view = await client.getOrganization(a.envelope.recipient.org_session_id); assert.equal(view.tasks.length, 1); assert.equal(view.attempts.length, 1); assert.equal(view.joins.length, 0);
+  const view = await client.getWorkSession(a.envelope.recipient.org_session_id); assert.equal(view.tasks.length, 1); assert.equal(view.attempts.length, 1); assert.equal(view.joins.length, 0);
   if (personaMode === 'public-fixture') {
     const bundle = await client.exportAgentJob(agent.id, job.id), included = bundle.events.find(e => e.activity === 'context_input_included'); assert.ok(included);
     const binding = JSON.parse(included.payload.descriptor).personaBinding.externalContext;

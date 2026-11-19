@@ -18,7 +18,7 @@ const owner={id:'owner',permissions:['pida:agents','agent:delegate','agent:read'
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
 async function until(fn){for(let i=0;i<600;i++){const r=await fn();if(r)return r;await delay(10);}assert.fail('organization did not settle');}
 const terminal=(s,id)=>until(()=>{const j=s.getJob(id,owner);return !['queued','running'].includes(j.status)&&j;});
-const orgDone=(s,id)=>until(async()=>{const value=await s.getOrganization(id,owner);return value.organization.status!=='active'&&value;});
+const orgDone=(s,id)=>until(async()=>{const value=await s.getWorkSession(id,owner);return value.organization.status!=='active'&&value;});
 function directory(t){const path=mkdtempSync(join(tmpdir(),'pida-org-'));t.after(()=>rmSync(path,{recursive:true,force:true}));return path;}
 function runtimeFactory(path,responses,extra={}){return profile=>{
   const f=fauxProvider({tokensPerSecond:100000});f.setResponses(responses(profile));
@@ -40,17 +40,17 @@ test('real Pi delegates, joins at maxConcurrent=1, continues once in the parent 
   };
   s=await AgentSupervisor.open({directory:path,maxConcurrent:1,resolvePrincipal:()=>owner,createRuntime});t.after(()=>s.close());
   parent=s.register(owner,{name:'parent'});a=s.register(owner,{name:'A'});b=s.register(owner,{name:'B'});
-  const org=s.createOrganization(owner,{requestId:'org1',goal:'Delegate two checks and combine them',agentId:parent.id,participants:[parent.id,a.id,b.id],criterionIds:[]});s.start();
+  const org=s.createWorkSession(owner,{requestId:'org1',goal:'Delegate two checks and combine them',agentId:parent.id,participants:[parent.id,a.id,b.id],criterionIds:[]});s.start();
   const done=await orgDone(s,org.id);assert.equal(done.organization.status,'unknown');assert.equal(done.currentAcceptance,'UNKNOWN');
   assert.equal(done.joins.length,1);assert.equal(done.joins[0].status,'ready');assert.equal(done.joins[0].results.length,2);
   const parentJobs=s.jobs(parent.id,owner);assert.equal(parentJobs.length,2);assert.equal(parentJobs[0].sessionId,parentJobs[1].sessionId);assert.equal(requests,7);
   const membership={requestId:done.joins[0].requestId,required:done.joins[0].required};
   assert.equal(s.registerJoin(parentJobs[0].id,owner,membership).id,done.joins[0].id);
   assert.throws(()=>s.registerJoin(parentJobs[0].id,owner,{...membership,required:[...membership.required].reverse()}),{code:'JOIN_REQUEST_CONFLICT'});
-  await assert.rejects(s.getOrganization(org.id,other),{code:'ORG_NOT_FOUND'});assert.deepEqual(s.listOrganizations(other),[]);
+  await assert.rejects(s.getWorkSession(org.id,other),{code:'ORG_NOT_FOUND'});assert.deepEqual(s.listWorkSessions(other),[]);
   await s.close();
   s=await AgentSupervisor.open({directory:path,maxConcurrent:1,resolvePrincipal:()=>owner,createRuntime:()=>{throw Error('must not replay');}});s.start();
-  await delay(60);const restored=await s.getOrganization(org.id,owner);assert.equal(restored.joins[0].continuationJobId,parentJobs[1].id);assert.equal(s.jobs(parent.id,owner).length,2);
+  await delay(60);const restored=await s.getWorkSession(org.id,owner);assert.equal(restored.joins[0].continuationJobId,parentJobs[1].id);assert.equal(s.jobs(parent.id,owner).length,2);
   await s.close();
   const statePath=join(path,'supervisor.json'), original=readFileSync(statePath,'utf8');
   for(const change of [j=>{delete j.results;},j=>{j.results=[];},j=>{j.results[0].resultDigest='0'.repeat(64);},j=>{j.results[0].attemptId=j.results[1].attemptId;}]) {
@@ -70,11 +70,11 @@ test('children completed before registration reconcile in reverse order; ready c
   const pj=s.enqueue(p.id,owner,{input:'parent',requestId:'p'}),bj=s.enqueue(b.id,owner,{input:'B',requestId:'b',parentJobId:pj.id}),aj=s.enqueue(a.id,owner,{input:'A',requestId:'a',parentJobId:pj.id});s.start();
   await Promise.all([pj,bj,aj].map(j=>terminal(s,j.id)));s.pause(p.id,owner);
   const registered=s.registerJoin(pj.id,owner,{requestId:'late',required:[aj.id,bj.id]});
-  const ready=await until(async()=>{const v=await s.getOrganization(registered.orgId,owner);return v.joins[0].status==='ready'&&v;});
+  const ready=await until(async()=>{const v=await s.getWorkSession(registered.orgId,owner);return v.joins[0].status==='ready'&&v;});
   assert.deepEqual(ready.joins[0].results.map(j=>j.assignmentJobId),[aj.id,bj.id]);
   const continuation=ready.joins[0].continuationJobId;assert.equal(s.getJob(continuation,owner).status,'queued');
   await s.close();s=await AgentSupervisor.open(options);s.start();await delay(50);
-  assert.equal(s.jobs(p.id,owner).length,2);assert.equal((await s.getOrganization(registered.orgId,owner)).joins[0].continuationJobId,continuation);
+  assert.equal(s.jobs(p.id,owner).length,2);assert.equal((await s.getWorkSession(registered.orgId,owner)).joins[0].continuationJobId,continuation);
   await assert.rejects(s.cancelJoin(registered.id,owner,0),{code:'JOIN_REVISION_CONFLICT'});
   await s.cancelJoin(registered.id,owner,1);await s.resume(p.id,owner);await delay(50);
   assert.equal(s.getJob(continuation,owner).status,'cancelled');assert.equal(seen.filter(n=>n==='continuation').length,0);
@@ -103,25 +103,25 @@ test('independent exact workbench check repairs once, invalidates changed bytes/
     createRuntime:runtimeFactory(path,()=>[()=>{calls++;return answer(call('workspace_write',{path:'answer.json',content:'{"answer":0}'}),{stopReason:'toolUse'});},answer('PASS'),()=>{calls++;return answer(call('workspace_write',{path:'answer.json',content:'{"answer":42}'}),{stopReason:'toolUse'});},answer('PASS')],{tools:bench.tools()})};
   let s=await AgentSupervisor.open(options);t.after(()=>s.close());const p=s.register(owner,{name:'writer'});
   const input={requestId:'checked',goal:'Write the answer JSON',agentId:p.id,participants:[p.id],criterionIds:['answer'],maxRepairAttempts:1};
-  const org=s.createOrganization(owner,input);assert.equal(s.createOrganization(owner,input).id,org.id);
-  assert.throws(()=>s.createOrganization(owner,{...input,goal:'changed'}),{code:'ORG_REQUEST_CONFLICT'});
-  assert.throws(()=>s.createOrganization(owner,{...input,requestId:'forged',receipt:{status:'PASS'}}),{code:'ORG_ARGUMENT_INVALID'});
+  const org=s.createWorkSession(owner,input);assert.equal(s.createWorkSession(owner,input).id,org.id);
+  assert.throws(()=>s.createWorkSession(owner,{...input,goal:'changed'}),{code:'ORG_REQUEST_CONFLICT'});
+  assert.throws(()=>s.createWorkSession(owner,{...input,requestId:'forged',receipt:{status:'PASS'}}),{code:'ORG_ARGUMENT_INVALID'});
   s.start();const done=await orgDone(s,org.id);assert.equal(done.currentAcceptance,'PASS');assert.equal(calls,2);
   const receipts=done.tasks[0].receipts;assert.deepEqual(receipts.map(r=>r.status),['FAIL','PASS']);assert.notEqual(receipts[0].artifactSnapshotDigest,receipts[1].artifactSnapshotDigest);assert.equal(done.attempts[1].kind,'repair');
-  await bench.write(owner,'answer.json','{"answer":43}');assert.equal((await s.getOrganization(org.id,owner)).currentAcceptance,'UNKNOWN');
+  await bench.write(owner,'answer.json','{"answer":43}');assert.equal((await s.getWorkSession(org.id,owner)).currentAcceptance,'UNKNOWN');
   await bench.write(owner,'answer.json','{"answer":42}');await s.close();
   s=await AgentSupervisor.open({...options,acceptance:{...options.acceptance,environmentRevision:'checker-v2'}});s.start();
-  assert.equal((await s.getOrganization(org.id,owner)).currentAcceptance,'UNKNOWN');assert.equal(s.jobs(p.id,owner).length,2);await s.close();
+  assert.equal((await s.getWorkSession(org.id,owner)).currentAcceptance,'UNKNOWN');assert.equal(s.jobs(p.id,owner).length,2);await s.close();
   s=await AgentSupervisor.open({...options,acceptance:{...options.acceptance,criteria:[{...checks[0],expected:'{"answer":43}'}]}});s.start();
-  assert.equal((await s.getOrganization(org.id,owner)).currentAcceptance,'UNKNOWN');assert.equal(calls,2);
+  assert.equal((await s.getWorkSession(org.id,owner)).currentAcceptance,'UNKNOWN');assert.equal(calls,2);
 });
 
 test('unavailable checker is UNKNOWN, repair budget is finite, unrelated organizations still settle',async t=>{
   const path=directory(t);let captures=0;
   const s=await AgentSupervisor.open({directory:path,resolvePrincipal:()=>owner,acceptance:{criteria:[{id:'value',kind:'file-contains',path:'value.txt',expected:'correct',required:true}],capture:profile=>{captures++;if(profile.name==='missing')throw Error('unavailable');return {'value.txt':'wrong'};}},createRuntime:runtimeFactory(path,()=>Array.from({length:5},()=>answer('VERIFIED PASS')))});t.after(()=>s.close());
   const missing=s.register(owner,{name:'missing'}),failed=s.register(owner,{name:'failed'});
-  const a=s.createOrganization(owner,{requestId:'missing',goal:'work',agentId:missing.id,participants:[missing.id],criterionIds:['value'],maxRepairAttempts:3});
-  const b=s.createOrganization(owner,{requestId:'failed',goal:'work',agentId:failed.id,participants:[failed.id],criterionIds:['value'],maxRepairAttempts:1});s.start();
+  const a=s.createWorkSession(owner,{requestId:'missing',goal:'work',agentId:missing.id,participants:[missing.id],criterionIds:['value'],maxRepairAttempts:3});
+  const b=s.createWorkSession(owner,{requestId:'failed',goal:'work',agentId:failed.id,participants:[failed.id],criterionIds:['value'],maxRepairAttempts:1});s.start();
   const [va,vb]=await Promise.all([orgDone(s,a.id),orgDone(s,b.id)]);assert.equal(va.currentAcceptance,'UNKNOWN');assert.equal(va.attempts.length,1);assert.equal(vb.organization.status,'failed');assert.equal(vb.currentAcceptance,'FAIL');assert.equal(vb.attempts.length,2);assert.ok(captures>=3);
 });
 
@@ -130,16 +130,16 @@ test('HTTP organization API enforces authorization and the SDK reuses host-selec
   const server=createPidaServer({runtime,agents:s,authenticate:staticTokenAuth([{token:'owner-token'.repeat(4),principal:owner},{token:'other-token'.repeat(4),principal:other},{token:'denied-token'.repeat(4),principal:{id:'owner',permissions:[]}}])});server.listen(0,'127.0.0.1');await once(server,'listening');
   t.after(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));await s.close();await runtime.close();});
   const baseUrl='http://127.0.0.1:'+server.address().port,client=new PidaClient({baseUrl,token:()=> 'owner-token'.repeat(4)}),outsider=new PidaClient({baseUrl,token:()=> 'other-token'.repeat(4)}),denied=new PidaClient({baseUrl,token:()=> 'denied-token'.repeat(4)});
-  await assert.rejects(denied.listOrganizations(),{code:'FORBIDDEN'});assert.deepEqual((await client.listOrganizations()).criteria,[]);
-  const p=s.register(owner,{name:'worker'}),org=await client.createOrganization({requestId:'api',goal:'work',agentId:p.id,participants:[p.id],criterionIds:[]});
-  await assert.rejects(outsider.getOrganization(org.id),{code:'ORG_NOT_FOUND'});s.start();await orgDone(s,org.id);assert.equal((await client.getOrganization(org.id)).currentAcceptance,'UNKNOWN');
+  await assert.rejects(denied.listWorkSessions(),{code:'FORBIDDEN'});assert.deepEqual((await client.listWorkSessions()).criteria,[]);
+  const p=s.register(owner,{name:'worker'}),org=await client.createWorkSession({requestId:'api',goal:'work',agentId:p.id,participants:[p.id],criterionIds:[]});
+  await assert.rejects(outsider.getWorkSession(org.id),{code:'ORG_NOT_FOUND'});s.start();await orgDone(s,org.id);assert.equal((await client.getWorkSession(org.id)).currentAcceptance,'UNKNOWN');
 });
 
 test('v1 migrates without inventing organizations; future formats fail closed',async t=>{
   const path=directory(t),options={directory:path,resolvePrincipal:()=>owner,createRuntime:()=>{throw Error('no replay');}};
   let s=await AgentSupervisor.open(options);s.register(owner,{name:'legacy'});await s.close();
   const file=join(path,'supervisor.json'),state=JSON.parse(readFileSync(file,'utf8'));state.version=1;delete state.organization;writeFileSync(file,JSON.stringify(state));
-  s=await AgentSupervisor.open(options);assert.deepEqual(s.listOrganizations(owner),[]);assert.equal(JSON.parse(readFileSync(file,'utf8')).version,4);await s.close();
+  s=await AgentSupervisor.open(options);assert.deepEqual(s.listWorkSessions(owner),[]);assert.equal(JSON.parse(readFileSync(file,'utf8')).version,4);await s.close();
   const next=JSON.parse(readFileSync(file,'utf8'));next.version=99;writeFileSync(file,JSON.stringify(next));await assert.rejects(AgentSupervisor.open(options),{code:'AGENT_STATE_INVALID'});
 });
 
@@ -149,7 +149,7 @@ test('revoked delegation prevents an already queued continuation from invoking t
   const p=s.register(owner,{name:'P'}),a=s.register(owner,{name:'A'}),pj=s.enqueue(p.id,owner,{input:'parent',requestId:'p'}),aj=s.enqueue(a.id,owner,{input:'child',requestId:'a',parentJobId:pj.id});s.start();
   await terminal(s,pj.id);await terminal(s,aj.id);s.pause(p.id,owner);
   const joined=s.registerJoin(pj.id,owner,{requestId:'join',required:[aj.id]});
-  const ready=await until(async()=>{const v=await s.getOrganization(joined.orgId,owner);return v.joins[0].status==='ready'&&v;});
+  const ready=await until(async()=>{const v=await s.getWorkSession(joined.orgId,owner);return v.joins[0].status==='ready'&&v;});
   principal={...owner,permissions:owner.permissions.filter(p=>p!=='agent:delegate')};await s.resume(p.id,owner);
   assert.equal((await terminal(s,ready.joins[0].continuationJobId)).code,'JOIN_CONTINUATION_OBSOLETE');assert.equal(models,2);assert.equal((await orgDone(s,joined.orgId)).currentAcceptance,'UNKNOWN');
 });
@@ -163,7 +163,7 @@ test('an abort-ignoring parent callback retains the lease and cannot enable chil
   }});t.after(async()=>{release.resolve();await s.close();});
   const p=s.register(owner,{name:'P'}),a=s.register(owner,{name:'A'}),pj=s.enqueue(p.id,owner,{input:'parent',requestId:'p'}),aj=s.enqueue(a.id,owner,{input:'child',requestId:'a',parentJobId:pj.id});s.start();await entered.promise;
   const joined=s.registerJoin(pj.id,owner,{requestId:'held',required:[aj.id]});await s.cancel(pj.id,owner);await delay(130);
-  assert.ok(lease);assert.equal(childCalls,0);assert.equal((await s.getOrganization(joined.orgId,owner)).joins[0].status,'waiting');
+  assert.ok(lease);assert.equal(childCalls,0);assert.equal((await s.getWorkSession(joined.orgId,owner)).joins[0].status,'waiting');
   release.resolve();await until(()=>!lease);const done=await orgDone(s,joined.orgId);assert.equal(done.joins[0].status,'blocked');assert.equal(s.jobs(p.id,owner).length,1);
 });
 
@@ -177,7 +177,7 @@ test('nested batch uses the child final attempt, not its initial delegating run'
     return new PidaRuntime({storageDir:join(path,profile.id),provider:()=>({provider:f.provider,modelId:f.getModel().id}),tools:createAgentTools(s,profile.id)});
   };
   s=await AgentSupervisor.open({directory:path,maxConcurrent:1,resolvePrincipal:()=>owner,createRuntime});t.after(()=>s.close());p=s.register(owner,{name:'P'});a=s.register(owner,{name:'A'});b=s.register(owner,{name:'B'});
-  const org=s.createOrganization(owner,{requestId:'nested',goal:'nested task',agentId:p.id,participants:[p.id,a.id,b.id],criterionIds:[]});s.start();const done=await orgDone(s,org.id);
+  const org=s.createWorkSession(owner,{requestId:'nested',goal:'nested task',agentId:p.id,participants:[p.id,a.id,b.id],criterionIds:[]});s.start();const done=await orgDone(s,org.id);
   assert.equal(done.joins.length,2);assert.ok(done.joins.every(j=>j.status==='ready'));
   const root=done.joins.find(j=>j.taskId===org.rootTaskId),aJobs=s.jobs(a.id,owner);assert.equal(root.results[0].assignmentJobId,aJobs[0].id);assert.equal(root.results[0].jobId,aJobs[1].id);
 });
@@ -186,8 +186,8 @@ test('persisted repair intent resumes once after restart and an expired organiza
   const path=directory(t);let s,calls=0;
   const checks=[{id:'value',kind:'file-contains',path:'value.txt',expected:'yes',required:true}];
   const options={directory:path,resolvePrincipal:()=>owner,acceptance:{criteria:checks,capture:profile=>{if(calls===1)s.pause(profile.id,owner);return {'value.txt':calls>1?'yes':'no'};}},createRuntime:runtimeFactory(path,()=>[()=>{calls++;return answer('done');}])};
-  s=await AgentSupervisor.open(options);t.after(()=>s.close());const p=s.register(owner,{name:'writer'}),org=s.createOrganization(owner,{requestId:'repair-restart',goal:'work',agentId:p.id,participants:[p.id],criterionIds:['value'],maxRepairAttempts:1});s.start();
-  const pending=await until(async()=>{const v=await s.getOrganization(org.id,owner);return v.attempts.length===2&&v;});const repair=pending.attempts[1].jobId;
+  s=await AgentSupervisor.open(options);t.after(()=>s.close());const p=s.register(owner,{name:'writer'}),org=s.createWorkSession(owner,{requestId:'repair-restart',goal:'work',agentId:p.id,participants:[p.id],criterionIds:['value'],maxRepairAttempts:1});s.start();
+  const pending=await until(async()=>{const v=await s.getWorkSession(org.id,owner);return v.attempts.length===2&&v;});const repair=pending.attempts[1].jobId;
   assert.equal(s.getJob(repair,owner).status,'queued');await s.close();
   s=await AgentSupervisor.open(options);s.start();await s.resume(p.id,owner);const done=await orgDone(s,org.id);assert.equal(done.currentAcceptance,'PASS');assert.equal(done.attempts[1].jobId,repair);assert.equal(calls,2);
   await s.close();const disk=JSON.parse(readFileSync(join(path,'supervisor.json'),'utf8'));
@@ -211,8 +211,8 @@ test('host cancellation interrupts only its organization and late capture cannot
   const path=directory(t),entered=deferred(),release=deferred();let s;
   const options={directory:path,resolvePrincipal:()=>owner,acceptance:{criteria:[{id:'ok',kind:'file-contains',path:'ok.txt',expected:'yes',required:true}],capture:async()=>{entered.resolve();await release.promise;return {'ok.txt':'yes'};}},createRuntime:runtimeFactory(path,()=>[answer('done')])};
   s=await AgentSupervisor.open(options);t.after(async()=>{release.resolve();await s.close();});const p=s.register(owner,{name:'P'}),b=s.register(owner,{name:'B'});
-  const org=s.createOrganization(owner,{requestId:'cancel',goal:'work',agentId:p.id,participants:[p.id],criterionIds:['ok']});s.start();await entered.promise;
+  const org=s.createWorkSession(owner,{requestId:'cancel',goal:'work',agentId:p.id,participants:[p.id],criterionIds:['ok']});s.start();await entered.promise;
   const unrelated=s.enqueue(b.id,owner,{input:'unrelated',requestId:'other'});
-  await assert.rejects(s.cancelOrganization(org.id,other),{code:'ORG_NOT_FOUND'});assert.equal((await s.cancelOrganization(org.id,owner)).status,'cancelled');release.resolve();
-  assert.equal((await terminal(s,unrelated.id)).status,'completed');const done=await s.getOrganization(org.id,owner);assert.equal(done.organization.status,'cancelled');assert.equal(done.currentAcceptance,'UNKNOWN');assert.equal(done.tasks[0].receipts.length,0);
+  await assert.rejects(s.cancelWorkSession(org.id,other),{code:'ORG_NOT_FOUND'});assert.equal((await s.cancelWorkSession(org.id,owner)).status,'cancelled');release.resolve();
+  assert.equal((await terminal(s,unrelated.id)).status,'completed');const done=await s.getWorkSession(org.id,owner);assert.equal(done.organization.status,'cancelled');assert.equal(done.currentAcceptance,'UNKNOWN');assert.equal(done.tasks[0].receipts.length,0);
 });

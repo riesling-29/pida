@@ -224,12 +224,12 @@ export function createPidaServer(options: HttpOptions) {
       if (path === "/v1/organizations" || path.startsWith("/v1/organizations/") || path === "/v1/joins" || path.startsWith("/v1/joins/")) {
         if (!principal.permissions.includes("pida:agents")) throw new PidaError("FORBIDDEN", 403);
         const agents = options.agents; if (!agents) throw new PidaError("AGENTS_DISABLED", 404);
-        if (path === "/v1/organizations" && req.method === "GET") { json(res, 200, { organizations: agents.listOrganizations(principal), criteria: agents.acceptanceCriteria(principal) }); return; }
-        if (path === "/v1/organizations" && req.method === "POST") { json(res, 202, agents.createOrganization(principal, await body(req) as any)); return; }
+        if (path === "/v1/organizations" && req.method === "GET") { json(res, 200, { organizations: agents.listWorkSessions(principal), criteria: agents.acceptanceCriteria(principal) }); return; }
+        if (path === "/v1/organizations" && req.method === "POST") { json(res, 202, agents.createWorkSession(principal, await body(req) as any)); return; }
         const org = /^\/v1\/organizations\/([a-f0-9-]{36})$/.exec(path);
-        if (org && req.method === "GET") { json(res, 200, await agents.getOrganization(org[1]!, principal)); return; }
+        if (org && req.method === "GET") { json(res, 200, await agents.getWorkSession(org[1]!, principal)); return; }
         const cancelOrg = /^\/v1\/organizations\/([a-f0-9-]{36})\/cancel$/.exec(path);
-        if (cancelOrg && req.method === "POST") { keys(await body(req), []); json(res, 200, await agents.cancelOrganization(cancelOrg[1]!, principal)); return; }
+        if (cancelOrg && req.method === "POST") { keys(await body(req), []); json(res, 200, await agents.cancelWorkSession(cancelOrg[1]!, principal)); return; }
         if (path === "/v1/joins" && req.method === "POST") {
           const input = await body(req); keys(input, ["parentJobId", "requestId", "required", "optional", "timeoutMs"]);
           const { parentJobId, ...join } = input;

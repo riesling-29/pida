@@ -66,7 +66,7 @@ export function auditSyntheticPiToolCalls(jsonl, privateOracle) {
 }
 export async function captureLinkedOrganization(client, {orgId,admissionReceipt}) {
   if(!uuid(orgId) || admissionReceipt?.recipient?.org_session_id!==orgId) throw Error('ADMISSION_BINDING_REQUIRED');
-  const before=await client.getOrganization(orgId), records=[], gaps=[];
+  const before=await client.getWorkSession(orgId), records=[], gaps=[];
   if(before.organization?.id!==orgId) throw Error('ORGANIZATION_IDENTITY_MISMATCH');
   for(const attempt of before.attempts) {
     const task=before.tasks.find(t=>t.id===attempt.taskId);
@@ -85,7 +85,7 @@ export async function captureLinkedOrganization(client, {orgId,admissionReceipt}
       try {record.ocel=await client.exportAgentJobOcel(task.agentId,job.id);} catch {gaps.push({job_id:job.id,reason:'OCEL_EXPORT_UNAVAILABLE'});}
     } catch(error) {gaps.push({job_id:attempt.jobId,reason:error.message==='NATIVE_IDENTITY_MISMATCH'?error.message:'JOB_READBACK_UNAVAILABLE'});}
   }
-  const after=await client.getOrganization(orgId);
+  const after=await client.getWorkSession(orgId);
   const events=records.flatMap(r=>r.bundle_validation?.valid?r.bundle.events:[]), requests=events.filter(e=>e.activity==='model_request');
   return {schema_version:'pida.linked-org-capture/1',org_id:orgId,admission_receipt:admissionReceipt,
     immutable_admission_root_job_id:admissionReceipt.job_id,before,after,records,gaps,

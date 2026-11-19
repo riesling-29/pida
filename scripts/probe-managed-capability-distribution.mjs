@@ -56,7 +56,7 @@ for(const [name,policyId,personaMode]of [['base-smoke','smoke/1','local'],['base
   const overview=(await client.listAgents()).personaSources;if(personaMode==='catalogue')assert.deepEqual(overview.sources.map(s=>s.id),['local','profile-a','profile-b']);
   for(const id of personaMode==='catalogue'?['a','b']:['a']){
    const agent=await client.createAgent({name:'Release '+id,...(personaMode==='catalogue'?{personaSourceId:'profile-'+id}:{})});
-   const org=await client.createOrganization({requestId:'release-'+id,goal:'Return a synthetic release check.',agentId:agent.id,participants:[agent.id],criterionIds:[]});
+   const org=await client.createWorkSession({requestId:'release-'+id,goal:'Return a synthetic release check.',agentId:agent.id,participants:[agent.id],criterionIds:[]});
    assert.equal(org.deadlineAt-Date.parse(org.createdAt),expectedPolicy.organization_timeout_ms);assert.equal(org.maxRepairAttempts,0);
    const job=await until(async()=>{const {jobs}=await client.listAgentJobs(agent.id);return jobs.find(j=>!['running','queued'].includes(j.status));});assert.equal(job.status,'completed');
    const bundle=await client.exportAgentJob(agent.id,job.id),inclusions=bundle.events.filter(e=>e.activity==='context_input_included');assert.ok(bundle.events.some(e=>e.activity==='run_finished'));

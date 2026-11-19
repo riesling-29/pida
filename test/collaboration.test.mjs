@@ -19,7 +19,7 @@ const directory = t => { const p = mkdtempSync(join(tmpdir(), 'pida-collab-')); 
 const options = (path, extra = {}) => ({ directory: path, resolvePrincipal: () => owner, createRuntime: () => { throw Error('unexpected runtime'); }, collaboration: { hostId: 'host-1', authorize: () => true }, ...extra });
 function setup(s, requestId = 'org') {
   const agent = s.register(owner, { name: 'worker' });
-  const org = s.createOrganization(owner, { requestId, goal: 'root goal', agentId: agent.id, participants: [agent.id], criterionIds: [] });
+  const org = s.createWorkSession(owner, { requestId, goal: 'root goal', agentId: agent.id, participants: [agent.id], criterionIds: [] });
   return { agent, org };
 }
 function envelope(agent, org, changes = {}) {
@@ -115,7 +115,7 @@ test('cancelled organization returns immutable duplicate history only, rejects n
     await assert.rejects(s.receiveCollaboration(owner, reply), { code: 'COLLABORATION_REPLY_OBSOLETE' });
     const otherOrg = setup(s, 'other');
     await assert.rejects(s.receiveCollaboration(owner, envelope(otherOrg.agent, otherOrg.org, { request_id: 'foreign-reply', reply_to_job_id: first.job_id })), { code: 'COLLABORATION_REPLY_OBSOLETE' });
-    await s.cancelOrganization(org.id, owner);
+    await s.cancelWorkSession(org.id, owner);
     assert.deepEqual(await s.receiveCollaboration(owner, e), first);
     await assert.rejects(s.receiveCollaboration(owner, envelope(agent, org, { request_id: 'new' })), { code: 'COLLABORATION_TARGET_INACTIVE' });
     assert.equal(s.jobs(agent.id, owner).length, 2);
@@ -147,7 +147,7 @@ test('reply cancellation while dispatch authorization awaits prevents model invo
     const reply = await s.receiveCollaboration(owner, envelope(agent, org, { request_id: 'reply', reply_to_job_id: original.job_id }));
     s.start(); await start;
     // Completed native jobs are immutable, so emulate late target authority revocation via organization cancellation.
-    const cancel = s.cancelOrganization(org.id, owner); release(true); await cancel;
+    const cancel = s.cancelWorkSession(org.id, owner); release(true); await cancel;
     assert.equal((await done(s, reply.job_id)).status, 'cancelled');
     assert.equal(calls.length, 2, 'root and original ran; reply did not');
     assert.equal(s.getJob(root.id, owner).status, 'completed');
@@ -159,7 +159,7 @@ test('async receive policy cannot bypass cancellation during its await', async t
   const s = await AgentSupervisor.open(options(path, { collaboration: { hostId: 'host-1', authorize: () => gate } }));
   try {
     const { agent, org } = setup(s), pending = s.receiveCollaboration(owner, envelope(agent, org));
-    await s.cancelOrganization(org.id, owner); release(true);
+    await s.cancelWorkSession(org.id, owner); release(true);
     await assert.rejects(pending, { code: 'COLLABORATION_TARGET_INACTIVE' });
     assert.equal(s.jobs(agent.id, owner).length, 1);
   } finally { release(false); await s.close(); }
@@ -194,8 +194,8 @@ test('HTTP + SDK enforce dedicated permission and current authority; native orga
     await assert.rejects(denied.receiveCollaboration(e), { code: 'FORBIDDEN' });
     const receipt = await client.receiveCollaboration(e);
     assert.deepEqual(await client.getCollaborationReceipt(receipt.receipt_id), receipt);
-    assert.equal((await client.listOrganizations()).organizations.length, 1);
-    assert.equal((await client.getOrganization(org.id)).currentAcceptance, 'UNKNOWN');
-    assert.equal((await client.cancelOrganization(org.id)).status, 'cancelled');
+    assert.equal((await client.listWorkSessions()).organizations.length, 1);
+    assert.equal((await client.getWorkSession(org.id)).currentAcceptance, 'UNKNOWN');
+    assert.equal((await client.cancelWorkSession(org.id)).status, 'cancelled');
   } finally { server.closeAllConnections(); await new Promise(r => server.close(r)); await s.close(); await runtime.close(); }
 });

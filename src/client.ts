@@ -74,16 +74,16 @@ export class PidaClient {
     if (this.queuedInputAttempts.get(path) === attempt) this.queuedInputAttempts.delete(path);
     return receipt;
   }
-  async listOrganizations(): Promise<{ organizations: import("./organization.js").OrgSession[]; criteria: import("./organization.js").LocalCriterion[] }> { return (await this.request("/v1/organizations")).json(); }
+  async listWorkSessions(): Promise<{ organizations: import("./organization.js").WorkSession[]; criteria: import("./organization.js").LocalCriterion[] }> { return (await this.request("/v1/organizations")).json(); }
   async receiveCollaboration(input: import("./collaboration.js").CollaborationEnvelope): Promise<import("./collaboration.js").CollaborationReceipt> { return (await this.request("/v1/collaboration/messages", "POST", input)).json(); }
   async admitOrganization(input: import("./organization-admission.js").OrganizationAdmission): Promise<import("./organization-admission.js").OrganizationAdmissionReceipt> { return (await this.request("/v1/collaboration/organization-admissions", "POST", input)).json(); }
   async getOrganizationAdmissionCapabilities(): Promise<ReturnType<import("./agent-supervisor.js").AgentSupervisor["organizationAdmissionCapabilities"]>> { return (await this.request("/v1/collaboration/organization-admission-capabilities")).json(); }
   async getOrganizationAdmissionReceipt(id: string): Promise<import("./organization-admission.js").OrganizationAdmissionReceipt> { return (await this.request("/v1/collaboration/organization-admission-receipts/" + encodeURIComponent(id))).json(); }
   async getCollaborationCapabilities(): Promise<ReturnType<import("./agent-supervisor.js").AgentSupervisor["collaborationCapabilities"]>> { return (await this.request("/v1/collaboration/capabilities")).json(); }
   async getCollaborationReceipt(id: string): Promise<import("./collaboration.js").CollaborationReceipt> { return (await this.request("/v1/collaboration/receipts/" + encodeURIComponent(id))).json(); }
-  async createOrganization(input: Parameters<import("./agent-supervisor.js").AgentSupervisor["createOrganization"]>[1]): Promise<import("./organization.js").OrgSession> { return (await this.request("/v1/organizations", "POST", input)).json(); }
-  async getOrganization(id: string): Promise<Awaited<ReturnType<import("./agent-supervisor.js").AgentSupervisor["getOrganization"]>>> { return (await this.request("/v1/organizations/" + encodeURIComponent(id))).json(); }
-  async cancelOrganization(id: string): Promise<import("./organization.js").OrgSession> { return (await this.request("/v1/organizations/" + encodeURIComponent(id) + "/cancel", "POST", {})).json(); }
+  async createWorkSession(input: Parameters<import("./agent-supervisor.js").AgentSupervisor["createWorkSession"]>[1]): Promise<import("./organization.js").WorkSession> { return (await this.request("/v1/organizations", "POST", input)).json(); }
+  async getWorkSession(id: string): Promise<Awaited<ReturnType<import("./agent-supervisor.js").AgentSupervisor["getWorkSession"]>>> { return (await this.request("/v1/organizations/" + encodeURIComponent(id))).json(); }
+  async cancelWorkSession(id: string): Promise<import("./organization.js").WorkSession> { return (await this.request("/v1/organizations/" + encodeURIComponent(id) + "/cancel", "POST", {})).json(); }
   async registerJoin(parentJobId: string, input: Parameters<import("./agent-supervisor.js").AgentSupervisor["registerJoin"]>[2]): Promise<import("./organization.js").BatchJoin> { return (await this.request("/v1/joins", "POST", { parentJobId, ...input })).json(); }
   async cancelJoin(id: string, expectedRevision: number): Promise<import("./organization.js").BatchJoin> { return (await this.request("/v1/joins/" + encodeURIComponent(id) + "/cancel", "POST", { expectedRevision })).json(); }
   private readonly options: ClientOptions;
